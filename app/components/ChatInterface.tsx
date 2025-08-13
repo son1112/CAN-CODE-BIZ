@@ -1,10 +1,11 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Send, Trash2, Download, MessageCircle, Bot } from 'lucide-react';
+import { Send, Trash2, Download, MessageCircle } from 'lucide-react';
+import Image from 'next/image';
 import VoiceInput from './VoiceInput';
-import MessageDisplay from './MessageDisplay';
 import AgentSelector from './AgentSelector';
+import Logo from './Logo';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import { useAgent } from '@/contexts/AgentContext';
 import { useConversationManager } from '@/hooks/useConversationManager';
@@ -104,36 +105,28 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 relative overflow-hidden">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 relative overflow-hidden">
       {/* Modern Background Elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-yellow-200/30 to-orange-300/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-blue-200/30 to-indigo-300/20 rounded-full blur-3xl"></div>
+      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-200/20 to-sky-300/15 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-indigo-200/20 to-blue-100/25 rounded-full blur-3xl"></div>
       
       {/* Modern Header */}
-      <div className="relative flex items-center justify-between px-8 py-6 bg-white/90 backdrop-blur-xl border-b border-gray-200/50 shadow-lg shadow-black/5">
+      <div className="relative flex items-center justify-between px-8 py-6 bg-white/95 backdrop-blur-xl border-b border-blue-200/50 shadow-lg shadow-blue-900/5">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="relative w-12 h-12 bg-gradient-to-br from-yellow-400 via-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-yellow-500/25 transform hover:scale-105 transition-transform duration-300">
-              <span className="text-2xl filter drop-shadow-sm">🦆</span>
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/50 to-transparent rounded-2xl"></div>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Rubber Ducky Live
-              </h1>
-              <p className="text-sm text-gray-600 font-medium">Your premium AI thinking companion 🦆</p>
-            </div>
-          </div>
+          <Logo 
+            size="md" 
+            onClick={() => window.location.reload()}
+          />
           <div className="hidden sm:block">
             <AgentSelector />
           </div>
         </div>
         <div className="flex items-center gap-3">
           {isContinuousMode && (
-            <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-200 text-emerald-700 rounded-full text-sm font-semibold backdrop-blur-sm">
+            <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-300 text-blue-800 rounded-full text-sm font-semibold backdrop-blur-sm">
               <div className="relative">
-                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50"></div>
-                <div className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-75"></div>
+                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
+                <div className="absolute inset-0 w-3 h-3 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
               </div>
               Live Mode Active
             </div>
@@ -143,7 +136,7 @@ export default function ChatInterface() {
             className={`p-3 rounded-xl transition-all duration-300 ${
               isContinuousMode 
                 ? 'bg-gradient-to-br from-yellow-500 to-amber-600 text-white shadow-lg shadow-yellow-500/25 hover:shadow-xl hover:shadow-yellow-500/30 scale-105' 
-                : 'text-gray-600 hover:bg-gradient-to-br hover:from-gray-100 hover:to-gray-50 hover:text-yellow-600 hover:shadow-md'
+                : 'text-gray-600 hover:bg-gradient-to-br hover:from-blue-50 hover:to-sky-50 hover:text-blue-700 hover:shadow-md'
             }`}
             title={isContinuousMode ? 'Disable continuous conversation' : 'Enable continuous conversation'}
           >
@@ -152,7 +145,7 @@ export default function ChatInterface() {
           <button
             onClick={exportChat}
             disabled={messages.length === 0}
-            className="p-3 text-gray-600 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:text-blue-600 rounded-xl disabled:opacity-50 transition-all duration-300 hover:shadow-md"
+            className="p-3 text-gray-600 hover:bg-gradient-to-br hover:from-blue-50 hover:to-sky-50 hover:text-blue-700 rounded-xl disabled:opacity-50 transition-all duration-300 hover:shadow-md"
             title="Export chat"
           >
             <Download className="w-5 h-5" />
@@ -160,7 +153,7 @@ export default function ChatInterface() {
           <button
             onClick={handleClearMessages}
             disabled={messages.length === 0}
-            className="p-3 text-gray-600 hover:bg-gradient-to-br hover:from-red-50 hover:to-pink-50 hover:text-red-600 rounded-xl disabled:opacity-50 transition-all duration-300 hover:shadow-md"
+            className="p-3 text-gray-600 hover:bg-gradient-to-br hover:from-red-50 hover:to-rose-50 hover:text-red-700 rounded-xl disabled:opacity-50 transition-all duration-300 hover:shadow-md"
             title="Clear chat"
           >
             <Trash2 className="w-5 h-5" />
@@ -176,17 +169,15 @@ export default function ChatInterface() {
             <div className="relative max-w-2xl text-center space-y-12 z-10">
               {/* Agent Introduction */}
               <div className="space-y-8">
-                <div className="relative w-24 h-24 bg-gradient-to-br from-yellow-400 via-amber-400 to-orange-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-yellow-500/30 mx-auto transform hover:scale-105 transition-all duration-500">
-                  <span className="text-5xl filter drop-shadow-lg animate-pulse">🦆</span>
-                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/50 to-transparent rounded-3xl"></div>
-                  <div className="absolute -inset-2 bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-3xl blur-xl animate-pulse"></div>
+                <div className="flex justify-center">
+                  <Logo size="xl" variant="minimal" showText={false} />
                 </div>
                 <div className="space-y-4">
                   <h2 className="text-4xl font-bold text-gray-900 leading-tight">
-                    🦆 Hi! I'm your Rubber Ducky
+                    🦆 Hi! I&apos;m your Rubber Ducky
                   </h2>
                   <p className="text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium">
-                    I'm here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
+                    I&apos;m here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
                   </p>
                 </div>
               </div>
@@ -196,13 +187,11 @@ export default function ChatInterface() {
                   <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 rounded-3xl"></div>
                   <div className="relative">
                     <div className="flex items-start gap-6">
-                      <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 via-amber-400 to-orange-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-yellow-500/25">
-                        <span className="text-2xl filter drop-shadow-sm">🦆</span>
-                      </div>
+                      <Logo size="md" variant="minimal" showText={false} />
                       <div className="text-left space-y-3">
-                        <p className="text-gray-700 font-semibold text-base">🦆 Let's chat about:</p>
+                        <p className="text-gray-700 font-semibold text-base">🦆 Let&apos;s chat about:</p>
                         <p className="text-gray-800 text-lg leading-relaxed font-medium italic">
-                          "{conversationStarter}"
+                          &ldquo;{conversationStarter}&rdquo;
                         </p>
                       </div>
                     </div>
@@ -217,7 +206,7 @@ export default function ChatInterface() {
                     {currentAgent.keyTopics.map((topic) => (
                       <span
                         key={topic}
-                        className="px-6 py-3 bg-gradient-to-br from-white to-gray-50 hover:from-yellow-50 hover:to-amber-50 border border-gray-200 hover:border-yellow-300 text-gray-800 hover:text-yellow-800 rounded-2xl text-base font-semibold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg transform hover:-translate-y-1"
+                        className="px-6 py-3 bg-gradient-to-br from-white to-blue-50 hover:from-yellow-50 hover:to-amber-50 border border-blue-200 hover:border-yellow-300 text-blue-800 hover:text-yellow-800 rounded-2xl text-base font-semibold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg transform hover:-translate-y-1"
                       >
                         {topic}
                       </span>
@@ -232,7 +221,7 @@ export default function ChatInterface() {
                 </p>
                 
                 {isContinuousMode && (
-                  <div className="inline-flex items-center gap-6 px-8 py-4 bg-gradient-to-r from-yellow-100 via-amber-100 to-orange-100 border-2 border-yellow-300/50 rounded-2xl shadow-lg shadow-yellow-500/10 backdrop-blur-sm">
+                  <div className="inline-flex items-center gap-6 px-8 py-4 bg-gradient-to-r from-yellow-100 via-amber-100 to-yellow-100 border-2 border-yellow-300/50 rounded-2xl shadow-lg shadow-yellow-500/10 backdrop-blur-sm">
                     <div className="flex items-center gap-4">
                       <div className="relative">
                         <div className="w-4 h-4 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
@@ -241,8 +230,8 @@ export default function ChatInterface() {
                       <span className="text-2xl filter drop-shadow-sm animate-pulse">🦆</span>
                     </div>
                     <div className="text-left space-y-2">
-                      <span className="text-yellow-800 font-bold text-lg">🦆 Rubber Ducky Live!</span>
-                      <span className="text-yellow-700 text-sm font-medium">I'm listening and ready to help you think</span>
+                      <span className="text-blue-800 font-bold text-lg">🦆 Rubber Ducky Live!</span>
+                      <span className="text-blue-700 text-sm font-medium">I&apos;m listening and ready to help you think</span>
                     </div>
                   </div>
                 )}
@@ -264,16 +253,16 @@ export default function ChatInterface() {
                     }`}>
                       {/* Avatar */}
                       <div 
-                        className="rounded-2xl flex items-center justify-center flex-shrink-0 relative shadow-lg transform transition-transform duration-300 group-hover:scale-110"
+                        className="rounded-full flex items-center justify-center flex-shrink-0 relative shadow-lg transform transition-transform duration-300 group-hover:scale-110"
                         style={{
                           width: '64px',
                           height: '64px',
                           background: isUser 
-                            ? 'linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%)' 
-                            : 'linear-gradient(135deg, #facc15 0%, #f59e0b 50%, #f97316 100%)',
+                            ? 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%)' 
+                            : 'linear-gradient(135deg, #eab308 0%, #f59e0b 50%, #f97316 100%)',
                           boxShadow: isUser 
-                            ? '0 10px 15px -3px rgba(37, 99, 235, 0.3)' 
-                            : '0 10px 15px -3px rgba(245, 158, 11, 0.3)'
+                            ? '0 10px 15px -3px rgba(30, 58, 138, 0.3)' 
+                            : '0 10px 15px -3px rgba(234, 179, 8, 0.3)'
                         }}
                       >
                         {isUser ? (
@@ -281,7 +270,15 @@ export default function ChatInterface() {
                             {message.audioMetadata ? '🎙️' : 'U'}
                           </span>
                         ) : (
-                          <span className="text-2xl filter drop-shadow-sm">🦆</span>
+                          <Image
+                            src="/rubber-duck-avatar.png"
+                            alt="Rubber Ducky"
+                            width={48}
+                            height={48}
+                            className="object-cover scale-110"
+                            style={{ objectPosition: 'center center' }}
+                            priority
+                          />
                         )}
                         {isUser && message.audioMetadata && (
                           <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border border-white">
@@ -295,14 +292,14 @@ export default function ChatInterface() {
                         className="relative shadow-xl max-w-full backdrop-blur-sm transition-all duration-300 group-hover:shadow-2xl group-hover:scale-[1.02] rounded-[2rem] bg-gray-800 text-white"
                         style={{ 
                           padding: '2rem 3rem',
-                          border: `4px solid ${isUser ? '#3b82f6' : '#eab308'}`,
+                          border: `4px solid ${isUser ? '#1e40af' : '#eab308'}`,
                           boxShadow: isUser 
-                            ? '0 25px 50px -12px rgba(59, 130, 246, 0.3)' 
+                            ? '0 25px 50px -12px rgba(30, 64, 175, 0.3)' 
                             : '0 25px 50px -12px rgba(234, 179, 8, 0.2)'
                         }}
                       >
                         {!isUser && (
-                          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 rounded-[2rem]"></div>
+                          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 rounded-[2rem]"></div>
                         )}
                         
                         {/* Message Content */}
@@ -351,7 +348,7 @@ export default function ChatInterface() {
 
       {/* Error display */}
       {error && (
-        <div className="mx-8 mb-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200/50 rounded-2xl text-red-700 text-sm shadow-lg shadow-red-500/10 backdrop-blur-sm">
+        <div className="mx-8 mb-4 p-4 bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/50 rounded-2xl text-red-800 text-sm shadow-lg shadow-red-500/10 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 bg-red-500 rounded-full flex-shrink-0 animate-pulse shadow-sm" />
             <span className="font-medium">{error}</span>
@@ -360,8 +357,8 @@ export default function ChatInterface() {
       )}
 
       {/* Premium Message Composer */}
-      <div className="relative border-t border-gray-200/50 bg-white/90 backdrop-blur-xl p-8 shadow-2xl shadow-black/5">
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-50/50 to-transparent"></div>
+      <div className="relative border-t border-blue-200/50 bg-white/95 backdrop-blur-xl p-8 shadow-2xl shadow-black/5">
+        <div className="absolute inset-0 bg-gradient-to-t from-blue-50/50 to-transparent"></div>
         <div className="relative max-w-6xl mx-auto">
           <div className="flex gap-6 items-end">
             <VoiceInput 
