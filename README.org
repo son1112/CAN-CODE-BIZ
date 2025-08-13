@@ -1,0 +1,127 @@
+* Rubber Ducky Live 🦆 - AI Chat Companion
+
+Your friendly rubber duck AI companion for thinking out loud, problem-solving, and casual conversations. Powered by Claude Sonnet AI and built with Next.js.
+
+** Features
+
+- 🎤 Live speech-to-text conversion using AssemblyAI Real-time Streaming
+- 🦆 Real-time streaming responses from your AI rubber ducky
+- 📝 Markdown support with syntax highlighting
+- 💾 MongoDB conversation persistence
+- 📱 Responsive design for all devices
+- 🔄 Server-Sent Events (SSE) for streaming
+- 📥 Export chat conversations
+
+** Prerequisites
+
+- Node.js 18+ and npm
+- MongoDB instance (local or cloud)
+- Anthropic API key for Claude access
+- AssemblyAI API key for speech recognition
+
+** Installation
+
+1. Clone the repository:
+   #+begin_src bash
+   git clone <repository-url>
+   cd rubber-ducky-live
+   #+end_src
+
+2. Install dependencies:
+   #+begin_src bash
+   npm install
+   #+end_src
+
+3. Set up environment variables:
+   #+begin_src bash
+   cp .env.example .env.local
+   #+end_src
+
+   Edit =.env.local= and add your credentials:
+   #+begin_src
+   MONGODB_URI=mongodb://localhost:27017/rubber-ducky-live
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   ASSEMBLYAI_API_KEY=your_assemblyai_api_key_here
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   #+end_src
+
+** Development
+
+Run the development server:
+#+begin_src bash
+npm run dev
+#+end_src
+
+Open [[http://localhost:3000]] in your browser.
+
+** Production Build
+
+#+begin_src bash
+npm run build
+npm start
+#+end_src
+
+** Project Structure
+
+#+begin_src
+rubber-ducky-live/
+├── app/
+│   ├── api/              # API routes
+│   │   ├── chat/         # SSE streaming endpoint
+│   │   └── conversations/ # MongoDB CRUD operations
+│   ├── components/       # React components
+│   │   ├── ChatInterface.tsx
+│   │   ├── VoiceInput.tsx
+│   │   └── MessageDisplay.tsx
+│   ├── layout.tsx
+│   └── page.tsx
+├── hooks/                # Custom React hooks
+│   ├── useSpeechRecognition.ts
+│   └── useStreamingChat.ts
+├── lib/                  # Utility functions
+│   ├── mongodb.ts        # Database connection
+│   └── claude.ts         # Claude API integration
+├── models/               # MongoDB schemas
+│   └── Conversation.ts
+└── types/                # TypeScript definitions
+    └── index.ts
+#+end_src
+
+** Usage
+
+1. *Voice Input*: Click the 🦆 microphone button to start talking to your rubber ducky. The app will automatically transcribe your speech and send it when you stop speaking.
+
+2. *Text Input*: Type your thoughts in the text area and press Enter or click Send to share them with your rubber ducky.
+
+3. *Export Chat*: Click the download button to export your conversation with the rubber ducky as a text file.
+
+4. *Clear Chat*: Click the trash button to start a new conversation with your rubber ducky.
+
+** Browser Compatibility
+
+Voice input requires a browser that supports WebSocket and MediaRecorder APIs:
+- Chrome (recommended)
+- Firefox (good support)
+- Safari (good support)
+- Edge (good support)
+
+** API Endpoints
+
+- =POST /api/chat= - Stream chat responses from Claude
+- =GET /api/conversations= - Fetch conversation history
+- =POST /api/conversations= - Save a new conversation
+- =PUT /api/conversations= - Update an existing conversation
+- =POST /api/speech-token= - Generate AssemblyAI authentication token
+
+** Technologies Used
+
+- [[https://nextjs.org/][Next.js 14]] - React framework
+- [[https://www.typescriptlang.org/][TypeScript]] - Type safety
+- [[https://tailwindcss.com/][Tailwind CSS]] - Styling
+- [[https://www.mongodb.com/][MongoDB]] - Database
+- [[https://www.anthropic.com/][Claude Sonnet 3.5]] - AI rubber ducky brain
+- [[https://www.assemblyai.com/][AssemblyAI]] - Real-time speech recognition
+
+** License
+
+MIT
