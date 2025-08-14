@@ -6,6 +6,7 @@ import Image from 'next/image';
 import VoiceInput from './VoiceInput';
 import AgentSelector from './AgentSelector';
 import Logo from './Logo';
+import UserMenu from './auth/UserMenu';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import { useAgent } from '@/contexts/AgentContext';
 import { useConversationManager } from '@/hooks/useConversationManager';
@@ -131,6 +132,10 @@ export default function ChatInterface() {
               Live Mode Active
             </div>
           )}
+          
+          {/* User Menu */}
+          <UserMenu />
+          
           <button
             onClick={toggleContinuousMode}
             className={`p-3 rounded-xl transition-all duration-300 ${
@@ -273,9 +278,9 @@ export default function ChatInterface() {
                           <Image
                             src="/rubber-duck-avatar.png"
                             alt="Rubber Ducky"
-                            width={48}
-                            height={48}
-                            className="object-cover scale-110"
+                            width={56}
+                            height={56}
+                            className="object-cover scale-125 rounded-full"
                             style={{ objectPosition: 'center center' }}
                             priority
                           />

@@ -16,6 +16,9 @@ interface SpeechRecognitionHook {
   stopContinuousMode: () => void;
   autoSendCountdown: number | null;
   autoSendReason: string | null;
+  isMuted: boolean;
+  setMuted: (muted: boolean) => void;
+  toggleMute: () => void;
 }
 
 export function useSpeechRecognition(): SpeechRecognitionHook {
@@ -27,6 +30,7 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
   const [isInContinuousMode, setIsInContinuousMode] = useState(false);
   const [autoSendCountdown, setAutoSendCountdown] = useState<number | null>(null);
   const [autoSendReason, setAutoSendReason] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
   
   const wsRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -322,7 +326,8 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
                 console.log('🚨 DEBUG: continuousCallbackRef.current:', continuousCallbackRef.current);
                 
                 // In continuous mode, implement multi-condition auto-send
-                if (isInContinuousModeRef.current && continuousCallbackRef.current) {
+                // Don't process new speech while muted
+                if (isInContinuousModeRef.current && continuousCallbackRef.current && !isMuted) {
                   console.log('🔍 Debug: In continuous mode, checking auto-send conditions');
                   console.log('🔍 Debug: newTranscript:', newTranscript.trim());
                   console.log('🔍 Debug: shouldAutoSend result:', shouldAutoSend(newTranscript));
@@ -487,6 +492,19 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
     stopListening();
   }, [stopListening, clearAllTimers]);
 
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => {
+      const newMutedState = !prev;
+      
+      // When muting, trigger auto-send immediately (simulate silence)
+      if (newMutedState && transcript.trim()) {
+        triggerAutoSend('muted - artificial silence');
+      }
+      
+      return newMutedState;
+    });
+  }, [transcript, triggerAutoSend]);
+
   return {
     transcript,
     interimTranscript,
@@ -503,5 +521,8 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
     stopContinuousMode,
     autoSendCountdown,
     autoSendReason,
+    isMuted,
+    setMuted: setIsMuted,
+    toggleMute,
   };
 }

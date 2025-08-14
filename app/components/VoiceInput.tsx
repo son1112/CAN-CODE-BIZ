@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Mic, MicOff, AlertCircle, RotateCcw, Send } from 'lucide-react';
+import { Mic, MicOff, AlertCircle, RotateCcw, Send, VolumeX, Volume2 } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 interface VoiceInputProps {
@@ -25,6 +25,8 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
     stopContinuousMode,
     autoSendCountdown,
     autoSendReason,
+    isMuted,
+    toggleMute,
   } = useSpeechRecognition();
 
   const handleSendTranscript = () => {
@@ -104,6 +106,22 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
           )}
         </button>
 
+        {/* Mute Button - show in continuous mode when listening */}
+        {enableContinuousMode && (isListening || isInContinuousMode) && (
+          <button
+            onClick={toggleMute}
+            disabled={isDisabled}
+            className={`p-3 rounded-xl transition-all duration-300 shadow-lg transform hover:scale-105 ${
+              isMuted 
+                ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-red-500/25' 
+                : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25 hover:shadow-xl'
+            }`}
+            title={isMuted ? '🔊 Unmute to continue conversation' : '🔇 Mute and send current message'}
+          >
+            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </button>
+        )}
+
         {/* Send Button - only show in manual mode */}
         {!enableContinuousMode && transcript.trim() && (
           <button
@@ -120,7 +138,10 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
           {(isListening || isInContinuousMode) && (
             <div className="flex items-center gap-3 mb-3">
               <span className="text-sm font-semibold text-gray-700">
-                {isInContinuousMode ? '🦆 Rubber ducky listening...' : '🔴 Recording...'}
+                {isInContinuousMode 
+                  ? (isMuted ? '🔇 Muted (not listening) - unmute to continue' : '🦆 Rubber ducky listening...')
+                  : '🔴 Recording...'
+                }
               </span>
               <div className="flex gap-1">
                 <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '0ms' }} />

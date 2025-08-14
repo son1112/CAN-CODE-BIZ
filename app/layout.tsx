@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Roboto, Roboto_Mono } from "next/font/google";
 import { AgentProvider } from "@/contexts/AgentContext";
+import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -30,9 +31,11 @@ export default function RootLayout({
       <body
         className={`${roboto.variable} ${robotoMono.variable} antialiased`}
       >
-        <AgentProvider>
-          {children}
-        </AgentProvider>
+        <SessionProvider>
+          <AgentProvider>
+            {children}
+          </AgentProvider>
+        </SessionProvider>
       </body>
     </html>
   );

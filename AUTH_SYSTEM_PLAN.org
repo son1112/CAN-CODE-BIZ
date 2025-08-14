@@ -1,0 +1,259 @@
+#+TITLE: Rubber Ducky Live - User Authentication System Plan
+#+AUTHOR: Claude Code
+#+DATE: 2025-08-14
+
+* Overview
+
+This document outlines the comprehensive plan for implementing a user authentication system with OAuth integration for Rubber Ducky Live. The system will support Google, Facebook/Instagram, and LinkedIn authentication providers.
+
+* Architecture Decision
+
+** Recommended Framework: NextAuth.js v5 (Auth.js)
+
+- Native Next.js integration
+- Built-in OAuth provider support
+- Session management
+- Database adapters for MongoDB
+- TypeScript support
+
+** Alternative Options Considered
+
+- *Auth0*: Enterprise-grade, more complex setup
+- *Firebase Auth*: Good for Google ecosystem
+- *Supabase Auth*: Open source, PostgreSQL focused
+
+* Database Schema Design
+
+** User Model
+#+BEGIN_SRC typescript
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+  image?: string;
+  emailVerified?: Date;
+  accounts: Account[];
+  sessions: Session[];
+  conversations: Conversation[];
+  preferences: UserPreferences;
+  createdAt: Date;
+  updatedAt: Date;
+}
+#+END_SRC
+
+** Account Model (OAuth providers)
+#+BEGIN_SRC typescript
+interface Account {
+  id: string;
+  userId: string;
+  type: 'oauth';
+  provider: 'google' | 'facebook' | 'linkedin';
+  providerAccountId: string;
+  access_token?: string;
+  refresh_token?: string;
+  expires_at?: number;
+  token_type?: string;
+  scope?: string;
+}
+#+END_SRC
+
+** Session Model
+#+BEGIN_SRC typescript
+interface Session {
+  id: string;
+  sessionToken: string;
+  userId: string;
+  expires: Date;
+}
+#+END_SRC
+
+** User Preferences
+#+BEGIN_SRC typescript
+interface UserPreferences {
+  theme: 'light' | 'dark' | 'auto';
+  language: string;
+  voiceEnabled: boolean;
+  continuousMode: boolean;
+  agentDefaults: {
+    preferredAgent: string;
+  };
+}
+#+END_SRC
+
+* OAuth Provider Configuration
+
+** Required Environment Variables
+#+BEGIN_SRC bash
+# NextAuth
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Facebook OAuth
+FACEBOOK_CLIENT_ID=your-facebook-app-id
+FACEBOOK_CLIENT_SECRET=your-facebook-app-secret
+
+# LinkedIn OAuth
+LINKEDIN_CLIENT_ID=your-linkedin-client-id
+LINKEDIN_CLIENT_SECRET=your-linkedin-client-secret
+#+END_SRC
+
+* Implementation Strategy
+
+** Phase 1: Core Authentication
+1. Install and configure NextAuth.js
+2. Set up MongoDB adapter
+3. Create basic login/logout functionality
+4. Implement session middleware
+
+** Phase 2: OAuth Integration
+1. Configure Google OAuth (easiest to start with)
+2. Add Facebook/Instagram OAuth
+3. Add LinkedIn OAuth
+4. Test each provider thoroughly
+
+** Phase 3: User Experience
+1. Create beautiful login/signup UI
+2. Add user profile management
+3. Implement protected routes
+4. Add user preferences system
+
+** Phase 4: Data Integration
+1. Update conversation storage for user-specific data
+2. Add conversation sharing/export features
+3. Implement user dashboard
+4. Add usage analytics per user
+
+* File Structure Plan
+
+#+BEGIN_SRC
+app/
+├── api/
+│   └── auth/
+│       └── [...nextauth]/
+│           └── route.ts
+├── auth/
+│   ├── signin/
+│   │   └── page.tsx
+│   └── signup/
+│       └── page.tsx
+├── profile/
+│   └── page.tsx
+└── dashboard/
+    └── page.tsx
+
+components/
+├── auth/
+│   ├── LoginButton.tsx
+│   ├── LogoutButton.tsx
+│   ├── AuthModal.tsx
+│   └── ProviderButtons.tsx
+└── user/
+    ├── UserProfile.tsx
+    ├── UserPreferences.tsx
+    └── UserDashboard.tsx
+
+lib/
+├── auth.ts (NextAuth config)
+├── auth-middleware.ts
+└── user-utils.ts
+
+models/
+├── User.ts
+├── Account.ts
+└── Session.ts
+#+END_SRC
+
+* Key Features to Implement
+
+** Authentication Flow
+- Social login buttons with provider branding
+- Automatic account linking for same email
+- Graceful error handling
+- Remember me functionality
+- Secure logout
+
+** User Management
+- Profile picture from OAuth providers
+- Email verification (if needed)
+- Account deletion/deactivation
+- Privacy settings
+
+** Data Privacy & Security
+- GDPR compliance considerations
+- Secure token storage
+- Rate limiting on auth endpoints
+- CSRF protection (built into NextAuth)
+
+* UI/UX Considerations
+
+** Login Modal Design
+- Slide-in modal overlay
+- Social provider buttons with icons
+- "Continue with Google/Facebook/LinkedIn"
+- Terms of service and privacy policy links
+- Clean, modern design matching current app theme
+
+** User Profile Integration
+- User avatar in header (replacing or alongside logo)
+- Dropdown menu with profile/settings/logout
+- Conversation history organized by user
+- Export/sharing capabilities per conversation
+
+* Implementation Timeline
+
+** Week 1: Foundation
+- [ ] NextAuth.js setup and configuration
+- [ ] MongoDB schema updates
+- [ ] Google OAuth integration
+- [ ] Basic login/logout functionality
+
+** Week 2: User Experience
+- [ ] Login/signup UI components
+- [ ] User profile management
+- [ ] Session management
+- [ ] Protected routes implementation
+
+** Week 3: Additional Providers
+- [ ] Facebook/Instagram OAuth
+- [ ] LinkedIn OAuth
+- [ ] User preferences system
+- [ ] Data migration for existing users
+
+** Week 4: Polish & Testing
+- [ ] Comprehensive testing
+- [ ] Error handling improvements
+- [ ] Performance optimization
+- [ ] Documentation updates
+
+* Security Considerations
+
+** Token Management
+- Secure storage of OAuth tokens
+- Token refresh mechanisms
+- Proper token expiration handling
+
+** Session Security
+- HTTPOnly cookies for session tokens
+- Secure cookie attributes in production
+- CSRF protection via NextAuth
+
+** Data Protection
+- User data encryption at rest
+- Secure API endpoint access
+- Rate limiting on authentication endpoints
+- Proper error messages (no information leakage)
+
+* Next Steps
+
+1. Install NextAuth.js and required dependencies
+2. Configure MongoDB adapter
+3. Set up Google OAuth application
+4. Create authentication API routes
+5. Implement basic login/logout UI
+6. Test authentication flow
+
+This plan provides a comprehensive roadmap for implementing a robust user authentication system that will enhance the Rubber Ducky Live application with secure, user-specific functionality.
