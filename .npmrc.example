@@ -1,0 +1,13 @@
+# Example .npmrc file for private GitHub packages
+# Copy this to .npmrc and replace YOUR_GITHUB_TOKEN with your actual token
+# 
+# IMPORTANT: Never commit .npmrc to the repository!
+# The .gitignore file is configured to ignore .npmrc
+
+@son1112:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
+
+# To use this:
+# 1. Copy this file to .npmrc: cp .npmrc.example .npmrc
+# 2. Replace YOUR_GITHUB_TOKEN with your actual GitHub Personal Access Token
+# 3. The .npmrc file will be ignored by git automatically
