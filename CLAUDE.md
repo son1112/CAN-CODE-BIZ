@@ -100,6 +100,14 @@ The application now supports continuous conversation mode with automatic AI resp
 6. AI responses stream back via SSE
 7. Process continues until user stops conversation
 
+## Security Notice ⚠️
+
+**RESOLVED**: GitHub Personal Access Token was accidentally committed in `.npmrc` on 2025-08-14. 
+- Token has been **completely removed from git history** using `git filter-branch`
+- `.npmrc` is now in `.gitignore` to prevent future incidents  
+- `.npmrc.example` template provided for secure setup
+- **ACTION REQUIRED**: The exposed token `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` should be revoked in GitHub settings
+
 ## Environment Setup
 
 Required environment variables in `.env.local`:
@@ -107,6 +115,11 @@ Required environment variables in `.env.local`:
 - `ANTHROPIC_API_KEY` - Claude API key
 - `ASSEMBLYAI_API_KEY` - AssemblyAI API key for speech recognition
 - `NEXT_PUBLIC_APP_URL` - Application URL
+
+For GitHub package registry access:
+1. Copy `.npmrc.example` to `.npmrc`
+2. Replace `YOUR_GITHUB_TOKEN` with your GitHub Personal Access Token
+3. Never commit the `.npmrc` file (it's in `.gitignore`)
 
 ## User Preferences
 
