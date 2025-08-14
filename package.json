@@ -11,6 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.59.0",
     "@auth/mongodb-adapter": "^3.10.0",
+    "@son1112/rubber-ducky-node": "^0.10.3",
     "assemblyai": "^4.15.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.539.0",
