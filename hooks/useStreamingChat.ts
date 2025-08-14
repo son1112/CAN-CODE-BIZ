@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Message } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { useAgent } from '@/contexts/AgentContext';
+import { useSession } from 'next-auth/react';
 
 interface StreamingChatHook {
   messages: Message[];
@@ -9,14 +10,18 @@ interface StreamingChatHook {
   error: string | null;
   sendMessage: (content: string) => Promise<void>;
   clearMessages: () => void;
+  saveConversation: () => Promise<void>;
+  currentConversationId: string | null;
 }
 
 export function useStreamingChat(): StreamingChatHook {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const { getSystemPrompt, addContext } = useAgent();
+  const { data: session } = useSession();
 
   const sendMessage = useCallback(async (content: string) => {
     console.log('useStreamingChat: sendMessage called with:', content);
@@ -111,6 +116,8 @@ export function useStreamingChat(): StreamingChatHook {
                 if (accumulatedContent.trim()) {
                   addContext(`Assistant: ${accumulatedContent.trim()}`);
                 }
+                // Auto-save conversation after each complete response
+                setTimeout(() => autoSaveConversation(), 1000);
               }
 
               if (data.error) {
@@ -136,6 +143,79 @@ export function useStreamingChat(): StreamingChatHook {
     }
   }, [messages, isStreaming, getSystemPrompt, addContext]);
 
+  const saveConversation = useCallback(async () => {
+    if (!session?.user?.id || messages.length === 0) {
+      console.log('Cannot save conversation: no user ID or no messages');
+      return;
+    }
+
+    try {
+      const conversationData = {
+        userId: session.user.id,
+        messages: messages.map(msg => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp,
+          audioMetadata: msg.audioMetadata,
+        })),
+        metadata: {
+          title: messages[0]?.content?.slice(0, 50) || 'Untitled Conversation',
+          tags: ['chat'],
+        },
+      };
+
+      if (currentConversationId) {
+        // Update existing conversation
+        const response = await fetch('/api/conversations', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            conversationId: currentConversationId,
+            messages: conversationData.messages,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update conversation');
+        }
+
+        console.log('Conversation updated successfully');
+      } else {
+        // Create new conversation
+        const response = await fetch('/api/conversations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(conversationData),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save conversation');
+        }
+
+        const savedConversation = await response.json();
+        setCurrentConversationId(savedConversation._id);
+        console.log('New conversation saved with ID:', savedConversation._id);
+      }
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+    }
+  }, [messages, session, currentConversationId]);
+
+  const autoSaveConversation = useCallback(async () => {
+    // Only auto-save if we have meaningful conversation (at least 1 user message and 1 assistant response)
+    const userMessages = messages.filter(m => m.role === 'user');
+    const assistantMessages = messages.filter(m => m.role === 'assistant');
+    
+    if (userMessages.length >= 1 && assistantMessages.length >= 1) {
+      await saveConversation();
+    }
+  }, [messages, saveConversation]);
+
   const clearMessages = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -143,6 +223,7 @@ export function useStreamingChat(): StreamingChatHook {
     setMessages([]);
     setError(null);
     setIsStreaming(false);
+    setCurrentConversationId(null);
   }, []);
 
   return {
@@ -151,5 +232,7 @@ export function useStreamingChat(): StreamingChatHook {
     error,
     sendMessage,
     clearMessages,
+    saveConversation,
+    currentConversationId,
   };
 }

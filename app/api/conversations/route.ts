@@ -1,17 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Conversation from '@/models/Conversation';
+import { auth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
     
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('userId');
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = parseInt(searchParams.get('skip') || '0');
 
-    const query = userId ? { userId } : {};
+    // Always use the authenticated user's ID
+    const query = { userId: session.user.id };
     
     const conversations = await Conversation
       .find(query)
@@ -38,10 +48,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
     
     const body = await request.json();
-    const { userId, messages, metadata } = body;
+    const { messages, metadata } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
@@ -50,8 +69,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Always use the authenticated user's ID
     const conversation = new Conversation({
-      userId,
+      userId: session.user.id,
       messages,
       metadata,
     });
@@ -70,6 +90,15 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const session = await auth();
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
     
     const body = await request.json();
@@ -82,8 +111,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const conversation = await Conversation.findByIdAndUpdate(
-      conversationId,
+    // Ensure the conversation belongs to the authenticated user
+    const conversation = await Conversation.findOneAndUpdate(
+      { 
+        _id: conversationId,
+        userId: session.user.id
+      },
       { 
         messages,
         updatedAt: new Date(),
@@ -93,7 +126,7 @@ export async function PUT(request: NextRequest) {
 
     if (!conversation) {
       return NextResponse.json(
-        { error: 'Conversation not found' },
+        { error: 'Conversation not found or access denied' },
         { status: 404 }
       );
     }

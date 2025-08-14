@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { ChevronDown, User, Settings, LogOut } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function UserMenu() {
   const { data: session } = useSession();
@@ -75,14 +76,14 @@ export default function UserMenu() {
           </div>
           
           <div className="py-2">
-            <button className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200">
+            <Link href="/profile" className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200">
               <User className="w-4 h-4" />
               Profile
-            </button>
-            <button className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200">
+            </Link>
+            <Link href="/settings" className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200">
               <Settings className="w-4 h-4" />
               Settings
-            </button>
+            </Link>
           </div>
           
           <div className="border-t border-blue-100 pt-2">
