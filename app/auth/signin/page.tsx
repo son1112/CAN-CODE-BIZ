@@ -17,6 +17,7 @@ function SignInForm() {
   const [providers, setProviders] = useState<Record<string, Provider> | null>(null)
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
+  const timeout = searchParams.get('timeout')
   const callbackUrl = searchParams.get('callbackUrl') || '/'
 
   useEffect(() => {
@@ -115,6 +116,16 @@ function SignInForm() {
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 bg-red-500 rounded-full flex-shrink-0" />
                 <span className="font-medium">{getErrorMessage(error)}</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Timeout Message */}
+          {timeout && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200/50 rounded-2xl text-amber-800 text-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-amber-500 rounded-full flex-shrink-0" />
+                <span className="font-medium">Authentication took too long. Please try signing in again.</span>
               </div>
             </div>
           )}

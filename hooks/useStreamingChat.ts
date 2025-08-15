@@ -67,7 +67,7 @@ export function useStreamingChat(): StreamingChatHook {
             role: msg.role,
             content: msg.content,
           })),
-          systemPrompt: getSystemPrompt(),
+          systemPrompt: getSystemPrompt(content.trim()),
         }),
         signal: abortControllerRef.current.signal,
       });

@@ -1,26 +1,58 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Send, Trash2, Download, MessageCircle } from 'lucide-react';
+import { Send, Trash2, Download, MessageCircle, Type } from 'lucide-react';
 import Image from 'next/image';
 import VoiceInput from './VoiceInput';
 import AgentSelector from './AgentSelector';
 import Logo from './Logo';
 import UserMenu from './auth/UserMenu';
+import FormattedMessage from './FormattedMessage';
+import ThemeToggle from './ThemeToggle';
+import ChatMessageModal from './ChatMessageModal';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import { useAgent } from '@/contexts/AgentContext';
+import { useDropdown } from '@/contexts/DropdownContext';
 import { useConversationManager } from '@/hooks/useConversationManager';
 
 export default function ChatInterface() {
   const [inputValue, setInputValue] = useState('');
   const [conversationStarter, setConversationStarter] = useState('');
   const [isContinuousMode, setIsContinuousMode] = useState(false);
+  const [textSize, setTextSize] = useState<'sm' | 'base' | 'lg' | 'xl'>('base');
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
   const { messages, isStreaming, error, sendMessage, clearMessages } = useStreamingChat();
   const { currentAgent, clearContext } = useAgent();
+  const { isDropdownOpen } = useDropdown();
   const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
+  const { isDark } = useTheme();
+
+  // Get text size class based on current setting
+  const getTextSizeClass = () => {
+    switch (textSize) {
+      case 'sm': return 'text-sm';
+      case 'base': return 'text-base';
+      case 'lg': return 'text-lg';
+      case 'xl': return 'text-xl';
+      default: return 'text-base';
+    }
+  };
+
+  // Get prose size class for AI responses
+  const getProseSize = () => {
+    switch (textSize) {
+      case 'sm': return 'prose-sm';
+      case 'base': return 'prose-base';
+      case 'lg': return 'prose-lg';
+      case 'xl': return 'prose-xl';
+      default: return 'prose-base';
+    }
+  };
 
   // Set conversation starter on client side to avoid hydration mismatch
   useEffect(() => {
@@ -91,6 +123,16 @@ export default function ChatInterface() {
     }
   };
 
+  const handleMessageClick = (message: any) => {
+    setSelectedMessage(message);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMessage(null);
+  };
+
   const exportChat = () => {
     const chatContent = messages
       .map(msg => `${msg.role.toUpperCase()}: ${msg.content}`)
@@ -106,25 +148,65 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 relative overflow-hidden">
+    <div 
+      className="flex flex-col h-screen relative overflow-hidden bg-primary"
+      style={{
+        background: isDark 
+          ? 'linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)'
+          : 'linear-gradient(135deg, #fafafa 0%, #f0f9ff 50%, #e0f2fe 100%)'
+      }}
+    >
       {/* Modern Background Elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-200/20 to-sky-300/15 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-indigo-200/20 to-blue-100/25 rounded-full blur-3xl"></div>
+      <div 
+        className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl"
+        style={{
+          background: isDark
+            ? 'radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)'
+        }}
+      ></div>
+      <div 
+        className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl"
+        style={{
+          background: isDark
+            ? 'radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)'
+        }}
+      ></div>
       
       {/* Modern Header */}
-      <div className="relative flex items-center justify-between px-8 py-6 bg-white/95 backdrop-blur-xl border-b border-blue-200/50 shadow-lg shadow-blue-900/5">
-        <div className="flex items-center gap-6">
+      <div 
+        className="relative flex items-center justify-between backdrop-blur-xl border-b scale-locked-header" 
+        style={{ 
+          padding: '16px 24px', 
+          position: 'relative', 
+          zIndex: 100, 
+          width: '100%',
+          backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          borderColor: 'var(--border-primary)',
+          boxShadow: 'var(--shadow-lg)'
+        }}
+      >
+        <div className="flex items-center" style={{ gap: '16px' }}>
           <Logo 
             size="md" 
             onClick={() => window.location.reload()}
           />
-          <div className="hidden sm:block">
-            <AgentSelector />
-          </div>
+          <AgentSelector />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center" style={{ gap: '8px' }}>
           {isContinuousMode && (
-            <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-300 text-blue-800 rounded-full text-sm font-semibold backdrop-blur-sm">
+            <div 
+              className="flex items-center rounded-full font-semibold backdrop-blur-sm border" 
+              style={{ 
+                gap: '8px', 
+                padding: '8px 12px', 
+                fontSize: '12px',
+                backgroundColor: 'var(--accent-primary)',
+                borderColor: 'var(--accent-secondary)',
+                color: 'white'
+              }}
+            >
               <div className="relative">
                 <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
                 <div className="absolute inset-0 w-3 h-3 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
@@ -136,32 +218,127 @@ export default function ChatInterface() {
           {/* User Menu */}
           <UserMenu />
           
+          {/* Theme Toggle */}
+          <ThemeToggle />
+          
           <button
             onClick={toggleContinuousMode}
-            className={`p-3 rounded-xl transition-all duration-300 ${
-              isContinuousMode 
-                ? 'bg-gradient-to-br from-yellow-500 to-amber-600 text-white shadow-lg shadow-yellow-500/25 hover:shadow-xl hover:shadow-yellow-500/30 scale-105' 
-                : 'text-gray-600 hover:bg-gradient-to-br hover:from-blue-50 hover:to-sky-50 hover:text-blue-700 hover:shadow-md'
-            }`}
+            className="rounded-xl transition-all duration-300"
+            style={{ 
+              padding: '8px',
+              backgroundColor: isContinuousMode ? 'var(--accent-primary)' : 'transparent',
+              color: isContinuousMode ? 'white' : 'var(--text-secondary)',
+              border: `1px solid ${isContinuousMode ? 'var(--accent-primary)' : 'transparent'}`,
+              boxShadow: isContinuousMode ? 'var(--shadow-md)' : 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (!isContinuousMode) {
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                e.currentTarget.style.borderColor = 'var(--border-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isContinuousMode) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'transparent';
+              }
+            }}
             title={isContinuousMode ? 'Disable continuous conversation' : 'Enable continuous conversation'}
           >
-            <MessageCircle className="w-5 h-5" />
+            <MessageCircle style={{ width: '16px', height: '16px' }} />
           </button>
+          <div className="relative">
+            <button
+              onClick={() => {
+                const sizes: Array<'sm' | 'base' | 'lg' | 'xl'> = ['sm', 'base', 'lg', 'xl'];
+                const currentIndex = sizes.indexOf(textSize);
+                const nextIndex = (currentIndex + 1) % sizes.length;
+                setTextSize(sizes[nextIndex]);
+              }}
+              className="rounded-xl transition-all duration-300"
+              style={{ 
+                padding: '8px',
+                color: 'var(--text-secondary)',
+                border: '1px solid transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                e.currentTarget.style.borderColor = 'var(--border-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'transparent';
+              }}
+              title={`Text size: ${textSize.toUpperCase()}`}
+            >
+              <Type style={{ width: '16px', height: '16px' }} />
+              <span 
+                className="absolute rounded-full flex items-center justify-center font-bold" 
+                style={{ 
+                  top: '-2px', 
+                  right: '-2px', 
+                  fontSize: '10px', 
+                  width: '16px', 
+                  height: '16px',
+                  backgroundColor: 'var(--accent-primary)',
+                  color: 'white'
+                }}
+              >
+                {textSize === 'sm' ? 'S' : textSize === 'base' ? 'M' : textSize === 'lg' ? 'L' : 'XL'}
+              </span>
+            </button>
+          </div>
           <button
             onClick={exportChat}
             disabled={messages.length === 0}
-            className="p-3 text-gray-600 hover:bg-gradient-to-br hover:from-blue-50 hover:to-sky-50 hover:text-blue-700 rounded-xl disabled:opacity-50 transition-all duration-300 hover:shadow-md"
+            className="rounded-xl transition-all duration-300"
+            style={{ 
+              padding: '8px',
+              color: messages.length === 0 ? 'var(--text-quaternary)' : 'var(--text-secondary)',
+              border: '1px solid transparent',
+              opacity: messages.length === 0 ? 0.5 : 1
+            }}
+            onMouseEnter={(e) => {
+              if (messages.length > 0) {
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                e.currentTarget.style.borderColor = 'var(--border-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (messages.length > 0) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'transparent';
+              }
+            }}
             title="Export chat"
           >
-            <Download className="w-5 h-5" />
+            <Download style={{ width: '16px', height: '16px' }} />
           </button>
           <button
             onClick={handleClearMessages}
             disabled={messages.length === 0}
-            className="p-3 text-gray-600 hover:bg-gradient-to-br hover:from-red-50 hover:to-rose-50 hover:text-red-700 rounded-xl disabled:opacity-50 transition-all duration-300 hover:shadow-md"
+            className="rounded-xl transition-all duration-300"
+            style={{ 
+              padding: '8px',
+              color: messages.length === 0 ? 'var(--text-quaternary)' : 'var(--status-error)',
+              border: '1px solid transparent',
+              opacity: messages.length === 0 ? 0.5 : 1
+            }}
+            onMouseEnter={(e) => {
+              if (messages.length > 0) {
+                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                e.currentTarget.style.borderColor = 'var(--status-error)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (messages.length > 0) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'transparent';
+              }
+            }}
             title="Clear chat"
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 style={{ width: '16px', height: '16px' }} />
           </button>
         </div>
       </div>
@@ -170,8 +347,8 @@ export default function ChatInterface() {
       <div className="flex-1 flex overflow-hidden">
         {messages.length === 0 ? (
           /* Premium Empty State */
-          <div className="relative flex-1 flex items-center justify-center p-12">
-            <div className="relative max-w-2xl text-center space-y-12 z-10">
+          <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
+            <div className="relative max-w-2xl text-center space-y-12">
               {/* Agent Introduction */}
               <div className="space-y-8">
                 <div className="flex justify-center">
@@ -294,7 +471,7 @@ export default function ChatInterface() {
                       
                       {/* Message Bubble */}
                       <div 
-                        className="relative shadow-xl max-w-full backdrop-blur-sm transition-all duration-300 group-hover:shadow-2xl group-hover:scale-[1.02] rounded-[2rem] bg-gray-800 text-white"
+                        className="relative shadow-xl max-w-full backdrop-blur-sm transition-all duration-300 group-hover:shadow-2xl group-hover:scale-[1.02] rounded-[2rem] bg-gray-800 text-white cursor-pointer"
                         style={{ 
                           padding: '2rem 3rem',
                           border: `4px solid ${isUser ? '#1e40af' : '#eab308'}`,
@@ -302,20 +479,27 @@ export default function ChatInterface() {
                             ? '0 25px 50px -12px rgba(30, 64, 175, 0.3)' 
                             : '0 25px 50px -12px rgba(234, 179, 8, 0.2)'
                         }}
+                        onClick={() => handleMessageClick(message)}
+                        title="Click to expand message"
                       >
                         {!isUser && (
                           <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 rounded-[2rem]"></div>
                         )}
                         
                         {/* Message Content */}
-                        <div className="relative text-base leading-relaxed font-medium text-white">
+                        <div className="relative">
                           {isUser ? (
-                            message.content
+                            <div className={`${getTextSizeClass()} leading-relaxed font-medium text-white`}>
+                              {message.content}
+                            </div>
                           ) : (
-                            <div className="prose prose-sm max-w-none">
-                              {message.content || (isCurrentlyStreaming ? '' : '')}
+                            <>
+                              <FormattedMessage 
+                                content={message.content || (isCurrentlyStreaming ? '' : '')}
+                                textSizeClass={getTextSizeClass()}
+                              />
                               {isCurrentlyStreaming && (
-                                <div className="flex items-center gap-1 mt-2">
+                                <div className="flex items-center gap-1 mt-4">
                                   <div className="flex space-x-1">
                                     <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '0ms' }}></div>
                                     <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '150ms' }}></div>
@@ -323,7 +507,7 @@ export default function ChatInterface() {
                                   </div>
                                 </div>
                               )}
-                            </div>
+                            </>
                           )}
                         </div>
                         
@@ -353,26 +537,35 @@ export default function ChatInterface() {
 
       {/* Error display */}
       {error && (
-        <div className="mx-8 mb-4 p-4 bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/50 rounded-2xl text-red-800 text-sm shadow-lg shadow-red-500/10 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 bg-red-500 rounded-full flex-shrink-0 animate-pulse shadow-sm" />
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/50 rounded-xl text-red-800 shadow-sm shadow-red-500/10 backdrop-blur-sm" style={{ margin: '0 12px 6px 12px', padding: '8px', fontSize: '12px' }}>
+          <div className="flex items-center" style={{ gap: '6px' }}>
+            <div className="bg-red-500 rounded-full flex-shrink-0 animate-pulse shadow-sm" style={{ width: '6px', height: '6px' }} />
             <span className="font-medium">{error}</span>
           </div>
         </div>
       )}
 
-      {/* Premium Message Composer */}
-      <div className="relative border-t border-blue-200/50 bg-white/95 backdrop-blur-xl p-8 shadow-2xl shadow-black/5">
+      {/* Fixed-Size Message Composer */}
+      <div 
+        className="relative border-t border-blue-200/50 bg-white/95 backdrop-blur-xl shadow-2xl shadow-black/5 scale-locked-footer" 
+        style={{ 
+          padding: '12px 16px', 
+          position: 'relative', 
+          zIndex: 100, 
+          width: '100%'
+        }}
+      >
         <div className="absolute inset-0 bg-gradient-to-t from-blue-50/50 to-transparent"></div>
         <div className="relative max-w-6xl mx-auto">
-          <div className="flex gap-6 items-end">
-            <VoiceInput 
+          <div className="flex items-end" style={{ gap: '12px' }}>
+            {/* Temporarily disabled VoiceInput for debugging blank page */}
+            {/* <VoiceInput 
               onTranscript={handleVoiceTranscript}
               isDisabled={isStreaming}
               enableContinuousMode={isContinuousMode}
-            />
+            /> */}
             
-            <form onSubmit={handleSubmit} className="flex-1 flex gap-4">
+            <form onSubmit={handleSubmit} className="flex-1 flex" style={{ gap: '10px' }}>
               <div className="flex-1 relative">
                 <div className="relative">
                   <textarea
@@ -383,14 +576,20 @@ export default function ChatInterface() {
                     placeholder="Share your thoughts with the rubber ducky..."
                     disabled={isStreaming}
                     rows={1}
-                    className="w-full px-6 py-4 border-2 border-gray-200 bg-white/90 backdrop-blur-sm text-gray-900 rounded-2xl resize-none focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-400/20 disabled:opacity-50 disabled:bg-gray-50 transition-all duration-300 placeholder-gray-400 shadow-lg shadow-black/5 text-base font-medium"
-                    style={{ minHeight: '56px', maxHeight: '120px' }}
+                    className="w-full border-2 border-gray-200 bg-white/90 backdrop-blur-sm text-gray-900 rounded-xl resize-none focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 disabled:opacity-50 disabled:bg-gray-50 transition-all duration-300 placeholder-gray-400 shadow-lg shadow-black/5 font-medium"
+                    style={{ 
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      minHeight: '44px', 
+                      maxHeight: '100px' 
+                    }}
                   />
                   {inputValue.trim() && (
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                    <div className="absolute top-1/2 -translate-y-1/2" style={{ right: '16px' }}>
                       <div className="relative">
-                        <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
-                        <div className="absolute inset-0 w-3 h-3 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+                        <div className="bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50" style={{ width: '8px', height: '8px' }}></div>
+                        <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75" style={{ width: '8px', height: '8px' }}></div>
                       </div>
                     </div>
                   )}
@@ -399,15 +598,27 @@ export default function ChatInterface() {
               <button
                 type="submit"
                 disabled={!inputValue.trim() || isStreaming}
-                className="relative px-6 py-4 bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 text-white rounded-2xl hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center min-w-[56px] shadow-lg shadow-yellow-500/25 hover:shadow-xl hover:shadow-yellow-500/30 transform hover:scale-105"
+                className="relative bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 text-white rounded-xl hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center shadow-lg shadow-yellow-500/25 hover:shadow-xl hover:shadow-yellow-500/30 transform hover:scale-105"
+                style={{ 
+                  padding: '12px 16px',
+                  minWidth: '44px',
+                  height: '44px'
+                }}
               >
-                <Send className="w-5 h-5 filter drop-shadow-sm" />
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-transparent rounded-2xl"></div>
+                <Send className="filter drop-shadow-sm" style={{ width: '16px', height: '16px' }} />
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-transparent rounded-xl"></div>
               </button>
             </form>
           </div>
         </div>
       </div>
+
+      {/* Chat Message Modal */}
+      <ChatMessageModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        message={selectedMessage}
+      />
     </div>
   );
 }

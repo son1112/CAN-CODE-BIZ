@@ -1,5 +1,5 @@
-import ChatInterface from './components/ChatInterface';
 import AuthGuard from './components/auth/AuthGuard';
+import ChatInterface from './components/ChatInterface';
 
 export default function Home() {
   return (

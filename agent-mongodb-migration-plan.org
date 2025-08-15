@@ -1,0 +1,191 @@
+#+TITLE: Agent Persistence Migration Plan: JSON to MongoDB
+#+AUTHOR: Claude Code Assistant
+#+DATE: 2025-08-15
+#+STARTUP: overview
+
+* Overview
+** Current System Analysis
+*** Rubber Ducky Live (Web App)
+- *Storage*: Reads directly from ~node_modules/@son1112/rubber-ducky-node/agents.json~
+- *API*: ~/api/agents~ route handles GET (list) and POST (create/process)
+- *Interface*: Uses ~useAgents~ hook to interact with agents
+- *Agent Creation*: Creates agents via Claude API and writes directly to ~agents.json~
+
+*** Rubber Ducky Node (CLI Package)
+- *Storage*: Uses ~agents.json~ file in package root
+- *MongoDB*: Already has full MongoDB infrastructure with GridFS, connection pooling
+- *Features*: Agent management, validation, CRUD operations
+- *Architecture*: Modular design with dedicated ~agents.mjs~ module
+
+* Migration Plan for Rubber Ducky Node Team
+
+** Task Description
+Migrate Agent Persistence from JSON File to MongoDB
+
+*Context*: Currently agents are stored in ~agents.json~ file. We need to move to
+MongoDB for proper persistence, synchronization, and multi-user support.
+
+** Implementation Steps
+
+*** 1. Create Agent Schema & Model
+Create ~src/models/agent.mjs~
+
+#+BEGIN_SRC javascript
+export const AgentSchema = {
+  _id: ObjectId, // Auto-generated
+  name: String, // Unique identifier (kebab-case)
+  description: String, // Human readable description
+  prompt: String, // Template with {{transcript}} and {{userNote}} placeholders
+  createdAt: Date, // Creation timestamp
+  updatedAt: Date, // Last modification
+  userId: String, // Optional: for multi-user support later
+  isSystem: Boolean, // Flag for built-in vs user-created agents
+  version: Number // For versioning/migration support
+}
+#+END_SRC
+
+*** 2. Update src/agents.mjs Module
+Replace current JSON file operations with MongoDB operations:
+
+#+BEGIN_SRC javascript
+// New functions to implement:
+- async function getAgentsFromDB(userId = null)
+- async function saveAgentToDB(agent, userId = null)
+- async function updateAgentInDB(name, updates, userId = null)
+- async function deleteAgentFromDB(name, userId = null)
+- async function migrateAgentsFromJSON() // One-time migration helper
+#+END_SRC
+
+*** 3. Add Migration Command
+#+BEGIN_SRC bash
+# New CLI command
+rubber-ducky migrate-agents-to-db
+#+END_SRC
+
+This should:
+- Read existing ~agents.json~
+- Insert all agents into MongoDB with ~isSystem: true~
+- Create backup of ~agents.json~ as ~agents.json.backup~
+- Validate migration success
+
+*** 4. Update Existing Commands
+Modify these commands to use MongoDB instead of JSON:
+- ~list-agents~ - Query from MongoDB
+- ~add-agent~ - Insert to MongoDB
+- ~update-agent~ - Update in MongoDB
+- ~validate-agents~ - Validate from MongoDB data
+- All agent processing commands (~generate~, etc.)
+
+*** 5. Database Indexes
+Create indexes for performance:
+
+#+BEGIN_SRC javascript
+// In migration or startup
+db.agents.createIndex({ name: 1 }, { unique: true })
+db.agents.createIndex({ userId: 1 })
+db.agents.createIndex({ isSystem: 1 })
+#+END_SRC
+
+*** 6. Backward Compatibility
+Add fallback logic:
+- If MongoDB is unavailable, fall back to ~agents.json~
+- Add environment variable ~AGENTS_STORAGE_MODE~ (mongodb|file)
+- Ensure existing JSON-based workflows continue working
+
+*** 7. Update Package Interface
+For rubber-ducky-live integration, ensure these functions are available:
+
+#+BEGIN_SRC javascript
+// Export these functions for external use
+export async function getAllAgents(userId = null)
+export async function createAgent(agentData, userId = null)
+export async function updateAgent(name, updates, userId = null)
+export async function deleteAgent(name, userId = null)
+export async function getAgent(name, userId = null)
+#+END_SRC
+
+*** 8. Testing & Validation
+- Unit tests for all MongoDB agent operations
+- Integration tests for migration
+- Verify agent template validation still works
+- Test concurrent access scenarios
+- Validate performance with large agent sets
+
+*** 9. Documentation Updates
+Update CLAUDE.md to reflect:
+- New MongoDB dependency for agent storage
+- Migration instructions
+- New environment variables
+- Updated command descriptions
+
+*** 10. Version Bump & Publish
+- Bump version to 0.11.0 (minor version for new feature)
+- Update package.json dependencies if needed
+- Publish to npm
+
+* Integration Changes for Rubber Ducky Live
+
+After the rubber-ducky-node package is updated, here are the changes needed in
+rubber-ducky-live:
+
+** 1. Remove Direct File Access
+#+BEGIN_SRC javascript
+// REMOVE from /api/agents/route.ts
+const agentsFilePath = path.join(process.cwd(), 'node_modules', '@son1112', 'rubber-ducky-node', 'agents.json');
+const agentsData = fs.readFileSync(agentsFilePath, 'utf-8');
+#+END_SRC
+
+** 2. Use Package Functions
+#+BEGIN_SRC javascript
+// REPLACE with
+import { getAllAgents, createAgent, updateAgent, deleteAgent } from '@son1112/rubber-ducky-node';
+
+// In GET handler
+const agents = await getAllAgents(session.user.id);
+
+// In POST handler for creation
+const newAgent = await createAgent(agentData, session.user.id);
+#+END_SRC
+
+** 3. Add Environment Variables
+#+BEGIN_SRC bash
+# Add to .env.local (already have MongoDB setup)
+AGENTS_STORAGE_MODE=mongodb
+#+END_SRC
+
+** 4. Update Error Handling
+Handle MongoDB connection errors gracefully and provide meaningful error messages to users.
+
+* Benefits of This Migration
+
+1. *Proper Persistence*: No more file system dependencies
+2. *Multi-User Support*: Each user can have their own agents
+3. *Synchronization*: Real-time updates across sessions
+4. *Scalability*: Handle large numbers of agents efficiently
+5. *Backup & Recovery*: Built into MongoDB infrastructure
+6. *Version Control*: Track agent changes over time
+7. *Performance*: Indexed queries vs file parsing
+
+* Rollback Plan
+
+If issues arise:
+1. Set ~AGENTS_STORAGE_MODE=file~
+2. Restore from ~agents.json.backup~
+3. Previous version continues working with JSON files
+
+* Conclusion
+
+This plan ensures a smooth transition while maintaining backward compatibility and providing a robust foundation for future agent management features.
+
+** Next Steps
+1. Share this plan with rubber-ducky-node development team
+2. Begin implementation following the step-by-step guide
+3. Test thoroughly in development environment
+4. Deploy and update rubber-ducky-live integration
+5. Monitor for issues and performance improvements
+
+** Timeline Estimate
+- Phase 1 (Steps 1-6): 2-3 days
+- Phase 2 (Steps 7-10): 1-2 days
+- Integration & Testing: 1 day
+- Total: ~1 week for complete migration

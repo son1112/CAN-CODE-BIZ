@@ -57,7 +57,7 @@ export function useAgents(): UseAgentsReturn {
     } finally {
       setLoading(false);
     }
-  }, [session, status, selectedAgent]);
+  }, [session, status]);
 
   // Load agents when session is ready
   useEffect(() => {

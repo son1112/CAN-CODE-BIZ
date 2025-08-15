@@ -2,22 +2,117 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Light theme variables (default) */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Linear.app inspired color palette */
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --bg-tertiary: #f5f5f5;
+  --bg-quaternary: #eeeeee;
+  
+  --border-primary: #e1e1e1;
+  --border-secondary: #d4d4d4;
+  
+  --text-primary: #0d0d0d;
+  --text-secondary: #525252;
+  --text-tertiary: #737373;
+  --text-quaternary: #a3a3a3;
+  
+  --accent-primary: #5e6ad2;
+  --accent-secondary: #8b5cf6;
+  --accent-tertiary: #06b6d4;
+  
+  --status-success: #22c55e;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark theme variables */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  
+  /* Linear.app inspired dark palette */
+  --bg-primary: #0d0d0d;
+  --bg-secondary: #161616;
+  --bg-tertiary: #1f1f1f;
+  --bg-quaternary: #2a2a2a;
+  
+  --border-primary: #2a2a2a;
+  --border-secondary: #404040;
+  
+  --text-primary: #f5f5f5;
+  --text-secondary: #d4d4d4;
+  --text-tertiary: #a3a3a3;
+  --text-quaternary: #737373;
+  
+  --accent-primary: #8b5cf6;
+  --accent-secondary: #a855f7;
+  --accent-tertiary: #06b6d4;
+  
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #f87171;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: var(--font-roboto), system-ui, -apple-system, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Theme utility classes */
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-tertiary { background-color: var(--bg-tertiary); }
+.bg-quaternary { background-color: var(--bg-quaternary); }
+
+.border-primary { border-color: var(--border-primary); }
+.border-secondary { border-color: var(--border-secondary); }
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-quaternary { color: var(--text-quaternary); }
+
+.accent-primary { color: var(--accent-primary); }
+.accent-secondary { color: var(--accent-secondary); }
+.accent-tertiary { color: var(--accent-tertiary); }
+
+.bg-accent-primary { background-color: var(--accent-primary); }
+.bg-accent-secondary { background-color: var(--accent-secondary); }
+.bg-accent-tertiary { background-color: var(--accent-tertiary); }
+
+.status-success { color: var(--status-success); }
+.status-warning { color: var(--status-warning); }
+.status-error { color: var(--status-error); }
+
+.bg-status-success { background-color: var(--status-success); }
+.bg-status-warning { background-color: var(--status-warning); }
+.bg-status-error { background-color: var(--status-error); }
+
+.shadow-theme-sm { box-shadow: var(--shadow-sm); }
+.shadow-theme-md { box-shadow: var(--shadow-md); }
+.shadow-theme-lg { box-shadow: var(--shadow-lg); }
+.shadow-theme-xl { box-shadow: var(--shadow-xl); }
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 * {
@@ -32,3 +127,205 @@ body {
   overflow-x: hidden;
   height: 100%;
 }
+
+/* Temporarily disabled viewport-based scaling prevention for debugging */
+/*
+html {
+  font-size: 14px !important;
+  -webkit-text-size-adjust: none !important;
+  -moz-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+}
+
+body {
+  font-size: 14px !important;
+  -webkit-text-size-adjust: none !important;
+  -moz-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+}
+*/
+
+/* Targeted scaling prevention for header and footer only */
+.scale-locked-header {
+  font-size: 14px !important;
+  -webkit-text-size-adjust: none !important;
+  -moz-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+  height: 70px !important;
+  min-height: 70px !important;
+  max-height: 70px !important;
+}
+
+.scale-locked-header * {
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+  -webkit-text-size-adjust: none !important;
+  -moz-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+}
+
+.scale-locked-footer {
+  font-size: 14px !important;
+  -webkit-text-size-adjust: none !important;
+  -moz-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+  min-height: 80px !important;
+  max-height: 120px !important;
+}
+
+.scale-locked-footer * {
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+  -webkit-text-size-adjust: none !important;
+  -moz-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+}
+
+/* Temporarily disabled all scaling prevention CSS for debugging */
+/*
+.no-text-scale {
+  font-size: 14px !important;
+  line-height: 16.8px !important;
+  -webkit-text-size-adjust: none !important;
+  -moz-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+  transform: scale(1) !important;
+  zoom: 1 !important;
+  container-type: size;
+  width: 100%;
+  height: auto;
+}
+
+.no-text-scale * {
+  font-size: clamp(14px, 14px, 14px) !important;
+  line-height: clamp(16.8px, 16.8px, 16.8px) !important;
+  -webkit-text-size-adjust: none !important;
+  -moz-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+  transform: none !important;
+  zoom: 1 !important;
+  scale: 1 !important;
+}
+
+.no-text-scale button {
+  font-size: clamp(12px, 12px, 12px) !important;
+  padding: 8px !important;
+  min-height: 32px !important;
+  height: 32px !important;
+}
+
+.no-text-scale input,
+.no-text-scale textarea {
+  font-size: clamp(14px, 14px, 14px) !important;
+  min-height: 44px !important;
+}
+
+.no-text-scale .text-xs,
+.no-text-scale [class*="text-xs"] { 
+  font-size: calc(10px + 0vw) !important; 
+}
+
+.no-text-scale .text-sm,
+.no-text-scale [class*="text-sm"] { 
+  font-size: calc(12px + 0vw) !important; 
+}
+
+.no-text-scale .text-base,
+.no-text-scale [class*="text-base"] { 
+  font-size: calc(14px + 0vw) !important; 
+}
+
+.no-text-scale .text-lg,
+.no-text-scale [class*="text-lg"] { 
+  font-size: calc(14px + 0vw) !important; 
+}
+
+.ui-locked {
+  font-size: calc(14px + 0vw) !important;
+  -webkit-text-size-adjust: none !important;
+  -moz-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+  transform: none !important;
+  zoom: 1 !important;
+  scale: 1 !important;
+  min-height: auto !important;
+  max-height: none !important;
+}
+
+.ui-locked * {
+  font-size: inherit !important;
+  line-height: 1.2 !important;
+  -webkit-text-size-adjust: none !important;
+  -moz-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+  transform: none !important;
+  zoom: 1 !important;
+  scale: 1 !important;
+}
+
+.ui-locked {
+  height: auto !important;
+  min-height: 60px !important;
+  max-height: 80px !important;
+}
+*/
+
+/* Temporarily disabled Chrome/Webkit specific fixes for debugging */
+/*
+@supports (-webkit-appearance: none) {
+  html, body {
+    -webkit-text-size-adjust: none !important;
+    text-size-adjust: none !important;
+    zoom: 1 !important;
+    transform: none !important;
+  }
+  
+  .no-text-scale, .ui-locked {
+    -webkit-text-size-adjust: none !important;
+    text-size-adjust: none !important;
+    zoom: 1 !important;
+    transform: scale(1) !important;
+    -webkit-transform: scale(1) !important;
+  }
+  
+  .no-text-scale *, .ui-locked * {
+    -webkit-text-size-adjust: none !important;
+    text-size-adjust: none !important;
+    zoom: 1 !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+}
+*/
+
+/* Temporarily disabled all remaining scaling prevention CSS */
+/*
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  * {
+    -webkit-text-size-adjust: none !important;
+    text-size-adjust: none !important;
+  }
+  
+  .no-text-scale, .ui-locked {
+    -webkit-text-size-adjust: none !important;
+    text-size-adjust: none !important;
+    font-size: 14px !important;
+  }
+}
+
+@-moz-document url-prefix() {
+  .no-text-scale, .ui-locked {
+    -moz-text-size-adjust: none !important;
+  }
+}
+
+:-webkit-any(.no-text-scale, .ui-locked) {
+  -webkit-text-size-adjust: none !important;
+  font-size: 14px !important;
+}
+
+:-webkit-any(.no-text-scale *, .ui-locked *) {
+  -webkit-text-size-adjust: none !important;
+  font-size: inherit !important;
+}
+*/

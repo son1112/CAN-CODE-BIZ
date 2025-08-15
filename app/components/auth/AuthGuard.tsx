@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Logo from '@/app/components/Logo';
 
 interface AuthGuardProps {
@@ -12,11 +12,41 @@ interface AuthGuardProps {
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [timeoutReached, setTimeoutReached] = useState(false);
+  const [loadingStartTime] = useState(Date.now());
+  const [loadingDuration, setLoadingDuration] = useState(0);
+
+  // Add timeout for loading state
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (status === 'loading') {
+        const loadingTime = Date.now() - loadingStartTime;
+        console.log(`AuthGuard: Timeout reached after ${loadingTime}ms, redirecting to signin`);
+        setTimeoutReached(true);
+        router.push('/auth/signin?timeout=true');
+      }
+    }, 8000); // Reduced to 8 second timeout
+
+    return () => clearTimeout(timer);
+  }, [status, router, loadingStartTime]);
+
+  // Update loading duration counter
+  useEffect(() => {
+    if (status === 'loading') {
+      const interval = setInterval(() => {
+        setLoadingDuration(Date.now() - loadingStartTime);
+      }, 100);
+      
+      return () => clearInterval(interval);
+    }
+  }, [status, loadingStartTime]);
 
   useEffect(() => {
+    console.log('AuthGuard: status =', status, 'session =', !!session);
     if (status === 'loading') return; // Still loading
 
     if (!session) {
+      console.log('AuthGuard: No session, redirecting to signin');
       router.push('/auth/signin');
       return;
     }
@@ -40,6 +70,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-gray-900">Loading...</h2>
               <p className="text-gray-600">Checking your authentication status</p>
+              <p className="text-sm text-gray-500">
+                {Math.round(loadingDuration / 100) / 10}s
+              </p>
             </div>
           </div>
         </div>

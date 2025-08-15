@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { spawn } from 'child_process';
 import path from 'path';
-import fs from 'fs';
+import Anthropic from '@anthropic-ai/sdk';
+// Temporarily disable direct imports due to package export issues
+// Will use CLI approach until package exports are fixed
+// import { getAllAgents, createAgent as createAgentInPackage } from '@son1112/rubber-ducky-node';
 
 // Helper function to execute CLI commands
 async function executeCliCommand(command: string, args: string[] = []): Promise<{ stdout: string; stderr: string }> {
@@ -53,35 +56,37 @@ export async function GET() {
       );
     }
 
-    // Read agents directly from the CLI package's agents.json file
-    const agentsFilePath = path.join(process.cwd(), 'node_modules', '@son1112', 'rubber-ducky-node', 'agents.json');
-    
-    if (!fs.existsSync(agentsFilePath)) {
+    // Use CLI to get agents from MongoDB (temporary until package exports are fixed)
+    try {
+      const { stdout } = await executeCliCommand('list-agents');
+      
+      // Parse the CLI output to extract agent information
+      const agents = parseAgentListOutput(stdout);
+
       return NextResponse.json({
-        agents: [],
-        count: 0,
-        message: 'No agents configuration found'
+        agents: agents,
+        count: agents.length
       });
+    } catch (cliError) {
+      console.error('CLI agent listing error:', cliError);
+      // If CLI fails, this indicates MongoDB or package issues
+      throw new Error('Failed to connect to agent storage');
     }
-
-    const agentsData = fs.readFileSync(agentsFilePath, 'utf-8');
-    const agents = JSON.parse(agentsData);
-
-    // Transform agents data for the web app
-    const transformedAgents = agents.map((agent: { name: string; description: string; prompt: string }) => ({
-      name: agent.name,
-      description: agent.description,
-      prompt: agent.prompt
-    }));
-
-    return NextResponse.json({
-      agents: transformedAgents,
-      count: transformedAgents.length
-    });
-  } catch (error) {
+  } catch (error: any) {
     console.error('List agents error:', error);
+    
+    // Provide specific error messages based on error type
+    let errorMessage = 'Failed to fetch agents';
+    if (error.message?.includes('MongoDB') || error.message?.includes('connection')) {
+      errorMessage = 'Database connection error. Please check MongoDB connection.';
+    } else if (error.message?.includes('timeout')) {
+      errorMessage = 'Database request timed out. Please try again.';
+    } else if (error.message?.includes('authentication')) {
+      errorMessage = 'Database authentication failed.';
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to fetch agents' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -100,14 +105,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { action, agentName, transcript, agentDefinition } = body;
+    const { action, agentName, transcript, agentDefinition, voiceDescription } = body;
 
     switch (action) {
       case 'process':
         return await processWithAgent(agentName, transcript);
       
       case 'create':
-        return await createAgent(agentDefinition);
+        return await createAgent(voiceDescription || agentDefinition);
       
       default:
         return NextResponse.json(
@@ -166,56 +171,231 @@ async function processWithAgent(agentName: string, transcript: string) {
   }
 }
 
-// Create a new agent (this would be complex as the CLI uses interactive input)
-async function createAgent(_agentDefinition: Record<string, unknown>) {
-  // For now, return a placeholder response
-  // The CLI's add-agent command is fully interactive, so we'd need to 
-  // either modify the CLI or implement agent creation directly
-  return NextResponse.json(
-    { error: 'Agent creation via API not yet implemented' },
-    { status: 501 }
-  );
+// Create a new agent from voice description
+async function createAgent(voiceDescription: string) {
+  try {
+    if (!voiceDescription || typeof voiceDescription !== 'string') {
+      return NextResponse.json(
+        { error: 'Voice description is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get session for user ID
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Initialize Claude AI client
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
+    // Use Claude to analyze the voice description and create agent structure
+    const agentCreationPrompt = `You are an AI agent creation assistant. Based on the user's voice description, create a new AI agent with the following JSON structure:
+
+{
+  "name": "agent-name-in-kebab-case",
+  "description": "A clear, comprehensive description of what this agent does and its purpose",
+  "prompt": "A detailed prompt template that includes {{transcript}} placeholder where the user's input will be inserted"
 }
 
-// Parse the CLI list-agents output into structured data (currently unused)
-// function parseAgentListOutput(output: string): Array<{
-//   name: string;
-//   description: string;
-// }> {
-//   try {
-//     const lines = output.split('\n');
-//     const agents: Array<{ name: string; description: string }> = [];
-//     let currentAgent: { name?: string; description?: string } = {};
-//     
-//     for (const line of lines) {
-//       const trimmed = line.trim();
-//       if (!trimmed || trimmed.includes('──────') || trimmed.includes('Available Agents')) {
-//         continue;
-//       }
-//       if (trimmed.startsWith('✨ Total:')) {
-//         break;
-//       }
-//       if (trimmed && !trimmed.startsWith(' ')) {
-//         if (currentAgent.name) {
-//           agents.push({
-//             name: currentAgent.name,
-//             description: currentAgent.description || 'No description available'
-//           });
-//         }
-//         currentAgent = { name: trimmed };
-//       } else if (trimmed.startsWith(' ') && currentAgent.name) {
-//         currentAgent.description = (currentAgent.description || '') + ' ' + trimmed;
-//       }
-//     }
-//     if (currentAgent.name) {
-//       agents.push({
-//         name: currentAgent.name,
-//         description: currentAgent.description || 'No description available'
-//       });
-//     }
-//     return agents;
-//   } catch (error) {
-//     console.error('Error parsing agent list output:', error);
-//     return [];
-//   }
-// }
+Guidelines:
+1. Create a unique, descriptive name in kebab-case (lowercase with hyphens)
+2. Write a thorough description explaining the agent's purpose and capabilities
+3. Craft a detailed prompt that will guide the AI to perform the requested task effectively
+4. Always include {{transcript}} in the prompt where user input should be processed
+5. Make the prompt specific and actionable based on the user's description
+
+User's voice description of the agent they want:
+"${voiceDescription}"
+
+Respond with ONLY the JSON object, no additional text or explanation.`;
+
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 1000,
+      messages: [
+        {
+          role: 'user',
+          content: agentCreationPrompt
+        }
+      ]
+    });
+
+    const responseText = response.content[0].type === 'text' ? response.content[0].text : '';
+    
+    // Parse the Claude response to get the agent structure
+    let newAgent;
+    try {
+      newAgent = JSON.parse(responseText.trim());
+    } catch (parseError) {
+      console.error('Failed to parse Claude response:', responseText);
+      return NextResponse.json(
+        { error: 'Failed to generate valid agent structure' },
+        { status: 500 }
+      );
+    }
+
+    // Validate the agent structure
+    if (!newAgent.name || !newAgent.description || !newAgent.prompt) {
+      return NextResponse.json(
+        { error: 'Generated agent is missing required fields' },
+        { status: 500 }
+      );
+    }
+
+    // Create agent using CLI (temporary until package exports are fixed)
+    try {
+      // Write agent to temporary file
+      const fs = await import('fs').then(m => m.promises);
+      const os = await import('os');
+      const tempDir = os.tmpdir();
+      const tempFile = path.join(tempDir, `agent-${Date.now()}.json`);
+      
+      await fs.writeFile(tempFile, JSON.stringify(newAgent, null, 2), 'utf-8');
+
+      try {
+        // Use CLI to add the agent
+        const { stdout } = await executeCliCommand('add-agent', [tempFile]);
+        
+        // Clean up temp file
+        await fs.unlink(tempFile);
+
+        return NextResponse.json({
+          success: true,
+          agent: newAgent,
+          message: `Agent "${newAgent.name}" created successfully`
+        });
+      } catch (cliError: any) {
+        // Clean up temp file even if CLI fails
+        try {
+          await fs.unlink(tempFile);
+        } catch (cleanupError) {
+          console.warn('Failed to cleanup temp file:', cleanupError);
+        }
+        
+        // Handle specific CLI error cases
+        if (cliError.message?.includes('already exists') || cliError.message?.includes('duplicate')) {
+          return NextResponse.json(
+            { error: `Agent with name "${newAgent.name}" already exists` },
+            { status: 409 }
+          );
+        }
+        throw cliError;
+      }
+    } catch (error: any) {
+      console.error('Agent creation error:', error);
+      throw error;
+    }
+
+  } catch (error: any) {
+    console.error('Create agent error:', error);
+    
+    // Provide specific error messages based on error type
+    let errorMessage = 'Failed to create agent';
+    let statusCode = 500;
+    
+    if (error.message?.includes('MongoDB') || error.message?.includes('connection')) {
+      errorMessage = 'Database connection error. Unable to create agent.';
+    } else if (error.message?.includes('timeout')) {
+      errorMessage = 'Database request timed out. Please try again.';
+    } else if (error.message?.includes('authentication')) {
+      errorMessage = 'Database authentication failed.';
+    } else if (error.message?.includes('validation')) {
+      errorMessage = 'Agent validation failed. Please check the agent data.';
+      statusCode = 400;
+    } else if (error.message?.includes('duplicate') || error.message?.includes('already exists')) {
+      errorMessage = 'An agent with this name already exists.';
+      statusCode = 409;
+    }
+    
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: statusCode }
+    );
+  }
+}
+
+// Parse the CLI list-agents output into structured data
+function parseAgentListOutput(output: string): Array<{
+  name: string;
+  description: string;
+  prompt: string;
+}> {
+  try {
+    const lines = output.split('\n');
+    const agents: Array<{ name: string; description: string; prompt: string }> = [];
+    let currentAgent: { name?: string; description?: string; prompt?: string } = {};
+    let inAgentSection = false;
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      
+      // Skip header lines and separators
+      if (!trimmed || 
+          trimmed.includes('──────') || 
+          trimmed.includes('Available Agents') ||
+          trimmed.includes('MongoDB connection') ||
+          trimmed.includes('Pool config') ||
+          trimmed.includes('Agent collection') ||
+          trimmed.includes('Closing MongoDB') ||
+          trimmed.startsWith('✅') ||
+          trimmed.startsWith('📊') ||
+          trimmed.startsWith('🔄') ||
+          trimmed.startsWith('🔴')) {
+        continue;
+      }
+      
+      // Check for "No agents found" message
+      if (trimmed.includes('No agents found')) {
+        return []; // Return empty array if no agents
+      }
+      
+      // End parsing when we hit the total line
+      if (trimmed.startsWith('✨ Total:')) {
+        break;
+      }
+      
+      // Look for agent entries (non-indented lines that aren't system messages)
+      if (trimmed && !trimmed.startsWith(' ') && !trimmed.startsWith('[')) {
+        // Save previous agent if exists
+        if (currentAgent.name) {
+          agents.push({
+            name: currentAgent.name,
+            description: currentAgent.description || 'No description available',
+            prompt: currentAgent.prompt || 'No prompt available'
+          });
+        }
+        // Start new agent
+        currentAgent = { name: trimmed };
+        inAgentSection = true;
+      } else if (trimmed.startsWith(' ') && currentAgent.name && inAgentSection) {
+        // Agent description (indented lines)
+        if (!currentAgent.description) {
+          currentAgent.description = trimmed;
+        } else {
+          currentAgent.description += ' ' + trimmed;
+        }
+      }
+    }
+    
+    // Add the last agent if exists
+    if (currentAgent.name) {
+      agents.push({
+        name: currentAgent.name,
+        description: currentAgent.description || 'No description available',
+        prompt: currentAgent.prompt || 'No prompt available'
+      });
+    }
+    
+    return agents;
+  } catch (error) {
+    console.error('Error parsing agent list output:', error);
+    return [];
+  }
+}
