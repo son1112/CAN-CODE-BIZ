@@ -198,7 +198,14 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
     
     if (isInContinuousModeRef.current && continuousCallbackRef.current && shouldAutoSend(currentTranscript)) {
       clearAllTimers();
-      continuousCallbackRef.current(currentTranscript);
+      
+      // Use setTimeout to ensure this doesn't conflict with React render
+      setTimeout(() => {
+        if (continuousCallbackRef.current) {
+          continuousCallbackRef.current(currentTranscript);
+        }
+      }, 0);
+      
       setTranscript('');
       setInterimTranscript('');
       lastActivityTimeRef.current = Date.now();
@@ -349,10 +356,10 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
                   console.log('🔍 Debug: shouldSendImmediately:', shouldSendImmediately);
                   
                   if (shouldSendImmediately && shouldAutoSend(newTranscript)) {
-                    // Immediate send for natural conversation breaks
+                    // Immediate send for natural conversation breaks - defer to avoid render conflict
                     console.log('🚀 Triggering immediate send for natural conversation break');
                     clearAllTimers();
-                    setTimeout(() => triggerAutoSend('natural conversation break', newTranscript), 500);
+                    setTimeout(() => triggerAutoSend('natural conversation break', newTranscript), 100);
                   } else if (shouldAutoSend(newTranscript)) {
                     // Clear existing countdown to restart it
                     if (countdownTimerRef.current) {
@@ -496,9 +503,11 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
     setIsMuted(prev => {
       const newMutedState = !prev;
       
-      // When muting, trigger auto-send immediately (simulate silence)
+      // When muting, trigger auto-send immediately (simulate silence) - defer to avoid render conflict
       if (newMutedState && transcript.trim()) {
-        triggerAutoSend('muted - artificial silence');
+        setTimeout(() => {
+          triggerAutoSend('muted - artificial silence');
+        }, 0);
       }
       
       return newMutedState;

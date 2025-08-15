@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Send, Trash2, Download, MessageCircle, Type, History } from 'lucide-react';
+import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X } from 'lucide-react';
 import Image from 'next/image';
 import VoiceInput from './VoiceInput';
 import AgentSelector from './AgentSelector';
@@ -26,6 +26,12 @@ export default function ChatInterface() {
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSessionBrowserOpen, setIsSessionBrowserOpen] = useState(false);
+  const [showUserHistory, setShowUserHistory] = useState(false);
+  const [currentTranscript, setCurrentTranscript] = useState('');
+  const [isEditingSessionName, setIsEditingSessionName] = useState(false);
+  const [editingSessionName, setEditingSessionName] = useState('');
+  const [showNewSessionModal, setShowNewSessionModal] = useState(false);
+  const [newSessionName, setNewSessionName] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
@@ -34,7 +40,7 @@ export default function ChatInterface() {
   const { isDropdownOpen } = useDropdown();
   const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
   const { isDark } = useTheme();
-  const { currentSession, createSession, loadSession } = useSession();
+  const { currentSession, createSession, loadSession, renameSession } = useSession();
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
@@ -79,6 +85,7 @@ export default function ChatInterface() {
     if (inputValue.trim() && !isStreaming) {
       await sendMessage(inputValue);
       setInputValue('');
+      setCurrentTranscript('');
     }
   };
 
@@ -87,9 +94,15 @@ export default function ChatInterface() {
     console.log('ChatInterface: isStreaming:', isStreaming);
     console.log('ChatInterface: isContinuousMode:', isContinuousMode);
     
+    // Update current transcript for display
+    setCurrentTranscript(transcript);
+    
     if (transcript.trim() && !isStreaming) {
       console.log('ChatInterface: Sending voice message to Claude...');
       await sendMessage(transcript);
+      
+      // Clear transcript after sending
+      setCurrentTranscript('');
       
       // In continuous mode, determine if AI should respond based on conversation context
       if (isContinuousMode && isInConversation) {
@@ -115,9 +128,16 @@ export default function ChatInterface() {
     if (isContinuousMode) {
       endConversation();
     }
-    // Create a new session for the next conversation
+    // Show new session modal to allow naming
+    setShowNewSessionModal(true);
+  };
+
+  const handleCreateNewSession = async () => {
     try {
-      await createSession();
+      const sessionName = newSessionName.trim() || undefined;
+      await createSession(sessionName);
+      setShowNewSessionModal(false);
+      setNewSessionName('');
     } catch (error) {
       console.error('Failed to create new session:', error);
     }
@@ -218,6 +238,97 @@ export default function ChatInterface() {
             size="md" 
             onClick={() => window.location.reload()}
           />
+          
+          {/* Session Name Display/Edit */}
+          {currentSession && (
+            <div className="flex items-center gap-2">
+              {isEditingSessionName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editingSessionName}
+                    onChange={(e) => setEditingSessionName(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === 'Enter') {
+                        if (editingSessionName.trim()) {
+                          const success = await renameSession(currentSession.sessionId, editingSessionName.trim());
+                          if (success) {
+                            setIsEditingSessionName(false);
+                            setEditingSessionName('');
+                          }
+                        }
+                      } else if (e.key === 'Escape') {
+                        setIsEditingSessionName(false);
+                        setEditingSessionName('');
+                      }
+                    }}
+                    autoFocus
+                    className="px-2 py-1 rounded text-sm border"
+                    style={{
+                      backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
+                      borderColor: 'var(--border-primary)',
+                      color: 'var(--text-primary)',
+                      minWidth: '150px'
+                    }}
+                    placeholder="Session name..."
+                  />
+                  <button
+                    onClick={async () => {
+                      if (editingSessionName.trim()) {
+                        const success = await renameSession(currentSession.sessionId, editingSessionName.trim());
+                        if (success) {
+                          setIsEditingSessionName(false);
+                          setEditingSessionName('');
+                        }
+                      }
+                    }}
+                    className="p-1 rounded transition-colors"
+                    style={{ color: 'var(--status-success)' }}
+                    title="Save name"
+                  >
+                    <Check style={{ width: '14px', height: '14px' }} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingSessionName(false);
+                      setEditingSessionName('');
+                    }}
+                    className="p-1 rounded transition-colors"
+                    style={{ color: 'var(--text-tertiary)' }}
+                    title="Cancel"
+                  >
+                    <X style={{ width: '14px', height: '14px' }} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-sm font-medium truncate max-w-xs cursor-pointer hover:underline"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onClick={() => {
+                      setEditingSessionName(currentSession.name);
+                      setIsEditingSessionName(true);
+                    }}
+                    title="Click to rename session"
+                  >
+                    {currentSession.name}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setEditingSessionName(currentSession.name);
+                      setIsEditingSessionName(true);
+                    }}
+                    className="p-1 rounded transition-colors"
+                    style={{ color: 'var(--text-tertiary)' }}
+                    title="Rename session"
+                  >
+                    <Edit3 style={{ width: '14px', height: '14px' }} />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          
           <AgentSelector />
         </div>
         <div className="flex items-center" style={{ gap: '12px' }}>
@@ -470,82 +581,60 @@ export default function ChatInterface() {
             </div>
           </div>
         ) : (
-          /* Premium Chat Interface */
+          /* AI-Focused Chat Interface */
           <div className="relative flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto p-8 space-y-6">
-              {messages.map((message, index) => {
-                const isUser = message.role === 'user';
-                const isCurrentlyStreaming = isStreaming && !isUser && index === messages.length - 1;
-                
-                return (
-                  <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}>
-                    <div className={`flex gap-4 max-w-xs md:max-w-md lg:max-w-lg xl:max-w-2xl ${
-                      isUser ? 'flex-row-reverse' : 'flex-row'
-                    }`}>
-                      {/* Avatar */}
-                      <div 
-                        className="rounded-full flex items-center justify-center flex-shrink-0 relative shadow-lg transform transition-transform duration-300 group-hover:scale-110"
-                        style={{
-                          width: '64px',
-                          height: '64px',
-                          background: isUser 
-                            ? 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%)' 
-                            : 'linear-gradient(135deg, #eab308 0%, #f59e0b 50%, #f97316 100%)',
-                          boxShadow: isUser 
-                            ? '0 10px 15px -3px rgba(30, 58, 138, 0.3)' 
-                            : '0 10px 15px -3px rgba(234, 179, 8, 0.3)'
-                        }}
-                      >
-                        {isUser ? (
-                          <span className="text-white text-lg font-bold filter drop-shadow-sm">
-                            {message.audioMetadata ? '🎙️' : 'U'}
-                          </span>
-                        ) : (
-                          <Image
-                            src="/rubber-duck-avatar.png"
-                            alt="Rubber Ducky"
-                            width={56}
-                            height={56}
-                            className="object-cover scale-125 rounded-full"
-                            style={{ objectPosition: 'center center' }}
-                            priority
-                          />
-                        )}
-                        {isUser && message.audioMetadata && (
-                          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border border-white">
-                            <div className="w-1.5 h-1.5 bg-white rounded-full mx-auto mt-0.5" />
+            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+              {messages
+                .filter(message => message.role === 'assistant')
+                .map((message, index, aiMessages) => {
+                  const isCurrentlyStreaming = isStreaming && index === aiMessages.length - 1;
+                  
+                  return (
+                    <div key={message.id} className="group">
+                      {/* Full-width AI Response */}
+                      <div className="w-full">
+                        <div className="flex items-start gap-6">
+                          {/* AI Avatar */}
+                          <div 
+                            className="rounded-full flex items-center justify-center flex-shrink-0 relative shadow-lg transform transition-transform duration-300 group-hover:scale-110"
+                            style={{
+                              width: '64px',
+                              height: '64px',
+                              background: 'linear-gradient(135deg, #eab308 0%, #f59e0b 50%, #f97316 100%)',
+                              boxShadow: '0 10px 15px -3px rgba(234, 179, 8, 0.3)'
+                            }}
+                          >
+                            <Image
+                              src="/rubber-duck-avatar.png"
+                              alt="Rubber Ducky"
+                              width={56}
+                              height={56}
+                              className="object-cover scale-125 rounded-full"
+                              style={{ objectPosition: 'center center' }}
+                              priority
+                            />
                           </div>
-                        )}
-                      </div>
-                      
-                      {/* Message Bubble */}
-                      <div 
-                        className="relative shadow-xl max-w-full backdrop-blur-sm transition-all duration-300 group-hover:shadow-2xl group-hover:scale-[1.02] rounded-[2rem] bg-gray-800 text-white cursor-pointer"
-                        style={{ 
-                          padding: '2rem 3rem',
-                          border: `4px solid ${isUser ? '#1e40af' : '#eab308'}`,
-                          boxShadow: isUser 
-                            ? '0 25px 50px -12px rgba(30, 64, 175, 0.3)' 
-                            : '0 25px 50px -12px rgba(234, 179, 8, 0.2)'
-                        }}
-                        onClick={() => handleMessageClick(message)}
-                        title="Click to expand message"
-                      >
-                        {!isUser && (
-                          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 rounded-[2rem]"></div>
-                        )}
-                        
-                        {/* Message Content */}
-                        <div className="relative">
-                          {isUser ? (
-                            <div className={`${getTextSizeClass()} leading-relaxed font-medium text-white`}>
-                              {message.content}
-                            </div>
-                          ) : (
-                            <>
+                          
+                          {/* Full-width AI Message */}
+                          <div 
+                            className="flex-1 relative shadow-xl backdrop-blur-sm transition-all duration-300 group-hover:shadow-2xl rounded-[2rem] cursor-pointer"
+                            style={{ 
+                              padding: '2rem 3rem',
+                              border: '4px solid #eab308',
+                              boxShadow: '0 25px 50px -12px rgba(234, 179, 8, 0.2)',
+                              backgroundColor: isDark ? 'var(--bg-secondary)' : 'white'
+                            }}
+                            onClick={() => handleMessageClick(message)}
+                            title="Click to expand message"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 rounded-[2rem]"></div>
+                            
+                            {/* Message Content */}
+                            <div className="relative">
                               <FormattedMessage 
                                 content={message.content || (isCurrentlyStreaming ? '' : '')}
                                 textSizeClass={getTextSizeClass()}
+                                expandedView={true}
                               />
                               {isCurrentlyStreaming && (
                                 <div className="flex items-center gap-1 mt-4">
@@ -556,28 +645,27 @@ export default function ChatInterface() {
                                   </div>
                                 </div>
                               )}
-                            </>
-                          )}
-                        </div>
-                        
-                        {/* Timestamp and status */}
-                        <div className="text-xs mt-2 font-medium text-gray-300">
-                          {new Date().toLocaleTimeString('en-US', { 
-                            hour: 'numeric', 
-                            minute: '2-digit',
-                            hour12: true 
-                          })}
-                          {isCurrentlyStreaming && !isUser && (
-                            <span className="ml-2 inline-flex items-center">
-                              <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse shadow-sm"></span>
-                            </span>
-                          )}
+                            </div>
+                            
+                            {/* Timestamp and status */}
+                            <div className="text-xs mt-2 font-medium" style={{ color: 'var(--text-tertiary)' }}>
+                              {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
+                                hour: 'numeric', 
+                                minute: '2-digit',
+                                hour12: true 
+                              })}
+                              {isCurrentlyStreaming && (
+                                <span className="ml-2 inline-flex items-center">
+                                  <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse shadow-sm"></span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         )}
@@ -594,18 +682,93 @@ export default function ChatInterface() {
         </div>
       )}
 
-      {/* Fixed-Size Message Composer */}
+      {/* Enhanced Footer with User Input History */}
       <div 
-        className="relative border-t border-blue-200/50 bg-white/95 backdrop-blur-xl shadow-2xl shadow-black/5 scale-locked-footer" 
+        className="relative border-t backdrop-blur-xl shadow-2xl scale-locked-footer" 
         style={{ 
           padding: '12px 16px', 
           position: 'relative', 
           zIndex: 100, 
-          width: '100%'
+          width: '100%',
+          backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          borderColor: 'var(--border-primary)'
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-blue-50/50 to-transparent"></div>
-        <div className="relative max-w-6xl mx-auto">
+        <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(to top, rgba(13, 13, 13, 0.1), transparent)' : 'linear-gradient(to top, rgba(59, 130, 246, 0.05), transparent)' }}></div>
+        <div className="relative max-w-6xl mx-auto space-y-3">
+          
+          {/* User Input History Dropdown */}
+          {messages.filter(m => m.role === 'user').length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowUserHistory(!showUserHistory)}
+                className="flex items-center gap-2 text-sm font-medium transition-colors rounded-lg px-3 py-2"
+                style={{
+                  color: 'var(--text-secondary)',
+                  backgroundColor: showUserHistory ? 'var(--bg-secondary)' : 'transparent',
+                  border: `1px solid ${showUserHistory ? 'var(--border-primary)' : 'transparent'}`
+                }}
+              >
+                {showUserHistory ? <ChevronDown style={{ width: '14px', height: '14px' }} /> : <ChevronUp style={{ width: '14px', height: '14px' }} />}
+                Your Input History ({messages.filter(m => m.role === 'user').length})
+              </button>
+              
+              {showUserHistory && (
+                <div 
+                  className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border shadow-lg overflow-hidden"
+                  style={{
+                    backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
+                    borderColor: 'var(--border-primary)',
+                    maxHeight: '200px'
+                  }}
+                >
+                  <div className="overflow-y-auto max-h-48 p-2 space-y-1">
+                    {messages
+                      .filter(m => m.role === 'user')
+                      .slice(-10) // Show last 10 user inputs
+                      .reverse() // Most recent first
+                      .map((message, index) => (
+                        <div 
+                          key={message.id}
+                          className="p-2 rounded-lg cursor-pointer transition-colors text-sm"
+                          style={{
+                            backgroundColor: 'var(--bg-tertiary)',
+                            color: 'var(--text-secondary)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--bg-quaternary)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                          }}
+                          onClick={() => {
+                            setInputValue(message.content);
+                            setShowUserHistory(false);
+                          }}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>
+                              {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
+                                hour: 'numeric', 
+                                minute: '2-digit',
+                                hour12: true 
+                              })}
+                            </span>
+                            {message.audioMetadata && (
+                              <span className="text-green-500" style={{ fontSize: '11px' }}>🎙️</span>
+                            )}
+                          </div>
+                          <div className="line-clamp-2">{message.content}</div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Current Input/Transcription Area */}
           <div className="flex items-end" style={{ gap: '12px' }}>
             <VoiceInput 
               onTranscript={handleVoiceTranscript}
@@ -615,22 +778,46 @@ export default function ChatInterface() {
             
             <form onSubmit={handleSubmit} className="flex-1 flex" style={{ gap: '10px' }}>
               <div className="flex-1 relative">
+                {/* Current Transcription Display */}
+                {currentTranscript && (
+                  <div 
+                    className="mb-2 p-3 rounded-lg border"
+                    style={{
+                      backgroundColor: 'var(--bg-tertiary)',
+                      borderColor: 'var(--border-primary)',
+                      color: 'var(--text-secondary)'
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-green-500 text-xs font-medium">🎙️ Current Transcription:</span>
+                    </div>
+                    <div className="text-sm italic">"{currentTranscript}"</div>
+                  </div>
+                )}
+                
                 <div className="relative">
                   <textarea
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Share your thoughts with the rubber ducky..."
+                    placeholder={currentTranscript ? "Voice input active..." : "Share your thoughts with the rubber ducky..."}
                     disabled={isStreaming}
                     rows={1}
-                    className="w-full border-2 border-gray-200 bg-white/90 backdrop-blur-sm text-gray-900 rounded-xl resize-none focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 disabled:opacity-50 disabled:bg-gray-50 transition-all duration-300 placeholder-gray-400 shadow-lg shadow-black/5 font-medium"
+                    className="w-full border-2 backdrop-blur-sm resize-none focus:outline-none focus:ring-2 disabled:opacity-50 transition-all duration-300 font-medium rounded-xl"
                     style={{ 
                       padding: '12px 16px',
                       fontSize: '14px',
                       lineHeight: '20px',
                       minHeight: '44px', 
-                      maxHeight: '100px' 
+                      maxHeight: '100px',
+                      backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
+                      borderColor: inputValue.trim() ? 'var(--accent-primary)' : 'var(--border-primary)',
+                      color: 'var(--text-primary)',
+                      focusRingColor: 'var(--accent-primary)',
+                      '&::placeholder': {
+                        color: 'var(--text-tertiary)'
+                      }
                     }}
                   />
                   {inputValue.trim() && (
@@ -674,6 +861,134 @@ export default function ChatInterface() {
         onClose={() => setIsSessionBrowserOpen(false)}
         onSelectSession={handleSelectSession}
       />
+
+      {/* New Session Modal */}
+      {showNewSessionModal && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{
+              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)'
+            }}
+            onClick={() => {
+              setShowNewSessionModal(false);
+              setNewSessionName('');
+            }}
+          />
+          
+          {/* Modal */}
+          <div className="relative flex h-full items-center justify-center p-4">
+            <div 
+              className="relative w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden"
+              style={{
+                backgroundColor: isDark ? 'var(--bg-primary)' : 'white',
+                borderColor: 'var(--border-primary)'
+              }}
+            >
+              {/* Header */}
+              <div 
+                className="flex items-center justify-between border-b"
+                style={{
+                  padding: '20px 24px',
+                  borderColor: 'var(--border-primary)',
+                  backgroundColor: isDark ? 'var(--bg-secondary)' : 'var(--bg-secondary)'
+                }}
+              >
+                <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                  Start New Chat
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowNewSessionModal(false);
+                    setNewSessionName('');
+                  }}
+                  className="rounded-lg p-2 transition-colors"
+                  style={{
+                    color: 'var(--text-secondary)',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <X style={{ width: '16px', height: '16px' }} />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div style={{ padding: '24px' }}>
+                <div className="space-y-4">
+                  <div>
+                    <label 
+                      className="block text-sm font-medium mb-2" 
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      Session Name (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newSessionName}
+                      onChange={(e) => setNewSessionName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleCreateNewSession();
+                        } else if (e.key === 'Escape') {
+                          setShowNewSessionModal(false);
+                          setNewSessionName('');
+                        }
+                      }}
+                      placeholder="Give your chat a name..."
+                      className="w-full px-3 py-2 rounded-lg border transition-colors focus:outline-none focus:ring-2"
+                      style={{
+                        backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
+                        borderColor: 'var(--border-primary)',
+                        color: 'var(--text-primary)',
+                        focusRingColor: 'var(--accent-primary)'
+                      }}
+                      autoFocus
+                    />
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                      Leave empty to auto-generate a name
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={() => {
+                        setShowNewSessionModal(false);
+                        setNewSessionName('');
+                      }}
+                      className="flex-1 px-4 py-2 rounded-lg border transition-colors"
+                      style={{
+                        backgroundColor: 'transparent',
+                        borderColor: 'var(--border-primary)',
+                        color: 'var(--text-secondary)'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCreateNewSession}
+                      className="flex-1 px-4 py-2 rounded-lg transition-colors"
+                      style={{
+                        backgroundColor: 'var(--accent-primary)',
+                        color: 'white',
+                        border: 'none'
+                      }}
+                    >
+                      Start New Chat
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

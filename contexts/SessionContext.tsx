@@ -12,7 +12,9 @@ export interface SessionContextType {
   createSession: (name?: string, tags?: string[]) => Promise<SessionDocument>;
   loadSession: (sessionId: string) => Promise<SessionDocument | null>;
   updateSession: (sessionId: string, updates: Partial<SessionDocument>) => Promise<boolean>;
+  renameSession: (sessionId: string, name: string) => Promise<boolean>;
   deleteSession: (sessionId: string, permanent?: boolean) => Promise<boolean>;
+  reimportSession: (sessionId: string) => Promise<boolean>;
   
   // Message management
   addMessage: (message: Omit<SessionMessage, 'id' | 'timestamp'>) => Promise<boolean>;
@@ -164,6 +166,46 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const renameSession = async (sessionId: string, name: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/rename`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to rename session');
+      }
+
+      const { session: updatedSession } = await response.json();
+      
+      // Update current session if it's the one being renamed
+      if (currentSessionId === sessionId && currentSession) {
+        setCurrentSession({
+          ...currentSession,
+          name: updatedSession.name,
+          updatedAt: updatedSession.updatedAt
+        });
+      }
+      
+      await refreshSessions();
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to rename session';
+      setError(errorMessage);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const deleteSession = async (sessionId: string, permanent = false): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
@@ -189,6 +231,42 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete session';
+      setError(errorMessage);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const reimportSession = async (sessionId: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/reimport`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to re-import session');
+      }
+
+      const { session: updatedSession } = await response.json();
+      
+      // Update current session if it's the one being re-imported
+      if (currentSessionId === sessionId && currentSession) {
+        // Reload the session to get the updated messages
+        await loadSession(sessionId);
+      }
+      
+      await refreshSessions();
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to re-import session';
       setError(errorMessage);
       return false;
     } finally {
@@ -288,7 +366,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     createSession,
     loadSession,
     updateSession,
+    renameSession,
     deleteSession,
+    reimportSession,
     
     // Message management
     addMessage,

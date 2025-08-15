@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { History, Search, Calendar, MessageCircle, Archive, Trash2, X, Eye } from 'lucide-react';
+import { History, Search, Calendar, MessageCircle, Archive, Trash2, X, Eye, Database, Check, Square, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import SessionMigration from './SessionMigration';
 
 interface SessionBrowserProps {
   isOpen: boolean;
@@ -15,7 +16,10 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showArchived, setShowArchived] = useState(false);
-  const { sessions, loadSessions, deleteSession, currentSession } = useSession();
+  const [isMigrationOpen, setIsMigrationOpen] = useState(false);
+  const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const { sessions, loadSessions, deleteSession, reimportSession, currentSession } = useSession();
   const { isDark } = useTheme();
 
   // Load sessions when component opens
@@ -56,6 +60,68 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
     );
+  };
+
+  const handleMigrationComplete = () => {
+    // Reload sessions after migration
+    loadSessions(1, searchTerm, selectedTags);
+  };
+
+  const handleReimportSession = async (sessionId: string) => {
+    const confirmed = confirm('Are you sure you want to re-import this session? This will update the messages with enhanced parsing.');
+    
+    if (!confirmed) return;
+
+    const success = await reimportSession(sessionId);
+    if (success) {
+      // Reload sessions after re-import
+      loadSessions(1, searchTerm, selectedTags);
+    }
+  };
+
+  // Check if a session has CLI iterations (was migrated from CLI)
+  const hasCliIterations = (session: any) => {
+    return session.tags?.includes('cli-migrated') || 
+           session.tags?.includes('rubber-ducky-node') ||
+           (session.iterationCount && session.iterationCount > 0);
+  };
+
+  const toggleSessionSelection = (sessionId: string) => {
+    setSelectedSessions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sessionId)) {
+        newSet.delete(sessionId);
+      } else {
+        newSet.add(sessionId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllSessions = () => {
+    setSelectedSessions(new Set(sessions.map(s => s.sessionId)));
+  };
+
+  const clearAllSelections = () => {
+    setSelectedSessions(new Set());
+    setShowBulkActions(false);
+  };
+
+  const handleBulkDelete = async (permanent = false) => {
+    if (selectedSessions.size === 0) return;
+    
+    const action = permanent ? 'permanently delete' : 'archive';
+    const confirmed = confirm(`Are you sure you want to ${action} ${selectedSessions.size} session(s)?`);
+    
+    if (!confirmed) return;
+
+    const promises = Array.from(selectedSessions).map(sessionId => 
+      deleteSession(sessionId, permanent)
+    );
+    
+    await Promise.all(promises);
+    clearAllSelections();
+    loadSessions(1, searchTerm, selectedTags);
   };
 
   if (!isOpen) return null;
@@ -179,25 +245,128 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
               </div>
             )}
 
-            {/* Archive Toggle */}
-            <div className="flex items-center gap-2">
+            {/* Controls */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowArchived(!showArchived)}
+                  className="flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: showArchived ? 'var(--accent-primary)' : 'transparent',
+                    color: showArchived ? 'white' : 'var(--text-secondary)',
+                    border: `1px solid ${showArchived ? 'var(--accent-primary)' : 'var(--border-primary)'}`
+                  }}
+                >
+                  <Archive style={{ width: '14px', height: '14px' }} />
+                  Show Archived
+                </button>
+                
+                {sessions.length > 0 && (
+                  <button
+                    onClick={() => setShowBulkActions(!showBulkActions)}
+                    className="flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                    style={{
+                      backgroundColor: showBulkActions ? 'var(--bg-quaternary)' : 'transparent',
+                      color: 'var(--text-secondary)',
+                      border: `1px solid var(--border-primary)`
+                    }}
+                    title="Bulk actions"
+                  >
+                    <MoreHorizontal style={{ width: '14px', height: '14px' }} />
+                    Bulk Actions
+                  </button>
+                )}
+              </div>
+
               <button
-                onClick={() => setShowArchived(!showArchived)}
+                onClick={() => setIsMigrationOpen(true)}
                 className="flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
                 style={{
-                  backgroundColor: showArchived ? 'var(--accent-primary)' : 'transparent',
-                  color: showArchived ? 'white' : 'var(--text-secondary)',
-                  border: `1px solid ${showArchived ? 'var(--accent-primary)' : 'var(--border-primary)'}`
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-secondary)',
+                  border: `1px solid var(--border-primary)`
                 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--accent-primary)';
+                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                  e.currentTarget.style.borderColor = 'var(--border-primary)';
+                }}
+                title="Import CLI sessions"
               >
-                <Archive style={{ width: '14px', height: '14px' }} />
-                Show Archived
+                <Database style={{ width: '14px', height: '14px' }} />
+                Import CLI Sessions
               </button>
             </div>
+            
+            {/* Bulk Actions Bar */}
+            {showBulkActions && (
+              <div className="mt-4 p-3 rounded-lg border" style={{ 
+                backgroundColor: 'var(--bg-secondary)', 
+                borderColor: 'var(--border-primary)' 
+              }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      {selectedSessions.size} session{selectedSessions.size !== 1 ? 's' : ''} selected
+                    </span>
+                    {selectedSessions.size > 0 && (
+                      <button
+                        onClick={clearAllSelections}
+                        className="text-sm px-2 py-1 rounded transition-colors"
+                        style={{ color: 'var(--text-tertiary)' }}
+                      >
+                        Clear selection
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={selectAllSessions}
+                      className="px-3 py-1 rounded text-sm font-medium transition-colors"
+                      style={{
+                        backgroundColor: 'var(--accent-primary)',
+                        color: 'white'
+                      }}
+                    >
+                      Select All
+                    </button>
+                    {selectedSessions.size > 0 && (
+                      <>
+                        <button
+                          onClick={() => handleBulkDelete(false)}
+                          className="px-3 py-1 rounded text-sm font-medium transition-colors"
+                          style={{
+                            backgroundColor: 'var(--status-warning)',
+                            color: 'white'
+                          }}
+                        >
+                          Archive Selected
+                        </button>
+                        <button
+                          onClick={() => handleBulkDelete(true)}
+                          className="px-3 py-1 rounded text-sm font-medium transition-colors"
+                          style={{
+                            backgroundColor: 'var(--status-error)',
+                            color: 'white'
+                          }}
+                        >
+                          Delete Selected
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sessions List */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto px-6 pt-6 pb-32" style={{ maxHeight: 'calc(80vh - 200px)' }}>
             {sessions.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <History style={{ width: '48px', height: '48px', color: 'var(--text-quaternary)', marginBottom: '16px' }} />
@@ -220,11 +389,25 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                         : isDark ? 'var(--bg-secondary)' : 'white',
                       borderColor: currentSession?.sessionId === session.sessionId 
                         ? 'var(--accent-primary)' 
+                        : selectedSessions.has(session.sessionId) && showBulkActions
+                        ? 'var(--accent-primary)'
                         : 'var(--border-primary)',
-                      borderWidth: currentSession?.sessionId === session.sessionId ? '2px' : '1px'
+                      borderWidth: currentSession?.sessionId === session.sessionId || (selectedSessions.has(session.sessionId) && showBulkActions) ? '2px' : '1px'
                     }}
                   >
                     <div className="flex items-start justify-between">
+                      {showBulkActions && (
+                        <button
+                          onClick={() => toggleSessionSelection(session.sessionId)}
+                          className="flex items-center justify-center w-5 h-5 rounded border-2 transition-colors mr-3 mt-1"
+                          style={{
+                            borderColor: selectedSessions.has(session.sessionId) ? 'var(--accent-primary)' : 'var(--border-secondary)',
+                            backgroundColor: selectedSessions.has(session.sessionId) ? 'var(--accent-primary)' : 'transparent'
+                          }}
+                        >
+                          {selectedSessions.has(session.sessionId) && <Check style={{ width: '12px', height: '12px', color: 'white' }} />}
+                        </button>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 
@@ -296,6 +479,25 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                         >
                           <Eye style={{ width: '16px', height: '16px' }} />
                         </button>
+                        {hasCliIterations(session) && (
+                          <button
+                            onClick={() => handleReimportSession(session.sessionId)}
+                            className="p-2 rounded-lg transition-colors"
+                            style={{
+                              backgroundColor: 'transparent',
+                              color: 'var(--accent-secondary)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                            title="Re-import with enhanced parsing"
+                          >
+                            <RefreshCw style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDeleteSession(session.sessionId, false)}
                           className="p-2 rounded-lg transition-colors"
@@ -339,6 +541,13 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
           </div>
         </div>
       </div>
+
+      {/* Session Migration Modal */}
+      <SessionMigration
+        isOpen={isMigrationOpen}
+        onClose={() => setIsMigrationOpen(false)}
+        onComplete={handleMigrationComplete}
+      />
     </div>
   );
 }

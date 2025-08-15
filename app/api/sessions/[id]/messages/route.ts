@@ -75,7 +75,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: newMessage,
-      messageCount: updatedSession.messages.length
+      messageCount: updatedSession.messages?.length || 0
     });
 
   } catch (error) {
