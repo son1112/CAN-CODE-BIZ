@@ -115,7 +115,7 @@ export default function Logo({
           </h1>
           {size === 'lg' || size === 'xl' ? (
             <p className="text-sm text-gray-600 font-medium">
-              Your premium AI thinking companion 🦆
+Your premium AI thinking companion
             </p>
           ) : null}
         </div>

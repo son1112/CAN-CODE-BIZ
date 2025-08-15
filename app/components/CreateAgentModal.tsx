@@ -339,7 +339,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                     <Logo size="md" variant="minimal" showText={false} />
                     <div>
                       <h3 className="font-semibold text-blue-900 mb-2">
-                        🦆 {inputMode === 'voice' ? 'Voice Recording Guide:' : 'Agent Creation Guide:'}
+{inputMode === 'voice' ? 'Voice Recording Guide:' : 'Agent Creation Guide:'}
                       </h3>
                       {inputMode === 'voice' ? (
                         <ul className="text-sm text-blue-800 space-y-2">

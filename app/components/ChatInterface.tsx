@@ -19,6 +19,42 @@ import { useConversationManager } from '@/hooks/useConversationManager';
 import { useSession } from '@/contexts/SessionContext';
 import SessionBrowser from './SessionBrowser';
 
+// Random Gemini Image Component
+function RandomGeminiImage() {
+  const [selectedImage, setSelectedImage] = useState<string>('');
+  
+  const geminiImages = [
+    '/Gemini_Generated_Image_6xo6qa6xo6qa6xo6.png',
+    '/Gemini_Generated_Image_kn11nekn11nekn11.png',
+    '/Gemini_Generated_Image_nqfygcnqfygcnqfy.png'
+  ];
+  
+  useEffect(() => {
+    // Select a random image on component mount
+    const randomIndex = Math.floor(Math.random() * geminiImages.length);
+    setSelectedImage(geminiImages[randomIndex]);
+  }, []);
+  
+  if (!selectedImage) return null;
+  
+  return (
+    <div className="relative w-full max-w-4xl mx-auto">
+      <Image
+        src={selectedImage}
+        alt="Rubber Ducky AI Companion"
+        width={800}
+        height={600}
+        className="w-full h-auto object-cover rounded-3xl shadow-2xl shadow-black/10"
+        style={{
+          filter: 'drop-shadow(0 25px 50px -12px rgba(0, 0, 0, 0.25))',
+          maxHeight: '400px'
+        }}
+        priority
+      />
+    </div>
+  );
+}
+
 export default function ChatInterface() {
   const [inputValue, setInputValue] = useState('');
   const [conversationStarter, setConversationStarter] = useState('');
@@ -518,11 +554,11 @@ export default function ChatInterface() {
               {/* Agent Introduction */}
               <div className="space-y-8">
                 <div className="flex justify-center">
-                  <Logo size="xl" variant="minimal" showText={false} />
+                  <RandomGeminiImage />
                 </div>
                 <div className="space-y-4">
                   <h2 className="text-4xl font-bold text-gray-900 leading-tight">
-                    🦆 Hi! I&apos;m your Rubber Ducky
+                    Hi! I&apos;m your Rubber Ducky
                   </h2>
                   <p className="text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium">
                     I&apos;m here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
@@ -537,7 +573,7 @@ export default function ChatInterface() {
                     <div className="flex items-start gap-6">
                       <Logo size="md" variant="minimal" showText={false} />
                       <div className="text-left space-y-3">
-                        <p className="text-gray-700 font-semibold text-base">🦆 Let&apos;s chat about:</p>
+                        <p className="text-gray-700 font-semibold text-base">Let&apos;s chat about:</p>
                         <p className="text-gray-800 text-lg leading-relaxed font-medium italic">
                           &ldquo;{conversationStarter}&rdquo;
                         </p>
@@ -549,7 +585,7 @@ export default function ChatInterface() {
 
               {currentAgent.keyTopics && currentAgent.keyTopics.length > 0 && (
                 <div className="space-y-6">
-                  <p className="text-2xl font-bold text-gray-800">🦆 What we can explore together:</p>
+                  <p className="text-2xl font-bold text-gray-800">What we can explore together:</p>
                   <div className="flex flex-wrap gap-4 justify-center">
                     {currentAgent.keyTopics.map((topic) => (
                       <span
@@ -578,7 +614,7 @@ export default function ChatInterface() {
                       <span className="text-2xl filter drop-shadow-sm animate-pulse">🦆</span>
                     </div>
                     <div className="text-left space-y-2">
-                      <span className="text-blue-800 font-bold text-lg">🦆 Rubber Ducky Live!</span>
+                      <span className="text-blue-800 font-bold text-lg">Rubber Ducky Live!</span>
                       <span className="text-blue-700 text-sm font-medium">I&apos;m listening and ready to help you think</span>
                     </div>
                   </div>

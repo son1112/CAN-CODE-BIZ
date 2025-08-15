@@ -89,8 +89,8 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
           style={{ padding: '12px' }}
           title={
             enableContinuousMode 
-              ? (isInContinuousMode ? '🛑 Stop rubber ducky chat' : '🦆 Start rubber ducky chat!')
-              : (isListening ? '⏹️ Stop recording' : '🦆 Start recording')
+              ? (isInContinuousMode ? '🛑 Stop chat' : 'Start chat!')
+              : (isListening ? '⏹️ Stop recording' : 'Start recording')
           }
         >
           {(isListening || isInContinuousMode) ? (
@@ -131,7 +131,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
             disabled={isDisabled}
             className="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 text-white rounded-xl transition-all duration-300 disabled:opacity-50 shadow-lg shadow-yellow-500/25 hover:shadow-xl transform hover:scale-105"
             style={{ padding: '8px' }}
-            title="🦆 Send to Rubber Ducky"
+            title="Send message"
           >
             <Send style={{ width: '16px', height: '16px' }} className="filter drop-shadow-sm" />
           </button>
@@ -142,7 +142,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
             <div className="flex items-center" style={{ gap: '8px', marginBottom: '8px' }}>
               <span className="font-semibold text-gray-700" style={{ fontSize: '12px' }}>
                 {isInContinuousMode 
-                  ? (isMuted ? '🔇 Muted (not listening) - unmute to continue' : '🦆 Rubber ducky listening...')
+                  ? (isMuted ? '🔇 Muted (not listening) - unmute to continue' : 'Listening...')
                   : '🔴 Recording...'
                 }
               </span>
@@ -195,8 +195,8 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
           {!isListening && !isInContinuousMode && !transcript.trim() && (
             <div className="text-gray-600 leading-relaxed font-medium" style={{ fontSize: '10px', padding: '2px 0' }}>
               {enableContinuousMode 
-                ? '🦆 Click to start rubber ducky mode'
-                : '🦆 Click to talk to your rubber ducky'
+                ? 'Click to start chat mode'
+                : 'Click to talk'
               }
             </div>
           )}

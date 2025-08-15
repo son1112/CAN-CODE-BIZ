@@ -112,7 +112,7 @@ export default function ChatMessageModal({ isOpen, onClose, message }: ChatMessa
                   {message.audioMetadata ? '🎙️' : 'U'}
                 </span>
               ) : (
-                <span className="text-2xl">🦆</span>
+                <span className="text-white text-sm font-bold">AI</span>
               )}
             </div>
 

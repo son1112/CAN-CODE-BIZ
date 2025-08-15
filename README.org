@@ -2,15 +2,49 @@
 
 Your friendly rubber duck AI companion for thinking out loud, problem-solving, and casual conversations. Powered by Claude Sonnet AI and built with Next.js.
 
-** Features
+** Features & Screenshots
 
+*** Core Features
 - 🎤 Live speech-to-text conversion using AssemblyAI Real-time Streaming
 - 🦆 Real-time streaming responses from your AI rubber ducky
+- 🤖 13+ specialized AI agent personalities (interview coach, storyteller, business advisor, etc.)
 - 📝 Markdown support with syntax highlighting
-- 💾 MongoDB conversation persistence
+- 💾 MongoDB conversation persistence with session management
 - 📱 Responsive design for all devices
 - 🔄 Server-Sent Events (SSE) for streaming
+- 🌓 Light/Dark mode toggle
 - 📥 Export chat conversations
+- 🎨 Beautiful cycling image animations during loading states
+
+*** Main Interface
+The clean, friendly interface welcomes users with a rubber ducky theme and easy-to-use controls.
+
+[[./docs/screenshots/01-main-interface.png]]
+
+*** Comprehensive Session Management
+Browse, search, and manage all your chat sessions with filtering by tags and full-text search.
+
+[[./docs/screenshots/02-session-history-browser.png]]
+
+*** Multiple AI Agent Personalities
+Choose from 13+ specialized AI agents including interview coaches, storytellers, business advisors, and technical specialists.
+
+[[./docs/screenshots/03-agent-selector-dropdown.png]]
+
+*** Custom Agent Creation
+Create your own AI agents using either voice recording or text input with comprehensive guidance.
+
+[[./docs/screenshots/04-create-agent-modal.png]]
+
+*** Beautiful Dark Mode
+Professional dark theme for comfortable extended use.
+
+[[./docs/screenshots/05-dark-mode-interface.png]]
+
+*** Active Chat Experience
+Engaging real-time conversations with proper message formatting and export capabilities.
+
+[[./docs/screenshots/06-active-chat-conversation.png]]
 
 ** Prerequisites
 
