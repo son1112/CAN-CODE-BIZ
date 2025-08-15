@@ -27,6 +27,8 @@ export interface SessionContextType {
   
   // UI state
   isLoading: boolean;
+  isLoadingSession: boolean;
+  isProcessingMessage: boolean;
   error: string | null;
   
   // Auto-session management
@@ -42,6 +44,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [sessions, setSessions] = useState<SessionDocument[]>([]);
   const [messages, setMessages] = useState<SessionMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
+  const [isProcessingMessage, setIsProcessingMessage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [autoCreateSession, setAutoCreateSession] = useState(true);
 
@@ -101,7 +105,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loadSession = async (sessionId: string): Promise<SessionDocument | null> => {
-    setIsLoading(true);
+    setIsLoadingSession(true);
     setError(null);
     
     try {
@@ -126,7 +130,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setError(errorMessage);
       return null;
     } finally {
-      setIsLoading(false);
+      setIsLoadingSession(false);
     }
   };
 
@@ -282,6 +286,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
 
+    setIsProcessingMessage(true);
     setError(null);
     
     try {
@@ -317,6 +322,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add message';
       setError(errorMessage);
       return false;
+    } finally {
+      setIsProcessingMessage(false);
     }
   };
 
@@ -381,6 +388,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     
     // UI state
     isLoading,
+    isLoadingSession,
+    isProcessingMessage,
     error,
     
     // Auto-session management

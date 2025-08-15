@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { History, Search, Calendar, MessageCircle, Archive, Trash2, X, Eye, Database, Check, Square, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { SessionOperationIndicator } from './LoadingIndicator';
 import SessionMigration from './SessionMigration';
 
 interface SessionBrowserProps {
@@ -19,7 +20,8 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   const [isMigrationOpen, setIsMigrationOpen] = useState(false);
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
-  const { sessions, loadSessions, deleteSession, reimportSession, currentSession } = useSession();
+  const [isProcessingOperation, setIsProcessingOperation] = useState(false);
+  const { sessions, loadSessions, deleteSession, reimportSession, currentSession, isLoading } = useSession();
   const { isDark } = useTheme();
 
   // Load sessions when component opens
@@ -47,10 +49,15 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   };
 
   const handleDeleteSession = async (sessionId: string, permanent = false) => {
-    const success = await deleteSession(sessionId, permanent);
-    if (success) {
-      // Reload sessions after deletion
-      loadSessions(1, searchTerm, selectedTags);
+    setIsProcessingOperation(true);
+    try {
+      const success = await deleteSession(sessionId, permanent);
+      if (success) {
+        // Reload sessions after deletion
+        loadSessions(1, searchTerm, selectedTags);
+      }
+    } finally {
+      setIsProcessingOperation(false);
     }
   };
 
@@ -72,10 +79,15 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
     
     if (!confirmed) return;
 
-    const success = await reimportSession(sessionId);
-    if (success) {
-      // Reload sessions after re-import
-      loadSessions(1, searchTerm, selectedTags);
+    setIsProcessingOperation(true);
+    try {
+      const success = await reimportSession(sessionId);
+      if (success) {
+        // Reload sessions after re-import
+        loadSessions(1, searchTerm, selectedTags);
+      }
+    } finally {
+      setIsProcessingOperation(false);
     }
   };
 
@@ -366,7 +378,13 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
           </div>
 
           {/* Sessions List */}
-          <div className="flex-1 overflow-y-auto px-6 pt-6 pb-32" style={{ maxHeight: 'calc(80vh - 200px)' }}>
+          <div className="relative flex-1 overflow-y-auto px-6 pt-6 pb-32" style={{ maxHeight: 'calc(80vh - 200px)' }}>
+            {/* Loading overlay */}
+            {isProcessingOperation && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)', backdropFilter: 'blur(2px)' }}>
+                <SessionOperationIndicator operation="Processing..." />
+              </div>
+            )}
             {sessions.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <History style={{ width: '48px', height: '48px', color: 'var(--text-quaternary)', marginBottom: '16px' }} />

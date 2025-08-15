@@ -10,6 +10,7 @@ import UserMenu from './auth/UserMenu';
 import FormattedMessage from './FormattedMessage';
 import ThemeToggle from './ThemeToggle';
 import ChatMessageModal from './ChatMessageModal';
+import { SessionLoadingIndicator, ChatThinkingIndicator } from './LoadingIndicator';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import { useAgent } from '@/contexts/AgentContext';
@@ -40,7 +41,7 @@ export default function ChatInterface() {
   const { isDropdownOpen } = useDropdown();
   const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
   const { isDark } = useTheme();
-  const { currentSession, createSession, loadSession, renameSession } = useSession();
+  const { currentSession, createSession, loadSession, renameSession, isLoadingSession, isProcessingMessage } = useSession();
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
@@ -505,7 +506,12 @@ export default function ChatInterface() {
 
       {/* Modern Chat Interface */}
       <div className="flex-1 flex overflow-hidden">
-        {messages.length === 0 ? (
+        {isLoadingSession ? (
+          /* Session Loading State */
+          <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
+            <SessionLoadingIndicator />
+          </div>
+        ) : messages.length === 0 ? (
           /* Premium Empty State */
           <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
             <div className="relative max-w-2xl text-center space-y-12">
@@ -666,6 +672,104 @@ export default function ChatInterface() {
                     </div>
                   );
                 })}
+              
+              {/* Show thinking bubble when processing a message */}
+              {isProcessingMessage && (
+                <div className="group">
+                  {/* Thinking bubble that matches AI response style */}
+                  <div className="w-full">
+                    <div className="flex items-start gap-6">
+                      {/* AI Avatar */}
+                      <div 
+                        className="rounded-full flex items-center justify-center flex-shrink-0 relative shadow-lg"
+                        style={{
+                          width: '64px',
+                          height: '64px',
+                          background: 'linear-gradient(135deg, #eab308 0%, #f59e0b 50%, #f97316 100%)',
+                          boxShadow: '0 10px 15px -3px rgba(234, 179, 8, 0.3)'
+                        }}
+                      >
+                        <Image
+                          src="/rubber-duck-avatar.png"
+                          alt="Rubber Ducky"
+                          width={56}
+                          height={56}
+                          className="object-cover scale-125 rounded-full"
+                          style={{ objectPosition: 'center center' }}
+                          priority
+                        />
+                      </div>
+                      
+                      {/* Thinking bubble */}
+                      <div 
+                        className="flex-1 relative shadow-xl backdrop-blur-sm rounded-[2rem] animate-pulse"
+                        style={{ 
+                          padding: '2rem 3rem',
+                          border: '4px solid #eab308',
+                          boxShadow: '0 25px 50px -12px rgba(234, 179, 8, 0.2)',
+                          backgroundColor: isDark ? 'var(--bg-secondary)' : 'white'
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 rounded-[2rem]"></div>
+                        
+                        {/* Thinking content */}
+                        <div className="relative flex items-center justify-center py-4">
+                          <div className="flex items-center space-x-3">
+                            {/* Rubber Ducky icon with gentle bounce */}
+                            <div className="relative">
+                              <div 
+                                className="text-2xl animate-bounce"
+                                style={{ 
+                                  animationDuration: '2s',
+                                  animationIterationCount: 'infinite'
+                                }}
+                              >
+                                🦆
+                              </div>
+                              {/* Thinking bubbles */}
+                              <div className="absolute -top-1 -right-1">
+                                <div className="flex space-x-0.5">
+                                  {[0, 1, 2].map((i) => (
+                                    <div
+                                      key={i}
+                                      className="w-1 h-1 rounded-full animate-pulse"
+                                      style={{
+                                        backgroundColor: 'var(--accent-primary)',
+                                        animationDelay: `${i * 0.3}s`,
+                                        animationDuration: '1.5s'
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Thinking text with animated dots */}
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg font-medium" style={{ color: 'var(--text-secondary)' }}>
+                                Rubber Ducky is thinking
+                              </span>
+                              <div className="flex items-center space-x-1">
+                                {[0, 1, 2].map((i) => (
+                                  <div
+                                    key={i}
+                                    className="w-2 h-2 rounded-full animate-pulse"
+                                    style={{
+                                      backgroundColor: 'var(--text-tertiary)',
+                                      animationDelay: `${i * 0.4}s`,
+                                      animationDuration: '1.6s'
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
