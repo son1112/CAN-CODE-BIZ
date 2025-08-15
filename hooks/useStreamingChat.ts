@@ -2,7 +2,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Message } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { useAgent } from '@/contexts/AgentContext';
-import { useSession } from 'next-auth/react';
+import { useSession as useAuthSession } from 'next-auth/react';
+import { useSession } from '@/contexts/SessionContext';
 
 interface StreamingChatHook {
   messages: Message[];
@@ -10,18 +11,15 @@ interface StreamingChatHook {
   error: string | null;
   sendMessage: (content: string) => Promise<void>;
   clearMessages: () => void;
-  saveConversation: () => Promise<void>;
-  currentConversationId: string | null;
 }
 
 export function useStreamingChat(): StreamingChatHook {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const { getSystemPrompt, addContext } = useAgent();
-  const { data: session } = useSession();
+  const { getSystemPrompt, addContext, currentAgent } = useAgent();
+  const { data: authSession } = useAuthSession();
+  const { messages, addMessage, currentSession } = useSession();
 
   const sendMessage = useCallback(async (content: string) => {
     console.log('useStreamingChat: sendMessage called with:', content);
@@ -31,31 +29,25 @@ export function useStreamingChat(): StreamingChatHook {
       return;
     }
 
-    const userMessage: Message = {
-      id: uuidv4(),
-      role: 'user',
-      content: content.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
     setIsStreaming(true);
     setError(null);
 
-    const assistantMessage: Message = {
-      id: uuidv4(),
-      role: 'assistant',
-      content: '',
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, assistantMessage]);
-
     try {
-      abortControllerRef.current = new AbortController();
-      
+      // Add user message to session
+      const userMessageAdded = await addMessage({
+        role: 'user',
+        content: content.trim(),
+        agentUsed: currentAgent.name
+      });
+
+      if (!userMessageAdded) {
+        throw new Error('Failed to add user message to session');
+      }
+
       // Add user message to conversation context
       addContext(`User: ${content.trim()}`);
+
+      abortControllerRef.current = new AbortController();
       
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -63,10 +55,13 @@ export function useStreamingChat(): StreamingChatHook {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map(msg => ({
+          messages: messages.map(msg => ({
             role: msg.role,
             content: msg.content,
-          })),
+          })).concat([{
+            role: 'user',
+            content: content.trim()
+          }]),
           systemPrompt: getSystemPrompt(content.trim()),
         }),
         signal: abortControllerRef.current.signal,
@@ -100,24 +95,22 @@ export function useStreamingChat(): StreamingChatHook {
               
               if (data.content) {
                 accumulatedContent += data.content;
-                
-                setMessages(prev => 
-                  prev.map(msg => 
-                    msg.id === assistantMessage.id 
-                      ? { ...msg, content: accumulatedContent }
-                      : msg
-                  )
-                );
               }
 
               if (data.isComplete) {
                 setIsStreaming(false);
-                // Add assistant response to conversation context
+                
+                // Add assistant response to session
                 if (accumulatedContent.trim()) {
+                  await addMessage({
+                    role: 'assistant',
+                    content: accumulatedContent.trim(),
+                    agentUsed: currentAgent.name
+                  });
+                  
+                  // Add assistant response to conversation context
                   addContext(`Assistant: ${accumulatedContent.trim()}`);
                 }
-                // Auto-save conversation after each complete response
-                setTimeout(() => autoSaveConversation(), 1000);
               }
 
               if (data.error) {
@@ -133,97 +126,21 @@ export function useStreamingChat(): StreamingChatHook {
       if (err.name !== 'AbortError') {
         console.error('Streaming error:', err);
         setError(err.message || 'Failed to send message');
-        
-        // Remove empty assistant message on error
-        setMessages(prev => prev.filter(msg => msg.id !== assistantMessage.id));
       }
     } finally {
       setIsStreaming(false);
       abortControllerRef.current = null;
     }
-  }, [messages, isStreaming, getSystemPrompt, addContext]);
-
-  const saveConversation = useCallback(async () => {
-    if (!session?.user?.id || messages.length === 0) {
-      console.log('Cannot save conversation: no user ID or no messages');
-      return;
-    }
-
-    try {
-      const conversationData = {
-        userId: session.user.id,
-        messages: messages.map(msg => ({
-          id: msg.id,
-          role: msg.role,
-          content: msg.content,
-          timestamp: msg.timestamp,
-          audioMetadata: msg.audioMetadata,
-        })),
-        metadata: {
-          title: messages[0]?.content?.slice(0, 50) || 'Untitled Conversation',
-          tags: ['chat'],
-        },
-      };
-
-      if (currentConversationId) {
-        // Update existing conversation
-        const response = await fetch('/api/conversations', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            conversationId: currentConversationId,
-            messages: conversationData.messages,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update conversation');
-        }
-
-        console.log('Conversation updated successfully');
-      } else {
-        // Create new conversation
-        const response = await fetch('/api/conversations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(conversationData),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save conversation');
-        }
-
-        const savedConversation = await response.json();
-        setCurrentConversationId(savedConversation._id);
-        console.log('New conversation saved with ID:', savedConversation._id);
-      }
-    } catch (error) {
-      console.error('Error saving conversation:', error);
-    }
-  }, [messages, session, currentConversationId]);
-
-  const autoSaveConversation = useCallback(async () => {
-    // Only auto-save if we have meaningful conversation (at least 1 user message and 1 assistant response)
-    const userMessages = messages.filter(m => m.role === 'user');
-    const assistantMessages = messages.filter(m => m.role === 'assistant');
-    
-    if (userMessages.length >= 1 && assistantMessages.length >= 1) {
-      await saveConversation();
-    }
-  }, [messages, saveConversation]);
+  }, [messages, isStreaming, getSystemPrompt, addContext, addMessage, currentAgent]);
 
   const clearMessages = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    setMessages([]);
     setError(null);
     setIsStreaming(false);
-    setCurrentConversationId(null);
+    // Note: Session clearing will be handled by the ChatInterface
+    // when it calls clearContext() and potentially creates a new session
   }, []);
 
   return {
@@ -232,7 +149,5 @@ export function useStreamingChat(): StreamingChatHook {
     error,
     sendMessage,
     clearMessages,
-    saveConversation,
-    currentConversationId,
   };
 }

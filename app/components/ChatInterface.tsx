@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Send, Trash2, Download, MessageCircle, Type } from 'lucide-react';
+import { Send, Trash2, Download, MessageCircle, Type, History } from 'lucide-react';
 import Image from 'next/image';
 import VoiceInput from './VoiceInput';
 import AgentSelector from './AgentSelector';
@@ -15,6 +15,8 @@ import { useStreamingChat } from '@/hooks/useStreamingChat';
 import { useAgent } from '@/contexts/AgentContext';
 import { useDropdown } from '@/contexts/DropdownContext';
 import { useConversationManager } from '@/hooks/useConversationManager';
+import { useSession } from '@/contexts/SessionContext';
+import SessionBrowser from './SessionBrowser';
 
 export default function ChatInterface() {
   const [inputValue, setInputValue] = useState('');
@@ -23,6 +25,7 @@ export default function ChatInterface() {
   const [textSize, setTextSize] = useState<'sm' | 'base' | 'lg' | 'xl'>('base');
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSessionBrowserOpen, setIsSessionBrowserOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
@@ -31,6 +34,7 @@ export default function ChatInterface() {
   const { isDropdownOpen } = useDropdown();
   const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
   const { isDark } = useTheme();
+  const { currentSession, createSession, loadSession } = useSession();
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
@@ -105,11 +109,17 @@ export default function ChatInterface() {
     }
   };
 
-  const handleClearMessages = () => {
+  const handleClearMessages = async () => {
     clearMessages();
     clearContext();
     if (isContinuousMode) {
       endConversation();
+    }
+    // Create a new session for the next conversation
+    try {
+      await createSession();
+    } catch (error) {
+      console.error('Failed to create new session:', error);
     }
   };
 
@@ -133,16 +143,32 @@ export default function ChatInterface() {
     setSelectedMessage(null);
   };
 
+  const handleSelectSession = async (sessionId: string) => {
+    try {
+      await loadSession(sessionId);
+      // Clear any streaming state when switching sessions
+      clearMessages();
+    } catch (error) {
+      console.error('Failed to load session:', error);
+    }
+  };
+
   const exportChat = () => {
-    const chatContent = messages
-      .map(msg => `${msg.role.toUpperCase()}: ${msg.content}`)
-      .join('\\n\\n');
+    const sessionName = currentSession?.name || 'Untitled Session';
+    const chatContent = [
+      `Session: ${sessionName}`,
+      `Agent: ${currentAgent.name}`,
+      `Created: ${currentSession?.createdAt ? new Date(currentSession.createdAt).toLocaleString() : 'Unknown'}`,
+      `Messages: ${messages.length}`,
+      '',
+      ...messages.map(msg => `${msg.role.toUpperCase()}: ${msg.content}`)
+    ].join('\\n\\n');
     
     const blob = new Blob([chatContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `chat-${currentAgent.name.toLowerCase().replace(/\\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.download = `session-${sessionName.toLowerCase().replace(/\\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -221,6 +247,28 @@ export default function ChatInterface() {
           
           {/* Theme Toggle */}
           <ThemeToggle />
+          
+          {/* Session History */}
+          <button
+            onClick={() => setIsSessionBrowserOpen(true)}
+            className="rounded-lg transition-all duration-300"
+            style={{ 
+              padding: '6px',
+              color: 'var(--text-secondary)',
+              border: '1px solid transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+              e.currentTarget.style.borderColor = 'var(--border-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.borderColor = 'transparent';
+            }}
+            title="Session History"
+          >
+            <History style={{ width: '16px', height: '16px' }} />
+          </button>
           
           <button
             onClick={toggleContinuousMode}
@@ -618,6 +666,13 @@ export default function ChatInterface() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         message={selectedMessage}
+      />
+
+      {/* Session Browser */}
+      <SessionBrowser
+        isOpen={isSessionBrowserOpen}
+        onClose={() => setIsSessionBrowserOpen(false)}
+        onSelectSession={handleSelectSession}
       />
     </div>
   );

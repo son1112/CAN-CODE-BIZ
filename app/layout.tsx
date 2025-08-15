@@ -4,6 +4,7 @@ import { AgentProvider } from "@/contexts/AgentContext";
 import { DropdownProvider } from "@/contexts/DropdownContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SessionProvider } from "next-auth/react";
+import { SessionProvider as ChatSessionProvider } from "@/contexts/SessionContext";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -81,9 +82,11 @@ export default function RootLayout({
         <SessionProvider>
           <ThemeProvider>
             <AgentProvider>
-              <DropdownProvider>
-                {children}
-              </DropdownProvider>
+              <ChatSessionProvider>
+                <DropdownProvider>
+                  {children}
+                </DropdownProvider>
+              </ChatSessionProvider>
             </AgentProvider>
           </ThemeProvider>
         </SessionProvider>
