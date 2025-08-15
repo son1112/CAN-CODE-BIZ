@@ -178,7 +178,7 @@ export default function ChatInterface() {
       <div 
         className="relative flex items-center justify-between backdrop-blur-xl border-b scale-locked-header" 
         style={{ 
-          padding: '16px 24px', 
+          padding: '12px 20px', 
           position: 'relative', 
           zIndex: 100, 
           width: '100%',
@@ -187,29 +187,30 @@ export default function ChatInterface() {
           boxShadow: 'var(--shadow-lg)'
         }}
       >
-        <div className="flex items-center" style={{ gap: '16px' }}>
+        <div className="flex items-center" style={{ gap: '20px' }}>
           <Logo 
             size="md" 
             onClick={() => window.location.reload()}
           />
           <AgentSelector />
         </div>
-        <div className="flex items-center" style={{ gap: '8px' }}>
+        <div className="flex items-center" style={{ gap: '12px' }}>
           {isContinuousMode && (
             <div 
-              className="flex items-center rounded-full font-semibold backdrop-blur-sm border" 
+              className="flex items-center rounded-full font-semibold backdrop-blur-sm border mr-2" 
               style={{ 
-                gap: '8px', 
-                padding: '8px 12px', 
-                fontSize: '12px',
+                gap: '6px', 
+                padding: '6px 12px', 
+                fontSize: '11px',
                 backgroundColor: 'var(--accent-primary)',
                 borderColor: 'var(--accent-secondary)',
-                color: 'white'
+                color: 'white',
+                whiteSpace: 'nowrap'
               }}
             >
               <div className="relative">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
-                <div className="absolute inset-0 w-3 h-3 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+                <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
+                <div className="absolute inset-0 w-2.5 h-2.5 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
               </div>
               Live Mode Active
             </div>
@@ -223,9 +224,9 @@ export default function ChatInterface() {
           
           <button
             onClick={toggleContinuousMode}
-            className="rounded-xl transition-all duration-300"
+            className="rounded-lg transition-all duration-300"
             style={{ 
-              padding: '8px',
+              padding: '6px',
               backgroundColor: isContinuousMode ? 'var(--accent-primary)' : 'transparent',
               color: isContinuousMode ? 'white' : 'var(--text-secondary)',
               border: `1px solid ${isContinuousMode ? 'var(--accent-primary)' : 'transparent'}`,
@@ -255,9 +256,9 @@ export default function ChatInterface() {
                 const nextIndex = (currentIndex + 1) % sizes.length;
                 setTextSize(sizes[nextIndex]);
               }}
-              className="rounded-xl transition-all duration-300"
+              className="rounded-lg transition-all duration-300"
               style={{ 
-                padding: '8px',
+                padding: '6px',
                 color: 'var(--text-secondary)',
                 border: '1px solid transparent'
               }}
@@ -291,9 +292,9 @@ export default function ChatInterface() {
           <button
             onClick={exportChat}
             disabled={messages.length === 0}
-            className="rounded-xl transition-all duration-300"
+            className="rounded-lg transition-all duration-300"
             style={{ 
-              padding: '8px',
+              padding: '6px',
               color: messages.length === 0 ? 'var(--text-quaternary)' : 'var(--text-secondary)',
               border: '1px solid transparent',
               opacity: messages.length === 0 ? 0.5 : 1
@@ -317,9 +318,9 @@ export default function ChatInterface() {
           <button
             onClick={handleClearMessages}
             disabled={messages.length === 0}
-            className="rounded-xl transition-all duration-300"
+            className="rounded-lg transition-all duration-300"
             style={{ 
-              padding: '8px',
+              padding: '6px',
               color: messages.length === 0 ? 'var(--text-quaternary)' : 'var(--status-error)',
               border: '1px solid transparent',
               opacity: messages.length === 0 ? 0.5 : 1
