@@ -558,12 +558,11 @@ export default function ChatInterface() {
         <div className="absolute inset-0 bg-gradient-to-t from-blue-50/50 to-transparent"></div>
         <div className="relative max-w-6xl mx-auto">
           <div className="flex items-end" style={{ gap: '12px' }}>
-            {/* Temporarily disabled VoiceInput for debugging blank page */}
-            {/* <VoiceInput 
+            <VoiceInput 
               onTranscript={handleVoiceTranscript}
               isDisabled={isStreaming}
               enableContinuousMode={isContinuousMode}
-            /> */}
+            />
             
             <form onSubmit={handleSubmit} className="flex-1 flex" style={{ gap: '10px' }}>
               <div className="flex-1 relative">

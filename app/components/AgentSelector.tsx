@@ -102,8 +102,95 @@ export default function AgentSelector() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-2 relative">
-              {/* Basic Agents Section */}
+              {/* Create New Agent Section - Top Priority */}
               <div className="mb-4">
+                <div className="px-2 py-1 text-xs font-semibold text-green-600 uppercase tracking-wide flex items-center gap-2">
+                  <Plus className="w-3 h-3" />
+                  Create Agent
+                </div>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => {
+                      setIsCreateAgentModalOpen(true);
+                      setIsOpen(false);
+                      setIsDropdownOpen(false);
+                    }}
+                    className="w-full text-left p-3 rounded-md hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-colors border border-transparent hover:border-green-200"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600">
+                        <Plus className="w-4 h-4 text-white" />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
+                          Create New Agent
+                          <span className="px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded-full font-medium">
+                            NEW
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          🎙️ Voice recording or text input to create custom AI agents
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* CLI Power Agents Section */}
+              {console.log('Rendering Power Agents:', { cliLoading, agentCount: cliAgents.length, agents: cliAgents })}
+              {!cliLoading && cliAgents.length > 0 && (
+                <div className="border-t border-gray-100 pt-4 mb-4">
+                  <div className="px-2 py-1 text-xs font-semibold text-purple-600 uppercase tracking-wide flex items-center gap-2">
+                    <Sparkles className="w-3 h-3" />
+                    Power Agents ({cliAgents.length})
+                  </div>
+                  <div className="space-y-1">
+                    <div className="p-2 bg-green-100 text-green-800 text-xs">
+                      ✅ Power Agents Working: {cliAgents.length} agents loaded
+                    </div>
+                    {cliAgents.map((agent) => (
+                      <button
+                        key={`cli-${agent.name}`}
+                        onClick={() => {
+                          console.log('Selected Power Agent:', agent.name);
+                          setPowerAgent(agent);
+                          setIsOpen(false);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`
+                          w-full text-left p-3 rounded-md hover:bg-purple-50 transition-colors border border-transparent hover:border-purple-200
+                          ${currentPowerAgent?.name === agent.name ? 'bg-purple-50 border-purple-200' : ''}
+                        `}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-500 to-pink-500">
+                            <Zap className="w-4 h-4 text-white" />
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
+                              {agent.name}
+                              <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full font-medium">
+                                POWER
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1 line-clamp-3">
+                              {agent.description.length > 150 
+                                ? agent.description.substring(0, 150) + '...' 
+                                : agent.description}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Basic Agents Section - Bottom */}
+              <div className="border-t border-gray-100 pt-4">
                 <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
                   <Bot className="w-3 h-3" />
                   Basic Agents
@@ -166,85 +253,6 @@ export default function AgentSelector() {
                 </div>
               </div>
 
-              {/* CLI Power Agents Section */}
-              {console.log('Rendering Power Agents:', { cliLoading, agentCount: cliAgents.length, agents: cliAgents })}
-              {!cliLoading && cliAgents.length > 0 && (
-                <div className="border-t border-gray-100 pt-4">
-                  <div className="px-2 py-1 text-xs font-semibold text-purple-600 uppercase tracking-wide flex items-center gap-2">
-                    <Sparkles className="w-3 h-3" />
-                    Power Agents ({cliAgents.length})
-                  </div>
-                  <div className="space-y-1">
-                    <div className="p-2 bg-green-100 text-green-800 text-xs">
-                      ✅ Power Agents Working: {cliAgents.length} agents loaded
-                    </div>
-                    {cliAgents.map((agent) => (
-                      <button
-                        key={`cli-${agent.name}`}
-                        onClick={() => {
-                          console.log('Selected Power Agent:', agent.name);
-                          setPowerAgent(agent);
-                          setIsOpen(false);
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`
-                          w-full text-left p-3 rounded-md hover:bg-purple-50 transition-colors border border-transparent hover:border-purple-200
-                          ${currentPowerAgent?.name === agent.name ? 'bg-purple-50 border-purple-200' : ''}
-                        `}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-500 to-pink-500">
-                            <Zap className="w-4 h-4 text-white" />
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
-                              {agent.name}
-                              <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full font-medium">
-                                POWER
-                              </span>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1 line-clamp-3">
-                              {agent.description.length > 150 
-                                ? agent.description.substring(0, 150) + '...' 
-                                : agent.description}
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                    
-                    {/* Create New Agent Button */}
-                    <button
-                      onClick={() => {
-                        setIsCreateAgentModalOpen(true);
-                        setIsOpen(false);
-                        setIsDropdownOpen(false);
-                      }}
-                      className="w-full text-left p-3 rounded-md hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-colors border border-transparent hover:border-green-200 mt-2"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600">
-                          <Plus className="w-4 h-4 text-white" />
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
-                            Create New Agent
-                            <span className="px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded-full font-medium">
-                              VOICE
-                            </span>
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            🎙️ Record your voice to create a custom AI agent
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Loading state for CLI agents */}
               {cliLoading && (
                 <div className="border-t border-gray-100 pt-4">
@@ -275,12 +283,11 @@ export default function AgentSelector() {
       )}
       
       {/* Create Agent Modal */}
-      {/* Temporarily disabled CreateAgentModal for debugging blank page */}
-      {/* <CreateAgentModal
+      <CreateAgentModal
         isOpen={isCreateAgentModalOpen}
         onClose={() => setIsCreateAgentModalOpen(false)}
         onAgentCreated={handleAgentCreated}
-      /> */}
+      />
     </div>
   );
 }

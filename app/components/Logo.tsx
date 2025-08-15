@@ -49,24 +49,28 @@ export default function Logo({
         <div 
           className={cn(
             'relative rounded-full overflow-hidden flex items-center justify-center',
-            'bg-gradient-to-br from-sky-100 via-blue-50 to-indigo-100',
+            'bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50',
             'shadow-lg transform hover:scale-105 transition-transform duration-300',
-            'border-2 border-blue-200/40',
+            'border-2 border-yellow-200/40',
             onClick ? 'cursor-pointer hover:shadow-xl' : '',
             config.container
           )}
           onClick={onClick}
         >
           <Image
-            src="/rubber-duck-logo.png"
+            src="/rdlogo081525-cutout.png"
             alt="Rubber Ducky"
             width={config.image}
             height={config.image}
-            className="object-cover scale-110"
+            className="object-contain scale-90"
             style={{ objectPosition: 'center center' }}
+            onError={(e) => {
+              // Fallback to previous logo if new one doesn't exist
+              (e.target as HTMLImageElement).src = '/rubber-duck-logo-new.png';
+            }}
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-200/15 to-transparent rounded-full"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/15 to-transparent rounded-full"></div>
         </div>
       </div>
     );
@@ -77,24 +81,28 @@ export default function Logo({
       <div 
         className={cn(
           'relative rounded-full overflow-hidden flex items-center justify-center',
-          'bg-gradient-to-br from-sky-100 via-blue-50 to-indigo-100',
-          'shadow-2xl shadow-blue-500/20 transform hover:scale-105 transition-transform duration-300',
-          'border-2 border-blue-200/40',
+          'bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50',
+          'shadow-2xl shadow-yellow-500/20 transform hover:scale-105 transition-transform duration-300',
+          'border-2 border-yellow-200/40',
           onClick ? 'cursor-pointer hover:shadow-xl' : '',
           config.container
         )}
         onClick={onClick}
       >
         <Image
-          src="/rubber-duck-logo.png"
+          src="/rdlogo081525-cutout.png"
           alt="Rubber Ducky"
           width={config.image}
           height={config.image}
-          className="object-cover scale-110"
+          className="object-contain scale-90"
           style={{ objectPosition: 'center center' }}
+          onError={(e) => {
+            // Fallback to previous logo if new one doesn't exist
+            (e.target as HTMLImageElement).src = '/rubber-duck-logo-new.png';
+          }}
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-200/15 to-transparent rounded-full"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/15 to-transparent rounded-full"></div>
       </div>
       
       {showText && (

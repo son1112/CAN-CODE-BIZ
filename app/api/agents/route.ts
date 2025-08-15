@@ -249,47 +249,54 @@ Respond with ONLY the JSON object, no additional text or explanation.`;
       );
     }
 
-    // Create agent using CLI (temporary until package exports are fixed)
+    // Create agent directly in MongoDB (since CLI add-agent is interactive only)
     try {
-      // Write agent to temporary file
-      const fs = await import('fs').then(m => m.promises);
-      const os = await import('os');
-      const tempDir = os.tmpdir();
-      const tempFile = path.join(tempDir, `agent-${Date.now()}.json`);
+      const { MongoClient } = await import('mongodb');
+      const client = new MongoClient(process.env.MONGODB_URI!);
       
-      await fs.writeFile(tempFile, JSON.stringify(newAgent, null, 2), 'utf-8');
-
       try {
-        // Use CLI to add the agent
-        const { stdout } = await executeCliCommand('add-agent', [tempFile]);
+        await client.connect();
+        const db = client.db(process.env.MONGODB_DB || 'rubber-ducky');
+        const collection = db.collection('agents');
         
-        // Clean up temp file
-        await fs.unlink(tempFile);
-
-        return NextResponse.json({
-          success: true,
-          agent: newAgent,
-          message: `Agent "${newAgent.name}" created successfully`
-        });
-      } catch (cliError: any) {
-        // Clean up temp file even if CLI fails
-        try {
-          await fs.unlink(tempFile);
-        } catch (cleanupError) {
-          console.warn('Failed to cleanup temp file:', cleanupError);
-        }
-        
-        // Handle specific CLI error cases
-        if (cliError.message?.includes('already exists') || cliError.message?.includes('duplicate')) {
+        // Check if agent with this name already exists
+        const existingAgent = await collection.findOne({ name: newAgent.name });
+        if (existingAgent) {
           return NextResponse.json(
             { error: `Agent with name "${newAgent.name}" already exists` },
             { status: 409 }
           );
         }
-        throw cliError;
+        
+        // Add metadata for web-created agents
+        const agentDocument = {
+          ...newAgent,
+          createdAt: new Date(),
+          createdBy: session.user.id,
+          source: 'web',
+          isActive: true
+        };
+        
+        const result = await collection.insertOne(agentDocument);
+        
+        return NextResponse.json({
+          success: true,
+          agent: newAgent,
+          message: `Agent "${newAgent.name}" created successfully`
+        });
+      } finally {
+        await client.close();
       }
     } catch (error: any) {
       console.error('Agent creation error:', error);
+      
+      // Handle specific MongoDB error cases
+      if (error.code === 11000) { // Duplicate key error
+        return NextResponse.json(
+          { error: `Agent with name "${newAgent.name}" already exists` },
+          { status: 409 }
+        );
+      }
       throw error;
     }
 
@@ -331,12 +338,12 @@ function parseAgentListOutput(output: string): Array<{
     const lines = output.split('\n');
     const agents: Array<{ name: string; description: string; prompt: string }> = [];
     let currentAgent: { name?: string; description?: string; prompt?: string } = {};
-    let inAgentSection = false;
+    let collectingDescription = false;
     
     for (const line of lines) {
       const trimmed = line.trim();
       
-      // Skip header lines and separators
+      // Skip empty lines and system messages
       if (!trimmed || 
           trimmed.includes('──────') || 
           trimmed.includes('Available Agents') ||
@@ -361,35 +368,41 @@ function parseAgentListOutput(output: string): Array<{
         break;
       }
       
-      // Look for agent entries (non-indented lines that aren't system messages)
-      if (trimmed && !trimmed.startsWith(' ') && !trimmed.startsWith('[')) {
+      // Look for agent entries starting with 📌
+      if (trimmed.startsWith('📌 ')) {
         // Save previous agent if exists
-        if (currentAgent.name) {
+        if (currentAgent.name && currentAgent.description) {
           agents.push({
             name: currentAgent.name,
-            description: currentAgent.description || 'No description available',
-            prompt: currentAgent.prompt || 'No prompt available'
+            description: currentAgent.description.trim(),
+            prompt: currentAgent.description.trim() // Using description as prompt since CLI doesn't expose prompt separately
           });
         }
-        // Start new agent
-        currentAgent = { name: trimmed };
-        inAgentSection = true;
-      } else if (trimmed.startsWith(' ') && currentAgent.name && inAgentSection) {
-        // Agent description (indented lines)
-        if (!currentAgent.description) {
-          currentAgent.description = trimmed;
+        
+        // Start new agent - extract name after the 📌 emoji
+        const agentName = trimmed.substring(2).trim(); // Remove "📌 " prefix
+        currentAgent = { 
+          name: agentName,
+          description: '',
+          prompt: ''
+        };
+        collectingDescription = true;
+      } else if (collectingDescription && currentAgent.name && trimmed) {
+        // This is a description line (indented content after agent name)
+        if (currentAgent.description) {
+          currentAgent.description += '\n' + trimmed;
         } else {
-          currentAgent.description += ' ' + trimmed;
+          currentAgent.description = trimmed;
         }
       }
     }
     
     // Add the last agent if exists
-    if (currentAgent.name) {
+    if (currentAgent.name && currentAgent.description) {
       agents.push({
         name: currentAgent.name,
-        description: currentAgent.description || 'No description available',
-        prompt: currentAgent.prompt || 'No prompt available'
+        description: currentAgent.description.trim(),
+        prompt: currentAgent.description.trim() // Using description as prompt since CLI doesn't expose prompt separately
       });
     }
     
