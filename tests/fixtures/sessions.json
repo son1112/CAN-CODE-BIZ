@@ -1,0 +1,40 @@
+[
+  {
+    "id": "test-session-1",
+    "title": "Test Chat Session",
+    "userId": "test-user",
+    "agentId": "claude-sonnet",
+    "messages": [
+      {
+        "id": "msg-1",
+        "role": "user",
+        "content": "Hello, how are you?",
+        "timestamp": "2025-08-16T10:00:00Z"
+      },
+      {
+        "id": "msg-2",
+        "role": "assistant",
+        "content": "Hello! I'm doing well, thank you for asking. How can I help you today?",
+        "timestamp": "2025-08-16T10:00:05Z"
+      }
+    ],
+    "createdAt": "2025-08-16T10:00:00Z",
+    "updatedAt": "2025-08-16T10:00:05Z"
+  },
+  {
+    "id": "test-session-2",
+    "title": "Code Review Session",
+    "userId": "test-user",
+    "agentId": "code-reviewer",
+    "messages": [
+      {
+        "id": "msg-3",
+        "role": "user",
+        "content": "Can you review this React component?",
+        "timestamp": "2025-08-16T11:00:00Z"
+      }
+    ],
+    "createdAt": "2025-08-16T11:00:00Z",
+    "updatedAt": "2025-08-16T11:00:00Z"
+  }
+]

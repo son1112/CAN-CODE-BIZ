@@ -753,7 +753,7 @@ export default function ChatInterface() {
         ) : (
           /* AI-Focused Chat Interface */
           <div className="relative flex-1 flex flex-col">
-            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 space-y-8">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 pb-4 space-y-8">
               {messages
                 .filter(message => message.role === 'assistant')
                 .map((message, index, aiMessages) => {
@@ -1035,23 +1035,23 @@ export default function ChatInterface() {
       <div 
         className="relative border-t backdrop-blur-xl shadow-2xl scale-locked-footer" 
         style={{ 
-          padding: '12px 16px', 
+          padding: '16px 16px 20px 16px', // Increased bottom padding
           position: 'relative', 
           zIndex: 100, 
           width: '100%',
-          backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backgroundColor: isDark ? 'rgba(13, 13, 13, 0.98)' : 'rgba(255, 255, 255, 0.98)', // Increased opacity
           borderColor: 'var(--border-primary)'
         }}
       >
-        <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(to top, rgba(13, 13, 13, 0.1), transparent)' : 'linear-gradient(to top, rgba(59, 130, 246, 0.05), transparent)' }}></div>
-        <div className="relative max-w-6xl mx-auto space-y-3">
+        <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(to top, rgba(13, 13, 13, 0.2), transparent)' : 'linear-gradient(to top, rgba(59, 130, 246, 0.08), transparent)' }}></div>
+        <div className="relative max-w-6xl mx-auto space-y-2">
           
           {/* User Input History Dropdown */}
           {messages.filter(m => m.role === 'user').length > 0 && (
             <div className="relative">
               <button
                 onClick={() => setShowUserHistory(!showUserHistory)}
-                className="flex items-center gap-2 text-sm font-medium transition-colors rounded-lg px-3 py-2"
+                className="flex items-center gap-2 text-sm font-medium transition-colors rounded-lg px-3 py-1.5"
                 style={{
                   color: 'var(--text-secondary)',
                   backgroundColor: showUserHistory ? 'var(--bg-secondary)' : 'transparent',
@@ -1064,11 +1064,12 @@ export default function ChatInterface() {
               
               {showUserHistory && (
                 <div 
-                  className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border shadow-lg overflow-hidden"
+                  className="absolute bottom-full left-0 right-0 mb-3 rounded-xl border shadow-xl overflow-hidden"
                   style={{
                     backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
                     borderColor: 'var(--border-primary)',
-                    maxHeight: '200px'
+                    maxHeight: '200px',
+                    zIndex: 110 // Ensure it's above other elements
                   }}
                 >
                   <div className="overflow-y-auto max-h-48 p-2 space-y-1">
@@ -1130,7 +1131,7 @@ export default function ChatInterface() {
                 {/* Current Transcription Display */}
                 {currentTranscript && (
                   <div 
-                    className="mb-2 p-3 rounded-lg border"
+                    className="mb-3 p-2.5 rounded-lg border animate-pulse"
                     style={{
                       backgroundColor: 'var(--bg-tertiary)',
                       borderColor: 'var(--border-primary)',

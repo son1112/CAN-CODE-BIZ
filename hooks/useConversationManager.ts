@@ -76,7 +76,7 @@ export function useConversationManager(): ConversationManagerHook {
     }
 
     // For short acknowledgments, don't always respond to avoid being too chatty
-    const acknowledgments = /^(yeah|yes|ok|okay|sure|right|exactly|true|no|nope)\.?$/i;
+    const acknowledgments = /^(yeah|yes|ok|okay|sure|right|exactly|true|no|nope)[.!]?$/i;
     if (acknowledgments.test(transcript.trim())) {
       console.log('ConversationManager: Short acknowledgment - AI should not respond');
       return false;

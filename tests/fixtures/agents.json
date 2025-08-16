@@ -1,0 +1,17 @@
+[
+  {
+    "name": "code-reviewer",
+    "description": "A helpful assistant that reviews code for best practices, security issues, and performance optimizations.",
+    "prompt": "You are a senior software engineer conducting a code review. Analyze the following code and provide constructive feedback on: {{transcript}}"
+  },
+  {
+    "name": "documentation-writer",
+    "description": "Generates comprehensive documentation for code, APIs, and software projects.",
+    "prompt": "Create clear and comprehensive documentation for the following: {{transcript}}"
+  },
+  {
+    "name": "bug-hunter",
+    "description": "Specialized in identifying and debugging software issues with detailed explanations.",
+    "prompt": "Analyze the following code or error description to identify potential bugs and suggest fixes: {{transcript}}"
+  }
+]
