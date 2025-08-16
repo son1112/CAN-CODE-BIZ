@@ -15,6 +15,9 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
     const elements: JSX.Element[] = [];
     let currentListItems: JSX.Element[] = [];
     let listLevel = 0;
+    let inCodeBlock = false;
+    let codeBlockLines: string[] = [];
+    let codeLanguage = '';
 
     const flushList = () => {
       if (currentListItems.length > 0) {
@@ -28,10 +31,72 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       }
     };
 
+    const flushCodeBlock = () => {
+      if (codeBlockLines.length > 0) {
+        elements.push(
+          <div key={`code-${elements.length}`} className="mb-4">
+            <div 
+              className="rounded-lg overflow-hidden border"
+              style={{
+                backgroundColor: expandedView ? 'var(--bg-tertiary)' : '#1f2937',
+                borderColor: expandedView ? 'var(--border-primary)' : '#374151'
+              }}
+            >
+              {codeLanguage && (
+                <div 
+                  className="px-4 py-2 text-xs font-medium border-b"
+                  style={{
+                    backgroundColor: expandedView ? 'var(--bg-quaternary)' : '#111827',
+                    borderColor: expandedView ? 'var(--border-primary)' : '#374151',
+                    color: expandedView ? 'var(--text-tertiary)' : '#9ca3af'
+                  }}
+                >
+                  {codeLanguage}
+                </div>
+              )}
+              <pre 
+                className="p-4 overflow-x-auto text-sm"
+                style={{
+                  color: expandedView ? 'var(--text-primary)' : '#f9fafb',
+                  fontFamily: 'var(--font-roboto-mono), monospace'
+                }}
+              >
+                <code>{codeBlockLines.join('\n')}</code>
+              </pre>
+            </div>
+          </div>
+        );
+        codeBlockLines = [];
+        codeLanguage = '';
+      }
+    };
+
     lines.forEach((line, index) => {
       const trimmedLine = line.trim();
       
-      // Skip empty lines
+      // Handle code block markers
+      if (trimmedLine.startsWith('```')) {
+        if (inCodeBlock) {
+          // End of code block
+          inCodeBlock = false;
+          flushCodeBlock();
+        } else {
+          // Start of code block
+          flushList(); // Flush any pending list items
+          inCodeBlock = true;
+          // Extract language if specified (e.g., ```bash, ```javascript)
+          codeLanguage = trimmedLine.slice(3).trim();
+        }
+        return;
+      }
+      
+      // If we're in a code block, collect the lines
+      if (inCodeBlock) {
+        codeBlockLines.push(line); // Keep original line with indentation
+        return;
+      }
+      
+      // Skip empty lines (only when not in code block)
       if (!trimmedLine) {
         // Add spacing for empty lines between sections
         if (elements.length > 0) {
@@ -164,19 +229,43 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       const isShortLine = trimmedLine.length < 200;
       const startsWithCapital = /^[A-Z]/.test(trimmedLine);
       
+      // Process inline code (single backticks)
+      const processInlineCode = (text: string): React.ReactNode => {
+        const parts = text.split(/(`[^`]+`)/);
+        return parts.map((part, i) => {
+          if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+            return (
+              <code 
+                key={i}
+                className="px-2 py-1 rounded text-sm font-mono"
+                style={{
+                  backgroundColor: expandedView ? 'var(--bg-tertiary)' : '#374151',
+                  color: expandedView ? 'var(--text-primary)' : '#f9fafb',
+                  fontFamily: 'var(--font-roboto-mono), monospace'
+                }}
+              >
+                {part.slice(1, -1)}
+              </code>
+            );
+          }
+          return part;
+        });
+      };
+      
       elements.push(
         <p 
           key={`para-${index}`} 
           className={`mb-3 leading-relaxed ${isShortLine && startsWithCapital ? 'font-medium' : ''}`}
           style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
         >
-          {trimmedLine}
+          {processInlineCode(trimmedLine)}
         </p>
       );
     });
 
-    // Flush any remaining list items
+    // Flush any remaining list items and code blocks
     flushList();
+    flushCodeBlock();
 
     return <div className="space-y-1">{elements}</div>;
   };

@@ -1,0 +1,346 @@
+#+TITLE: Dynamic Claude Model Selection Implementation Plan
+#+AUTHOR: Claude Code
+#+DATE: 2025-08-15
+
+* Overview
+This document outlines the implementation plan for dynamic Claude model selection in Rubber Ducky Live, allowing users to choose between Opus, Sonnet, and Haiku models per agent and per session, with the ability to change models on-the-fly.
+
+* Goals
+1. *Flexibility*: Allow model selection at both agent and session levels
+2. *Performance*: Enable users to choose optimal models for different use cases
+3. *Cost Management*: Provide access to different pricing tiers (Haiku < Sonnet < Opus)
+4. *User Experience*: Seamless model switching without interrupting conversations
+5. *Agent Optimization*: Allow agents to specify preferred models based on their capabilities
+
+* Model Characteristics
+
+** Claude 3 Opus
+- *Best for*: Complex reasoning, creative writing, detailed analysis
+- *Characteristics*: Highest intelligence, most capable, highest cost
+- *Use cases*: Code review, complex problem solving, research, creative writing
+
+** Claude 3.5 Sonnet
+- *Best for*: Balanced performance and speed, general conversation
+- *Characteristics*: Great balance of capability and speed, moderate cost
+- *Use cases*: General chat, programming help, analysis, most agent types
+
+** Claude 3 Haiku
+- *Best for*: Quick responses, simple tasks, high-volume usage
+- *Characteristics*: Fastest responses, lowest cost, good for simple tasks
+- *Use cases*: Quick questions, simple conversations, high-frequency interactions
+
+* Architecture Design
+
+** Model Configuration Hierarchy
+1. *Global Default*: System-wide default model (currently Opus)
+2. *Agent Default*: Per-agent preferred model configuration
+3. *Session Override*: Per-session model selection
+4. *Message Override*: Per-message model selection (future enhancement)
+
+** Data Structure Extensions
+
+*** AgentPersona Interface
+#+begin_src typescript
+export interface AgentPersona {
+  id: string;
+  name: string;
+  description: string;
+  systemPrompt: string;
+  conversationStarters?: string[];
+  keyTopics?: string[];
+  preferredModel?: ClaudeModel; // New field
+  modelRationale?: string;      // Why this model is preferred
+}
+#+end_src
+
+*** New Types
+#+begin_src typescript
+export type ClaudeModel = 
+  | 'claude-3-opus-20240229'
+  | 'claude-3-5-sonnet-20241022' 
+  | 'claude-3-haiku-20240307';
+
+export interface ModelConfig {
+  model: ClaudeModel;
+  displayName: string;
+  description: string;
+  costTier: 'low' | 'medium' | 'high';
+  strengths: string[];
+  bestFor: string[];
+}
+
+export interface SessionModelSettings {
+  currentModel: ClaudeModel;
+  overrideAgentDefault: boolean;
+  modelHistory: Array<{
+    model: ClaudeModel;
+    timestamp: Date;
+    reason: string;
+  }>;
+}
+#+end_src
+
+*** Power Agent Extension
+#+begin_src typescript
+export interface Agent {
+  // ... existing fields
+  preferredModel?: ClaudeModel;
+  modelJustification?: string;
+}
+#+end_src
+
+** Context Extensions
+
+*** ModelContext
+#+begin_src typescript
+interface ModelContextType {
+  // Current model state
+  currentModel: ClaudeModel;
+  sessionModelSettings: SessionModelSettings;
+  
+  // Model management
+  setSessionModel: (model: ClaudeModel, reason?: string) => void;
+  resetToAgentDefault: () => void;
+  
+  // Model information
+  availableModels: ModelConfig[];
+  getModelConfig: (model: ClaudeModel) => ModelConfig;
+  getEffectiveModel: (agent?: AgentPersona, powerAgent?: Agent) => ClaudeModel;
+  
+  // Cost and usage tracking
+  estimatedCost: number;
+  messageCount: number;
+}
+#+end_src
+
+*** AgentContext Updates
+#+begin_src typescript
+interface AgentContextType {
+  // ... existing fields
+  getEffectiveModel: () => ClaudeModel;
+  getModelRationale: () => string;
+}
+#+end_src
+
+** API Layer Updates
+
+*** Enhanced Claude API
+#+begin_src typescript
+export async function* streamClaudeResponse(
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  systemPrompt?: string,
+  model?: ClaudeModel // New optional parameter
+) {
+  const selectedModel = model || 'claude-3-opus-20240229'; // Fallback to Opus
+  // ... implementation
+}
+#+end_src
+
+* UI Components
+
+** Model Selector Component
+#+begin_src typescript
+interface ModelSelectorProps {
+  currentModel: ClaudeModel;
+  onModelChange: (model: ClaudeModel) => void;
+  showCostInfo?: boolean;
+  disabled?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+}
+#+end_src
+
+** Model Indicator
+- Small badge showing current model in chat interface
+- Color-coded by cost tier (green=Haiku, blue=Sonnet, purple=Opus)
+- Tooltip showing model capabilities and cost
+
+** Model Comparison Modal
+- Side-by-side comparison of models
+- Performance characteristics
+- Cost implications
+- Recommended use cases
+
+* Implementation Phases
+
+** Phase 1: Core Infrastructure (Week 1)
+- [ ] Define model types and configurations
+- [ ] Create ModelContext and provider
+- [ ] Update claude.ts to accept model parameter
+- [ ] Extend AgentPersona interface
+- [ ] Basic model selection in settings
+
+** Phase 2: Agent Integration (Week 2)
+- [ ] Add preferredModel to agent definitions
+- [ ] Update AgentContext to handle model selection
+- [ ] Modify agent creation flow to include model selection
+- [ ] Update existing agents with recommended models
+
+** Phase 3: Session-Level Control (Week 3)
+- [ ] Implement session model override system
+- [ ] Create model selector UI component
+- [ ] Add model indicator to chat interface
+- [ ] Model switching without conversation interruption
+
+** Phase 4: Enhanced UX (Week 4)
+- [ ] Model comparison and education
+- [ ] Cost tracking and estimation
+- [ ] Performance analytics
+- [ ] Smart model recommendations
+
+* Agent Model Recommendations
+
+** Suggested Model Assignments
+- *Complex Reasoning Agents* (Code Reviewer, Research Assistant): Opus
+- *Conversational Agents* (Default, Interview Coach): Sonnet
+- *Quick Response Agents* (Simple Q&A, Trivia): Haiku
+- *Creative Agents* (Storyteller, Creative Writer): Opus
+- *Technical Agents* (Programming, DevOps): Sonnet
+- *Business Agents* (Real Estate, Business Advisor): Sonnet
+
+** Rationale Framework
+Each agent should include model rationale explaining why that model is optimal:
+- Complexity of typical tasks
+- Response time requirements
+- Cost considerations for expected usage patterns
+- Specific model strengths that align with agent purpose
+
+* User Experience Flow
+
+** New User Experience
+1. *Agent Selection*: Users see model recommendations with each agent
+2. *Education*: Tooltip explains model differences and costs
+3. *Default Choice*: Agent's preferred model is pre-selected
+4. *Override Option*: Users can choose different model if desired
+
+** Existing User Experience
+1. *Model Indicator*: Current model shown in chat header
+2. *Quick Switch*: Model selector dropdown in header
+3. *Explanation*: Modal explaining why model change might be beneficial
+4. *Seamless Transition*: Model changes without conversation interruption
+
+** Session Management
+1. *Model Persistence*: Session remembers model choice
+2. *Model History*: Track model changes within session
+3. *Smart Suggestions*: Suggest model changes based on conversation type
+
+* Technical Implementation Details
+
+** Model Configuration Management
+#+begin_src typescript
+export const MODEL_CONFIGS: Record<ClaudeModel, ModelConfig> = {
+  'claude-3-opus-20240229': {
+    model: 'claude-3-opus-20240229',
+    displayName: 'Claude 3 Opus',
+    description: 'Most capable model for complex reasoning and creative tasks',
+    costTier: 'high',
+    strengths: ['Complex reasoning', 'Creative writing', 'Detailed analysis'],
+    bestFor: ['Code review', 'Research', 'Creative projects', 'Complex problem solving']
+  },
+  'claude-3-5-sonnet-20241022': {
+    model: 'claude-3-5-sonnet-20241022',
+    displayName: 'Claude 3.5 Sonnet',
+    description: 'Balanced performance and speed for most tasks',
+    costTier: 'medium',
+    strengths: ['Balanced capabilities', 'Good speed', 'Versatile'],
+    bestFor: ['General conversation', 'Programming help', 'Analysis', 'Most tasks']
+  },
+  'claude-3-haiku-20240307': {
+    model: 'claude-3-haiku-20240307',
+    displayName: 'Claude 3 Haiku',
+    description: 'Fast and efficient for simple tasks and quick responses',
+    costTier: 'low',
+    strengths: ['Speed', 'Efficiency', 'Cost-effective'],
+    bestFor: ['Quick questions', 'Simple tasks', 'High-volume usage']
+  }
+};
+#+end_src
+
+** Session Model Management
+#+begin_src typescript
+export function useSessionModel() {
+  const [sessionSettings, setSessionSettings] = useState<SessionModelSettings>({
+    currentModel: 'claude-3-opus-20240229',
+    overrideAgentDefault: false,
+    modelHistory: []
+  });
+
+  const changeModel = useCallback((model: ClaudeModel, reason: string = 'User preference') => {
+    setSessionSettings(prev => ({
+      ...prev,
+      currentModel: model,
+      overrideAgentDefault: true,
+      modelHistory: [
+        ...prev.modelHistory,
+        { model, timestamp: new Date(), reason }
+      ]
+    }));
+  }, []);
+
+  return { sessionSettings, changeModel };
+}
+#+end_src
+
+* Performance Considerations
+
+** Caching Strategy
+- Cache model configurations in memory
+- Persist session model preferences in localStorage
+- Cache agent model preferences
+
+** Error Handling
+- Graceful fallback to default model on API errors
+- User notification of model availability issues
+- Automatic retry with different model if needed
+
+** Cost Optimization
+- Warn users about cost implications of model changes
+- Suggest more cost-effective models for simple tasks
+- Track usage patterns to recommend optimal models
+
+* Future Enhancements
+
+** Advanced Features
+- *Smart Model Selection*: AI-powered model recommendation based on task type
+- *Cost Budgeting*: Set spending limits per model tier
+- *A/B Testing*: Compare model performance for specific agents
+- *Custom Model Profiles*: User-defined model selection rules
+
+** Analytics Integration
+- Track model usage patterns
+- Measure user satisfaction by model
+- Cost analysis and optimization recommendations
+- Performance benchmarking across models
+
+** Enterprise Features
+- Organization-wide model policies
+- Cost allocation by department/user
+- Compliance and audit logging
+- Custom model fine-tuning integration
+
+* Success Metrics
+
+** User Adoption
+- Percentage of users who customize model selection
+- Model switching frequency
+- User satisfaction with model choices
+
+** Performance Metrics
+- Response time by model
+- User engagement by model
+- Task completion rates by model type
+
+** Cost Metrics
+- Average cost per conversation
+- Cost savings from intelligent model selection
+- User awareness of cost implications
+
+* Summary
+
+This implementation plan provides a comprehensive framework for dynamic Claude model selection in Rubber Ducky Live. The system will be built incrementally over four weeks, starting with core infrastructure and progressing to advanced user experience features. The design prioritizes flexibility, user education, and cost-consciousness while maintaining the seamless conversational experience users expect.
+
+Key benefits:
+- *Performance Optimization*: Right model for the right task
+- *Cost Management*: Intelligent cost control and transparency
+- *User Choice*: Flexibility without complexity
+- *Agent Enhancement*: Model-aware agent design
+- *Future-Proof*: Extensible architecture for new models

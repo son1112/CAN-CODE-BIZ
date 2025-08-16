@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useAgent } from '@/contexts/AgentContext';
 import { useSession as useAuthSession } from 'next-auth/react';
 import { useSession } from '@/contexts/SessionContext';
+import { useModel } from '@/contexts/ModelContext';
 
 interface StreamingChatHook {
   messages: Message[];
@@ -17,9 +18,10 @@ export function useStreamingChat(): StreamingChatHook {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const { getSystemPrompt, addContext, currentAgent } = useAgent();
+  const { getSystemPrompt, addContext, currentAgent, currentPowerAgent, getEffectiveModel } = useAgent();
   const { data: authSession } = useAuthSession();
   const { messages, addMessage, currentSession } = useSession();
+  const { getEffectiveModel: getSessionModel } = useModel();
 
   const sendMessage = useCallback(async (content: string) => {
     console.log('useStreamingChat: sendMessage called with:', content);
@@ -63,6 +65,7 @@ export function useStreamingChat(): StreamingChatHook {
             content: content.trim()
           }]),
           systemPrompt: getSystemPrompt(content.trim()),
+          model: getSessionModel(currentAgent, currentPowerAgent),
         }),
         signal: abortControllerRef.current.signal,
       });

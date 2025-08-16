@@ -6,6 +6,7 @@ import { useSession } from '@/contexts/SessionContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { SessionOperationIndicator } from './LoadingIndicator';
 import SessionMigration from './SessionMigration';
+import StarButton from './StarButton';
 
 interface SessionBrowserProps {
   isOpen: boolean;
@@ -486,6 +487,17 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                       </div>
 
                       <div className="flex items-center gap-2 ml-4">
+                        <StarButton
+                          userId="demo-user" // TODO: Replace with actual user ID from auth
+                          itemType="session"
+                          itemId={session.sessionId}
+                          context={{
+                            title: session.name,
+                            description: `${session.messageCount || 0} messages • Last accessed ${formatDate(session.lastAccessedAt || session.createdAt)}`,
+                            agentId: session.lastAgentUsed,
+                          }}
+                          size="sm"
+                        />
                         <button
                           onClick={() => handleSessionSelect(session.sessionId)}
                           className="p-2 rounded-lg transition-colors"

@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { AgentPersona, DEFAULT_AGENT, getAgentById } from '@/lib/agents';
 import { Agent } from '@/hooks/useAgents';
+import { ClaudeModel, DEFAULT_MODEL } from '@/lib/models';
 
 interface AgentContextType {
   currentAgent: AgentPersona;
@@ -13,6 +14,8 @@ interface AgentContextType {
   addContext: (context: string) => void;
   clearContext: () => void;
   getSystemPrompt: (userInput?: string) => string;
+  getEffectiveModel: () => ClaudeModel;
+  getModelRationale: () => string;
   isUsingPowerAgent: boolean;
 }
 
@@ -34,6 +37,32 @@ export function AgentProvider({ children }: AgentProviderProps) {
   const [currentAgent, setCurrentAgent] = useState<AgentPersona>(DEFAULT_AGENT);
   const [currentPowerAgent, setCurrentPowerAgent] = useState<Agent | null>(null);
   const [conversationContext, setConversationContext] = useState<string[]>([]);
+  
+  // Load saved agent from localStorage on mount
+  useEffect(() => {
+    const savedAgentId = localStorage.getItem('rubber-ducky-current-agent');
+    if (savedAgentId) {
+      console.log('Restoring agent from localStorage:', savedAgentId);
+      const agent = getAgentById(savedAgentId);
+      if (agent.id !== DEFAULT_AGENT.id) {
+        setCurrentAgent(agent);
+        console.log('Successfully restored agent:', agent.name);
+      }
+    }
+  }, []);
+
+  // Save current agent ID to localStorage whenever it changes
+  useEffect(() => {
+    if (currentAgent.id !== DEFAULT_AGENT.id) {
+      localStorage.setItem('rubber-ducky-current-agent', currentAgent.id);
+      console.log('Saved current agent to localStorage:', currentAgent.id);
+    } else {
+      localStorage.removeItem('rubber-ducky-current-agent');
+      console.log('Removed current agent from localStorage (using default)');
+    }
+  }, [currentAgent]);
+
+  // Note: We'll access useModel within the callbacks to avoid hook order issues
 
   const setAgent = useCallback((agentId: string) => {
     const newAgent = getAgentById(agentId);
@@ -85,6 +114,33 @@ export function AgentProvider({ children }: AgentProviderProps) {
     return prompt;
   }, [currentAgent.systemPrompt, currentPowerAgent, conversationContext]);
 
+  const getEffectiveModel = useCallback((): ClaudeModel => {
+    // Return power agent's preferred model if available
+    if (currentPowerAgent?.preferredModel) {
+      return currentPowerAgent.preferredModel;
+    }
+    
+    // Return basic agent's preferred model if available
+    if (currentAgent?.preferredModel) {
+      return currentAgent.preferredModel;
+    }
+    
+    // Fall back to system default
+    return DEFAULT_MODEL;
+  }, [currentAgent, currentPowerAgent]);
+
+  const getModelRationale = useCallback((): string => {
+    if (currentPowerAgent?.modelJustification) {
+      return currentPowerAgent.modelJustification;
+    }
+    
+    if (currentAgent?.modelRationale) {
+      return currentAgent.modelRationale;
+    }
+    
+    return 'Using default model for general conversation';
+  }, [currentAgent, currentPowerAgent]);
+
   const isUsingPowerAgent = Boolean(currentPowerAgent);
 
   return (
@@ -98,6 +154,8 @@ export function AgentProvider({ children }: AgentProviderProps) {
         addContext,
         clearContext,
         getSystemPrompt,
+        getEffectiveModel,
+        getModelRationale,
         isUsingPowerAgent,
       }}
     >

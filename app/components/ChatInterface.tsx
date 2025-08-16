@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X } from 'lucide-react';
+import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star } from 'lucide-react';
 import Image from 'next/image';
 import VoiceInput from './VoiceInput';
 import AgentSelector from './AgentSelector';
@@ -10,6 +10,10 @@ import UserMenu from './auth/UserMenu';
 import FormattedMessage from './FormattedMessage';
 import ThemeToggle from './ThemeToggle';
 import ChatMessageModal from './ChatMessageModal';
+import ModelSelector from './ModelSelector';
+import ScrollNavigation from './ScrollNavigation';
+import StarButton from './StarButton';
+import StarsBrowser from './StarsBrowser';
 import { SessionLoadingIndicator, ChatThinkingIndicator } from './LoadingIndicator';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
@@ -17,6 +21,7 @@ import { useAgent } from '@/contexts/AgentContext';
 import { useDropdown } from '@/contexts/DropdownContext';
 import { useConversationManager } from '@/hooks/useConversationManager';
 import { useSession } from '@/contexts/SessionContext';
+import { useModel } from '@/contexts/ModelContext';
 import SessionBrowser from './SessionBrowser';
 
 // Random Gemini Image Component
@@ -69,8 +74,11 @@ export default function ChatInterface() {
   const [editingSessionName, setEditingSessionName] = useState('');
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
   const [newSessionName, setNewSessionName] = useState('');
+  const [collapsedMessages, setCollapsedMessages] = useState<Set<string>>(new Set());
+  const [isStarsBrowserOpen, setIsStarsBrowserOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   
   const { messages, isStreaming, error, sendMessage, clearMessages } = useStreamingChat();
   const { currentAgent, clearContext } = useAgent();
@@ -78,6 +86,7 @@ export default function ChatInterface() {
   const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
   const { isDark } = useTheme();
   const { currentSession, createSession, loadSession, renameSession, isLoadingSession, isProcessingMessage } = useSession();
+  const { currentModel } = useModel();
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
@@ -208,6 +217,27 @@ export default function ChatInterface() {
     } catch (error) {
       console.error('Failed to load session:', error);
     }
+  };
+
+  const toggleMessageCollapse = (messageId: string) => {
+    setCollapsedMessages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(messageId)) {
+        newSet.delete(messageId);
+      } else {
+        newSet.add(messageId);
+      }
+      return newSet;
+    });
+  };
+
+  const expandAllMessages = () => {
+    setCollapsedMessages(new Set());
+  };
+
+  const collapseAllMessages = () => {
+    const allMessageIds = new Set(messages.map(msg => msg.id));
+    setCollapsedMessages(allMessageIds);
   };
 
   const exportChat = () => {
@@ -393,6 +423,9 @@ export default function ChatInterface() {
           {/* User Menu */}
           <UserMenu />
           
+          {/* Model Selector */}
+          <ModelSelector size="sm" />
+          
           {/* Theme Toggle */}
           <ThemeToggle />
           
@@ -416,6 +449,28 @@ export default function ChatInterface() {
             title="Session History"
           >
             <History style={{ width: '16px', height: '16px' }} />
+          </button>
+          
+          {/* Stars Browser */}
+          <button
+            onClick={() => setIsStarsBrowserOpen(true)}
+            className="rounded-lg transition-all duration-300"
+            style={{ 
+              padding: '6px',
+              color: 'var(--text-secondary)',
+              border: '1px solid transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+              e.currentTarget.style.borderColor = 'var(--border-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.borderColor = 'transparent';
+            }}
+            title="Starred Items"
+          >
+            <Star style={{ width: '16px', height: '16px' }} />
           </button>
           
           <button
@@ -511,6 +566,63 @@ export default function ChatInterface() {
           >
             <Download style={{ width: '16px', height: '16px' }} />
           </button>
+          {/* Collapse/Expand All Messages */}
+          {messages.length > 0 && (
+            <>
+              <button
+                onClick={expandAllMessages}
+                disabled={collapsedMessages.size === 0}
+                className="rounded-lg transition-all duration-300"
+                style={{ 
+                  padding: '6px',
+                  color: collapsedMessages.size === 0 ? 'var(--text-quaternary)' : 'var(--text-secondary)',
+                  border: '1px solid transparent',
+                  opacity: collapsedMessages.size === 0 ? 0.5 : 1
+                }}
+                onMouseEnter={(e) => {
+                  if (collapsedMessages.size > 0) {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                    e.currentTarget.style.borderColor = 'var(--border-primary)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (collapsedMessages.size > 0) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.borderColor = 'transparent';
+                  }
+                }}
+                title="Expand all messages"
+              >
+                <Maximize2 style={{ width: '16px', height: '16px' }} />
+              </button>
+              <button
+                onClick={collapseAllMessages}
+                disabled={messages.length === 0}
+                className="rounded-lg transition-all duration-300"
+                style={{ 
+                  padding: '6px',
+                  color: messages.length === 0 ? 'var(--text-quaternary)' : 'var(--text-secondary)',
+                  border: '1px solid transparent',
+                  opacity: messages.length === 0 ? 0.5 : 1
+                }}
+                onMouseEnter={(e) => {
+                  if (messages.length > 0) {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                    e.currentTarget.style.borderColor = 'var(--border-primary)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (messages.length > 0) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.borderColor = 'transparent';
+                  }
+                }}
+                title="Collapse all messages"
+              >
+                <Minimize2 style={{ width: '16px', height: '16px' }} />
+              </button>
+            </>
+          )}
           <button
             onClick={handleClearMessages}
             disabled={messages.length === 0}
@@ -625,7 +737,7 @@ export default function ChatInterface() {
         ) : (
           /* AI-Focused Chat Interface */
           <div className="relative flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 space-y-8">
               {messages
                 .filter(message => message.role === 'assistant')
                 .map((message, index, aiMessages) => {
@@ -659,47 +771,110 @@ export default function ChatInterface() {
                           
                           {/* Full-width AI Message */}
                           <div 
-                            className="flex-1 relative shadow-xl backdrop-blur-sm transition-all duration-300 group-hover:shadow-2xl rounded-[2rem] cursor-pointer"
+                            className="flex-1 relative shadow-xl backdrop-blur-sm transition-all duration-300 group-hover:shadow-2xl rounded-[2rem]"
                             style={{ 
                               padding: '2rem 3rem',
                               border: '4px solid #eab308',
                               boxShadow: '0 25px 50px -12px rgba(234, 179, 8, 0.2)',
                               backgroundColor: isDark ? 'var(--bg-secondary)' : 'white'
                             }}
-                            onClick={() => handleMessageClick(message)}
-                            title="Click to expand message"
                           >
                             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 rounded-[2rem]"></div>
                             
-                            {/* Message Content */}
-                            <div className="relative">
-                              <FormattedMessage 
-                                content={message.content || (isCurrentlyStreaming ? '' : '')}
-                                textSizeClass={getTextSizeClass()}
-                                expandedView={true}
-                              />
-                              {isCurrentlyStreaming && (
-                                <div className="flex items-center gap-1 mt-4">
-                                  <div className="flex space-x-1">
-                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '0ms' }}></div>
-                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '150ms' }}></div>
-                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '300ms' }}></div>
+                            {/* Message Header with Collapse Button */}
+                            <div className="relative flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>
+                                  {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
+                                    hour: 'numeric', 
+                                    minute: '2-digit',
+                                    hour12: true 
+                                  })}
+                                </span>
+                                {isCurrentlyStreaming && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse shadow-sm"></span>
+                                    <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Responding...</span>
                                   </div>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <StarButton
+                                    userId="demo-user" // TODO: Replace with actual user ID from auth
+                                    itemType="message"
+                                    itemId={message.id}
+                                    context={{
+                                      sessionId: currentSession?.sessionId,
+                                      messageContent: message.content,
+                                      agentId: message.agentUsed || currentAgent.id,
+                                      title: `Message from ${new Date(message.timestamp || new Date()).toLocaleDateString()}`,
+                                    }}
+                                    size="sm"
+                                  />
                                 </div>
-                              )}
+                                <button
+                                  onClick={() => handleMessageClick(message)}
+                                  className="p-1 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                  style={{ color: 'var(--text-tertiary)' }}
+                                  title="Expand message"
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                  }}
+                                >
+                                  <Maximize2 style={{ width: '14px', height: '14px' }} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleMessageCollapse(message.id);
+                                  }}
+                                  className="p-1 rounded-lg transition-colors"
+                                  style={{ color: 'var(--text-secondary)' }}
+                                  title={collapsedMessages.has(message.id) ? "Expand message" : "Collapse message"}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                  }}
+                                >
+                                  {collapsedMessages.has(message.id) ? 
+                                    <Maximize2 style={{ width: '14px', height: '14px' }} /> : 
+                                    <Minimize2 style={{ width: '14px', height: '14px' }} />
+                                  }
+                                </button>
+                              </div>
                             </div>
                             
-                            {/* Timestamp and status */}
-                            <div className="text-xs mt-2 font-medium" style={{ color: 'var(--text-tertiary)' }}>
-                              {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
-                                hour: 'numeric', 
-                                minute: '2-digit',
-                                hour12: true 
-                              })}
-                              {isCurrentlyStreaming && (
-                                <span className="ml-2 inline-flex items-center">
-                                  <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse shadow-sm"></span>
-                                </span>
+                            {/* Message Content */}
+                            <div className="relative">
+                              {collapsedMessages.has(message.id) ? (
+                                /* Collapsed View */
+                                <div className="text-sm italic" style={{ color: 'var(--text-tertiary)' }}>
+                                  Message collapsed • Click expand to view
+                                </div>
+                              ) : (
+                                /* Full Content */
+                                <>
+                                  <FormattedMessage 
+                                    content={message.content || (isCurrentlyStreaming ? '' : '')}
+                                    textSizeClass={getTextSizeClass()}
+                                    expandedView={true}
+                                  />
+                                  {isCurrentlyStreaming && (
+                                    <div className="flex items-center gap-1 mt-4">
+                                      <div className="flex space-x-1">
+                                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '0ms' }}></div>
+                                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '150ms' }}></div>
+                                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '300ms' }}></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
@@ -1002,6 +1177,18 @@ export default function ChatInterface() {
         onSelectSession={handleSelectSession}
       />
 
+      {/* Stars Browser */}
+      <StarsBrowser
+        isOpen={isStarsBrowserOpen}
+        onClose={() => setIsStarsBrowserOpen(false)}
+        userId="demo-user" // TODO: Replace with actual user ID from auth
+        onSelectStar={(star) => {
+          // Handle star selection - could navigate to the starred item
+          console.log('Selected star:', star);
+          setIsStarsBrowserOpen(false);
+        }}
+      />
+
       {/* New Session Modal */}
       {showNewSessionModal && (
         <div className="fixed inset-0 z-50 overflow-hidden">
@@ -1129,6 +1316,9 @@ export default function ChatInterface() {
           </div>
         </div>
       )}
+
+      {/* Floating Scroll Navigation */}
+      <ScrollNavigation containerRef={chatContainerRef} />
     </div>
   );
 }

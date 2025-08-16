@@ -1,0 +1,72 @@
+import { NextRequest, NextResponse } from 'next/server';
+import connectDB from '@/lib/mongodb';
+import Star from '@/models/Star';
+
+// PUT /api/stars/[starId] - Update a star
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { starId: string } }
+) {
+  try {
+    await connectDB();
+    
+    const { starId } = params;
+    const updates = await request.json();
+    
+    // Remove fields that shouldn't be updated
+    const { starId: _, userId: __, itemType: ___, itemId: ____, ...allowedUpdates } = updates;
+    
+    const star = await Star.findOneAndUpdate(
+      { starId },
+      { 
+        ...allowedUpdates,
+        lastAccessedAt: new Date(),
+      },
+      { new: true }
+    );
+
+    if (!star) {
+      return NextResponse.json(
+        { error: 'Star not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ star });
+  } catch (error) {
+    console.error('Error updating star:', error);
+    return NextResponse.json(
+      { error: 'Failed to update star' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/stars/[starId] - Delete a star
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { starId: string } }
+) {
+  try {
+    await connectDB();
+    
+    const { starId } = params;
+    
+    const star = await Star.findOneAndDelete({ starId });
+
+    if (!star) {
+      return NextResponse.json(
+        { error: 'Star not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ message: 'Star deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting star:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete star' },
+      { status: 500 }
+    );
+  }
+}

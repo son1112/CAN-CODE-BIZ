@@ -359,10 +359,36 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     await loadSessions();
   };
 
-  // Load sessions on mount
+  // Load current session from localStorage on mount
   useEffect(() => {
+    const savedSessionId = localStorage.getItem('rubber-ducky-current-session');
+    if (savedSessionId) {
+      console.log('Restoring session from localStorage:', savedSessionId);
+      loadSession(savedSessionId).then((session) => {
+        if (session) {
+          console.log('Successfully restored session:', session.name);
+        } else {
+          console.log('Failed to restore session, clearing localStorage');
+          localStorage.removeItem('rubber-ducky-current-session');
+        }
+      }).catch((error) => {
+        console.error('Error restoring session:', error);
+        localStorage.removeItem('rubber-ducky-current-session');
+      });
+    }
     loadSessions();
   }, []);
+
+  // Save current session ID to localStorage whenever it changes
+  useEffect(() => {
+    if (currentSessionId) {
+      localStorage.setItem('rubber-ducky-current-session', currentSessionId);
+      console.log('Saved current session to localStorage:', currentSessionId);
+    } else {
+      localStorage.removeItem('rubber-ducky-current-session');
+      console.log('Removed current session from localStorage');
+    }
+  }, [currentSessionId]);
 
   const value: SessionContextType = {
     // Current session state

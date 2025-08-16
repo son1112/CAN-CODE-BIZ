@@ -1,3 +1,5 @@
+import { ClaudeModel } from './models';
+
 export interface AgentPersona {
   id: string;
   name: string;
@@ -5,6 +7,8 @@ export interface AgentPersona {
   systemPrompt: string;
   conversationStarters?: string[];
   keyTopics?: string[];
+  preferredModel?: ClaudeModel;
+  modelRationale?: string;
 }
 
 export const DEFAULT_AGENT: AgentPersona = {

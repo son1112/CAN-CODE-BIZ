@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { streamClaudeResponse } from '@/lib/claude';
+import { ClaudeModel, DEFAULT_MODEL } from '@/lib/models';
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, systemPrompt } = await request.json();
+    const { messages, systemPrompt, model = DEFAULT_MODEL } = await request.json();
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of streamClaudeResponse(messages, systemPrompt)) {
+          for await (const chunk of streamClaudeResponse(messages, systemPrompt, model as ClaudeModel)) {
             const data = `data: ${JSON.stringify(chunk)}\n\n`;
             controller.enqueue(encoder.encode(data));
           }

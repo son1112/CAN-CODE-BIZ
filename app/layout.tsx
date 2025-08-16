@@ -3,6 +3,7 @@ import { Roboto, Roboto_Mono } from "next/font/google";
 import { AgentProvider } from "@/contexts/AgentContext";
 import { DropdownProvider } from "@/contexts/DropdownContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ModelProvider } from "@/contexts/ModelContext";
 import { SessionProvider } from "next-auth/react";
 import { SessionProvider as ChatSessionProvider } from "@/contexts/SessionContext";
 import "./globals.css";
@@ -81,13 +82,15 @@ export default function RootLayout({
       >
         <SessionProvider>
           <ThemeProvider>
-            <AgentProvider>
-              <ChatSessionProvider>
-                <DropdownProvider>
-                  {children}
-                </DropdownProvider>
-              </ChatSessionProvider>
-            </AgentProvider>
+            <ModelProvider>
+              <AgentProvider>
+                <ChatSessionProvider>
+                  <DropdownProvider>
+                    {children}
+                  </DropdownProvider>
+                </ChatSessionProvider>
+              </AgentProvider>
+            </ModelProvider>
           </ThemeProvider>
         </SessionProvider>
       </body>

@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { ClaudeModel } from '@/lib/models';
 
 export interface Agent {
   name: string;
   description: string;
   prompt: string;
+  preferredModel?: ClaudeModel;
+  modelJustification?: string;
 }
 
 interface UseAgentsReturn {
