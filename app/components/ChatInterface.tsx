@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star } from 'lucide-react';
+import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
 import VoiceInput from './VoiceInput';
 import AgentSelector from './AgentSelector';
@@ -76,6 +76,7 @@ export default function ChatInterface() {
   const [newSessionName, setNewSessionName] = useState('');
   const [collapsedMessages, setCollapsedMessages] = useState<Set<string>>(new Set());
   const [isStarsBrowserOpen, setIsStarsBrowserOpen] = useState(false);
+  const [isOverflowMenuOpen, setIsOverflowMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -122,9 +123,48 @@ export default function ChatInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleQuickNewSession = async () => {
+    try {
+      await createSession(); // Creates session with auto-generated name
+      clearMessages();
+      clearContext();
+      if (isContinuousMode) {
+        endConversation();
+      }
+    } catch (error) {
+      console.error('Failed to create new session:', error);
+    }
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Add keyboard shortcut for new session (Ctrl/Cmd + N)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n' && !e.shiftKey) {
+        e.preventDefault();
+        handleQuickNewSession();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [createSession, clearMessages, clearContext, isContinuousMode, endConversation]);
+
+  // Close overflow menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (isOverflowMenuOpen && !target.closest('.md\\:hidden')) {
+        setIsOverflowMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOverflowMenuOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -398,10 +438,10 @@ export default function ChatInterface() {
           
           <AgentSelector />
         </div>
-        <div className="flex items-center" style={{ gap: '12px' }}>
+        <div className="flex items-center" style={{ gap: '8px' }}>
           {isContinuousMode && (
             <div 
-              className="flex items-center rounded-full font-semibold backdrop-blur-sm border mr-2" 
+              className="hidden sm:flex items-center rounded-full font-semibold backdrop-blur-sm border mr-2" 
               style={{ 
                 gap: '6px', 
                 padding: '6px 12px', 
@@ -420,93 +460,16 @@ export default function ChatInterface() {
             </div>
           )}
           
-          {/* User Menu */}
+          {/* Core Controls - Always Visible */}
           <UserMenu />
-          
-          {/* Model Selector */}
           <ModelSelector size="sm" />
-          
-          {/* Theme Toggle */}
           <ThemeToggle />
           
-          {/* Session History */}
-          <button
-            onClick={() => setIsSessionBrowserOpen(true)}
-            className="rounded-lg transition-all duration-300"
-            style={{ 
-              padding: '6px',
-              color: 'var(--text-secondary)',
-              border: '1px solid transparent'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-              e.currentTarget.style.borderColor = 'var(--border-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = 'transparent';
-            }}
-            title="Session History"
-          >
-            <History style={{ width: '16px', height: '16px' }} />
-          </button>
-          
-          {/* Stars Browser */}
-          <button
-            onClick={() => setIsStarsBrowserOpen(true)}
-            className="rounded-lg transition-all duration-300"
-            style={{ 
-              padding: '6px',
-              color: 'var(--text-secondary)',
-              border: '1px solid transparent'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-              e.currentTarget.style.borderColor = 'var(--border-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = 'transparent';
-            }}
-            title="Starred Items"
-          >
-            <Star style={{ width: '16px', height: '16px' }} />
-          </button>
-          
-          <button
-            onClick={toggleContinuousMode}
-            className="rounded-lg transition-all duration-300"
-            style={{ 
-              padding: '6px',
-              backgroundColor: isContinuousMode ? 'var(--accent-primary)' : 'transparent',
-              color: isContinuousMode ? 'white' : 'var(--text-secondary)',
-              border: `1px solid ${isContinuousMode ? 'var(--accent-primary)' : 'transparent'}`,
-              boxShadow: isContinuousMode ? 'var(--shadow-md)' : 'none'
-            }}
-            onMouseEnter={(e) => {
-              if (!isContinuousMode) {
-                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-                e.currentTarget.style.borderColor = 'var(--border-primary)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isContinuousMode) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = 'transparent';
-              }
-            }}
-            title={isContinuousMode ? 'Disable continuous conversation' : 'Enable continuous conversation'}
-          >
-            <MessageCircle style={{ width: '16px', height: '16px' }} />
-          </button>
-          <div className="relative">
+          {/* Desktop Controls - Hidden on small screens */}
+          <div className="hidden md:flex items-center" style={{ gap: '8px' }}>
+            {/* New Session */}
             <button
-              onClick={() => {
-                const sizes: Array<'sm' | 'base' | 'lg' | 'xl'> = ['sm', 'base', 'lg', 'xl'];
-                const currentIndex = sizes.indexOf(textSize);
-                const nextIndex = (currentIndex + 1) % sizes.length;
-                setTextSize(sizes[nextIndex]);
-              }}
+              onClick={handleQuickNewSession}
               className="rounded-lg transition-all duration-300"
               style={{ 
                 padding: '6px',
@@ -521,134 +484,187 @@ export default function ChatInterface() {
                 e.currentTarget.style.backgroundColor = 'transparent';
                 e.currentTarget.style.borderColor = 'transparent';
               }}
-              title={`Text size: ${textSize.toUpperCase()}`}
+              title="New Session (Ctrl/Cmd + N)"
+              disabled={isLoadingSession}
             >
-              <Type style={{ width: '16px', height: '16px' }} />
-              <span 
-                className="absolute rounded-full flex items-center justify-center font-bold" 
-                style={{ 
-                  top: '-2px', 
-                  right: '-2px', 
-                  fontSize: '10px', 
-                  width: '16px', 
-                  height: '16px',
-                  backgroundColor: 'var(--accent-primary)',
-                  color: 'white'
-                }}
-              >
-                {textSize === 'sm' ? 'S' : textSize === 'base' ? 'M' : textSize === 'lg' ? 'L' : 'XL'}
-              </span>
+              <Plus style={{ width: '16px', height: '16px' }} />
             </button>
-          </div>
-          <button
-            onClick={exportChat}
-            disabled={messages.length === 0}
-            className="rounded-lg transition-all duration-300"
-            style={{ 
-              padding: '6px',
-              color: messages.length === 0 ? 'var(--text-quaternary)' : 'var(--text-secondary)',
-              border: '1px solid transparent',
-              opacity: messages.length === 0 ? 0.5 : 1
-            }}
-            onMouseEnter={(e) => {
-              if (messages.length > 0) {
+            
+            {/* Session History */}
+            <button
+              onClick={() => setIsSessionBrowserOpen(true)}
+              className="rounded-lg transition-all duration-300"
+              style={{ 
+                padding: '6px',
+                color: 'var(--text-secondary)',
+                border: '1px solid transparent'
+              }}
+              onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
                 e.currentTarget.style.borderColor = 'var(--border-primary)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (messages.length > 0) {
+              }}
+              onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
                 e.currentTarget.style.borderColor = 'transparent';
-              }
-            }}
-            title="Export chat"
-          >
-            <Download style={{ width: '16px', height: '16px' }} />
-          </button>
-          {/* Collapse/Expand All Messages */}
-          {messages.length > 0 && (
-            <>
-              <button
-                onClick={expandAllMessages}
-                disabled={collapsedMessages.size === 0}
-                className="rounded-lg transition-all duration-300"
-                style={{ 
-                  padding: '6px',
-                  color: collapsedMessages.size === 0 ? 'var(--text-quaternary)' : 'var(--text-secondary)',
-                  border: '1px solid transparent',
-                  opacity: collapsedMessages.size === 0 ? 0.5 : 1
-                }}
-                onMouseEnter={(e) => {
-                  if (collapsedMessages.size > 0) {
-                    e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-                    e.currentTarget.style.borderColor = 'var(--border-primary)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (collapsedMessages.size > 0) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.borderColor = 'transparent';
-                  }
-                }}
-                title="Expand all messages"
-              >
-                <Maximize2 style={{ width: '16px', height: '16px' }} />
-              </button>
-              <button
-                onClick={collapseAllMessages}
-                disabled={messages.length === 0}
-                className="rounded-lg transition-all duration-300"
-                style={{ 
-                  padding: '6px',
-                  color: messages.length === 0 ? 'var(--text-quaternary)' : 'var(--text-secondary)',
-                  border: '1px solid transparent',
-                  opacity: messages.length === 0 ? 0.5 : 1
-                }}
-                onMouseEnter={(e) => {
-                  if (messages.length > 0) {
-                    e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-                    e.currentTarget.style.borderColor = 'var(--border-primary)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (messages.length > 0) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.borderColor = 'transparent';
-                  }
-                }}
-                title="Collapse all messages"
-              >
-                <Minimize2 style={{ width: '16px', height: '16px' }} />
-              </button>
-            </>
-          )}
-          <button
-            onClick={handleClearMessages}
-            disabled={messages.length === 0}
-            className="rounded-lg transition-all duration-300"
-            style={{ 
-              padding: '6px',
-              color: messages.length === 0 ? 'var(--text-quaternary)' : 'var(--status-error)',
-              border: '1px solid transparent',
-              opacity: messages.length === 0 ? 0.5 : 1
-            }}
-            onMouseEnter={(e) => {
-              if (messages.length > 0) {
-                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-                e.currentTarget.style.borderColor = 'var(--status-error)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (messages.length > 0) {
+              }}
+              title="Session History"
+            >
+              <History style={{ width: '16px', height: '16px' }} />
+            </button>
+            
+            {/* Stars Browser */}
+            <button
+              onClick={() => setIsStarsBrowserOpen(true)}
+              className="rounded-lg transition-all duration-300"
+              style={{ 
+                padding: '6px',
+                color: 'var(--text-secondary)',
+                border: '1px solid transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                e.currentTarget.style.borderColor = 'var(--border-primary)';
+              }}
+              onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
                 e.currentTarget.style.borderColor = 'transparent';
-              }
-            }}
-            title="Clear chat"
-          >
-            <Trash2 style={{ width: '16px', height: '16px' }} />
-          </button>
+              }}
+              title="Starred Items"
+            >
+              <Star style={{ width: '16px', height: '16px' }} />
+            </button>
+            
+            {/* Continuous Mode */}
+            <button
+              onClick={toggleContinuousMode}
+              className="rounded-lg transition-all duration-300"
+              style={{ 
+                padding: '6px',
+                backgroundColor: isContinuousMode ? 'var(--accent-primary)' : 'transparent',
+                color: isContinuousMode ? 'white' : 'var(--text-secondary)',
+                border: `1px solid ${isContinuousMode ? 'var(--accent-primary)' : 'transparent'}`,
+                boxShadow: isContinuousMode ? 'var(--shadow-md)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!isContinuousMode) {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                  e.currentTarget.style.borderColor = 'var(--border-primary)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isContinuousMode) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }
+              }}
+              title={isContinuousMode ? 'Disable continuous conversation' : 'Enable continuous conversation'}
+            >
+              <MessageCircle style={{ width: '16px', height: '16px' }} />
+            </button>
+          </div>
+          
+          {/* Mobile Overflow Menu */}
+          <div className="md:hidden relative">
+            <button
+              onClick={() => setIsOverflowMenuOpen(!isOverflowMenuOpen)}
+              className="rounded-lg transition-all duration-300"
+              style={{ 
+                padding: '6px',
+                color: 'var(--text-secondary)',
+                border: '1px solid transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                e.currentTarget.style.borderColor = 'var(--border-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'transparent';
+              }}
+              title="More options"
+            >
+              <MoreHorizontal style={{ width: '16px', height: '16px' }} />
+            </button>
+            
+            {/* Overflow Menu Dropdown */}
+            {isOverflowMenuOpen && (
+              <div 
+                className="absolute right-0 top-full mt-2 py-2 rounded-lg shadow-lg border z-50"
+                style={{
+                  backgroundColor: 'var(--bg-primary)',
+                  borderColor: 'var(--border-primary)',
+                  minWidth: '180px'
+                }}
+              >
+                {/* New Session */}
+                <button
+                  onClick={() => {
+                    handleQuickNewSession();
+                    setIsOverflowMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors"
+                  style={{ color: 'var(--text-primary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  disabled={isLoadingSession}
+                >
+                  <Plus style={{ width: '16px', height: '16px' }} />
+                  <span className="text-sm">New Session</span>
+                </button>
+                
+                {/* Session History */}
+                <button
+                  onClick={() => {
+                    setIsSessionBrowserOpen(true);
+                    setIsOverflowMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors"
+                  style={{ color: 'var(--text-primary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <History style={{ width: '16px', height: '16px' }} />
+                  <span className="text-sm">Session History</span>
+                </button>
+                
+                {/* Stars Browser */}
+                <button
+                  onClick={() => {
+                    setIsStarsBrowserOpen(true);
+                    setIsOverflowMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors"
+                  style={{ color: 'var(--text-primary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <Star style={{ width: '16px', height: '16px' }} />
+                  <span className="text-sm">Starred Items</span>
+                </button>
+                
+                {/* Continuous Mode */}
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                <button
+                  onClick={() => {
+                    toggleContinuousMode();
+                    setIsOverflowMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors"
+                  style={{ color: isContinuousMode ? 'var(--accent-primary)' : 'var(--text-primary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <MessageCircle style={{ width: '16px', height: '16px' }} />
+                  <span className="text-sm">
+                    {isContinuousMode ? 'Disable Live Mode' : 'Enable Live Mode'}
+                  </span>
+                  {isContinuousMode && (
+                    <div className="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -884,8 +900,8 @@ export default function ChatInterface() {
                   );
                 })}
               
-              {/* Show thinking bubble when processing a message */}
-              {isProcessingMessage && (
+              {/* Show thinking bubble when processing a message or when streaming but no content yet */}
+              {(isProcessingMessage || (isStreaming && messages.filter(m => m.role === 'assistant').length === 0)) && (
                 <div className="group">
                   {/* Thinking bubble that matches AI response style */}
                   <div className="w-full">
@@ -955,24 +971,42 @@ export default function ChatInterface() {
                               </div>
                             </div>
                             
-                            {/* Thinking text with animated dots */}
-                            <div className="flex items-center space-x-2">
-                              <span className="text-lg font-medium" style={{ color: 'var(--text-secondary)' }}>
-                                Rubber Ducky is thinking
-                              </span>
-                              <div className="flex items-center space-x-1">
-                                {[0, 1, 2].map((i) => (
-                                  <div
-                                    key={i}
-                                    className="w-2 h-2 rounded-full animate-pulse"
-                                    style={{
-                                      backgroundColor: 'var(--text-tertiary)',
-                                      animationDelay: `${i * 0.4}s`,
-                                      animationDuration: '1.6s'
-                                    }}
-                                  />
-                                ))}
+                            {/* Enhanced thinking indicator with more prominent animations */}
+                            <div className="flex flex-col items-center space-y-4">
+                              <div className="flex items-center space-x-3">
+                                <span className="text-xl font-semibold animate-pulse" style={{ color: 'var(--accent-primary)' }}>
+                                  🦆 Rubber Ducky is thinking
+                                </span>
+                                <div className="flex items-center space-x-1">
+                                  {[0, 1, 2].map((i) => (
+                                    <div
+                                      key={i}
+                                      className="w-3 h-3 rounded-full animate-bounce"
+                                      style={{
+                                        backgroundColor: 'var(--accent-primary)',
+                                        animationDelay: `${i * 0.2}s`,
+                                        animationDuration: '1s'
+                                      }}
+                                    />
+                                  ))}
+                                </div>
                               </div>
+                              
+                              {/* Progress indicator */}
+                              <div className="w-32 h-1 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full animate-pulse"
+                                  style={{
+                                    width: '100%',
+                                    animationDuration: '2s',
+                                    animationIterationCount: 'infinite'
+                                  }}
+                                />
+                              </div>
+                              
+                              <span className="text-sm text-center" style={{ color: 'var(--text-tertiary)' }}>
+                                Processing your message with Claude AI...
+                              </span>
                             </div>
                           </div>
                         </div>

@@ -48,11 +48,12 @@ export function useAgents(): UseAgentsReturn {
       }
 
       const data = await response.json();
-      setAgents(data.agents || []);
+      const agents = data.agents || [];
+      setAgents(agents);
       
       // If we have agents but no selected agent, select the first one
-      if (data.agents.length > 0 && !selectedAgent) {
-        setSelectedAgent(data.agents[0]);
+      if (agents.length > 0) {
+        setSelectedAgent(prevSelected => prevSelected || agents[0]);
       }
     } catch (err: any) {
       console.error('Error loading agents:', err);
