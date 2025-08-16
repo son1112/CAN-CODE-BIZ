@@ -140,7 +140,6 @@ export default function AgentSelector() {
               </div>
 
               {/* CLI Power Agents Section */}
-              {console.log('Rendering Power Agents:', { cliLoading, agentCount: cliAgents.length, agents: cliAgents })}
               {!cliLoading && cliAgents.length > 0 && (
                 <div className="border-t border-gray-100 pt-4 mb-4">
                   <div className="px-2 py-1 text-xs font-semibold text-purple-600 uppercase tracking-wide flex items-center gap-2">
@@ -152,47 +151,32 @@ export default function AgentSelector() {
                       ✅ Power Agents Working: {cliAgents.length} agents loaded
                     </div>
                     {cliAgents.map((agent) => (
-                      <button
+                      <div 
                         key={`cli-${agent.name}`}
-                        onClick={() => {
-                          console.log('Selected Power Agent:', agent.name);
-                          setPowerAgent(agent);
-                          setIsOpen(false);
-                          setIsDropdownOpen(false);
-                        }}
                         className={`
-                          group w-full text-left p-3 rounded-md hover:bg-purple-50 transition-colors border border-transparent hover:border-purple-200
+                          group w-full text-left rounded-md hover:bg-purple-50 transition-colors border border-transparent hover:border-purple-200 relative
                           ${currentPowerAgent?.name === agent.name ? 'bg-purple-50 border-purple-200' : ''}
                         `}
                       >
-                        <div className="flex items-start gap-3">
+                        <div 
+                          className="flex items-start gap-3 p-3 cursor-pointer"
+                          onClick={() => {
+                            console.log('Selected Power Agent:', agent.name);
+                            setPowerAgent(agent);
+                            setIsOpen(false);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
                           <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-500 to-pink-500">
                             <Zap className="w-4 h-4 text-white" />
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
-                                {agent.name}
-                                <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full font-medium">
-                                  POWER
-                                </span>
-                              </div>
-                              <div 
-                                onClick={(e) => e.stopPropagation()}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <StarButton
-                                  userId="demo-user" // TODO: Replace with actual user ID from auth
-                                  itemType="agent"
-                                  itemId={agent.name}
-                                  context={{
-                                    title: agent.name,
-                                    description: agent.description,
-                                  }}
-                                  size="sm"
-                                />
-                              </div>
+                            <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
+                              {agent.name}
+                              <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full font-medium">
+                                POWER
+                              </span>
                             </div>
                             <div className="text-xs text-gray-500 mt-1 line-clamp-3">
                               {agent.description.length > 150 
@@ -201,7 +185,21 @@ export default function AgentSelector() {
                             </div>
                           </div>
                         </div>
-                      </button>
+                        
+                        {/* Star Button positioned absolutely */}
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <StarButton
+                            userId="demo-user" // TODO: Replace with actual user ID from auth
+                            itemType="agent"
+                            itemId={agent.name}
+                            context={{
+                              title: agent.name,
+                              description: agent.description,
+                            }}
+                            size="sm"
+                          />
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -215,19 +213,21 @@ export default function AgentSelector() {
                 </div>
                 <div className="space-y-1">
                   {AVAILABLE_AGENTS.map((agent) => (
-                    <button
+                    <div 
                       key={agent.id}
-                      onClick={() => {
-                        setAgent(agent.id);
-                        setIsOpen(false);
-                        setIsDropdownOpen(false);
-                      }}
                       className={`
-                        group w-full text-left p-3 rounded-md hover:bg-gray-50 transition-colors
+                        group w-full text-left rounded-md hover:bg-gray-50 transition-colors relative
                         ${currentAgent.id === agent.id && !isUsingPowerAgent ? 'bg-blue-50 border border-blue-200' : ''}
                       `}
                     >
-                      <div className="flex items-start gap-3">
+                      <div 
+                        className="flex items-start gap-3 p-3 cursor-pointer"
+                        onClick={() => {
+                          setAgent(agent.id);
+                          setIsOpen(false);
+                          setIsDropdownOpen(false);
+                        }}
+                      >
                         <div className={`
                           w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
                           ${currentAgent.id === agent.id && !isUsingPowerAgent ? 'bg-blue-100' : 'bg-gray-100'}
@@ -240,25 +240,8 @@ export default function AgentSelector() {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <div className="font-medium text-gray-900 text-sm">
-                              {agent.name}
-                            </div>
-                            <div 
-                              onClick={(e) => e.stopPropagation()}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <StarButton
-                                userId="demo-user" // TODO: Replace with actual user ID from auth
-                                itemType="agent"
-                                itemId={agent.id}
-                                context={{
-                                  title: agent.name,
-                                  description: agent.description,
-                                }}
-                                size="sm"
-                              />
-                            </div>
+                          <div className="font-medium text-gray-900 text-sm">
+                            {agent.name}
                           </div>
                           <div className="text-xs text-gray-500 mt-1 line-clamp-2">
                             {agent.description}
@@ -283,7 +266,21 @@ export default function AgentSelector() {
                           )}
                         </div>
                       </div>
-                    </button>
+                      
+                      {/* Star Button positioned absolutely */}
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <StarButton
+                          userId="demo-user" // TODO: Replace with actual user ID from auth
+                          itemType="agent"
+                          itemId={agent.id}
+                          context={{
+                            title: agent.name,
+                            description: agent.description,
+                          }}
+                          size="sm"
+                        />
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -294,6 +291,32 @@ export default function AgentSelector() {
                   <div className="px-2 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-2">
                     <Sparkles className="w-3 h-3 animate-spin" />
                     Loading Power Agents...
+                  </div>
+                </div>
+              )}
+
+              {/* Empty state for CLI agents */}
+              {!cliLoading && !cliError && cliAgents.length === 0 && (
+                <div className="border-t border-gray-100 pt-4 mb-4">
+                  <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                    <Sparkles className="w-3 h-3" />
+                    Power Agents
+                  </div>
+                  <div className="px-3 py-4 text-center">
+                    <div className="text-gray-400 text-sm mb-2">No Power Agents yet</div>
+                    <div className="text-xs text-gray-500 mb-3">
+                      Create custom AI agents tailored to your specific needs
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsCreateAgentModalOpen(true);
+                        setIsOpen(false);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="text-xs text-purple-600 hover:text-purple-700 font-medium border border-purple-200 hover:border-purple-300 rounded-md px-3 py-1.5 transition-colors"
+                    >
+                      Create Your First Power Agent
+                    </button>
                   </div>
                 </div>
               )}

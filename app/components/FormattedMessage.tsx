@@ -31,6 +31,74 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       }
     };
 
+    // Process inline formatting (code, bold, italic)
+    const processInlineFormatting = (text: string): React.ReactNode => {
+      // First handle inline code (highest priority)
+      const codeRegex = /(`[^`]+`)/g;
+      const parts = text.split(codeRegex);
+      
+      return parts.map((part, i) => {
+        // Handle inline code
+        if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+          return (
+            <code 
+              key={i}
+              className="px-2 py-1 rounded text-sm font-mono"
+              style={{
+                backgroundColor: expandedView ? 'var(--bg-tertiary)' : '#374151',
+                color: expandedView ? 'var(--text-primary)' : '#f9fafb',
+                fontFamily: 'var(--font-roboto-mono), monospace'
+              }}
+            >
+              {part.slice(1, -1)}
+            </code>
+          );
+        }
+        
+        // Process bold and italic for non-code parts
+        return processTextFormatting(part, i);
+      });
+    };
+
+    const processTextFormatting = (text: string, keyPrefix: number): React.ReactNode => {
+      // Handle bold text (**text**)
+      const boldRegex = /(\*\*[^*]+\*\*)/g;
+      const boldParts = text.split(boldRegex);
+      
+      return boldParts.map((boldPart, j) => {
+        if (boldPart.startsWith('**') && boldPart.endsWith('**') && boldPart.length > 4) {
+          const innerText = boldPart.slice(2, -2);
+          // Check for italic within bold
+          return (
+            <strong key={`${keyPrefix}-bold-${j}`} className="font-semibold">
+              {processItalicFormatting(innerText, `${keyPrefix}-bold-${j}`)}
+            </strong>
+          );
+        }
+        
+        // Process italic for non-bold parts
+        return processItalicFormatting(boldPart, `${keyPrefix}-${j}`);
+      });
+    };
+
+    const processItalicFormatting = (text: string, keyPrefix: string): React.ReactNode => {
+      // Handle italic text (*text*) - but not **text**
+      const italicRegex = /(\*[^*]+\*)/g;
+      const italicParts = text.split(italicRegex);
+      
+      return italicParts.map((italicPart, k) => {
+        if (italicPart.startsWith('*') && italicPart.endsWith('*') && italicPart.length > 2 && !italicPart.startsWith('**')) {
+          return (
+            <em key={`${keyPrefix}-italic-${k}`} className="italic">
+              {italicPart.slice(1, -1)}
+            </em>
+          );
+        }
+        
+        return italicPart;
+      });
+    };
+
     const flushCodeBlock = () => {
       if (codeBlockLines.length > 0) {
         elements.push(
@@ -158,7 +226,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
               className="leading-relaxed"
               style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
             >
-              {content}
+              {processInlineFormatting(content)}
             </span>
           </li>
         );
@@ -176,7 +244,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
             className="text-base font-bold mb-2 mt-4 border-l-4 border-gradient-to-b border-yellow-500 pl-4 bg-gradient-to-r from-yellow-500/10 to-transparent py-2 rounded-r-md"
             style={{ color: expandedView ? 'var(--accent-secondary)' : '#fcd34d' }}
           >
-            {title}
+            {processInlineFormatting(title)}
           </h4>
         );
         return;
@@ -193,13 +261,13 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
               className="font-bold"
               style={{ color: expandedView ? 'var(--accent-primary)' : '#fcd34d' }}
             >
-              {keyword}:
+              {processInlineFormatting(keyword)}:
             </span>
             <span 
               className="ml-2 leading-relaxed"
               style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
             >
-              {description}
+              {processInlineFormatting(description)}
             </span>
           </div>
         );
@@ -229,28 +297,6 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       const isShortLine = trimmedLine.length < 200;
       const startsWithCapital = /^[A-Z]/.test(trimmedLine);
       
-      // Process inline code (single backticks)
-      const processInlineCode = (text: string): React.ReactNode => {
-        const parts = text.split(/(`[^`]+`)/);
-        return parts.map((part, i) => {
-          if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
-            return (
-              <code 
-                key={i}
-                className="px-2 py-1 rounded text-sm font-mono"
-                style={{
-                  backgroundColor: expandedView ? 'var(--bg-tertiary)' : '#374151',
-                  color: expandedView ? 'var(--text-primary)' : '#f9fafb',
-                  fontFamily: 'var(--font-roboto-mono), monospace'
-                }}
-              >
-                {part.slice(1, -1)}
-              </code>
-            );
-          }
-          return part;
-        });
-      };
       
       elements.push(
         <p 
@@ -258,7 +304,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
           className={`mb-3 leading-relaxed ${isShortLine && startsWithCapital ? 'font-medium' : ''}`}
           style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
         >
-          {processInlineCode(trimmedLine)}
+          {processInlineFormatting(trimmedLine)}
         </p>
       );
     });
