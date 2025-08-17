@@ -1,7 +1,8 @@
 'use client';
 
-import { useRef, useEffect, useState, useMemo, useCallback, memo } from 'react';
-import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash } from 'lucide-react';
+import { useRef, useEffect, useState, useMemo, useCallback, memo, useLayoutEffect } from 'react';
+// Import critical icons directly for instant INP response
+import { Send, MessageCircle, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash } from 'lucide-react';
 import Image from 'next/image';
 import VoiceInput from './VoiceInput';
 import AgentSelector from './AgentSelector';
@@ -26,39 +27,118 @@ import { useSession } from '@/contexts/SessionContext';
 import { useModel } from '@/contexts/ModelContext';
 import SessionBrowser from './SessionBrowser';
 
-// Fast-loading Hero Section for optimal LCP
+// Ultra-fast input component with minimal re-renders
+const OptimizedTextInput = memo(({ 
+  value, 
+  onChange, 
+  onKeyDown, 
+  placeholder, 
+  disabled, 
+  inputRef,
+  showIndicator 
+}: {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  placeholder: string;
+  disabled: boolean;
+  inputRef: React.RefObject<HTMLTextAreaElement>;
+  showIndicator: boolean;
+}) => (
+  <div className="relative">
+    <textarea
+      ref={inputRef}
+      value={value}
+      onChange={onChange}
+      onKeyDown={onKeyDown}
+      placeholder={placeholder}
+      disabled={disabled}
+      rows={1}
+      className="w-full border-2 resize-none focus:outline-none disabled:opacity-50 font-medium rounded-xl border-[var(--border-primary)] focus:border-[var(--accent-primary)]"
+      style={{
+        padding: '12px 16px',
+        fontSize: '14px',
+        lineHeight: '20px',
+        minHeight: '44px', 
+        maxHeight: '100px',
+        backgroundColor: 'var(--bg-secondary)',
+        color: 'var(--text-primary)'
+      }}
+    />
+    {showIndicator && (
+      <div className="absolute top-1/2 -translate-y-1/2" style={{ right: '16px' }}>
+        <div className="relative">
+          <div className="bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50" style={{ width: '8px', height: '8px' }}></div>
+          <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75" style={{ width: '8px', height: '8px' }}></div>
+        </div>
+      </div>
+    )}
+  </div>
+));
+OptimizedTextInput.displayName = 'OptimizedTextInput';
+
+// Fast-loading Hero Section for optimal LCP - Pure CSS, no JavaScript
 function HeroSection() {
   return (
-    <div className="relative w-full max-w-4xl mx-auto">
-      {/* CSS-based hero graphic - no image download needed */}
+    <div 
+      style={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: '56rem', // max-w-4xl equivalent
+        marginLeft: 'auto',
+        marginRight: 'auto'
+      }}
+    >
+      {/* CSS-only hero graphic - zero JavaScript blocking */}
       <div 
-        className="w-full h-64 rounded-3xl shadow-2xl shadow-black/10 flex items-center justify-center relative overflow-hidden"
         style={{
+          width: '100%',
+          height: '16rem', // Fixed height to prevent CLS
+          borderRadius: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          overflow: 'hidden',
           background: 'linear-gradient(135deg, #eab308 0%, #f59e0b 50%, #f97316 100%)',
-          filter: 'drop-shadow(0 25px 50px -12px rgba(234, 179, 8, 0.25))'
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1), 0 25px 50px -12px rgba(234, 179, 8, 0.25)'
         }}
       >
-        {/* Rubber duck emoji as hero "image" - renders instantly */}
-        <div className="text-9xl transform rotate-12 scale-110">
+        {/* Duck emoji - critical path optimized */}
+        <div 
+          style={{
+            fontSize: '9rem',
+            transform: 'rotate(12deg) scale(1.1)',
+            lineHeight: '1',
+            userSelect: 'none'
+          }}
+        >
           🦆
         </div>
         
-        {/* Optional: Small optimized avatar if available */}
-        <div className="absolute bottom-4 right-4">
-          <Image
-            src="/rubber-duck-avatar.png"
-            alt="Duck Avatar"
-            width={64}
-            height={64}
-            className="rounded-full shadow-lg"
-            loading="lazy" // Don't block LCP
-          />
-        </div>
-        
-        {/* Decorative elements */}
-        <div className="absolute top-4 left-4 w-8 h-8 bg-white/20 rounded-full"></div>
-        <div className="absolute top-8 right-8 w-6 h-6 bg-white/15 rounded-full"></div>
-        <div className="absolute bottom-8 left-8 w-4 h-4 bg-white/25 rounded-full"></div>
+        {/* Simple decorative dots */}
+        <div 
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            left: '1rem',
+            width: '2rem',
+            height: '2rem',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.2)'
+          }}
+        />
+        <div 
+          style={{
+            position: 'absolute',
+            top: '2rem',
+            right: '2rem',
+            width: '1.5rem',
+            height: '1.5rem',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)'
+          }}
+        />
       </div>
     </div>
   );
@@ -166,6 +246,23 @@ export default function ChatInterface() {
       return message.tags?.some(tag => tagSet.has(tag));
     });
   }, [messages, activeTagFilter]);
+
+  // CRITICAL: Memoize expensive message filtering to prevent INP lag
+  const userMessages = useMemo(() => 
+    messages.filter(m => m.role === 'user'), 
+    [messages]
+  );
+  
+  const recentUserInputs = useMemo(() => 
+    userMessages.slice(-10).reverse(), 
+    [userMessages]
+  );
+
+  const assistantMessagesCount = useMemo(() => 
+    messages.filter(m => m.role === 'assistant').length, 
+    [messages]
+  );
+
   const { updateMessageTags } = useSession();
   const { currentAgent, clearContext } = useAgent();
   const { isDropdownOpen } = useDropdown();
@@ -293,18 +390,20 @@ export default function ChatInterface() {
     }
   };
 
-  // Optimized input handler with debouncing for expensive operations
+  // Ultra-optimized input handler - direct state update only
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
-    setInputValue(value); // Immediate UI update
     
-    // Debounce expensive operations
+    // CRITICAL: Only update what's needed for immediate response
+    setInputValue(value); 
+    
+    // Debounce all non-critical operations
     if (inputDebounceRef.current) {
       clearTimeout(inputDebounceRef.current);
     }
     inputDebounceRef.current = setTimeout(() => {
       setDebouncedInputValue(value);
-    }, 100); // 100ms debounce
+    }, 50);
   }, []);
 
   const handleClearMessages = async () => {
@@ -945,17 +1044,13 @@ export default function ChatInterface() {
                 </button>
 
                 {/* Input History Section */}
-                {showUserHistory && messages.filter(m => m.role === 'user').length > 0 && (
+                {showUserHistory && userMessages.length > 0 && (
                   <div className="border-t pt-4" style={{ borderColor: 'var(--border-primary)' }}>
                     <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>
-                      Recent Inputs ({messages.filter(m => m.role === 'user').length})
+                      Recent Inputs ({userMessages.length})
                     </h4>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {messages
-                        .filter(m => m.role === 'user')
-                        .slice(-10) // Show last 10 user inputs
-                        .reverse() // Most recent first
-                        .map((message, index) => (
+                      {recentUserInputs.map((message, index) => (
                           <div 
                             key={message.id}
                             className="p-2 rounded-lg cursor-pointer transition-colors text-sm"
@@ -1051,11 +1146,28 @@ export default function ChatInterface() {
                       <HeroSection />
                     </div>
                     <div className="space-y-4">
-                      <h2 className="text-4xl font-bold text-gray-900 leading-tight">
-                        Hi! I'm your Rubber Ducky
+                      {/* LCP Critical Text - Optimized for instant rendering */}
+                      <h2 
+                        className="font-bold text-gray-900 leading-tight"
+                        style={{
+                          fontSize: '2.25rem', // text-4xl equivalent
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+                          fontWeight: 700,
+                          color: '#111827',
+                          lineHeight: '1.25',
+                          margin: 0
+                        }}
+                      >
+                        Hi! I&apos;m your Rubber Ducky
                       </h2>
-                      <p className="text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium">
-                        I'm here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
+                      <p 
+                        className="text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium"
+                        style={{
+                          fontSize: '1.25rem', // text-xl equivalent
+                          fontFamily: 'var(--font-roboto)'
+                        }}
+                      >
+                        I&apos;m here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
                       </p>
                     </div>
                   </div>
@@ -1109,7 +1221,7 @@ export default function ChatInterface() {
                         </div>
                         <div className="text-left space-y-2">
                           <span className="text-blue-800 font-bold text-lg">Rubber Ducky Live!</span>
-                          <span className="text-blue-700 text-sm font-medium">I'm listening and ready to help you think</span>
+                          <span className="text-blue-700 text-sm font-medium">I&apos;m listening and ready to help you think</span>
                         </div>
                       </div>
                     )}
@@ -1353,7 +1465,7 @@ export default function ChatInterface() {
                 })}
               
               {/* Show thinking bubble when processing a message or when streaming but no content yet */}
-              {(isProcessingMessage || (isStreaming && messages.filter(m => m.role === 'assistant').length === 0)) && (
+              {(isProcessingMessage || (isStreaming && assistantMessagesCount === 0)) && (
                 <div className="group">
                   {/* Thinking bubble that matches AI response style */}
                   <div className="w-full">
@@ -1527,39 +1639,15 @@ export default function ChatInterface() {
                   </div>
                 )}
                 
-                <div className="relative">
-                  <textarea
-                    ref={inputRef}
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    placeholder={currentTranscript ? "Voice input active..." : "Share your thoughts with the rubber ducky..."}
-                    disabled={isStreaming}
-                    rows={1}
-                    className={`w-full border-2 backdrop-blur-sm resize-none focus:outline-none focus:ring-2 disabled:opacity-50 transition-all duration-300 font-medium rounded-xl ${debouncedInputValue.trim() ? 'border-[var(--accent-primary)]' : 'border-[var(--border-primary)]'}`}
-                    style={useMemo(() => ({ 
-                      padding: '12px 16px',
-                      fontSize: '14px',
-                      lineHeight: '20px',
-                      minHeight: '44px', 
-                      maxHeight: '100px',
-                      backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
-                      color: 'var(--text-primary)',
-                      focusRingColor: 'var(--accent-primary)',
-                      '&::placeholder': {
-                        color: 'var(--text-tertiary)'
-                      }
-                    }), [isDark])}
-                  />
-                  {inputValue.trim() && (
-                    <div className="absolute top-1/2 -translate-y-1/2" style={{ right: '16px' }}>
-                      <div className="relative">
-                        <div className="bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50" style={{ width: '8px', height: '8px' }}></div>
-                        <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75" style={{ width: '8px', height: '8px' }}></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <OptimizedTextInput
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder={currentTranscript ? "Voice input active..." : "Share your thoughts with the rubber ducky..."}
+                  disabled={isStreaming}
+                  inputRef={inputRef}
+                  showIndicator={debouncedInputValue.trim().length > 0}
+                />
               </div>
               <button
                 type="submit"
