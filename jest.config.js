@@ -17,9 +17,13 @@ const customJestConfig = {
   moduleNameMapper: {
     // Handle module aliases (this will be automatically configured for Next.js)
     '^@/(.*)$': '<rootDir>/$1',
+    // Mock ES module issues
+    '^bson$': '<rootDir>/tests/mocks/bson.js',
+    '^mongodb$': '<rootDir>/tests/mocks/mongodb.js',
+    '^mongoose$': '<rootDir>/tests/mocks/mongoose.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(bson|mongodb|mongoose|next-auth)/)'
+    'node_modules/(?!(bson|mongodb|mongoose|next-auth|@anthropic-ai)/)'
   ],
   collectCoverageFrom: [
     '**/*.{js,jsx,ts,tsx}',

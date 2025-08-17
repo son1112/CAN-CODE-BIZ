@@ -101,13 +101,20 @@ global.TextEncoder = class {
   }
 }
 
-// Mock Web APIs for Next.js API routes
+// Mock Web APIs for Next.js API routes  
 global.Request = class Request {
   constructor(input, init = {}) {
-    this.url = typeof input === 'string' ? input : input.url
+    const url = typeof input === 'string' ? input : input.url
     this.method = init.method || 'GET'
     this.headers = new Map(Object.entries(init.headers || {}))
     this.body = init.body || null
+    
+    // Define url as a getter to match Web API spec
+    Object.defineProperty(this, 'url', {
+      get: () => url,
+      enumerable: true,
+      configurable: false
+    })
   }
   
   async json() {

@@ -1,8 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { StarDocument, StarableType } from '@/models/Star';
 import { CreateStarOptions, StarFilterOptions } from '@/lib/stars';
+
+// Global cache to prevent multiple API calls for the same user
+const starsCache = new Map<string, {
+  data: StarDocument[];
+  timestamp: number;
+  loading: boolean;
+}>();
+
+const CACHE_DURATION = 30000; // 30 seconds
 
 interface UseStarsReturn {
   // State
@@ -35,6 +44,7 @@ export function useStars(userId: string): UseStarsReturn {
   const [stars, setStars] = useState<StarDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loadingRef = useRef(false);
 
   const starItem = useCallback(async (options: Omit<CreateStarOptions, 'userId'>): Promise<boolean> => {
     setIsLoading(true);
@@ -59,6 +69,11 @@ export function useStars(userId: string): UseStarsReturn {
 
       const { star } = await response.json();
       setStars(prev => [star, ...prev]);
+      
+      // Invalidate cache after successful star creation
+      const cacheKey = `${userId}:{}`;
+      starsCache.delete(cacheKey);
+      
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to star item';
@@ -88,6 +103,11 @@ export function useStars(userId: string): UseStarsReturn {
       }
 
       setStars(prev => prev.filter(star => !(star.itemType === itemType && star.itemId === itemId)));
+      
+      // Invalidate cache after successful unstar
+      const cacheKey = `${userId}:{}`;
+      starsCache.delete(cacheKey);
+      
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to unstar item';
@@ -159,8 +179,32 @@ export function useStars(userId: string): UseStarsReturn {
   }, [stars]);
 
   const loadStars = useCallback(async (filters?: Omit<StarFilterOptions, 'userId'>): Promise<void> => {
+    // Prevent multiple concurrent requests
+    if (loadingRef.current) return;
+    
+    const cacheKey = `${userId}:${JSON.stringify(filters || {})}`;
+    const cached = starsCache.get(cacheKey);
+    const now = Date.now();
+    
+    // Use cache if valid and recent
+    if (cached && (now - cached.timestamp < CACHE_DURATION)) {
+      setStars(cached.data);
+      setIsLoading(cached.loading);
+      return;
+    }
+    
+    // If already loading for this cache key, don't start another request
+    if (cached?.loading) {
+      setIsLoading(true);
+      return;
+    }
+    
+    loadingRef.current = true;
     setIsLoading(true);
     setError(null);
+    
+    // Mark as loading in cache
+    starsCache.set(cacheKey, { data: stars, timestamp: now, loading: true });
     
     try {
       const searchParams = new URLSearchParams({
@@ -181,13 +225,26 @@ export function useStars(userId: string): UseStarsReturn {
 
       const { stars: starList } = await response.json();
       setStars(starList);
+      
+      // Update cache with fresh data
+      starsCache.set(cacheKey, { 
+        data: starList, 
+        timestamp: now, 
+        loading: false 
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load stars';
       setError(errorMessage);
+      
+      // Remove loading flag from cache on error
+      if (cached) {
+        starsCache.set(cacheKey, { ...cached, loading: false });
+      }
     } finally {
+      loadingRef.current = false;
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId, stars]);
 
   const refreshStars = useCallback(async (): Promise<void> => {
     await loadStars();
@@ -206,7 +263,7 @@ export function useStars(userId: string): UseStarsReturn {
     if (userId) {
       loadStars();
     }
-  }, [userId, loadStars]);
+  }, [userId]); // Remove loadStars dependency to prevent infinite loop
 
   return {
     // State

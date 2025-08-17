@@ -1,6 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { ClaudeModel } from '@/lib/models';
+
+// Global cache to prevent multiple API calls 
+const agentsCache = new Map<string, {
+  data: Agent[];
+  timestamp: number;
+  loading: boolean;
+}>();
+
+const CACHE_DURATION = 60000; // 60 seconds for agents (they change less frequently)
 
 export interface Agent {
   name: string;
@@ -26,17 +35,39 @@ export function useAgents(): UseAgentsReturn {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loadingRef = useRef(false);
 
   // Load agents from the API
   const loadAgents = useCallback(async () => {
-    if (status === 'loading' || !session?.user?.id) {
+    if (status === 'loading' || !session?.user?.id || loadingRef.current) {
       return;
     }
 
-    try {
+    const cacheKey = 'agents';
+    const cached = agentsCache.get(cacheKey);
+    const now = Date.now();
+    
+    // Use cache if valid and recent
+    if (cached && (now - cached.timestamp < CACHE_DURATION)) {
+      setAgents(cached.data);
+      setLoading(cached.loading);
+      return;
+    }
+    
+    // If already loading, don't start another request
+    if (cached?.loading) {
       setLoading(true);
-      setError(null);
+      return;
+    }
 
+    loadingRef.current = true;
+    setLoading(true);
+    setError(null);
+    
+    // Mark as loading in cache
+    agentsCache.set(cacheKey, { data: agents, timestamp: now, loading: true });
+
+    try {
       const response = await fetch('/api/agents');
       
       if (!response.ok) {
@@ -48,25 +79,40 @@ export function useAgents(): UseAgentsReturn {
       }
 
       const data = await response.json();
-      const agents = data.agents || [];
-      setAgents(agents);
+      const agentsList = data.agents || [];
+      setAgents(agentsList);
+      
+      // Update cache with fresh data
+      agentsCache.set(cacheKey, { 
+        data: agentsList, 
+        timestamp: now, 
+        loading: false 
+      });
       
       // If we have agents but no selected agent, select the first one
-      if (agents.length > 0) {
-        setSelectedAgent(prevSelected => prevSelected || agents[0]);
+      if (agentsList.length > 0) {
+        setSelectedAgent(prevSelected => prevSelected || agentsList[0]);
       }
     } catch (err: any) {
       console.error('Error loading agents:', err);
       setError(err.message || 'Failed to load agents');
+      
+      // Remove loading flag from cache on error
+      if (cached) {
+        agentsCache.set(cacheKey, { ...cached, loading: false });
+      }
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }, [session, status]);
+  }, [agents]);
 
   // Load agents when session is ready
   useEffect(() => {
-    loadAgents();
-  }, [loadAgents]);
+    if (status !== 'loading' && session?.user?.id) {
+      loadAgents();
+    }
+  }, [session?.user?.id, status]); // Remove loadAgents dependency to prevent infinite loop
 
   // Select an agent
   const selectAgent = useCallback((agent: Agent | null) => {
