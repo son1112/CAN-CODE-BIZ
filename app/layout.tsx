@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ModelProvider } from "@/contexts/ModelContext";
 import { SessionProvider } from "next-auth/react";
 import { SessionProvider as ChatSessionProvider } from "@/contexts/SessionContext";
+import { SessionAgentSync } from "@/components/SessionAgentSync";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -94,9 +95,11 @@ export default function RootLayout({
             <ModelProvider>
               <AgentProvider>
                 <ChatSessionProvider>
-                  <DropdownProvider>
-                    {children}
-                  </DropdownProvider>
+                  <SessionAgentSync>
+                    <DropdownProvider>
+                      {children}
+                    </DropdownProvider>
+                  </SessionAgentSync>
                 </ChatSessionProvider>
               </AgentProvider>
             </ModelProvider>

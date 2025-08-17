@@ -35,6 +35,7 @@ export interface SessionContextType {
   // Auto-session management
   autoCreateSession: boolean;
   setAutoCreateSession: (enabled: boolean) => void;
+  
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);

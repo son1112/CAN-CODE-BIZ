@@ -39,7 +39,7 @@ export function useStreamingChat(): StreamingChatHook {
       const userMessageAdded = await addMessage({
         role: 'user',
         content: content.trim(),
-        agentUsed: currentAgent.name
+        agentUsed: currentAgent.id
       });
 
       if (!userMessageAdded) {
@@ -108,7 +108,7 @@ export function useStreamingChat(): StreamingChatHook {
                   await addMessage({
                     role: 'assistant',
                     content: accumulatedContent.trim(),
-                    agentUsed: currentAgent.name
+                    agentUsed: currentAgent.id
                   });
                   
                   // Add assistant response to conversation context
