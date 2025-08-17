@@ -280,6 +280,24 @@ export default function ChatInterface() {
     setCollapsedMessages(allMessageIds);
   };
 
+  // Auto-collapse agent responses when there are more than 10
+  useEffect(() => {
+    const agentMessages = messages.filter(msg => msg.role === 'assistant');
+    
+    if (agentMessages.length > 10) {
+      // Get IDs of all agent messages except the last 3 (keep recent ones expanded)
+      const messagesToCollapse = agentMessages
+        .slice(0, -3)
+        .map(msg => msg.id);
+      
+      setCollapsedMessages(prev => {
+        const newSet = new Set(prev);
+        messagesToCollapse.forEach(id => newSet.add(id));
+        return newSet;
+      });
+    }
+  }, [messages]);
+
   const exportChat = () => {
     const sessionName = currentSession?.name || 'Untitled Session';
     const chatContent = [
@@ -1217,10 +1235,23 @@ export default function ChatInterface() {
         isOpen={isStarsBrowserOpen}
         onClose={() => setIsStarsBrowserOpen(false)}
         userId="demo-user" // TODO: Replace with actual user ID from auth
-        onSelectStar={(star) => {
-          // Handle star selection - could navigate to the starred item
-          console.log('Selected star:', star);
+        onSelectStar={async (star) => {
           setIsStarsBrowserOpen(false);
+          
+          // Handle navigation based on star type
+          if (star.itemType === 'session') {
+            try {
+              await loadSession(star.itemId);
+              // Clear any streaming state when switching sessions
+              clearMessages();
+            } catch (error) {
+              console.error('Failed to load starred session:', error);
+            }
+          } else {
+            // For non-session items, just log for now
+            // Future: could implement navigation for other types
+            console.log('Selected star:', star);
+          }
         }}
       />
 

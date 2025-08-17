@@ -11,7 +11,11 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "image:info": "node mini-features/image-reader/read-image-metadata.js",
+    "image:scan": "node mini-features/image-reader/read-image-metadata.js public/",
+    "image:export": "node mini-features/image-reader/read-image-metadata.js public/ --json public-images-metadata.json",
+    "image:quick": "./mini-features/image-reader/quick-image-info.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.59.0",
