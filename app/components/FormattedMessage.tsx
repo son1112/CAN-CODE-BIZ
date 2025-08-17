@@ -8,7 +8,7 @@ interface FormattedMessageProps {
   expandedView?: boolean;
 }
 
-const FormattedMessage: React.FC<FormattedMessageProps> = React.memo(({ content, textSizeClass, expandedView = false }) => {
+const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeClass, expandedView = false }) => {
   // Memoize the expensive formatting operation to prevent re-processing on parent re-renders
   const formattedContent = useMemo(() => {
     // Process the content to add structure and formatting
@@ -331,7 +331,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = React.memo(({ content,
       {formattedContent}
     </div>
   );
-});
+};
 
 FormattedMessage.displayName = 'FormattedMessage';
 

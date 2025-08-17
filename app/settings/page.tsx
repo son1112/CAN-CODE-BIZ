@@ -94,16 +94,7 @@ export default function SettingsPage() {
               <span className="font-medium">Back to Chat</span>
             </Link>
             <Logo size="md" />
-            <h1 
-              style={{
-                fontSize: '1.5rem',
-                fontWeight: 700,
-                color: '#111827',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem'
-              }}
-            >
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
               <SettingsIcon className="w-6 h-6" />
               Settings
             </h1>

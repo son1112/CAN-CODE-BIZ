@@ -1,13 +1,12 @@
 'use client';
 
-import { useRef, useEffect, useState, useMemo, useCallback, memo, useLayoutEffect } from 'react';
-// Import critical icons directly for instant INP response
-import { Send, MessageCircle, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash } from 'lucide-react';
+import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
+import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash, RefreshCw, User, LogOut } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import VoiceInput from './VoiceInput';
 import AgentSelector from './AgentSelector';
 import Logo from './Logo';
-import UserMenu from './auth/UserMenu';
 import FormattedMessage from './FormattedMessage';
 import ThemeToggle from './ThemeToggle';
 import ChatMessageModal from './ChatMessageModal';
@@ -26,119 +25,64 @@ import { useConversationManager } from '@/hooks/useConversationManager';
 import { useSession } from '@/contexts/SessionContext';
 import { useModel } from '@/contexts/ModelContext';
 import SessionBrowser from './SessionBrowser';
+import { useSession as useAuthSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
+import { Settings } from 'lucide-react';
 
-// Ultra-fast input component with minimal re-renders
-const OptimizedTextInput = memo(({ 
-  value, 
-  onChange, 
-  onKeyDown, 
-  placeholder, 
-  disabled, 
-  inputRef,
-  showIndicator 
-}: {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
-  placeholder: string;
-  disabled: boolean;
-  inputRef: React.RefObject<HTMLTextAreaElement>;
-  showIndicator: boolean;
-}) => (
-  <div className="relative">
-    <textarea
-      ref={inputRef}
-      value={value}
-      onChange={onChange}
-      onKeyDown={onKeyDown}
-      placeholder={placeholder}
-      disabled={disabled}
-      rows={1}
-      className="w-full border-2 resize-none focus:outline-none disabled:opacity-50 font-medium rounded-xl border-[var(--border-primary)] focus:border-[var(--accent-primary)]"
-      style={{
-        padding: '12px 16px',
-        fontSize: '14px',
-        lineHeight: '20px',
-        minHeight: '44px', 
-        maxHeight: '100px',
-        backgroundColor: 'var(--bg-secondary)',
-        color: 'var(--text-primary)'
-      }}
-    />
-    {showIndicator && (
-      <div className="absolute top-1/2 -translate-y-1/2" style={{ right: '16px' }}>
-        <div className="relative">
-          <div className="bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50" style={{ width: '8px', height: '8px' }}></div>
-          <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75" style={{ width: '8px', height: '8px' }}></div>
-        </div>
-      </div>
-    )}
-  </div>
-));
-OptimizedTextInput.displayName = 'OptimizedTextInput';
+// Array of available hero images
+const heroImages = [
+  '/Gemini_Generated_Image_35trpk35trpk35tr.png',
+  '/Gemini_Generated_Image_63t3fb63t3fb63t3.png',
+  '/Gemini_Generated_Image_ght25qght25qght2.png',
+  '/Gemini_Generated_Image_tnr5a2tnr5a2tnr5.png',
+  '/Gemini_Generated_Image_yphrpuyphrpuyphr.png',
+];
 
-// Fast-loading Hero Section for optimal LCP - Pure CSS, no JavaScript
+// Fast-loading Hero Section with cycling images
 function HeroSection() {
+  const [heroImage, setHeroImage] = useState(() => {
+    // Select a random image on mount
+    return heroImages[Math.floor(Math.random() * heroImages.length)];
+  });
+
+  useEffect(() => {
+    // Change image every 10 seconds
+    const interval = setInterval(() => {
+      setHeroImage(prev => {
+        const currentIndex = heroImages.indexOf(prev);
+        const nextIndex = (currentIndex + 1) % heroImages.length;
+        return heroImages[nextIndex];
+      });
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div 
-      style={{
-        position: 'relative',
-        width: '100%',
-        maxWidth: '56rem', // max-w-4xl equivalent
-        marginLeft: 'auto',
-        marginRight: 'auto'
-      }}
-    >
-      {/* CSS-only hero graphic - zero JavaScript blocking */}
-      <div 
-        style={{
-          width: '100%',
-          height: '16rem', // Fixed height to prevent CLS
-          borderRadius: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-          background: 'linear-gradient(135deg, #eab308 0%, #f59e0b 50%, #f97316 100%)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1), 0 25px 50px -12px rgba(234, 179, 8, 0.25)'
-        }}
-      >
-        {/* Duck emoji - critical path optimized */}
-        <div 
-          style={{
-            fontSize: '9rem',
-            transform: 'rotate(12deg) scale(1.1)',
-            lineHeight: '1',
-            userSelect: 'none'
-          }}
-        >
-          🦆
-        </div>
+    <div className="relative w-full max-w-4xl mx-auto">
+      <div className="w-full h-64 rounded-3xl shadow-2xl shadow-black/10 relative overflow-hidden">
+        <Image
+          src={heroImage}
+          alt="Rubber Ducky Hero"
+          fill
+          className="object-cover"
+          priority // Load immediately for welcome view
+        />
         
-        {/* Simple decorative dots */}
-        <div 
-          style={{
-            position: 'absolute',
-            top: '1rem',
-            left: '1rem',
-            width: '2rem',
-            height: '2rem',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)'
-          }}
-        />
-        <div 
-          style={{
-            position: 'absolute',
-            top: '2rem',
-            right: '2rem',
-            width: '1.5rem',
-            height: '1.5rem',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.15)'
-          }}
-        />
+        {/* Gradient overlay for better text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+        
+        {/* Rubber duck logo in corner */}
+        <div className="absolute bottom-4 right-4">
+          <Image
+            src="/rdlogo081525-cutout.png"
+            alt="Rubber Ducky Logo"
+            width={80}
+            height={80}
+            className="drop-shadow-2xl"
+            priority
+          />
+        </div>
       </div>
     </div>
   );
@@ -178,32 +122,6 @@ function getFirstSentencePreview(content: string, maxLength: number = 80): strin
   return truncated + '...';
 }
 
-// Memoized message component to prevent unnecessary re-renders
-const MessageItem = memo(({ 
-  message, 
-  index, 
-  isCurrentlyStreaming, 
-  collapsedMessages, 
-  isDark, 
-  getTextSizeClass, 
-  handleToggleCollapse, 
-  handleMessageClick 
-}: {
-  message: any;
-  index: number;
-  isCurrentlyStreaming: boolean;
-  collapsedMessages: Set<string>;
-  isDark: boolean;
-  getTextSizeClass: () => string;
-  handleToggleCollapse: (messageId: string) => void;
-  handleMessageClick: (message: any) => void;
-}) => (
-  <div key={message.id} className="group">
-    {/* Message content would go here - for now keeping existing structure */}
-  </div>
-));
-
-MessageItem.displayName = 'MessageItem';
 
 export default function ChatInterface() {
   const [inputValue, setInputValue] = useState('');
@@ -225,6 +143,7 @@ export default function ChatInterface() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'menu' | 'tags'>('menu');
   const [activeTagFilter, setActiveTagFilter] = useState<string[]>([]);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -246,23 +165,6 @@ export default function ChatInterface() {
       return message.tags?.some(tag => tagSet.has(tag));
     });
   }, [messages, activeTagFilter]);
-
-  // CRITICAL: Memoize expensive message filtering to prevent INP lag
-  const userMessages = useMemo(() => 
-    messages.filter(m => m.role === 'user'), 
-    [messages]
-  );
-  
-  const recentUserInputs = useMemo(() => 
-    userMessages.slice(-10).reverse(), 
-    [userMessages]
-  );
-
-  const assistantMessagesCount = useMemo(() => 
-    messages.filter(m => m.role === 'assistant').length, 
-    [messages]
-  );
-
   const { updateMessageTags } = useSession();
   const { currentAgent, clearContext } = useAgent();
   const { isDropdownOpen } = useDropdown();
@@ -270,6 +172,7 @@ export default function ChatInterface() {
   const { isDark } = useTheme();
   const { currentSession, createSession, loadSession, loadSessions, renameSession, isLoadingSession, isProcessingMessage } = useSession();
   const { currentModel } = useModel();
+  const { data: authSession } = useAuthSession();
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
@@ -390,20 +293,18 @@ export default function ChatInterface() {
     }
   };
 
-  // Ultra-optimized input handler - direct state update only
+  // Optimized input handler with debouncing for expensive operations
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
+    setInputValue(value); // Immediate UI update
     
-    // CRITICAL: Only update what's needed for immediate response
-    setInputValue(value); 
-    
-    // Debounce all non-critical operations
+    // Debounce expensive operations
     if (inputDebounceRef.current) {
       clearTimeout(inputDebounceRef.current);
     }
     inputDebounceRef.current = setTimeout(() => {
       setDebouncedInputValue(value);
-    }, 50);
+    }, 100); // 100ms debounce
   }, []);
 
   const handleClearMessages = async () => {
@@ -578,8 +479,21 @@ export default function ChatInterface() {
         <div className="flex items-center min-w-0 flex-1" style={{ gap: '20px' }}>
           <Logo 
             size="md" 
-            onClick={() => window.location.reload()}
+            onClick={async () => {
+              // Navigate to home/welcome page by creating a new session
+              // This is the same as clicking "New Session" button
+              await handleQuickNewSession();
+            }}
           />
+          
+          {/* Refresh button to reload current state */}
+          <button
+            onClick={() => window.location.reload()}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            title="Refresh page"
+          >
+            <RefreshCw className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+          </button>
           
           {/* Session Name Display/Edit */}
           {currentSession ? (
@@ -736,7 +650,6 @@ export default function ChatInterface() {
           )}
           
           {/* Core Controls - Always Visible */}
-          <UserMenu />
           <ModelSelector size="sm" />
           <ThemeToggle />
           
@@ -897,6 +810,28 @@ export default function ChatInterface() {
               </div>
             )}
           </div>
+
+          {/* Account Avatar - Far Right */}
+          {authSession?.user?.image && (
+            <button
+              onClick={() => {
+                setActiveTab('menu');
+                setShowAccountMenu(true);
+                setIsSidebarOpen(true);
+              }}
+              className="rounded-full overflow-hidden border-2 hover:border-blue-400 transition-colors ml-auto"
+              style={{ borderColor: 'var(--border-primary)' }}
+              title="Account settings"
+            >
+              <Image
+                src={authSession.user.image}
+                alt="Account"
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+            </button>
+          )}
         </div>
       </div>
 
@@ -1044,13 +979,17 @@ export default function ChatInterface() {
                 </button>
 
                 {/* Input History Section */}
-                {showUserHistory && userMessages.length > 0 && (
+                {showUserHistory && messages.filter(m => m.role === 'user').length > 0 && (
                   <div className="border-t pt-4" style={{ borderColor: 'var(--border-primary)' }}>
                     <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>
-                      Recent Inputs ({userMessages.length})
+                      Recent Inputs ({messages.filter(m => m.role === 'user').length})
                     </h4>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {recentUserInputs.map((message, index) => (
+                      {messages
+                        .filter(m => m.role === 'user')
+                        .slice(-10) // Show last 10 user inputs
+                        .reverse() // Most recent first
+                        .map((message, index) => (
                           <div 
                             key={message.id}
                             className="p-2 rounded-lg cursor-pointer transition-colors text-sm"
@@ -1091,10 +1030,6 @@ export default function ChatInterface() {
                   </div>
                 )}
 
-                {/* Placeholder for future sidebar items */}
-                <div className="text-sm pt-4" style={{ color: 'var(--text-tertiary)' }}>
-                  More features coming soon...
-                </div>
                 </div>
                 ) : (
                   /* Tags Tab */
@@ -1107,6 +1042,78 @@ export default function ChatInterface() {
                   />
                 )}
               </div>
+
+              {/* Account Menu at Bottom */}
+              {authSession?.user && (
+                <div className="border-t pt-4 mt-4" style={{ borderColor: 'var(--border-primary)' }}>
+                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                    {authSession.user.image && (
+                      <Image
+                        src={authSession.user.image}
+                        alt={authSession.user.name || 'User'}
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                        {authSession.user.name || 'User'}
+                      </p>
+                      <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
+                        {authSession.user.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 space-y-1">
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-3 p-3 rounded-lg transition-colors text-sm"
+                      style={{ color: 'var(--text-primary)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <User style={{ width: '16px', height: '16px' }} />
+                      <span>Profile</span>
+                    </Link>
+
+                    <Link
+                      href="/settings"
+                      className="flex items-center gap-3 p-3 rounded-lg transition-colors text-sm"
+                      style={{ color: 'var(--text-primary)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <Settings style={{ width: '16px', height: '16px' }} />
+                      <span>Settings</span>
+                    </Link>
+
+                    <button
+                      onClick={() => signOut({ callbackUrl: '/' })}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-sm text-left"
+                      style={{ color: 'var(--text-error)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <LogOut style={{ width: '16px', height: '16px' }} />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1146,28 +1153,11 @@ export default function ChatInterface() {
                       <HeroSection />
                     </div>
                     <div className="space-y-4">
-                      {/* LCP Critical Text - Optimized for instant rendering */}
-                      <h2 
-                        className="font-bold text-gray-900 leading-tight"
-                        style={{
-                          fontSize: '2.25rem', // text-4xl equivalent
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
-                          fontWeight: 700,
-                          color: '#111827',
-                          lineHeight: '1.25',
-                          margin: 0
-                        }}
-                      >
-                        Hi! I&apos;m your Rubber Ducky
+                      <h2 className="text-4xl font-bold text-gray-900 leading-tight">
+                        Hi! I'm your Rubber Ducky
                       </h2>
-                      <p 
-                        className="text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium"
-                        style={{
-                          fontSize: '1.25rem', // text-xl equivalent
-                          fontFamily: 'var(--font-roboto)'
-                        }}
-                      >
-                        I&apos;m here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
+                      <p className="text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium">
+                        I'm here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
                       </p>
                     </div>
                   </div>
@@ -1221,7 +1211,7 @@ export default function ChatInterface() {
                         </div>
                         <div className="text-left space-y-2">
                           <span className="text-blue-800 font-bold text-lg">Rubber Ducky Live!</span>
-                          <span className="text-blue-700 text-sm font-medium">I&apos;m listening and ready to help you think</span>
+                          <span className="text-blue-700 text-sm font-medium">I'm listening and ready to help you think</span>
                         </div>
                       </div>
                     )}
@@ -1465,7 +1455,7 @@ export default function ChatInterface() {
                 })}
               
               {/* Show thinking bubble when processing a message or when streaming but no content yet */}
-              {(isProcessingMessage || (isStreaming && assistantMessagesCount === 0)) && (
+              {(isProcessingMessage || (isStreaming && messages.filter(m => m.role === 'assistant').length === 0)) && (
                 <div className="group">
                   {/* Thinking bubble that matches AI response style */}
                   <div className="w-full">
@@ -1639,15 +1629,35 @@ export default function ChatInterface() {
                   </div>
                 )}
                 
-                <OptimizedTextInput
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  placeholder={currentTranscript ? "Voice input active..." : "Share your thoughts with the rubber ducky..."}
-                  disabled={isStreaming}
-                  inputRef={inputRef}
-                  showIndicator={debouncedInputValue.trim().length > 0}
-                />
+                <div className="relative">
+                  <textarea
+                    ref={inputRef}
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder={currentTranscript ? "Voice input active..." : "Share your thoughts with the rubber ducky..."}
+                    disabled={isStreaming}
+                    rows={1}
+                    className={`w-full border-2 backdrop-blur-sm resize-none focus:outline-none focus:ring-2 disabled:opacity-50 transition-all duration-300 font-medium rounded-xl ${debouncedInputValue.trim() ? 'border-[var(--accent-primary)]' : 'border-[var(--border-primary)]'}`}
+                    style={useMemo(() => ({ 
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      minHeight: '44px', 
+                      maxHeight: '100px',
+                      backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
+                      color: 'var(--text-primary)'
+                    }), [isDark])}
+                  />
+                  {inputValue.trim() && (
+                    <div className="absolute top-1/2 -translate-y-1/2" style={{ right: '16px' }}>
+                      <div className="relative">
+                        <div className="bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50" style={{ width: '8px', height: '8px' }}></div>
+                        <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75" style={{ width: '8px', height: '8px' }}></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               <button
                 type="submit"
