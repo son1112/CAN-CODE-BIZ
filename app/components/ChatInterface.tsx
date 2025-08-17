@@ -26,38 +26,40 @@ import { useSession } from '@/contexts/SessionContext';
 import { useModel } from '@/contexts/ModelContext';
 import SessionBrowser from './SessionBrowser';
 
-// Random Gemini Image Component
-function RandomGeminiImage() {
-  const [selectedImage, setSelectedImage] = useState<string>('');
-  
-  const geminiImages = [
-    '/Gemini_Generated_Image_6xo6qa6xo6qa6xo6.png',
-    '/Gemini_Generated_Image_kn11nekn11nekn11.png',
-    '/Gemini_Generated_Image_nqfygcnqfygcnqfy.png'
-  ];
-  
-  useEffect(() => {
-    // Select a random image on component mount
-    const randomIndex = Math.floor(Math.random() * geminiImages.length);
-    setSelectedImage(geminiImages[randomIndex]);
-  }, []);
-  
-  if (!selectedImage) return null;
-  
+// Fast-loading Hero Section for optimal LCP
+function HeroSection() {
   return (
     <div className="relative w-full max-w-4xl mx-auto">
-      <Image
-        src={selectedImage}
-        alt="Rubber Ducky AI Companion"
-        width={800}
-        height={600}
-        className="w-full h-auto object-cover rounded-3xl shadow-2xl shadow-black/10"
+      {/* CSS-based hero graphic - no image download needed */}
+      <div 
+        className="w-full h-64 rounded-3xl shadow-2xl shadow-black/10 flex items-center justify-center relative overflow-hidden"
         style={{
-          filter: 'drop-shadow(0 25px 50px -12px rgba(0, 0, 0, 0.25))',
-          maxHeight: '400px'
+          background: 'linear-gradient(135deg, #eab308 0%, #f59e0b 50%, #f97316 100%)',
+          filter: 'drop-shadow(0 25px 50px -12px rgba(234, 179, 8, 0.25))'
         }}
-        priority
-      />
+      >
+        {/* Rubber duck emoji as hero "image" - renders instantly */}
+        <div className="text-9xl transform rotate-12 scale-110">
+          🦆
+        </div>
+        
+        {/* Optional: Small optimized avatar if available */}
+        <div className="absolute bottom-4 right-4">
+          <Image
+            src="/rubber-duck-avatar.png"
+            alt="Duck Avatar"
+            width={64}
+            height={64}
+            className="rounded-full shadow-lg"
+            loading="lazy" // Don't block LCP
+          />
+        </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute top-4 left-4 w-8 h-8 bg-white/20 rounded-full"></div>
+        <div className="absolute top-8 right-8 w-6 h-6 bg-white/15 rounded-full"></div>
+        <div className="absolute bottom-8 left-8 w-4 h-4 bg-white/25 rounded-full"></div>
+      </div>
     </div>
   );
 }
@@ -1046,7 +1048,7 @@ export default function ChatInterface() {
                 <div className="relative max-w-2xl text-center space-y-12">
                   <div className="space-y-8">
                     <div className="flex justify-center">
-                      <RandomGeminiImage />
+                      <HeroSection />
                     </div>
                     <div className="space-y-4">
                       <h2 className="text-4xl font-bold text-gray-900 leading-tight">
