@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useRef, useEffect, useState, useMemo, useCallback, memo } from 'react';
 import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash } from 'lucide-react';
 import Image from 'next/image';
 import VoiceInput from './VoiceInput';
@@ -96,6 +96,33 @@ function getFirstSentencePreview(content: string, maxLength: number = 80): strin
   return truncated + '...';
 }
 
+// Memoized message component to prevent unnecessary re-renders
+const MessageItem = memo(({ 
+  message, 
+  index, 
+  isCurrentlyStreaming, 
+  collapsedMessages, 
+  isDark, 
+  getTextSizeClass, 
+  handleToggleCollapse, 
+  handleMessageClick 
+}: {
+  message: any;
+  index: number;
+  isCurrentlyStreaming: boolean;
+  collapsedMessages: Set<string>;
+  isDark: boolean;
+  getTextSizeClass: () => string;
+  handleToggleCollapse: (messageId: string) => void;
+  handleMessageClick: (message: any) => void;
+}) => (
+  <div key={message.id} className="group">
+    {/* Message content would go here - for now keeping existing structure */}
+  </div>
+));
+
+MessageItem.displayName = 'MessageItem';
+
 export default function ChatInterface() {
   const [inputValue, setInputValue] = useState('');
   const [conversationStarter, setConversationStarter] = useState('');
@@ -120,16 +147,21 @@ export default function ChatInterface() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
+  // Debounce input changes to reduce re-renders
+  const [debouncedInputValue, setDebouncedInputValue] = useState('');
+  const inputDebounceRef = useRef<NodeJS.Timeout>();
+  
   const { messages, isStreaming, error, sendMessage, clearMessages } = useStreamingChat();
   
-  // Filter messages based on active tag filter
+  // Filter messages based on active tag filter (optimized)
   const filteredMessages = useMemo(() => {
     if (activeTagFilter.length === 0) {
       return messages;
     }
+    // Use a Set for faster tag lookups
+    const tagSet = new Set(activeTagFilter);
     return messages.filter(message => {
-      // Only show messages that have any of the filtered tags
-      return message.tags?.some(tag => activeTagFilter.includes(tag));
+      return message.tags?.some(tag => tagSet.has(tag));
     });
   }, [messages, activeTagFilter]);
   const { updateMessageTags } = useSession();
@@ -259,6 +291,20 @@ export default function ChatInterface() {
     }
   };
 
+  // Optimized input handler with debouncing for expensive operations
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInputValue(value); // Immediate UI update
+    
+    // Debounce expensive operations
+    if (inputDebounceRef.current) {
+      clearTimeout(inputDebounceRef.current);
+    }
+    inputDebounceRef.current = setTimeout(() => {
+      setDebouncedInputValue(value);
+    }, 100); // 100ms debounce
+  }, []);
+
   const handleClearMessages = async () => {
     clearMessages();
     clearContext();
@@ -290,10 +336,10 @@ export default function ChatInterface() {
     }
   };
 
-  const handleMessageClick = (message: any) => {
+  const handleMessageClick = useCallback((message: any) => {
     setSelectedMessage(message);
     setIsModalOpen(true);
-  };
+  }, []);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -310,7 +356,7 @@ export default function ChatInterface() {
     }
   };
 
-  const toggleMessageCollapse = (messageId: string) => {
+  const toggleMessageCollapse = useCallback((messageId: string) => {
     setCollapsedMessages(prev => {
       const newSet = new Set(prev);
       if (newSet.has(messageId)) {
@@ -320,19 +366,27 @@ export default function ChatInterface() {
       }
       return newSet;
     });
-  };
+  }, []);
 
-  const expandAllMessages = () => {
+  const expandAllMessages = useCallback(() => {
     setCollapsedMessages(new Set());
-  };
+  }, []);
 
-  const collapseAllMessages = () => {
+  const collapseAllMessages = useCallback(() => {
     const allMessageIds = new Set(messages.map(msg => msg.id));
     setCollapsedMessages(allMessageIds);
-  };
+  }, [messages]);
 
-  // Auto-collapse agent responses when there are more than 10
+  // Auto-collapse agent responses when there are more than 10 (optimized)
+  const lastMessageCount = useRef(0);
   useEffect(() => {
+    // Only run when message count actually increases (not on every state change)
+    if (messages.length <= lastMessageCount.current || messages.length <= 10) {
+      lastMessageCount.current = messages.length;
+      return;
+    }
+    
+    // Only filter assistant messages if we have enough messages
     const agentMessages = messages.filter(msg => msg.role === 'assistant');
     
     if (agentMessages.length > 10) {
@@ -347,7 +401,18 @@ export default function ChatInterface() {
         return newSet;
       });
     }
-  }, [messages]);
+    
+    lastMessageCount.current = messages.length;
+  }, [messages.length]); // Only depend on length, not entire messages array
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (inputDebounceRef.current) {
+        clearTimeout(inputDebounceRef.current);
+      }
+    };
+  }, []);
 
   const exportChat = () => {
     const sessionName = currentSession?.name || 'Untitled Session';
@@ -1464,26 +1529,25 @@ export default function ChatInterface() {
                   <textarea
                     ref={inputRef}
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
                     placeholder={currentTranscript ? "Voice input active..." : "Share your thoughts with the rubber ducky..."}
                     disabled={isStreaming}
                     rows={1}
-                    className="w-full border-2 backdrop-blur-sm resize-none focus:outline-none focus:ring-2 disabled:opacity-50 transition-all duration-300 font-medium rounded-xl"
-                    style={{ 
+                    className={`w-full border-2 backdrop-blur-sm resize-none focus:outline-none focus:ring-2 disabled:opacity-50 transition-all duration-300 font-medium rounded-xl ${debouncedInputValue.trim() ? 'border-[var(--accent-primary)]' : 'border-[var(--border-primary)]'}`}
+                    style={useMemo(() => ({ 
                       padding: '12px 16px',
                       fontSize: '14px',
                       lineHeight: '20px',
                       minHeight: '44px', 
                       maxHeight: '100px',
                       backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
-                      borderColor: inputValue.trim() ? 'var(--accent-primary)' : 'var(--border-primary)',
                       color: 'var(--text-primary)',
                       focusRingColor: 'var(--accent-primary)',
                       '&::placeholder': {
                         color: 'var(--text-tertiary)'
                       }
-                    }}
+                    }), [isDark])}
                   />
                   {inputValue.trim() && (
                     <div className="absolute top-1/2 -translate-y-1/2" style={{ right: '16px' }}>

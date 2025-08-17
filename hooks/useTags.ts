@@ -1,6 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+
+// Global cache to prevent multiple API calls for tags
+const tagsCache = new Map<string, {
+  data: Tag[];
+  timestamp: number;
+  loading: boolean;
+}>();
+
+const CACHE_DURATION = 30000; // 30 seconds
 
 interface Tag {
   _id: string;
@@ -24,12 +33,37 @@ export function useTags(options: UseTagsOptions = {}) {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loadingRef = useRef(false);
 
   const fetchTags = useCallback(async () => {
-    try {
+    // Prevent multiple concurrent requests
+    if (loadingRef.current) return;
+    
+    const cacheKey = JSON.stringify(options);
+    const cached = tagsCache.get(cacheKey);
+    const now = Date.now();
+    
+    // Use cache if valid and recent
+    if (cached && (now - cached.timestamp < CACHE_DURATION)) {
+      setTags(cached.data);
+      setLoading(cached.loading);
+      return;
+    }
+    
+    // If already loading for this cache key, don't start another request
+    if (cached?.loading) {
       setLoading(true);
-      setError(null);
+      return;
+    }
+    
+    loadingRef.current = true;
+    setLoading(true);
+    setError(null);
+    
+    // Mark as loading in cache
+    tagsCache.set(cacheKey, { data: tags, timestamp: now, loading: true });
 
+    try {
       const params = new URLSearchParams();
       if (options.category) params.append('category', options.category);
       if (options.search) params.append('search', options.search);
@@ -44,12 +78,25 @@ export function useTags(options: UseTagsOptions = {}) {
 
       const fetchedTags = await response.json();
       setTags(fetchedTags);
+      
+      // Update cache with fresh data
+      tagsCache.set(cacheKey, { 
+        data: fetchedTags, 
+        timestamp: now, 
+        loading: false 
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      
+      // Remove loading flag from cache on error
+      if (cached) {
+        tagsCache.set(cacheKey, { ...cached, loading: false });
+      }
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }, [options.category, options.search, options.sortBy, options.limit]);
+  }, [tags]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -57,7 +104,7 @@ export function useTags(options: UseTagsOptions = {}) {
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [fetchTags]);
+  }, [JSON.stringify(options)]); // Remove fetchTags dependency to prevent infinite loop
 
   const createTag = async (tagData: {
     name: string;
@@ -81,6 +128,10 @@ export function useTags(options: UseTagsOptions = {}) {
 
       const newTag = await response.json();
       setTags(prev => [newTag, ...prev]);
+      
+      // Invalidate cache after successful tag creation
+      tagsCache.clear();
+      
       return newTag;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create tag');
@@ -110,6 +161,10 @@ export function useTags(options: UseTagsOptions = {}) {
       setTags(prev => 
         prev.map(tag => tag._id === tagId ? updatedTag : tag)
       );
+      
+      // Invalidate cache after successful tag update
+      tagsCache.clear();
+      
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update tag');
@@ -129,6 +184,10 @@ export function useTags(options: UseTagsOptions = {}) {
       }
 
       setTags(prev => prev.filter(tag => tag._id !== tagId));
+      
+      // Invalidate cache after successful tag deletion
+      tagsCache.clear();
+      
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete tag');
