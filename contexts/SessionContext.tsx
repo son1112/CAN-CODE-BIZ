@@ -18,6 +18,7 @@ export interface SessionContextType {
   
   // Message management
   addMessage: (message: Omit<SessionMessage, 'id' | 'timestamp'>) => Promise<boolean>;
+  updateMessageTags: (messageId: string, tags: string[]) => Promise<boolean>;
   messages: SessionMessage[];
   
   // Session list management
@@ -327,6 +328,47 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateMessageTags = async (messageId: string, tags: string[]): Promise<boolean> => {
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/sessions/messages/${messageId}/tags`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tags }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update message tags');
+      }
+      
+      // Update local messages array
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId ? { ...msg, tags } : msg
+      ));
+      
+      // Update current session messages if available
+      if (currentSession) {
+        const updatedMessages = currentSession.messages.map(msg => 
+          msg.id === messageId ? { ...msg, tags } : msg
+        );
+        setCurrentSession({
+          ...currentSession,
+          messages: updatedMessages
+        });
+      }
+      
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update message tags';
+      setError(errorMessage);
+      return false;
+    }
+  };
+
   const loadSessions = async (page = 1, search = '', tags: string[] = []): Promise<void> => {
     setIsLoading(true);
     setError(null);
@@ -405,6 +447,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     
     // Message management
     addMessage,
+    updateMessageTags,
     messages,
     
     // Session list management

@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal } from 'lucide-react';
+import { useRef, useEffect, useState, useMemo } from 'react';
+import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash } from 'lucide-react';
 import Image from 'next/image';
 import VoiceInput from './VoiceInput';
 import AgentSelector from './AgentSelector';
@@ -14,6 +14,8 @@ import ModelSelector from './ModelSelector';
 import ScrollNavigation from './ScrollNavigation';
 import StarButton from './StarButton';
 import StarsBrowser from './StarsBrowser';
+import TagBrowser from './TagBrowser';
+import MessageTagInterface from './MessageTagInterface';
 import { SessionLoadingIndicator, ChatThinkingIndicator } from './LoadingIndicator';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
@@ -112,16 +114,30 @@ export default function ChatInterface() {
   const [isStarsBrowserOpen, setIsStarsBrowserOpen] = useState(false);
   const [isOverflowMenuOpen, setIsOverflowMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'menu' | 'tags'>('menu');
+  const [activeTagFilter, setActiveTagFilter] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
   const { messages, isStreaming, error, sendMessage, clearMessages } = useStreamingChat();
+  
+  // Filter messages based on active tag filter
+  const filteredMessages = useMemo(() => {
+    if (activeTagFilter.length === 0) {
+      return messages;
+    }
+    return messages.filter(message => {
+      // Only show messages that have any of the filtered tags
+      return message.tags?.some(tag => activeTagFilter.includes(tag));
+    });
+  }, [messages, activeTagFilter]);
+  const { updateMessageTags } = useSession();
   const { currentAgent, clearContext } = useAgent();
   const { isDropdownOpen } = useDropdown();
   const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
   const { isDark } = useTheme();
-  const { currentSession, createSession, loadSession, renameSession, isLoadingSession, isProcessingMessage } = useSession();
+  const { currentSession, createSession, loadSession, loadSessions, renameSession, isLoadingSession, isProcessingMessage } = useSession();
   const { currentModel } = useModel();
 
   // Get text size class based on current setting
@@ -733,28 +749,64 @@ export default function ChatInterface() {
         >
           {isSidebarOpen && (
             <div className="h-full flex flex-col p-6">
-              {/* Sidebar Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-                  Menu
-                </h3>
-                <button
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="p-2 rounded-lg transition-colors"
-                  style={{ color: 'var(--text-secondary)' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <X style={{ width: '16px', height: '16px' }} />
-                </button>
+              {/* Sidebar Header with Tabs */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    {activeTab === 'menu' ? 'Menu' : 'Tags'}
+                  </h3>
+                  <button
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="p-2 rounded-lg transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    <X style={{ width: '16px', height: '16px' }} />
+                  </button>
+                </div>
+
+                {/* Tab Navigation */}
+                <div className="flex rounded-lg p-1" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  <button
+                    onClick={() => setActiveTab('menu')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md transition-all duration-200 ${
+                      activeTab === 'menu' ? 'font-medium' : ''
+                    }`}
+                    style={{
+                      backgroundColor: activeTab === 'menu' ? 'var(--bg-primary)' : 'transparent',
+                      color: activeTab === 'menu' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      boxShadow: activeTab === 'menu' ? 'var(--shadow-sm)' : 'none'
+                    }}
+                  >
+                    <MoreHorizontal style={{ width: '16px', height: '16px' }} />
+                    <span className="text-sm">Menu</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('tags')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md transition-all duration-200 ${
+                      activeTab === 'tags' ? 'font-medium' : ''
+                    }`}
+                    style={{
+                      backgroundColor: activeTab === 'tags' ? 'var(--bg-primary)' : 'transparent',
+                      color: activeTab === 'tags' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      boxShadow: activeTab === 'tags' ? 'var(--shadow-sm)' : 'none'
+                    }}
+                  >
+                    <Hash style={{ width: '16px', height: '16px' }} />
+                    <span className="text-sm">Tags</span>
+                  </button>
+                </div>
               </div>
 
               {/* Sidebar Content */}
-              <div className="flex-1 space-y-4">
+              <div className="flex-1 overflow-hidden">
+                {activeTab === 'menu' ? (
+                  <div className="space-y-4">
                 {/* Session History */}
                 <button
                   onClick={() => {
@@ -881,6 +933,17 @@ export default function ChatInterface() {
                 <div className="text-sm pt-4" style={{ color: 'var(--text-tertiary)' }}>
                   More features coming soon...
                 </div>
+                </div>
+                ) : (
+                  /* Tags Tab */
+                  <TagBrowser 
+                    onTagFilter={(tags) => {
+                      setActiveTagFilter(tags);
+                      setIsSidebarOpen(false);
+                    }}
+                    onClose={() => setIsSidebarOpen(false)}
+                  />
+                )}
               </div>
             </div>
           )}
@@ -888,91 +951,109 @@ export default function ChatInterface() {
 
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
-        {isLoadingSession ? (
-          /* Session Loading State */
-          <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
-            <SessionLoadingIndicator />
-          </div>
-        ) : messages.length === 0 ? (
-          /* Premium Empty State */
-          <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
-            <div className="relative max-w-2xl text-center space-y-12">
-              {/* Agent Introduction */}
-              <div className="space-y-8">
-                <div className="flex justify-center">
-                  <RandomGeminiImage />
-                </div>
-                <div className="space-y-4">
-                  <h2 className="text-4xl font-bold text-gray-900 leading-tight">
-                    Hi! I&apos;m your Rubber Ducky
-                  </h2>
-                  <p className="text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium">
-                    I&apos;m here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
-                  </p>
-                </div>
-              </div>
-              
-              {conversationStarter && (
-                <div className="relative bg-white/80 backdrop-blur-xl border border-gray-200/50 rounded-3xl p-8 shadow-2xl shadow-black/5">
-                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 rounded-3xl"></div>
-                  <div className="relative">
-                    <div className="flex items-start gap-6">
-                      <Logo size="md" variant="minimal" showText={false} />
-                      <div className="text-left space-y-3">
-                        <p className="text-gray-700 font-semibold text-base">Let&apos;s chat about:</p>
-                        <p className="text-gray-800 text-lg leading-relaxed font-medium italic">
-                          &ldquo;{conversationStarter}&rdquo;
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {currentAgent.keyTopics && currentAgent.keyTopics.length > 0 && (
-                <div className="space-y-6">
-                  <p className="text-2xl font-bold text-gray-800">What we can explore together:</p>
-                  <div className="flex flex-wrap gap-4 justify-center">
-                    {currentAgent.keyTopics.map((topic) => (
-                      <span
-                        key={topic}
-                        className="px-6 py-3 bg-gradient-to-br from-white to-blue-50 hover:from-yellow-50 hover:to-amber-50 border border-blue-200 hover:border-yellow-300 text-blue-800 hover:text-yellow-800 rounded-2xl text-base font-semibold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg transform hover:-translate-y-1"
-                      >
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="text-center space-y-8">
-                <p className="text-xl text-gray-600 font-medium">
-                  🎙️ Ready to chat? Use your voice or type a message below!
-                </p>
-                
-                {isContinuousMode && (
-                  <div className="inline-flex items-center gap-6 px-8 py-4 bg-gradient-to-r from-yellow-100 via-amber-100 to-yellow-100 border-2 border-yellow-300/50 rounded-2xl shadow-lg shadow-yellow-500/10 backdrop-blur-sm">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <div className="w-4 h-4 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
-                        <div className="absolute inset-0 w-4 h-4 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
-                      </div>
-                      <span className="text-2xl filter drop-shadow-sm animate-pulse">🦆</span>
-                    </div>
-                    <div className="text-left space-y-2">
-                      <span className="text-blue-800 font-bold text-lg">Rubber Ducky Live!</span>
-                      <span className="text-blue-700 text-sm font-medium">I&apos;m listening and ready to help you think</span>
-                    </div>
-                  </div>
-                )}
-              </div>
+          {isLoadingSession ? (
+            <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
+              <SessionLoadingIndicator />
             </div>
-          </div>
-        ) : (
-          /* AI-Focused Chat Interface */
-          <div className="relative flex-1 flex flex-col">
+          ) : filteredMessages.length === 0 ? (
+            <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
+              {activeTagFilter.length > 0 ? (
+                <div className="text-center space-y-4">
+                  <Hash style={{ width: '48px', height: '48px', color: 'var(--text-tertiary)', margin: '0 auto' }} />
+                  <h3 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    No messages with selected tags
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary)' }}>
+                    No messages found with tags: {activeTagFilter.join(', ')}
+                  </p>
+                  <button
+                    onClick={() => setActiveTagFilter([])}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors"
+                    style={{
+                      backgroundColor: 'var(--accent-primary)',
+                      color: 'white'
+                    }}
+                  >
+                    Clear Filter
+                  </button>
+                </div>
+              ) : (
+                <div className="relative max-w-2xl text-center space-y-12">
+                  <div className="space-y-8">
+                    <div className="flex justify-center">
+                      <RandomGeminiImage />
+                    </div>
+                    <div className="space-y-4">
+                      <h2 className="text-4xl font-bold text-gray-900 leading-tight">
+                        Hi! I'm your Rubber Ducky
+                      </h2>
+                      <p className="text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium">
+                        I'm here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
+                      </p>
+                    </div>
+                  </div>
+                
+                  {conversationStarter && (
+                    <div className="relative bg-white/80 backdrop-blur-xl border border-gray-200/50 rounded-3xl p-8 shadow-2xl shadow-black/5">
+                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 rounded-3xl"></div>
+                      <div className="relative">
+                        <div className="flex items-start gap-6">
+                          <Logo size="md" variant="minimal" showText={false} />
+                          <div className="text-left space-y-3">
+                            <p className="text-gray-700 font-semibold text-base">Let's chat about:</p>
+                            <p className="text-gray-800 text-lg leading-relaxed font-medium italic">
+                              "{conversationStarter}"
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentAgent.keyTopics && currentAgent.keyTopics.length > 0 && (
+                    <div className="space-y-6">
+                      <p className="text-2xl font-bold text-gray-800">What we can explore together:</p>
+                      <div className="flex flex-wrap gap-4 justify-center">
+                        {currentAgent.keyTopics.map((topic) => (
+                          <span
+                            key={topic}
+                            className="px-6 py-3 bg-gradient-to-br from-white to-blue-50 hover:from-yellow-50 hover:to-amber-50 border border-blue-200 hover:border-yellow-300 text-blue-800 hover:text-yellow-800 rounded-2xl text-base font-semibold transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg transform hover:-translate-y-1"
+                          >
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="text-center space-y-8">
+                    <p className="text-xl text-gray-600 font-medium">
+                      🎙️ Ready to chat? Use your voice or type a message below!
+                    </p>
+                    
+                    {isContinuousMode && (
+                      <div className="inline-flex items-center gap-6 px-8 py-4 bg-gradient-to-r from-yellow-100 via-amber-100 to-yellow-100 border-2 border-yellow-300/50 rounded-2xl shadow-lg shadow-yellow-500/10 backdrop-blur-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <div className="w-4 h-4 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
+                            <div className="absolute inset-0 w-4 h-4 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+                          </div>
+                          <span className="text-2xl filter drop-shadow-sm animate-pulse">🦆</span>
+                        </div>
+                        <div className="text-left space-y-2">
+                          <span className="text-blue-800 font-bold text-lg">Rubber Ducky Live!</span>
+                          <span className="text-blue-700 text-sm font-medium">I'm listening and ready to help you think</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="relative flex-1 flex flex-col">
             {/* Session Title - Sticky */}
-            {currentSession && messages.length > 0 && (
+            {currentSession && filteredMessages.length > 0 && (
               <div 
                 className="sticky top-0 z-10 text-center py-6 border-b border-opacity-20"
                 style={{ 
@@ -1017,12 +1098,32 @@ export default function ChatInterface() {
                     })}
                   </p>
                 )}
+                
+                {/* Active Tag Filter Indicator */}
+                {activeTagFilter.length > 0 && (
+                  <div className="mt-3 flex items-center justify-center gap-2">
+                    <Hash style={{ width: '14px', height: '14px', color: 'var(--accent-primary)' }} />
+                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      Filtering by: {activeTagFilter.join(', ')}
+                    </span>
+                    <button
+                      onClick={() => setActiveTagFilter([])}
+                      className="text-xs px-2 py-1 rounded transition-colors"
+                      style={{ 
+                        backgroundColor: 'var(--bg-tertiary)',
+                        color: 'var(--text-tertiary)'
+                      }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             
             <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 pb-4 space-y-8">
               
-              {messages
+              {filteredMessages
                 .filter(message => message.role === 'assistant')
                 .reverse()
                 .map((message, index, aiMessages) => {
@@ -1155,6 +1256,16 @@ export default function ChatInterface() {
                                     textSizeClass={getTextSizeClass()}
                                     expandedView={true}
                                   />
+                                  
+                                  {/* Message Tags */}
+                                  <MessageTagInterface 
+                                    messageId={message.id}
+                                    tags={message.tags || []}
+                                    onTagsUpdate={async (tags) => {
+                                      await updateMessageTags(message.id, tags);
+                                    }}
+                                  />
+                                  
                                   {isCurrentlyStreaming && (
                                     <div className="flex items-center gap-1 mt-4">
                                       <div className="flex space-x-1">
@@ -1292,8 +1403,8 @@ export default function ChatInterface() {
             </div>
           </div>
         )}
+        </div>
         <div ref={messagesEndRef} />
-      </div>
       </div>
 
       {/* Error display */}

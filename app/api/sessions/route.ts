@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const archived = searchParams.get('archived') === 'true';
 
     // Build query
-    const query: any = {
+    const query: Record<string, any> = {
       createdBy: session.user.id,
       isArchived: archived
     };
@@ -39,7 +39,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (tags.length > 0) {
-      query.tags = { $in: tags };
+      query.$or = query.$or || [];
+      query.$or.push(
+        { tags: { $in: tags } }, // Session-level tags
+        { 'messages.tags': { $in: tags } } // Message-level tags
+      );
     }
 
     // Execute query with pagination

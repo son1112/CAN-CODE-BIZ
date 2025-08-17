@@ -5,6 +5,7 @@ export interface SessionMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
+  tags?: string[]; // Message-level tags
   audioMetadata?: {
     duration?: number;
     language?: string;
@@ -60,6 +61,7 @@ const SessionMessageSchema = new Schema({
   role: { type: String, enum: ['user', 'assistant', 'system'], required: true },
   content: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
+  tags: [{ type: String }], // Message-level tags
   audioMetadata: {
     duration: Number,
     language: String,
