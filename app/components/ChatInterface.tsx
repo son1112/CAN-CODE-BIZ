@@ -60,6 +60,40 @@ function RandomGeminiImage() {
   );
 }
 
+// Helper function to extract and truncate the first sentence
+function getFirstSentencePreview(content: string, maxLength: number = 80): string {
+  if (!content) return '';
+  
+  // Clean up the content first - remove markdown formatting for preview
+  const cleanContent = content
+    .replace(/#{1,6}\s+/g, '') // Remove markdown headers
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+    .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
+    .replace(/`(.*?)`/g, '$1') // Remove inline code
+    .replace(/```[\s\S]*?```/g, '[code block]') // Replace code blocks
+    .replace(/\n+/g, ' ') // Replace newlines with spaces
+    .trim();
+  
+  // Find the first sentence (look for period, exclamation, or question mark followed by space/end)
+  const sentenceMatch = cleanContent.match(/^[^.!?]*[.!?](?:\s|$)/);
+  const firstSentence = sentenceMatch ? sentenceMatch[0].trim() : cleanContent;
+  
+  // Truncate if too long
+  if (firstSentence.length <= maxLength) {
+    return firstSentence;
+  }
+  
+  // Find the last complete word that fits
+  const truncated = firstSentence.substring(0, maxLength);
+  const lastSpaceIndex = truncated.lastIndexOf(' ');
+  
+  if (lastSpaceIndex > maxLength * 0.7) { // If we can preserve most of the text
+    return truncated.substring(0, lastSpaceIndex) + '...';
+  }
+  
+  return truncated + '...';
+}
+
 export default function ChatInterface() {
   const [inputValue, setInputValue] = useState('');
   const [conversationStarter, setConversationStarter] = useState('');
@@ -77,6 +111,7 @@ export default function ChatInterface() {
   const [collapsedMessages, setCollapsedMessages] = useState<Set<string>>(new Set());
   const [isStarsBrowserOpen, setIsStarsBrowserOpen] = useState(false);
   const [isOverflowMenuOpen, setIsOverflowMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -358,15 +393,15 @@ export default function ChatInterface() {
           boxShadow: 'var(--shadow-lg)'
         }}
       >
-        <div className="flex items-center" style={{ gap: '20px' }}>
+        <div className="flex items-center min-w-0 flex-1" style={{ gap: '20px' }}>
           <Logo 
             size="md" 
             onClick={() => window.location.reload()}
           />
           
           {/* Session Name Display/Edit */}
-          {currentSession && (
-            <div className="flex items-center gap-2">
+          {currentSession ? (
+            <div className="flex items-center gap-2 min-w-0 flex-shrink">
               {isEditingSessionName ? (
                 <div className="flex items-center gap-2">
                   <input
@@ -388,12 +423,13 @@ export default function ChatInterface() {
                       }
                     }}
                     autoFocus
-                    className="px-2 py-1 rounded text-sm border"
+                    className="px-3 py-1.5 rounded-lg text-lg font-semibold border-2 transition-colors"
                     style={{
                       backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
-                      borderColor: 'var(--border-primary)',
+                      borderColor: 'var(--accent-primary)',
                       color: 'var(--text-primary)',
-                      minWidth: '150px'
+                      minWidth: '200px',
+                      letterSpacing: '-0.01em'
                     }}
                     placeholder="Session name..."
                   />
@@ -426,31 +462,70 @@ export default function ChatInterface() {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <span
-                    className="text-sm font-medium truncate max-w-xs cursor-pointer hover:underline"
-                    style={{ color: 'var(--text-secondary)' }}
-                    onClick={() => {
-                      setEditingSessionName(currentSession.name);
-                      setIsEditingSessionName(true);
-                    }}
-                    title="Click to rename session"
-                  >
-                    {currentSession.name}
-                  </span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <MessageCircle 
+                      style={{ 
+                        width: '18px', 
+                        height: '18px', 
+                        color: 'var(--accent-primary)' 
+                      }} 
+                    />
+                    <span
+                      className="text-lg font-semibold truncate cursor-pointer hover:underline transition-colors"
+                      style={{ 
+                        color: 'var(--text-primary)',
+                        letterSpacing: '-0.01em'
+                      }}
+                      onClick={() => {
+                        setEditingSessionName(currentSession.name);
+                        setIsEditingSessionName(true);
+                      }}
+                      title="Click to rename session"
+                    >
+                      {currentSession.name}
+                    </span>
+                  </div>
                   <button
                     onClick={() => {
                       setEditingSessionName(currentSession.name);
                       setIsEditingSessionName(true);
                     }}
-                    className="p-1 rounded transition-colors"
+                    className="p-1.5 rounded-lg transition-colors"
                     style={{ color: 'var(--text-tertiary)' }}
                     title="Rename session"
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = 'var(--text-tertiary)';
+                    }}
                   >
-                    <Edit3 style={{ width: '14px', height: '14px' }} />
+                    <Edit3 style={{ width: '16px', height: '16px' }} />
                   </button>
                 </div>
               )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <MessageCircle 
+                style={{ 
+                  width: '18px', 
+                  height: '18px', 
+                  color: 'var(--text-tertiary)' 
+                }} 
+              />
+              <span
+                className="text-lg font-semibold"
+                style={{ 
+                  color: 'var(--text-tertiary)',
+                  letterSpacing: '-0.01em'
+                }}
+              >
+                New Conversation
+              </span>
             </div>
           )}
           
@@ -484,7 +559,7 @@ export default function ChatInterface() {
           <ThemeToggle />
           
           {/* Desktop Controls - Hidden on small screens */}
-          <div className="hidden md:flex items-center" style={{ gap: '8px' }}>
+          <div className="flex items-center" style={{ gap: '8px' }}>
             {/* New Session */}
             <button
               onClick={handleQuickNewSession}
@@ -508,49 +583,6 @@ export default function ChatInterface() {
               <Plus style={{ width: '16px', height: '16px' }} />
             </button>
             
-            {/* Session History */}
-            <button
-              onClick={() => setIsSessionBrowserOpen(true)}
-              className="rounded-lg transition-all duration-300"
-              style={{ 
-                padding: '6px',
-                color: 'var(--text-secondary)',
-                border: '1px solid transparent'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-                e.currentTarget.style.borderColor = 'var(--border-primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = 'transparent';
-              }}
-              title="Session History"
-            >
-              <History style={{ width: '16px', height: '16px' }} />
-            </button>
-            
-            {/* Stars Browser */}
-            <button
-              onClick={() => setIsStarsBrowserOpen(true)}
-              className="rounded-lg transition-all duration-300"
-              style={{ 
-                padding: '6px',
-                color: 'var(--text-secondary)',
-                border: '1px solid transparent'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-                e.currentTarget.style.borderColor = 'var(--border-primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = 'transparent';
-              }}
-              title="Starred Items"
-            >
-              <Star style={{ width: '16px', height: '16px' }} />
-            </button>
             
             {/* Continuous Mode */}
             <button
@@ -686,8 +718,176 @@ export default function ChatInterface() {
         </div>
       </div>
 
-      {/* Modern Chat Interface */}
+      {/* Modern Chat Interface with Sidebar */}
       <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar */}
+        <div 
+          className={`relative transition-all duration-300 ease-in-out border-r ${
+            isSidebarOpen ? 'w-80' : 'w-0'
+          } overflow-hidden`}
+          style={{ 
+            borderColor: 'var(--border-primary)',
+            backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(12px)'
+          }}
+        >
+          {isSidebarOpen && (
+            <div className="h-full flex flex-col p-6">
+              {/* Sidebar Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  Menu
+                </h3>
+                <button
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-2 rounded-lg transition-colors"
+                  style={{ color: 'var(--text-secondary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <X style={{ width: '16px', height: '16px' }} />
+                </button>
+              </div>
+
+              {/* Sidebar Content */}
+              <div className="flex-1 space-y-4">
+                {/* Session History */}
+                <button
+                  onClick={() => {
+                    setIsSessionBrowserOpen(true);
+                    setIsSidebarOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left"
+                  style={{ 
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-primary)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <History style={{ width: '18px', height: '18px' }} />
+                  <span>Session History</span>
+                </button>
+
+                {/* Stars Browser */}
+                <button
+                  onClick={() => {
+                    setIsStarsBrowserOpen(true);
+                    setIsSidebarOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left"
+                  style={{ 
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-primary)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <Star style={{ width: '18px', height: '18px' }} />
+                  <span>Starred Items</span>
+                </button>
+
+                {/* Input History Toggle */}
+                <button
+                  onClick={() => setShowUserHistory(!showUserHistory)}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left"
+                  style={{ 
+                    backgroundColor: showUserHistory ? 'var(--bg-tertiary)' : 'transparent',
+                    color: 'var(--text-primary)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showUserHistory) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showUserHistory) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <History style={{ width: '18px', height: '18px' }} />
+                  <span>Input History</span>
+                  {showUserHistory && (
+                    <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></div>
+                  )}
+                </button>
+
+                {/* Input History Section */}
+                {showUserHistory && messages.filter(m => m.role === 'user').length > 0 && (
+                  <div className="border-t pt-4" style={{ borderColor: 'var(--border-primary)' }}>
+                    <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>
+                      Recent Inputs ({messages.filter(m => m.role === 'user').length})
+                    </h4>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {messages
+                        .filter(m => m.role === 'user')
+                        .slice(-10) // Show last 10 user inputs
+                        .reverse() // Most recent first
+                        .map((message, index) => (
+                          <div 
+                            key={message.id}
+                            className="p-2 rounded-lg cursor-pointer transition-colors text-sm"
+                            style={{
+                              backgroundColor: 'var(--bg-tertiary)',
+                              color: 'var(--text-secondary)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'var(--bg-quaternary)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                            }}
+                            onClick={() => {
+                              setInputValue(message.content);
+                              setShowUserHistory(false);
+                              setIsSidebarOpen(false);
+                              inputRef.current?.focus();
+                            }}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>
+                                {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
+                                  hour: 'numeric', 
+                                  minute: '2-digit',
+                                  hour12: true 
+                                })}
+                              </span>
+                              {message.audioMetadata && (
+                                <span className="text-green-500" style={{ fontSize: '11px' }}>🎙️</span>
+                              )}
+                            </div>
+                            <div className="line-clamp-2">{message.content}</div>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
+
+                {/* Placeholder for future sidebar items */}
+                <div className="text-sm pt-4" style={{ color: 'var(--text-tertiary)' }}>
+                  More features coming soon...
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex overflow-hidden">
         {isLoadingSession ? (
           /* Session Loading State */
           <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
@@ -771,11 +971,62 @@ export default function ChatInterface() {
         ) : (
           /* AI-Focused Chat Interface */
           <div className="relative flex-1 flex flex-col">
+            {/* Session Title - Sticky */}
+            {currentSession && messages.length > 0 && (
+              <div 
+                className="sticky top-0 z-10 text-center py-6 border-b border-opacity-20"
+                style={{ 
+                  borderColor: 'var(--border-primary)',
+                  backgroundColor: 'var(--bg-primary)',
+                  backdropFilter: 'blur(8px)'
+                }}
+              >
+                <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl" style={{
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+                  border: '1px solid',
+                  borderColor: 'var(--border-primary)'
+                }}>
+                  <MessageCircle 
+                    style={{ 
+                      width: '20px', 
+                      height: '20px', 
+                      color: 'var(--accent-primary)' 
+                    }} 
+                  />
+                  <h1 
+                    className="text-2xl font-bold"
+                    style={{ 
+                      color: 'var(--text-primary)',
+                      letterSpacing: '-0.02em'
+                    }}
+                  >
+                    {currentSession.name}
+                  </h1>
+                </div>
+                {currentSession.createdAt && (
+                  <p 
+                    className="mt-2 text-sm"
+                    style={{ color: 'var(--text-tertiary)' }}
+                  >
+                    Started {new Date(currentSession.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                )}
+              </div>
+            )}
+            
             <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 pb-4 space-y-8">
+              
               {messages
                 .filter(message => message.role === 'assistant')
+                .reverse()
                 .map((message, index, aiMessages) => {
-                  const isCurrentlyStreaming = isStreaming && index === aiMessages.length - 1;
+                  const isCurrentlyStreaming = isStreaming && index === 0;
                   
                   return (
                     <div key={message.id} className="group">
@@ -807,7 +1058,7 @@ export default function ChatInterface() {
                           <div 
                             className="flex-1 relative shadow-xl backdrop-blur-sm transition-all duration-300 group-hover:shadow-2xl rounded-[2rem]"
                             style={{ 
-                              padding: '2rem 3rem',
+                              padding: collapsedMessages.has(message.id) ? '0.75rem 1.5rem' : '2rem 3rem',
                               border: '4px solid #eab308',
                               boxShadow: '0 25px 50px -12px rgba(234, 179, 8, 0.2)',
                               backgroundColor: isDark ? 'var(--bg-secondary)' : 'white'
@@ -887,9 +1138,14 @@ export default function ChatInterface() {
                             {/* Message Content */}
                             <div className="relative">
                               {collapsedMessages.has(message.id) ? (
-                                /* Collapsed View */
-                                <div className="text-sm italic" style={{ color: 'var(--text-tertiary)' }}>
-                                  Message collapsed • Click expand to view
+                                /* Collapsed View - Lower Profile */
+                                <div className="py-1">
+                                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                    {getFirstSentencePreview(message.content)}
+                                  </div>
+                                  <div className="text-xs mt-0.5 opacity-50" style={{ color: 'var(--text-tertiary)' }}>
+                                    Click to expand
+                                  </div>
                                 </div>
                               ) : (
                                 /* Full Content */
@@ -1038,6 +1294,7 @@ export default function ChatInterface() {
         )}
         <div ref={messagesEndRef} />
       </div>
+      </div>
 
       {/* Error display */}
       {error && (
@@ -1064,77 +1321,6 @@ export default function ChatInterface() {
         <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(to top, rgba(13, 13, 13, 0.2), transparent)' : 'linear-gradient(to top, rgba(59, 130, 246, 0.08), transparent)' }}></div>
         <div className="relative max-w-6xl mx-auto space-y-2">
           
-          {/* User Input History Dropdown */}
-          {messages.filter(m => m.role === 'user').length > 0 && (
-            <div className="relative">
-              <button
-                onClick={() => setShowUserHistory(!showUserHistory)}
-                className="flex items-center gap-2 text-sm font-medium transition-colors rounded-lg px-3 py-1.5"
-                style={{
-                  color: 'var(--text-secondary)',
-                  backgroundColor: showUserHistory ? 'var(--bg-secondary)' : 'transparent',
-                  border: `1px solid ${showUserHistory ? 'var(--border-primary)' : 'transparent'}`
-                }}
-              >
-                {showUserHistory ? <ChevronDown style={{ width: '14px', height: '14px' }} /> : <ChevronUp style={{ width: '14px', height: '14px' }} />}
-                Your Input History ({messages.filter(m => m.role === 'user').length})
-              </button>
-              
-              {showUserHistory && (
-                <div 
-                  className="absolute bottom-full left-0 right-0 mb-3 rounded-xl border shadow-xl overflow-hidden"
-                  style={{
-                    backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
-                    borderColor: 'var(--border-primary)',
-                    maxHeight: '200px',
-                    zIndex: 110 // Ensure it's above other elements
-                  }}
-                >
-                  <div className="overflow-y-auto max-h-48 p-2 space-y-1">
-                    {messages
-                      .filter(m => m.role === 'user')
-                      .slice(-10) // Show last 10 user inputs
-                      .reverse() // Most recent first
-                      .map((message, index) => (
-                        <div 
-                          key={message.id}
-                          className="p-2 rounded-lg cursor-pointer transition-colors text-sm"
-                          style={{
-                            backgroundColor: 'var(--bg-tertiary)',
-                            color: 'var(--text-secondary)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'var(--bg-quaternary)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-                          }}
-                          onClick={() => {
-                            setInputValue(message.content);
-                            setShowUserHistory(false);
-                          }}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>
-                              {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
-                                hour: 'numeric', 
-                                minute: '2-digit',
-                                hour12: true 
-                              })}
-                            </span>
-                            {message.audioMetadata && (
-                              <span className="text-green-500" style={{ fontSize: '11px' }}>🎙️</span>
-                            )}
-                          </div>
-                          <div className="line-clamp-2">{message.content}</div>
-                        </div>
-                      ))
-                    }
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
           
           {/* Current Input/Transcription Area */}
           <div className="flex items-end" style={{ gap: '12px' }}>
@@ -1382,6 +1568,57 @@ export default function ChatInterface() {
           </div>
         </div>
       )}
+
+      {/* Floating Sidebar Toggle */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="fixed z-50 transition-all duration-300 ease-in-out transform hover:scale-110"
+        style={{
+          left: isSidebarOpen ? '320px' : '0px', // Moves with sidebar
+          top: '50%',
+          transform: 'translateY(-50%)',
+          padding: '12px 8px',
+          backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          border: '2px solid var(--border-primary)',
+          borderLeft: isSidebarOpen ? '2px solid var(--border-primary)' : 'none',
+          borderTopRightRadius: '12px',
+          borderBottomRightRadius: '12px',
+          borderTopLeftRadius: isSidebarOpen ? '12px' : '0px',
+          borderBottomLeftRadius: isSidebarOpen ? '12px' : '0px',
+          boxShadow: 'var(--shadow-xl)',
+          backdropFilter: 'blur(12px)',
+          color: 'var(--accent-primary)',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)';
+          e.currentTarget.style.borderColor = 'var(--accent-primary)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+          e.currentTarget.style.borderColor = 'var(--border-primary)';
+        }}
+        title={isSidebarOpen ? 'Close Menu' : 'Open Menu'}
+      >
+        <svg 
+          style={{ 
+            width: '20px', 
+            height: '20px',
+            transition: 'transform 0.3s ease-in-out',
+            transform: isSidebarOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+          }} 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2.5} 
+            d="M9 5l7 7-7 7" 
+          />
+        </svg>
+      </button>
 
       {/* Floating Scroll Navigation */}
       <ScrollNavigation containerRef={chatContainerRef} />
