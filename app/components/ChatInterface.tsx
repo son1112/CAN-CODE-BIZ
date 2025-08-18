@@ -28,6 +28,7 @@ import SessionBrowser from './SessionBrowser';
 import { useSession as useAuthSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
 import { Settings } from 'lucide-react';
+import { getAgentById } from '@/lib/agents';
 
 // Array of available hero images
 const heroImages = [
@@ -1290,39 +1291,93 @@ export default function ChatInterface() {
               </div>
             )}
             
-            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 pb-4 space-y-8">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 pb-4 space-y-6">
               
-              {filteredMessages
-                .filter(message => message.role === 'assistant')
+              {[...filteredMessages]
                 .reverse()
-                .map((message, index, aiMessages) => {
-                  const isCurrentlyStreaming = isStreaming && index === 0;
+                .map((message, index) => {
+                  const isCurrentlyStreaming = isStreaming && message.role === 'assistant' && index === 0;
                   
                   return (
                     <div key={message.id} className="group">
-                      {/* Full-width AI Response */}
-                      <div className="w-full">
-                        <div className="flex items-start gap-6">
-                          {/* AI Avatar */}
-                          <div 
-                            className="rounded-full flex items-center justify-center flex-shrink-0 relative shadow-lg transform transition-transform duration-300 group-hover:scale-110"
-                            style={{
-                              width: '64px',
-                              height: '64px',
-                              background: 'linear-gradient(135deg, #eab308 0%, #f59e0b 50%, #f97316 100%)',
-                              boxShadow: '0 10px 15px -3px rgba(234, 179, 8, 0.3)'
-                            }}
-                          >
-                            <Image
-                              src="/rubber-duck-avatar.png"
-                              alt="Rubber Ducky"
-                              width={56}
-                              height={56}
-                              className="object-cover scale-125 rounded-full"
-                              style={{ objectPosition: 'center center' }}
-                              priority
-                            />
+                      {message.role === 'user' ? (
+                        /* User Message */
+                        <div className="w-full flex justify-end">
+                          <div className="max-w-[80%]">
+                            <div 
+                              className="relative shadow-lg backdrop-blur-sm rounded-2xl"
+                              style={{ 
+                                padding: '1.5rem 2rem',
+                                backgroundColor: isDark ? 'var(--accent-primary)' : '#3b82f6',
+                                color: 'white'
+                              }}
+                            >
+                              {/* User Message Header */}
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold px-2 py-1 rounded" style={{ 
+                                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                    color: 'white'
+                                  }}>
+                                    You
+                                  </span>
+                                  {message.audioMetadata && (
+                                    <span className="text-xs px-2 py-1 rounded flex items-center gap-1" style={{ 
+                                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                                      color: 'white'
+                                    }}>
+                                      🎙️ Voice
+                                    </span>
+                                  )}
+                                  {message.agentUsed && (
+                                    <span className="text-xs px-2 py-1 rounded" style={{ 
+                                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                      color: 'white',
+                                      fontSize: '10px'
+                                    }}>
+                                      to {getAgentById(message.agentUsed).name}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-xs opacity-80">
+                                  {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
+                                    hour: 'numeric', 
+                                    minute: '2-digit',
+                                    hour12: true 
+                                  })}
+                                </span>
+                              </div>
+                              {/* User Message Content */}
+                              <div className="text-sm leading-relaxed">
+                                {message.content}
+                              </div>
+                            </div>
                           </div>
+                        </div>
+                      ) : (
+                        /* AI Assistant Message */
+                        <div className="w-full">
+                          <div className="flex items-start gap-6">
+                            {/* AI Avatar */}
+                            <div 
+                              className="rounded-full flex items-center justify-center flex-shrink-0 relative shadow-lg transform transition-transform duration-300 group-hover:scale-110"
+                              style={{
+                                width: '64px',
+                                height: '64px',
+                                background: 'linear-gradient(135deg, #eab308 0%, #f59e0b 50%, #f97316 100%)',
+                                boxShadow: '0 10px 15px -3px rgba(234, 179, 8, 0.3)'
+                              }}
+                            >
+                              <Image
+                                src="/rubber-duck-avatar.png"
+                                alt="Rubber Ducky"
+                                width={56}
+                                height={56}
+                                className="object-cover scale-125 rounded-full"
+                                style={{ objectPosition: 'center center' }}
+                                priority
+                              />
+                            </div>
                           
                           {/* Full-width AI Message */}
                           <div 
@@ -1338,7 +1393,23 @@ export default function ChatInterface() {
                             
                             {/* Message Header with Collapse Button */}
                             <div className="relative flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold px-2 py-1 rounded" style={{ 
+                                    backgroundColor: 'var(--bg-tertiary)', 
+                                    color: 'var(--accent-primary)' 
+                                  }}>
+                                    AI Assistant
+                                  </span>
+                                  {message.agentUsed && (
+                                    <span className="text-xs px-2 py-1 rounded" style={{ 
+                                      backgroundColor: 'var(--bg-quaternary)', 
+                                      color: 'var(--text-secondary)' 
+                                    }}>
+                                      {getAgentById(message.agentUsed).name}
+                                    </span>
+                                  )}
+                                </div>
                                 <span className="text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>
                                   {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
                                     hour: 'numeric', 
@@ -1450,6 +1521,7 @@ export default function ChatInterface() {
                           </div>
                         </div>
                       </div>
+                      )}
                     </div>
                   );
                 })}
