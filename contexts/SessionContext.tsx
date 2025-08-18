@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { SessionDocument, SessionMessage } from '@/models/Session';
 
 export interface SessionContextType {
@@ -370,7 +370,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const loadSessions = async (page = 1, search = '', tags: string[] = []): Promise<void> => {
+  const loadSessions = useCallback(async (page = 1, search = '', tags: string[] = []): Promise<void> => {
     setIsLoading(true);
     setError(null);
     
@@ -396,11 +396,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const refreshSessions = async (): Promise<void> => {
+  const refreshSessions = useCallback(async (): Promise<void> => {
     await loadSessions();
-  };
+  }, [loadSessions]);
 
   // Load current session from localStorage on mount
   useEffect(() => {
@@ -420,7 +420,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       });
     }
     loadSessions();
-  }, []);
+  }, [loadSessions]);
 
   // Save current session ID to localStorage whenever it changes
   useEffect(() => {
