@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ModelProvider } from "@/contexts/ModelContext";
 import { SessionProvider } from "next-auth/react";
 import { SessionProvider as ChatSessionProvider } from "@/contexts/SessionContext";
+import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { SessionAgentSync } from "@/components/SessionAgentSync";
 import "./globals.css";
 
@@ -97,7 +98,9 @@ export default function RootLayout({
                 <ChatSessionProvider>
                   <SessionAgentSync>
                     <DropdownProvider>
-                      {children}
+                      <OnboardingProvider>
+                        {children}
+                      </OnboardingProvider>
                     </DropdownProvider>
                   </SessionAgentSync>
                 </ChatSessionProvider>

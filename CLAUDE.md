@@ -121,6 +121,39 @@ For GitHub package registry access:
 2. Replace `YOUR_GITHUB_TOKEN` with your GitHub Personal Access Token
 3. Never commit the `.npmrc` file (it's in `.gitignore`)
 
+## Versioning and Release Management
+
+The project follows [Semantic Versioning (SemVer)](https://semver.org/) with automated release management:
+
+### Release Commands
+```bash
+# Patch release (bug fixes): 0.1.0 -> 0.1.1
+npm run version:patch
+
+# Minor release (new features): 0.1.0 -> 0.2.0  
+npm run version:minor
+
+# Major release (breaking changes): 0.1.0 -> 1.0.0
+npm run version:major
+
+# Test release process without making changes
+npm run release:dry-run
+```
+
+### Automated Release Process
+- **Pre-flight checks**: Runs lint, build, and verifies clean working directory
+- **Version update**: Updates package.json and CHANGELOG.md with new version
+- **Git operations**: Creates commit, tags version, and pushes to remote
+- **Documentation**: Automatically updates changelog links and generates release notes
+
+### Files and Documentation
+- `CHANGELOG.md` - Detailed change log following Keep a Changelog format
+- `docs/VERSIONING.md` - Comprehensive versioning guide and best practices
+- `scripts/version.js` - Version management automation script
+- `scripts/release.js` - Complete release process automation
+
+See [docs/VERSIONING.md](docs/VERSIONING.md) for detailed versioning guidelines.
+
 ## User Preferences
 
 - Use README.org instead of README.md for documentation

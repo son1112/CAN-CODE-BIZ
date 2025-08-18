@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Bot, User, Sparkles, Zap, Plus } from 'lucide-react';
+import { ChevronDown, Bot, User, Sparkles, Zap, Plus, Star } from 'lucide-react';
 import { useAgent } from '@/contexts/AgentContext';
 import { useDropdown } from '@/contexts/DropdownContext';
 import { AVAILABLE_AGENTS } from '@/lib/agents';
@@ -10,6 +10,7 @@ import { useAgents } from '@/hooks/useAgents';
 import Logo from '@/app/components/Logo';
 import CreateAgentModal from '@/app/components/CreateAgentModal';
 import StarButton from './StarButton';
+import { useStars } from '@/hooks/useStars';
 
 export default function AgentSelector() {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,11 +20,36 @@ export default function AgentSelector() {
   const { currentAgent, currentPowerAgent, setAgent, setPowerAgent, isUsingPowerAgent } = useAgent();
   const { agents: cliAgents, loading: cliLoading, error: cliError, loadAgents } = useAgents();
   const { setIsDropdownOpen } = useDropdown();
+  const { stars } = useStars('demo-user'); // TODO: Replace with actual user ID
 
   // Get display name for current selection
   const currentDisplayName = isUsingPowerAgent 
     ? currentPowerAgent?.name 
     : currentAgent.name;
+    
+  // Sort agents to show starred ones first
+  const sortedCliAgents = useMemo(() => {
+    if (!cliAgents) return [];
+    
+    // Get starred agent IDs
+    const starredAgentIds = new Set(
+      stars
+        .filter(star => star.itemType === 'agent')
+        .map(star => star.itemId)
+    );
+    
+    // Sort agents: starred first, then alphabetically
+    return [...cliAgents].sort((a, b) => {
+      const aIsStarred = starredAgentIds.has(a.name);
+      const bIsStarred = starredAgentIds.has(b.name);
+      
+      if (aIsStarred && !bIsStarred) return -1;
+      if (!aIsStarred && bIsStarred) return 1;
+      
+      // If both are starred or both are not, sort alphabetically
+      return a.name.localeCompare(b.name);
+    });
+  }, [cliAgents, stars]);
 
   // Calculate dropdown position when opening
   useEffect(() => {
@@ -150,7 +176,7 @@ export default function AgentSelector() {
                     <div className="p-2 bg-green-100 text-green-800 text-xs">
                       ✅ Power Agents Working: {cliAgents.length} agents loaded
                     </div>
-                    {cliAgents.map((agent) => (
+                    {sortedCliAgents.map((agent) => (
                       <div 
                         key={`cli-${agent.name}`}
                         className={`
@@ -173,6 +199,7 @@ export default function AgentSelector() {
                           
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
+                              {stars.some(star => star.itemType === 'agent' && star.itemId === agent.name) && <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
                               {agent.name}
                               <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full font-medium">
                                 POWER

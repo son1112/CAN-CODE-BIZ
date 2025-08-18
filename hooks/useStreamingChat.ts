@@ -36,10 +36,11 @@ export function useStreamingChat(): StreamingChatHook {
 
     try {
       // Add user message to session
+      const agentId = currentPowerAgent ? `power-agent:${currentPowerAgent.name}` : currentAgent.id;
       const userMessageAdded = await addMessage({
         role: 'user',
         content: content.trim(),
-        agentUsed: currentAgent.id
+        agentUsed: agentId
       });
 
       if (!userMessageAdded) {
@@ -105,10 +106,11 @@ export function useStreamingChat(): StreamingChatHook {
                 
                 // Add assistant response to session
                 if (accumulatedContent.trim()) {
+                  const agentId = currentPowerAgent ? `power-agent:${currentPowerAgent.name}` : currentAgent.id;
                   await addMessage({
                     role: 'assistant',
                     content: accumulatedContent.trim(),
-                    agentUsed: currentAgent.id
+                    agentUsed: agentId
                   });
                   
                   // Add assistant response to conversation context
@@ -134,7 +136,7 @@ export function useStreamingChat(): StreamingChatHook {
       setIsStreaming(false);
       abortControllerRef.current = null;
     }
-  }, [messages, isStreaming, getSystemPrompt, addContext, addMessage, currentAgent]);
+  }, [messages, isStreaming, getSystemPrompt, addContext, addMessage, currentAgent, currentPowerAgent]);
 
   const clearMessages = useCallback(() => {
     if (abortControllerRef.current) {

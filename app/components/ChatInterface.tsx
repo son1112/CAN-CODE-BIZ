@@ -21,6 +21,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import { useAgent } from '@/contexts/AgentContext';
 import { useDropdown } from '@/contexts/DropdownContext';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useConversationManager } from '@/hooks/useConversationManager';
 import { useSession } from '@/contexts/SessionContext';
 import { useModel } from '@/contexts/ModelContext';
@@ -29,6 +30,7 @@ import { useSession as useAuthSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
 import { Settings } from 'lucide-react';
 import { getAgentById } from '@/lib/agents';
+import { useAgents } from '@/hooks/useAgents';
 
 // Array of available hero images
 const heroImages = [
@@ -125,6 +127,21 @@ function getFirstSentencePreview(content: string, maxLength: number = 80): strin
 
 
 export default function ChatInterface() {
+  const { agents } = useAgents();
+  
+  // Helper function to get agent display name
+  const getAgentDisplayName = (agentUsed: string | undefined) => {
+    if (!agentUsed) return null;
+    
+    if (agentUsed.startsWith('power-agent:')) {
+      const powerAgentId = agentUsed.replace('power-agent:', '');
+      const powerAgent = agents.find(a => a.name === powerAgentId);
+      return powerAgent?.name || powerAgentId;
+    }
+    
+    return getAgentById(agentUsed).name;
+  };
+  
   const [inputValue, setInputValue] = useState('');
   const [conversationStarter, setConversationStarter] = useState('');
   const [isContinuousMode, setIsContinuousMode] = useState(false);
@@ -154,6 +171,76 @@ export default function ChatInterface() {
   const inputDebounceRef = useRef<NodeJS.Timeout>();
   
   const { messages, isStreaming, error, sendMessage, clearMessages } = useStreamingChat();
+  const { startOnboarding } = useOnboarding();
+
+  // Helper function to format session names into readable titles
+  const formatSessionTitle = (sessionName: string) => {
+    if (!sessionName || sessionName === 'Untitled Session') {
+      return 'Untitled Session';
+    }
+    
+    // Handle date-based names like "Chat 8/17/2025, 10:52:01 PM"
+    if (sessionName.startsWith('Chat ')) {
+      const dateString = sessionName.replace('Chat ', '');
+      try {
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+          return `Chat from ${date.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}`;
+        }
+      } catch {
+        // Fall through to default formatting
+      }
+    }
+    
+    // Handle other automatic names or clean up user-provided names
+    return sessionName
+      .split(/[\s_-]+/) // Split on spaces, underscores, hyphens
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Title case
+      .join(' ')
+      .replace(/\b(And|Or|The|A|An|In|On|At|To|For|Of|With|By)\b/g, word => word.toLowerCase()) // Lowercase articles/prepositions
+      .replace(/^[a-z]/, char => char.toUpperCase()); // Ensure first letter is capitalized
+  };
+
+  // Helper function to generate message titles from content
+  const generateMessageTitle = (content: string, role: 'user' | 'assistant') => {
+    if (!content) return role === 'user' ? 'Your Message' : 'AI Response';
+    
+    // Clean up the content first - remove markdown formatting for title
+    const cleanContent = content
+      .replace(/#{1,6}\s+/g, '') // Remove markdown headers
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+      .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
+      .replace(/`(.*?)`/g, '$1') // Remove inline code
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links, keep text
+      .trim();
+    
+    // Get first sentence
+    const sentences = cleanContent.split(/[.!?]+/);
+    let firstSentence = sentences[0]?.trim() || '';
+    
+    // If first sentence is too short, try to get more context
+    if (firstSentence.length < 10 && sentences[1]) {
+      firstSentence = (firstSentence + '. ' + sentences[1]).trim();
+    }
+    
+    // Limit length and ensure it ends properly
+    if (firstSentence.length > 60) {
+      firstSentence = firstSentence.substring(0, 57) + '...';
+    }
+    
+    // If still empty or too short, use generic titles
+    if (!firstSentence || firstSentence.length < 5) {
+      return role === 'user' ? 'Your Message' : 'AI Response';
+    }
+    
+    // Ensure first letter is capitalized
+    return firstSentence.charAt(0).toUpperCase() + firstSentence.slice(1);
+  };
   
   // Filter messages based on active tag filter (optimized)
   const filteredMessages = useMemo(() => {
@@ -417,8 +504,9 @@ export default function ChatInterface() {
     };
   }, []);
 
+
   const exportChat = () => {
-    const sessionName = currentSession?.name || 'Untitled Session';
+    const sessionName = formatSessionTitle(currentSession?.name || 'Untitled Session');
     const chatContent = [
       `Session: ${sessionName}`,
       `Agent: ${currentAgent.name}`,
@@ -464,7 +552,7 @@ export default function ChatInterface() {
         }}
       ></div>
       
-      {/* Modern Header */}
+      {/* Modern Header with Color Accents */}
       <div 
         className="relative flex items-center justify-between backdrop-blur-xl border-b scale-locked-header" 
         style={{ 
@@ -474,23 +562,33 @@ export default function ChatInterface() {
           width: '100%',
           backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
           borderColor: 'var(--border-primary)',
-          boxShadow: 'var(--shadow-lg)'
+          boxShadow: 'var(--shadow-lg)',
+          borderImage: 'linear-gradient(90deg, #3b82f6, #eab308, #10b981) 1',
+          borderBottom: '2px solid transparent',
+          background: isDark 
+            ? 'linear-gradient(rgba(13, 13, 13, 0.95), rgba(13, 13, 13, 0.95)), linear-gradient(90deg, #3b82f6, #eab308, #10b981)'
+            : 'linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)), linear-gradient(90deg, #3b82f6, #eab308, #10b981)',
+          backgroundClip: 'padding-box, border-box',
+          backgroundOrigin: 'padding-box, border-box'
         }}
       >
         <div className="flex items-center min-w-0 flex-1" style={{ gap: '20px' }}>
-          <Logo 
-            size="md" 
-            onClick={async () => {
-              // Navigate to home/welcome page by creating a new session
-              // This is the same as clicking "New Session" button
-              await handleQuickNewSession();
-            }}
-          />
+          <div data-onboarding="logo">
+            <Logo 
+              size="lg" 
+              showText={false}
+              onClick={async () => {
+                // Navigate to home/welcome page by creating a new session
+                // This is the same as clicking "New Session" button
+                await handleQuickNewSession();
+              }}
+            />
+          </div>
           
           {/* Refresh button to reload current state */}
           <button
             onClick={() => window.location.reload()}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors hover:shadow-md"
             title="Refresh page"
           >
             <RefreshCw className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
@@ -505,6 +603,7 @@ export default function ChatInterface() {
                     type="text"
                     value={editingSessionName}
                     onChange={(e) => setEditingSessionName(e.target.value)}
+                    className="px-3 py-1 border-2 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
                     onKeyDown={async (e) => {
                       if (e.key === 'Enter') {
                         if (editingSessionName.trim()) {
@@ -569,7 +668,7 @@ export default function ChatInterface() {
                       }} 
                     />
                     <span
-                      className="text-lg font-semibold truncate cursor-pointer hover:underline transition-colors"
+                      className="text-lg font-semibold truncate cursor-pointer hover:text-blue-600 transition-colors duration-200"
                       style={{ 
                         color: 'var(--text-primary)',
                         letterSpacing: '-0.01em'
@@ -580,7 +679,7 @@ export default function ChatInterface() {
                       }}
                       title="Click to rename session"
                     >
-                      {currentSession.name}
+                      {formatSessionTitle(currentSession.name)}
                     </span>
                   </div>
                   <button
@@ -588,17 +687,9 @@ export default function ChatInterface() {
                       setEditingSessionName(currentSession.name);
                       setIsEditingSessionName(true);
                     }}
-                    className="p-1.5 rounded-lg transition-colors"
+                    className="p-1.5 rounded-lg transition-colors hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30"
                     style={{ color: 'var(--text-tertiary)' }}
                     title="Rename session"
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-                      e.currentTarget.style.color = 'var(--text-secondary)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = 'var(--text-tertiary)';
-                    }}
                   >
                     <Edit3 style={{ width: '16px', height: '16px' }} />
                   </button>
@@ -606,7 +697,11 @@ export default function ChatInterface() {
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <button
+              onClick={handleQuickNewSession}
+              className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg px-2 py-1 transition-all duration-200 cursor-pointer"
+              title="Start a new conversation"
+            >
               <MessageCircle 
                 style={{ 
                   width: '18px', 
@@ -623,10 +718,12 @@ export default function ChatInterface() {
               >
                 New Conversation
               </span>
-            </div>
+            </button>
           )}
           
-          <AgentSelector />
+          <div data-onboarding="agent-selector">
+            <AgentSelector />
+          </div>
         </div>
         <div className="flex items-center" style={{ gap: '8px' }}>
           {isContinuousMode && (
@@ -662,16 +759,19 @@ export default function ChatInterface() {
               className="rounded-lg transition-all duration-300"
               style={{ 
                 padding: '6px',
-                color: 'var(--text-secondary)',
-                border: '1px solid transparent'
+                color: '#10b981',
+                border: '1px solid transparent',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-                e.currentTarget.style.borderColor = 'var(--border-primary)';
+                e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+                e.currentTarget.style.borderColor = '#10b981';
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.15)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
                 e.currentTarget.style.borderColor = 'transparent';
+                e.currentTarget.style.boxShadow = 'none';
               }}
               title="New Session (Ctrl/Cmd + N)"
               disabled={isLoadingSession}
@@ -682,6 +782,7 @@ export default function ChatInterface() {
             
             {/* Continuous Mode */}
             <button
+              data-onboarding="continuous-mode"
               onClick={toggleContinuousMode}
               className="rounded-lg transition-all duration-300"
               style={{ 
@@ -706,6 +807,28 @@ export default function ChatInterface() {
               title={isContinuousMode ? 'Disable continuous conversation' : 'Enable continuous conversation'}
             >
               <MessageCircle style={{ width: '16px', height: '16px' }} />
+            </button>
+            
+            {/* Tour Button */}
+            <button
+              onClick={startOnboarding}
+              className="rounded-lg transition-all duration-300"
+              style={{ 
+                padding: '6px',
+                color: 'var(--text-secondary)',
+                border: '1px solid transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                e.currentTarget.style.borderColor = 'var(--border-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'transparent';
+              }}
+              title="Show App Tour"
+            >
+              <Type style={{ width: '16px', height: '16px' }} />
             </button>
           </div>
           
@@ -808,6 +931,21 @@ export default function ChatInterface() {
                     <div className="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
                   )}
                 </button>
+                
+                {/* Onboarding Tour */}
+                <button
+                  onClick={() => {
+                    startOnboarding();
+                    setIsOverflowMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors"
+                  style={{ color: 'var(--text-primary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <Type style={{ width: '16px', height: '16px' }} />
+                  <span className="text-sm">Show App Tour</span>
+                </button>
               </div>
             )}
           </div>
@@ -820,7 +958,7 @@ export default function ChatInterface() {
                 setShowAccountMenu(true);
                 setIsSidebarOpen(true);
               }}
-              className="rounded-full overflow-hidden border-2 hover:border-blue-400 transition-colors ml-auto"
+              className="rounded-full overflow-hidden border-2 hover:border-blue-400 transition-all duration-200 ml-auto hover:shadow-lg hover:scale-105"
               style={{ borderColor: 'var(--border-primary)' }}
               title="Account settings"
             >
@@ -842,13 +980,54 @@ export default function ChatInterface() {
         <div 
           className={`relative transition-all duration-300 ease-in-out border-r ${
             isSidebarOpen ? 'w-80' : 'w-0'
-          } overflow-hidden`}
+          } ${isSidebarOpen ? 'overflow-visible' : 'overflow-hidden'}`}
           style={{ 
             borderColor: 'var(--border-primary)',
             backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(12px)'
           }}
         >
+          {/* Sidebar Toggle Button - Positioned relative to sidebar */}
+          <button
+            data-onboarding="sidebar-toggle"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="absolute z-50 transition-all duration-300 ease-in-out transform hover:scale-110 hover:shadow-lg"
+            style={{
+              right: '-22px', // Position halfway outside the sidebar edge
+              top: '50%',
+              transform: 'translateY(-50%)',
+              padding: '12px 8px',
+              backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              border: '2px solid #3b82f6', // Blue when open
+              borderLeft: 'none', // No left border - attached to sidebar
+              borderTopRightRadius: '12px',
+              borderBottomRightRadius: '12px',
+              borderTopLeftRadius: '0px', // Square left edge - attached to sidebar
+              borderBottomLeftRadius: '0px', // Square left edge - attached to sidebar
+              boxShadow: 'var(--shadow-xl)',
+              backdropFilter: 'blur(12px)',
+              color: 'var(--accent-primary)',
+              cursor: 'pointer'
+            }}
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              style={{ 
+                width: '20px', 
+                height: '20px'
+              }} 
+              fill="none" 
+              stroke="currentColor"
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+          </button>
           {isSidebarOpen && (
             <div className="h-full flex flex-col p-6">
               {/* Sidebar Header with Tabs */}
@@ -880,9 +1059,10 @@ export default function ChatInterface() {
                       activeTab === 'menu' ? 'font-medium' : ''
                     }`}
                     style={{
-                      backgroundColor: activeTab === 'menu' ? 'var(--bg-primary)' : 'transparent',
-                      color: activeTab === 'menu' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      boxShadow: activeTab === 'menu' ? 'var(--shadow-sm)' : 'none'
+                      backgroundColor: activeTab === 'menu' ? '#ffffff' : 'transparent',
+                      color: activeTab === 'menu' ? '#3b82f6' : 'var(--text-secondary)',
+                      boxShadow: activeTab === 'menu' ? '0 2px 4px rgba(59, 130, 246, 0.15)' : 'none',
+                      borderLeft: activeTab === 'menu' ? '3px solid #3b82f6' : '3px solid transparent'
                     }}
                   >
                     <MoreHorizontal style={{ width: '16px', height: '16px' }} />
@@ -894,9 +1074,10 @@ export default function ChatInterface() {
                       activeTab === 'tags' ? 'font-medium' : ''
                     }`}
                     style={{
-                      backgroundColor: activeTab === 'tags' ? 'var(--bg-primary)' : 'transparent',
-                      color: activeTab === 'tags' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      boxShadow: activeTab === 'tags' ? 'var(--shadow-sm)' : 'none'
+                      backgroundColor: activeTab === 'tags' ? '#ffffff' : 'transparent',
+                      color: activeTab === 'tags' ? '#10b981' : 'var(--text-secondary)',
+                      boxShadow: activeTab === 'tags' ? '0 2px 4px rgba(16, 185, 129, 0.15)' : 'none',
+                      borderLeft: activeTab === 'tags' ? '3px solid #10b981' : '3px solid transparent'
                     }}
                   >
                     <Hash style={{ width: '16px', height: '16px' }} />
@@ -1120,7 +1301,7 @@ export default function ChatInterface() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
+        <div data-onboarding="chat-area" className="flex-1 flex overflow-hidden">
           {isLoadingSession ? (
             <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
               <SessionLoadingIndicator />
@@ -1251,7 +1432,7 @@ export default function ChatInterface() {
                       letterSpacing: '-0.02em'
                     }}
                   >
-                    {currentSession.name}
+                    {formatSessionTitle(currentSession.name)}
                   </h1>
                 </div>
                 {currentSession.createdAt && (
@@ -1291,7 +1472,19 @@ export default function ChatInterface() {
               </div>
             )}
             
-            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 pb-4 space-y-6">
+            <div 
+              ref={chatContainerRef} 
+              className="flex-1 overflow-y-auto p-8 pb-4 space-y-6"
+              style={{
+                backgroundColor: '#f0f0f0',
+                backgroundImage: `
+                  linear-gradient(90deg, #d1d5db 1px, transparent 1px),
+                  linear-gradient(#d1d5db 1px, transparent 1px)
+                `,
+                backgroundSize: '24px 24px',
+                backgroundPosition: '0 0, 0 0'
+              }}
+            >
               
               {[...filteredMessages]
                 .reverse()
@@ -1301,45 +1494,52 @@ export default function ChatInterface() {
                   return (
                     <div key={message.id} className="group">
                       {message.role === 'user' ? (
-                        /* User Message */
+                        /* User Message - Professional Paper Style */
                         <div className="w-full flex justify-end">
                           <div className="max-w-[80%]">
                             <div 
-                              className="relative shadow-lg backdrop-blur-sm rounded-2xl"
+                              className="relative shadow-xl rounded-lg border-l-4"
                               style={{ 
                                 padding: '1.5rem 2rem',
-                                backgroundColor: isDark ? 'var(--accent-primary)' : '#3b82f6',
-                                color: 'white'
+                                backgroundColor: isDark ? '#ffffff' : '#ffffff',
+                                color: isDark ? '#1f2937' : '#1f2937',
+                                borderLeftColor: '#3b82f6',
+                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
+                                border: '1px solid #e5e7eb',
                               }}
                             >
-                              {/* User Message Header */}
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-semibold px-2 py-1 rounded" style={{ 
-                                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                                    color: 'white'
-                                  }}>
-                                    You
-                                  </span>
+                              {/* User Message Title & Header */}
+                              <div className="mb-3 border-b pb-2" style={{ borderColor: '#e5e7eb' }}>
+                                <h3 className="text-lg font-bold mb-1" style={{ color: '#1f2937' }}>
+                                  {generateMessageTitle(message.content, 'user')}
+                                </h3>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold px-2 py-1 rounded" style={{ 
+                                      backgroundColor: '#f3f4f6',
+                                      color: '#3b82f6'
+                                    }}>
+                                      You
+                                    </span>
                                   {message.audioMetadata && (
                                     <span className="text-xs px-2 py-1 rounded flex items-center gap-1" style={{ 
-                                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                                      color: 'white'
+                                      backgroundColor: '#dbeafe',
+                                      color: '#3b82f6'
                                     }}>
                                       🎙️ Voice
                                     </span>
                                   )}
                                   {message.agentUsed && (
                                     <span className="text-xs px-2 py-1 rounded" style={{ 
-                                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                      color: 'white',
+                                      backgroundColor: '#f0f9ff',
+                                      color: '#0284c7',
                                       fontSize: '10px'
                                     }}>
-                                      to {getAgentById(message.agentUsed).name}
+                                      to {getAgentDisplayName(message.agentUsed)}
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-xs opacity-80">
+                                <span className="text-xs" style={{ color: '#6b7280' }}>
                                   {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
                                     hour: 'numeric', 
                                     minute: '2-digit',
@@ -1347,6 +1547,7 @@ export default function ChatInterface() {
                                   })}
                                 </span>
                               </div>
+                            </div>
                               {/* User Message Content */}
                               <div className="text-sm leading-relaxed">
                                 {message.content}
@@ -1379,38 +1580,50 @@ export default function ChatInterface() {
                               />
                             </div>
                           
-                          {/* Full-width AI Message */}
+                          {/* Full-width AI Message - Professional Paper Style */}
                           <div 
-                            className="flex-1 relative shadow-xl backdrop-blur-sm transition-all duration-300 group-hover:shadow-2xl rounded-[2rem]"
+                            className="flex-1 relative shadow-xl transition-all duration-300 group-hover:shadow-2xl rounded-lg border-l-4"
                             style={{ 
                               padding: collapsedMessages.has(message.id) ? '0.75rem 1.5rem' : '2rem 3rem',
-                              border: '4px solid #eab308',
-                              boxShadow: '0 25px 50px -12px rgba(234, 179, 8, 0.2)',
-                              backgroundColor: isDark ? 'var(--bg-secondary)' : 'white'
+                              borderLeftColor: '#eab308',
+                              backgroundColor: isDark ? '#ffffff' : '#ffffff',
+                              color: isDark ? '#1f2937' : '#1f2937',
+                              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
+                              border: '1px solid #e5e7eb',
+                              borderLeft: '4px solid #eab308'
                             }}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 rounded-[2rem]"></div>
+                            {/* Professional document-style watermark */}
+                            <div className="absolute top-3 right-3 opacity-10">
+                              <div className="w-6 h-6 border-2 border-amber-500 rounded-full flex items-center justify-center">
+                                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                              </div>
+                            </div>
                             
-                            {/* Message Header with Collapse Button */}
-                            <div className="relative flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-semibold px-2 py-1 rounded" style={{ 
-                                    backgroundColor: 'var(--bg-tertiary)', 
-                                    color: 'var(--accent-primary)' 
-                                  }}>
-                                    AI Assistant
-                                  </span>
+                            {/* Message Title & Header with Collapse Button */}
+                            <div className="mb-3 border-b pb-2" style={{ borderColor: '#e5e7eb' }}>
+                              <h3 className="text-lg font-bold mb-1" style={{ color: '#1f2937' }}>
+                                {generateMessageTitle(message.content, 'assistant')}
+                              </h3>
+                              <div className="relative flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold px-2 py-1 rounded" style={{ 
+                                      backgroundColor: '#fef3c7', 
+                                      color: '#d97706' 
+                                    }}>
+                                      AI Assistant
+                                    </span>
                                   {message.agentUsed && (
                                     <span className="text-xs px-2 py-1 rounded" style={{ 
-                                      backgroundColor: 'var(--bg-quaternary)', 
-                                      color: 'var(--text-secondary)' 
+                                      backgroundColor: '#f0f9ff', 
+                                      color: '#0284c7' 
                                     }}>
-                                      {getAgentById(message.agentUsed).name}
+                                      {getAgentDisplayName(message.agentUsed)}
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>
+                                <span className="text-sm font-medium" style={{ color: '#6b7280' }}>
                                   {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
                                     hour: 'numeric', 
                                     minute: '2-digit',
@@ -1473,6 +1686,7 @@ export default function ChatInterface() {
                                     <Minimize2 style={{ width: '14px', height: '14px' }} />
                                   }
                                 </button>
+                              </div>
                               </div>
                             </div>
                             
@@ -1553,17 +1767,31 @@ export default function ChatInterface() {
                         />
                       </div>
                       
-                      {/* Thinking bubble */}
+                      {/* Thinking bubble - Professional Paper Style */}
                       <div 
-                        className="flex-1 relative shadow-xl backdrop-blur-sm rounded-[2rem] animate-pulse"
+                        className="flex-1 relative shadow-xl rounded-lg border-l-4 animate-pulse"
                         style={{ 
                           padding: '2rem 3rem',
-                          border: '4px solid #eab308',
-                          boxShadow: '0 25px 50px -12px rgba(234, 179, 8, 0.2)',
-                          backgroundColor: isDark ? 'var(--bg-secondary)' : 'white'
+                          borderLeftColor: '#eab308',
+                          backgroundColor: isDark ? '#ffffff' : '#ffffff',
+                          color: isDark ? '#1f2937' : '#1f2937',
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
+                          border: '1px solid #e5e7eb',
+                          borderLeft: '4px solid #eab308'
                         }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 rounded-[2rem]"></div>
+                        {/* Thinking Title */}
+                        <div className="mb-3 border-b pb-2" style={{ borderColor: '#e5e7eb' }}>
+                          <h3 className="text-lg font-bold" style={{ color: '#1f2937' }}>
+                            Thinking...
+                          </h3>
+                        </div>
+                        {/* Professional document-style watermark */}
+                        <div className="absolute top-3 right-3 opacity-10">
+                          <div className="w-6 h-6 border-2 border-amber-500 rounded-full flex items-center justify-center">
+                            <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                          </div>
+                        </div>
                         
                         {/* Thinking content */}
                         <div className="relative flex items-center justify-center py-4">
@@ -1600,7 +1828,7 @@ export default function ChatInterface() {
                             {/* Enhanced thinking indicator with more prominent animations */}
                             <div className="flex flex-col items-center space-y-4">
                               <div className="flex items-center space-x-3">
-                                <span className="text-xl font-semibold animate-pulse" style={{ color: 'var(--accent-primary)' }}>
+                                <span className="text-xl font-semibold animate-pulse" style={{ color: '#d97706' }}>
                                   🦆 Rubber Ducky is thinking
                                 </span>
                                 <div className="flex items-center space-x-1">
@@ -1609,7 +1837,7 @@ export default function ChatInterface() {
                                       key={i}
                                       className="w-3 h-3 rounded-full animate-bounce"
                                       style={{
-                                        backgroundColor: 'var(--accent-primary)',
+                                        backgroundColor: '#eab308',
                                         animationDelay: `${i * 0.2}s`,
                                         animationDuration: '1s'
                                       }}
@@ -1676,13 +1904,15 @@ export default function ChatInterface() {
           
           {/* Current Input/Transcription Area */}
           <div className="flex items-end" style={{ gap: '12px' }}>
-            <VoiceInput 
-              onTranscript={handleVoiceTranscript}
-              isDisabled={isStreaming}
-              enableContinuousMode={isContinuousMode}
-            />
+            <div data-onboarding="voice-input">
+              <VoiceInput 
+                onTranscript={handleVoiceTranscript}
+                isDisabled={isStreaming}
+                enableContinuousMode={isContinuousMode}
+              />
+            </div>
             
-            <form onSubmit={handleSubmit} className="flex-1 flex" style={{ gap: '10px' }}>
+            <form data-onboarding="message-input" onSubmit={handleSubmit} className="flex-1 flex" style={{ gap: '10px' }}>
               <div className="flex-1 relative">
                 {/* Current Transcription Display */}
                 {currentTranscript && (
@@ -1710,7 +1940,7 @@ export default function ChatInterface() {
                     placeholder={currentTranscript ? "Voice input active..." : "Share your thoughts with the rubber ducky..."}
                     disabled={isStreaming}
                     rows={1}
-                    className={`w-full border-2 backdrop-blur-sm resize-none focus:outline-none focus:ring-2 disabled:opacity-50 transition-all duration-300 font-medium rounded-xl ${debouncedInputValue.trim() ? 'border-[var(--accent-primary)]' : 'border-[var(--border-primary)]'}`}
+                    className={`w-full border-2 backdrop-blur-sm resize-none focus:outline-none transition-all duration-300 font-medium rounded-xl ${debouncedInputValue.trim() ? 'border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600' : 'border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500'} disabled:opacity-50`}
                     style={useMemo(() => ({ 
                       padding: '12px 16px',
                       fontSize: '14px',
@@ -1859,6 +2089,7 @@ export default function ChatInterface() {
                       type="text"
                       value={newSessionName}
                       onChange={(e) => setNewSessionName(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg transition-all duration-200"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleCreateNewSession();
@@ -1916,22 +2147,23 @@ export default function ChatInterface() {
         </div>
       )}
 
-      {/* Floating Sidebar Toggle */}
-      <button
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="fixed z-50 transition-all duration-300 ease-in-out transform hover:scale-110"
-        style={{
-          left: isSidebarOpen ? '320px' : '0px', // Moves with sidebar
+      {/* Floating Sidebar Toggle - Only when closed */}
+      {!isSidebarOpen && (
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="fixed z-50 transition-all duration-300 ease-in-out transform hover:scale-110 hover:shadow-lg"
+          style={{
+          left: '0px', // Always at left edge when collapsed
           top: '50%',
           transform: 'translateY(-50%)',
           padding: '12px 8px',
           backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          border: '2px solid var(--border-primary)',
-          borderLeft: isSidebarOpen ? '2px solid var(--border-primary)' : 'none',
+          border: '2px solid #10b981', // Green when closed
+          borderLeft: 'none', // No left border - attached to edge
           borderTopRightRadius: '12px',
           borderBottomRightRadius: '12px',
-          borderTopLeftRadius: isSidebarOpen ? '12px' : '0px',
-          borderBottomLeftRadius: isSidebarOpen ? '12px' : '0px',
+          borderTopLeftRadius: '0px', // Square left edge
+          borderBottomLeftRadius: '0px', // Square left edge
           boxShadow: 'var(--shadow-xl)',
           backdropFilter: 'blur(12px)',
           color: 'var(--accent-primary)',
@@ -1966,6 +2198,7 @@ export default function ChatInterface() {
           />
         </svg>
       </button>
+      )}
 
       {/* Floating Scroll Navigation */}
       <ScrollNavigation containerRef={chatContainerRef} />
