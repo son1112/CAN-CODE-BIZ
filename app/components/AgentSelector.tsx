@@ -76,7 +76,7 @@ export default function AgentSelector() {
 
 
   // Handle agent creation
-  const handleAgentCreated = async (newAgent: any) => {
+  const handleAgentCreated = async (newAgent: { name: string; description: string; prompt: string }) => {
     // Refresh the agents list
     await loadAgents();
     // Select the new agent

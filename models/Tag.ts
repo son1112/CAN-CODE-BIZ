@@ -38,8 +38,7 @@ const TagSchema = new Schema<ITag>({
   },
   userId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   usageCount: {
     type: Number,

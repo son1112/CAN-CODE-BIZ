@@ -12,9 +12,9 @@ interface AuthGuardProps {
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [timeoutReached, setTimeoutReached] = useState(false);
   const [loadingStartTime] = useState(Date.now());
   const [loadingDuration, setLoadingDuration] = useState(0);
+  const [timeoutReached, setTimeoutReached] = useState(false);
 
   // Demo mode bypass for testing
   const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';

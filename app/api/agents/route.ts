@@ -72,16 +72,16 @@ export async function GET() {
       // If CLI fails, this indicates MongoDB or package issues
       throw new Error('Failed to connect to agent storage');
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('List agents error:', error);
     
     // Provide specific error messages based on error type
     let errorMessage = 'Failed to fetch agents';
-    if (error.message?.includes('MongoDB') || error.message?.includes('connection')) {
+    if ((error instanceof Error && error.message?.includes('MongoDB')) || (error instanceof Error && error.message?.includes('connection'))) {
       errorMessage = 'Database connection error. Please check MongoDB connection.';
-    } else if (error.message?.includes('timeout')) {
+    } else if (error instanceof Error && error.message?.includes('timeout')) {
       errorMessage = 'Database request timed out. Please try again.';
-    } else if (error.message?.includes('authentication')) {
+    } else if (error instanceof Error && error.message?.includes('authentication')) {
       errorMessage = 'Database authentication failed.';
     }
     
@@ -234,7 +234,7 @@ Respond with ONLY the JSON object, no additional text or explanation.`;
     try {
       newAgent = JSON.parse(responseText.trim());
     } catch (parseError) {
-      console.error('Failed to parse Claude response:', responseText);
+      console.error('Failed to parse Claude response:', parseError, responseText);
       return NextResponse.json(
         { error: 'Failed to generate valid agent structure' },
         { status: 500 }
@@ -277,21 +277,22 @@ Respond with ONLY the JSON object, no additional text or explanation.`;
           isActive: true
         };
         
-        const result = await collection.insertOne(agentDocument);
+        const insertResult = await collection.insertOne(agentDocument);
         
         return NextResponse.json({
           success: true,
           agent: newAgent,
+          insertedId: insertResult.insertedId,
           message: `Agent "${newAgent.name}" created successfully`
         });
       } finally {
         await client.close();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Agent creation error:', error);
       
       // Handle specific MongoDB error cases
-      if (error.code === 11000) { // Duplicate key error
+      if (error instanceof Error && 'code' in error && error.code === 11000) { // Duplicate key error
         return NextResponse.json(
           { error: `Agent with name "${newAgent.name}" already exists` },
           { status: 409 }
@@ -300,25 +301,27 @@ Respond with ONLY the JSON object, no additional text or explanation.`;
       throw error;
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Create agent error:', error);
     
     // Provide specific error messages based on error type
     let errorMessage = 'Failed to create agent';
     let statusCode = 500;
     
-    if (error.message?.includes('MongoDB') || error.message?.includes('connection')) {
-      errorMessage = 'Database connection error. Unable to create agent.';
-    } else if (error.message?.includes('timeout')) {
-      errorMessage = 'Database request timed out. Please try again.';
-    } else if (error.message?.includes('authentication')) {
-      errorMessage = 'Database authentication failed.';
-    } else if (error.message?.includes('validation')) {
-      errorMessage = 'Agent validation failed. Please check the agent data.';
-      statusCode = 400;
-    } else if (error.message?.includes('duplicate') || error.message?.includes('already exists')) {
-      errorMessage = 'An agent with this name already exists.';
-      statusCode = 409;
+    if (error instanceof Error) {
+      if (error.message?.includes('MongoDB') || error.message?.includes('connection')) {
+        errorMessage = 'Database connection error. Unable to create agent.';
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = 'Database request timed out. Please try again.';
+      } else if (error.message?.includes('authentication')) {
+        errorMessage = 'Database authentication failed.';
+      } else if (error.message?.includes('validation')) {
+        errorMessage = 'Agent validation failed. Please check the agent data.';
+        statusCode = 400;
+      } else if (error.message?.includes('duplicate') || error.message?.includes('already exists')) {
+        errorMessage = 'An agent with this name already exists.';
+        statusCode = 409;
+      }
     }
     
     return NextResponse.json(

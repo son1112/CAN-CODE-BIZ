@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import Session from '@/models/Session';
 import connectDB from '@/lib/mongodb';
@@ -28,7 +28,7 @@ function getRandomAvatar(): { imageUrl: string; prompt: string } {
   return avatars[randomIndex];
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const session = await auth();
     

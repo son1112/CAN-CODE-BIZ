@@ -66,7 +66,7 @@ export function useStreamingChat(): StreamingChatHook {
             content: content.trim()
           }]),
           systemPrompt: getSystemPrompt(content.trim()),
-          model: getSessionModel(currentAgent, currentPowerAgent),
+          model: getSessionModel(currentAgent || undefined, currentPowerAgent || undefined),
         }),
         signal: abortControllerRef.current.signal,
       });

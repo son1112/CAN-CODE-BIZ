@@ -18,7 +18,7 @@ export interface SessionIteration {
   processedAt: Date;
   agent: string;
   transcript: string;
-  agentOutputs: Record<string, any>;
+  agentOutputs: Record<string, string | number | boolean | object>;
   userNote: string;
   audioFileId?: string;
   metadata?: {
@@ -92,7 +92,7 @@ const SessionIterationSchema = new Schema({
 const SessionSchema = new Schema<SessionDocument>(
   {
     sessionId: { type: String, required: true, unique: true },
-    name: { type: String, required: true, index: true },
+    name: { type: String, required: true },
     
     // Interactive chat data
     messages: [SessionMessageSchema],
@@ -107,7 +107,7 @@ const SessionSchema = new Schema<SessionDocument>(
     isArchived: { type: Boolean, default: false },
     
     // User context
-    createdBy: { type: String, required: true, index: true },
+    createdBy: { type: String, required: true },
     lastAgentUsed: String,
     conversationStarter: String,
     avatar: {
@@ -131,8 +131,7 @@ SessionSchema.index({ name: 1, createdBy: 1 }, { unique: true });
 SessionSchema.index({ tags: 1 });
 SessionSchema.index({ isActive: 1, isArchived: 1 });
 
-// CLI compatibility: ensure name field works for CLI queries
-SessionSchema.index({ name: 1 });
+// Note: name index is covered by compound index { name: 1, createdBy: 1 }
 
 // Auto-update lastAccessedAt on read operations
 SessionSchema.pre('findOne', function() {

@@ -7,6 +7,8 @@ export interface Message {
     duration?: number;
     language?: string;
   };
+  agentUsed?: string;
+  tags?: string[];
 }
 
 export interface Conversation {

@@ -5,7 +5,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface ScrollNavigationProps {
-  containerRef?: React.RefObject<HTMLElement>;
+  containerRef?: React.RefObject<HTMLElement | null>;
 }
 
 export default function ScrollNavigation({ containerRef }: ScrollNavigationProps) {

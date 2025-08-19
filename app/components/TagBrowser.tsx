@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
-import { Hash, Plus, Search, Filter, Trash2, Edit3, TrendingUp } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Hash, Plus, Search, Trash2, Edit3, TrendingUp } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTags } from '@/hooks/useTags';
-import TagInput from './TagInput';
 import TagDisplay from './TagDisplay';
 
 interface TagBrowserProps {
@@ -18,9 +17,9 @@ export default function TagBrowser({ onTagFilter, onClose }: TagBrowserProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'usageCount' | 'name' | 'createdAt'>('usageCount');
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingTag, setEditingTag] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [editingTag, setEditingTag] = useState<string | null>(null);
 
   const tagOptions = useMemo(() => ({
     search: searchTerm,
@@ -29,7 +28,7 @@ export default function TagBrowser({ onTagFilter, onClose }: TagBrowserProps) {
     limit: 100
   }), [searchTerm, selectedCategory, sortBy]);
 
-  const { tags, loading, error, createTag, updateTag, deleteTag, refetch } = useTags(tagOptions);
+  const { tags, loading, error, createTag, deleteTag } = useTags(tagOptions);
 
   // Get unique categories
   const categories = useMemo(() => {
@@ -305,7 +304,16 @@ function TagItem({
   onEdit, 
   onDelete 
 }: {
-  tag: any;
+  tag: {
+    _id: string;
+    name: string;
+    color: string;
+    category?: string;
+    description?: string;
+    usageCount: number;
+    createdAt: string;
+    updatedAt: string;
+  };
   isSelected: boolean;
   onSelect: (tagName: string) => void;
   onEdit: () => void;
@@ -318,8 +326,7 @@ function TagItem({
       }`}
       style={{
         backgroundColor: isSelected ? `${tag.color}10` : 'var(--bg-tertiary)',
-        borderColor: isSelected ? tag.color : 'var(--border-primary)',
-        ringColor: isSelected ? tag.color : 'transparent'
+        borderColor: isSelected ? tag.color : 'var(--border-primary)'
       }}
       onClick={() => onSelect(tag.name)}
     >
@@ -387,7 +394,7 @@ function CreateTagForm({
   onSubmit, 
   onCancel 
 }: {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: { name: string; color: string; category?: string; description?: string }) => void;
   onCancel: () => void;
 }) {
   const [formData, setFormData] = useState({
@@ -473,7 +480,16 @@ function CreateTagForm({
 }
 
 // Tag Analytics Component
-function TagAnalytics({ tags }: { tags: any[] }) {
+function TagAnalytics({ tags }: { tags: Array<{
+  _id: string;
+  name: string;
+  color: string;
+  category?: string;
+  description?: string;
+  usageCount: number;
+  createdAt: string;
+  updatedAt: string;
+}> }) {
   const topTags = tags
     .sort((a, b) => b.usageCount - a.usageCount)
     .slice(0, 5);

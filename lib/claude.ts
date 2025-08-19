@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { ClaudeModel, DEFAULT_MODEL, getModelConfig } from './models';
+import { logger } from './logger';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -31,7 +32,7 @@ export async function* streamClaudeResponse(
     
     yield { content: '', isComplete: true };
   } catch (error) {
-    console.error('Claude API error:', error);
+    logger.error('Claude API streaming error', { component: 'claude', model }, error);
     yield { 
       content: '', 
       isComplete: true, 
@@ -59,7 +60,7 @@ export async function getClaudeResponse(
 
     return response.content[0].type === 'text' ? response.content[0].text : '';
   } catch (error) {
-    console.error('Claude API error:', error);
+    logger.error('Claude API error', { component: 'claude', model }, error);
     throw error;
   }
 }

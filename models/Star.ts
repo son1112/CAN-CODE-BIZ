@@ -42,14 +42,13 @@ export interface StarDocument extends Document {
 const StarSchema = new Schema<StarDocument>(
   {
     starId: { type: String, required: true, unique: true },
-    userId: { type: String, required: true, index: true },
+    userId: { type: String, required: true },
     
     // What is starred
     itemType: { 
       type: String, 
       enum: ['message', 'session', 'agent', 'conversation-starter', 'code-snippet'],
-      required: true,
-      index: true
+      required: true
     },
     itemId: { type: String, required: true },
     

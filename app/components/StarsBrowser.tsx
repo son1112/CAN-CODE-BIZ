@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Search, Filter, Star, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+import { X, Search, Filter, Star } from 'lucide-react';
 import { StarDocument, StarableType } from '@/models/Star';
 import { useStars } from '@/hooks/useStars';
 import { getStarIcon, getStarDisplayName, getPriorityColor, getPriorityIcon } from '@/lib/stars';
@@ -21,12 +21,12 @@ export default function StarsBrowser({
   onSelectStar,
 }: StarsBrowserProps) {
   const { isDark } = useTheme();
-  const { stars, isLoading, loadStars, unstarItem } = useStars(userId);
+  const { stars, isLoading, unstarItem } = useStars(userId);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<StarableType | 'all'>('all');
   const [selectedPriority, setSelectedPriority] = useState<'low' | 'medium' | 'high' | 'all'>('all');
-  const [sortBy, setSortBy] = useState<'starredAt' | 'lastAccessedAt' | 'priority'>('starredAt');
+  const [sortBy] = useState<'starredAt' | 'lastAccessedAt' | 'priority'>('starredAt');
   const [showFilters, setShowFilters] = useState(false);
 
   // Filter and sort stars
@@ -222,8 +222,7 @@ export default function StarsBrowser({
                       style={{
                         backgroundColor: isDark ? 'var(--bg-primary)' : 'white',
                         borderColor: 'var(--border-primary)',
-                        color: 'var(--text-primary)',
-                        focusRingColor: 'var(--accent-primary)'
+                        color: 'var(--text-primary)'
                       }}
                     />
                   </div>
@@ -241,8 +240,7 @@ export default function StarsBrowser({
                     style={{
                       backgroundColor: isDark ? 'var(--bg-primary)' : 'white',
                       borderColor: 'var(--border-primary)',
-                      color: 'var(--text-primary)',
-                      focusRingColor: 'var(--accent-primary)'
+                      color: 'var(--text-primary)'
                     }}
                   >
                     {starTypes.map(type => (
@@ -265,8 +263,7 @@ export default function StarsBrowser({
                     style={{
                       backgroundColor: isDark ? 'var(--bg-primary)' : 'white',
                       borderColor: 'var(--border-primary)',
-                      color: 'var(--text-primary)',
-                      focusRingColor: 'var(--accent-primary)'
+                      color: 'var(--text-primary)'
                     }}
                   >
                     {priorityOptions.map(priority => (

@@ -1,9 +1,10 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { ClaudeModel, DEFAULT_MODEL, SessionModelSettings, DEFAULT_SESSION_SETTINGS, ModelConfig, getAllModels, getModelConfig } from '@/lib/models';
+import { ClaudeModel, SessionModelSettings, DEFAULT_SESSION_SETTINGS, ModelConfig, getAllModels, getModelConfig } from '@/lib/models';
 import { AgentPersona } from '@/lib/agents';
 import { Agent } from '@/hooks/useAgents';
+import { logger } from '@/lib/logger';
 
 interface ModelContextType {
   // Current model state
@@ -52,13 +53,13 @@ export function ModelProvider({ children }: ModelProviderProps) {
         setSessionModelSettings({
           ...DEFAULT_SESSION_SETTINGS,
           ...parsed,
-          modelHistory: parsed.modelHistory?.map((entry: any) => ({
+          modelHistory: parsed.modelHistory?.map((entry: { model: string; timestamp: string | Date; reason: string }) => ({
             ...entry,
             timestamp: new Date(entry.timestamp)
           })) || []
         });
       } catch (error) {
-        console.warn('Failed to parse saved model settings:', error);
+        logger.warn('Failed to parse saved model settings', { component: 'ModelContext' }, error);
       }
     }
   }, []);

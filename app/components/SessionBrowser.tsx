@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { History, Search, Calendar, MessageCircle, Archive, Trash2, X, Eye, Database, Check, Square, MoreHorizontal, RefreshCw } from 'lucide-react';
+import { History, Search, Calendar, MessageCircle, Archive, Trash2, X, Eye, Database, Check, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { SessionOperationIndicator } from './LoadingIndicator';
@@ -22,7 +22,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [isProcessingOperation, setIsProcessingOperation] = useState(false);
-  const { sessions, loadSessions, deleteSession, reimportSession, currentSession, isLoading } = useSession();
+  const { sessions, loadSessions, deleteSession, reimportSession, currentSession } = useSession();
   const { isDark } = useTheme();
 
   // Load sessions when component opens
@@ -93,7 +93,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   };
 
   // Check if a session has CLI iterations (was migrated from CLI)
-  const hasCliIterations = (session: any) => {
+  const hasCliIterations = (session: { tags?: string[]; iterationCount?: number }) => {
     return session.tags?.includes('cli-migrated') || 
            session.tags?.includes('rubber-ducky-node') ||
            (session.iterationCount && session.iterationCount > 0);
@@ -223,8 +223,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                 style={{
                   backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
                   borderColor: 'var(--border-primary)',
-                  color: 'var(--text-primary)',
-                  focusRingColor: 'var(--accent-primary)'
+                  color: 'var(--text-primary)'
                 }}
               />
             </div>
@@ -455,16 +454,16 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                           </div>
                           <div className="flex items-center gap-1">
                             <MessageCircle style={{ width: '14px', height: '14px' }} />
-                            {session.messageCount || 0} messages
+                            {(session as unknown as { messageCount?: number }).messageCount || 0} messages
                           </div>
                         </div>
 
-                        {session.lastMessage && (
+                        {(session as unknown as { lastMessage?: string }).lastMessage && (
                           <p 
                             className="text-sm truncate mb-2"
                             style={{ color: 'var(--text-secondary)' }}
                           >
-                            {session.lastMessage}
+                            {(session as unknown as { lastMessage?: string }).lastMessage}
                           </p>
                         )}
 
@@ -493,7 +492,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                           itemId={session.sessionId}
                           context={{
                             title: session.name,
-                            description: `${session.messageCount || 0} messages • Last accessed ${formatDate(session.lastAccessedAt || session.createdAt)}`,
+                            description: `${(session as unknown as { messageCount?: number }).messageCount || 0} messages • Last accessed ${formatDate(session.lastAccessedAt || session.createdAt)}`,
                             agentId: session.lastAgentUsed,
                           }}
                           size="sm"

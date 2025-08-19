@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useTheme } from '@/contexts/ThemeContext';
 
 interface LoadingIndicatorProps {
   type?: 'spinner' | 'dots' | 'thinking';
@@ -28,7 +27,6 @@ export default function LoadingIndicator({
   className = '',
   useCyclingImages = false 
 }: LoadingIndicatorProps) {
-  const { isDark } = useTheme();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Cycle through images when useCyclingImages is enabled

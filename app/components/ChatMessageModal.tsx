@@ -2,25 +2,17 @@
 
 import { useEffect } from 'react';
 import { X, Copy, Check } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
 import FormattedMessage from './FormattedMessage';
 import { useState } from 'react';
-
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  audioMetadata?: any;
-}
+import type { Message } from '@/types';
 
 interface ChatMessageModalProps {
   isOpen: boolean;
   onClose: () => void;
-  message: ChatMessage | null;
+  message: Message | null;
 }
 
 export default function ChatMessageModal({ isOpen, onClose, message }: ChatMessageModalProps) {
-  const { isDark } = useTheme();
   const [copied, setCopied] = useState(false);
 
   // Close modal on Escape key

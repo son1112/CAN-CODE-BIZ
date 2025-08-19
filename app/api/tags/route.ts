@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     // Build query
-    const query: Record<string, any> = { userId: session.user.id };
+    const query: Record<string, unknown> = { userId: session.user.id };
     
     if (category && category !== 'all') {
       query.category = category;
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build sort
-    const sortOptions: Record<string, any> = {};
+    const sortOptions: Record<string, number> = {};
     switch (sortBy) {
       case 'name':
         sortOptions.name = 1;
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     const tags = await Tag.find(query)
-      .sort(sortOptions)
+      .sort(sortOptions as Record<string, 1 | -1>)
       .limit(limit)
       .lean();
 

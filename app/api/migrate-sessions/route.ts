@@ -4,6 +4,7 @@ import Session from '@/models/Session';
 import connectDB from '@/lib/mongodb';
 import { MongoClient } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 interface CLISession {
   _id: string;
@@ -152,7 +153,10 @@ export async function POST(request: NextRequest) {
       // Get all CLI sessions
       const cliSessions = await cliSessionsCollection.find().toArray() as unknown as CLISession[];
       
-      console.log(`Found ${cliSessions.length} CLI sessions to process`);
+      logger.info('Found CLI sessions to process', { 
+        component: 'migration', 
+        sessionCount: cliSessions.length 
+      });
       result.sessionsProcessed = cliSessions.length;
 
       for (const cliSession of cliSessions) {
@@ -362,11 +366,19 @@ export async function POST(request: NextRequest) {
             iterationCount: cliSession.iterations?.length || 0
           });
 
-          console.log(`${dryRun ? '[DRY RUN] ' : ''}Migrated session: ${cliSession.name} (${messages.length} messages, ${cliSession.iterations?.length || 0} iterations)`);
+          logger.info('Session migrated', { 
+            component: 'migration', 
+            sessionName: cliSession.name,
+            messageCount: messages.length,
+            iterationCount: cliSession.iterations?.length || 0,
+            isDryRun: dryRun 
+          });
 
         } catch (sessionError) {
-          console.error(`Error processing session ${cliSession.name}:`, sessionError);
-          console.error('Session data:', JSON.stringify(cliSession, null, 2));
+          logger.error('Error processing session', { 
+            component: 'migration', 
+            sessionName: cliSession.name 
+          }, sessionError);
           const errorMessage = sessionError instanceof Error ? sessionError.message : 'Unknown error';
           result.errors.push(`${cliSession.name}: ${errorMessage}`);
           result.details.push({
@@ -397,7 +409,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Migration error:', error);
+    logger.error('Migration failed', { component: 'migration' }, error);
     return NextResponse.json(
       { 
         error: 'Migration failed', 
@@ -409,7 +421,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/migrate-sessions - Get migration status and preview
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
     
@@ -474,7 +486,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Migration preview error:', error);
+    logger.error('Migration preview failed', { component: 'migration' }, error);
     return NextResponse.json(
       { 
         error: 'Failed to get migration status',

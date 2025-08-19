@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Star, StarOff } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { StarableType } from '@/models/Star';
 import { useStars } from '@/hooks/useStars';
 import { CreateStarOptions } from '@/lib/stars';

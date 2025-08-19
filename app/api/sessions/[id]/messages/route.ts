@@ -79,7 +79,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: newMessage,
-      messageCount: updatedSession.messages?.length || 0
+      messageCount: (updatedSession as { messages?: unknown[] })?.messages?.length || 0
     });
 
   } catch (error) {
@@ -115,7 +115,7 @@ export async function GET(
 
     const sessionDoc = await Session.findOne({
       sessionId: id,
-      createdBy: userId
+      createdBy: session.user.id
     }).lean();
 
     if (!sessionDoc) {
@@ -126,11 +126,11 @@ export async function GET(
     }
 
     // Paginate messages
-    const totalMessages = sessionDoc.messages.length;
+    const totalMessages = (sessionDoc as { messages?: unknown[] })?.messages?.length || 0;
     const skip = Math.max(0, totalMessages - (page * limit));
     const take = Math.min(limit, totalMessages - skip);
     
-    const messages = sessionDoc.messages.slice(skip, skip + take);
+    const messages = ((sessionDoc as { messages?: unknown[] })?.messages || []).slice(skip, skip + take);
 
     return NextResponse.json({
       messages,

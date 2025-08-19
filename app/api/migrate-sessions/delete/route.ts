@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { MongoClient } from 'mongodb';
+import { logger } from '@/lib/logger';
 
 // DELETE /api/migrate-sessions/delete - Delete CLI sessions
 export async function DELETE(request: NextRequest) {
@@ -71,7 +72,7 @@ export async function DELETE(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Session deletion error:', error);
+    logger.error('Session deletion failed', { component: 'migration' }, error);
     return NextResponse.json(
       { 
         error: 'Failed to delete session(s)', 

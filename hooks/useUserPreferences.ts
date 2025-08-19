@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { logger } from '@/lib/logger';
 
 export interface UserPreferences {
   notifications: {
@@ -96,7 +97,7 @@ export function useUserPreferences(): UseUserPreferencesReturn {
       setPreferences(userPreferences);
       setOriginalPreferences(JSON.parse(JSON.stringify(userPreferences)));
     } catch (err: any) {
-      console.error('Error loading preferences:', err);
+      logger.error('Error loading preferences', { component: 'UserPreferences' }, err);
       setError(err.message || 'Failed to load preferences');
       // Fall back to defaults on error
       setPreferences(defaultPreferences);
@@ -151,9 +152,9 @@ export function useUserPreferences(): UseUserPreferencesReturn {
       // Update the original preferences to reflect the saved state
       setOriginalPreferences(JSON.parse(JSON.stringify(preferences)));
       
-      console.log('Preferences saved successfully');
+      logger.info('Preferences saved successfully', { component: 'UserPreferences' });
     } catch (err: any) {
-      console.error('Error saving preferences:', err);
+      logger.error('Error saving preferences', { component: 'UserPreferences' }, err);
       setError(err.message || 'Failed to save preferences');
       throw err;
     }

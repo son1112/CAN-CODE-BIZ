@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash, RefreshCw, User, LogOut, Archive, ArchiveRestore } from 'lucide-react';
+import { Send, MessageCircle, Type, History, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash, RefreshCw, User, LogOut, Archive, ArchiveRestore } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -17,7 +17,7 @@ import StarButton from './StarButton';
 import StarsBrowser from './StarsBrowser';
 import TagBrowser from './TagBrowser';
 import MessageTagInterface from './MessageTagInterface';
-import { SessionLoadingIndicator, ChatThinkingIndicator } from './LoadingIndicator';
+import { SessionLoadingIndicator } from './LoadingIndicator';
 import DuckAvatar from './DuckAvatar';
 import { useDuckAvatar } from '@/hooks/useDuckAvatar';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -27,13 +27,13 @@ import { useDropdown } from '@/contexts/DropdownContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useConversationManager } from '@/hooks/useConversationManager';
 import { useSession } from '@/contexts/SessionContext';
-import { useModel } from '@/contexts/ModelContext';
 import SessionBrowser from './SessionBrowser';
 import { useSession as useAuthSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
 import { Settings } from 'lucide-react';
 import { getAgentById, getRandomConversationStarter } from '@/lib/agents';
 import { useAgents } from '@/hooks/useAgents';
+import type { Message } from '@/types';
 
 // Array of available hero images
 const heroImages = [
@@ -148,11 +148,12 @@ export default function ChatInterface() {
   const [inputValue, setInputValue] = useState('');
   const [conversationStarter, setConversationStarter] = useState('');
   const [isContinuousMode, setIsContinuousMode] = useState(false);
-  const [textSize, setTextSize] = useState<'sm' | 'base' | 'lg' | 'xl'>('base');
-  const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const textSize: 'sm' | 'base' | 'lg' | 'xl' | '2xl' = 'base';
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSessionBrowserOpen, setIsSessionBrowserOpen] = useState(false);
   const [showUserHistory, setShowUserHistory] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [isEditingSessionName, setIsEditingSessionName] = useState(false);
   const [editingSessionName, setEditingSessionName] = useState('');
@@ -164,7 +165,6 @@ export default function ChatInterface() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'menu' | 'tags'>('menu');
   const [activeTagFilter, setActiveTagFilter] = useState<string[]>([]);
-  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [archivedMessages, setArchivedMessages] = useState<Set<string>>(new Set());
   const [showArchivedMessages, setShowArchivedMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -173,7 +173,7 @@ export default function ChatInterface() {
   
   // Debounce input changes to reduce re-renders
   const [debouncedInputValue, setDebouncedInputValue] = useState('');
-  const inputDebounceRef = useRef<NodeJS.Timeout>();
+  const inputDebounceRef = useRef<NodeJS.Timeout | null>(null);
   
   const { messages, isStreaming, error, sendMessage, clearMessages } = useStreamingChat();
   const { startOnboarding } = useOnboarding();
@@ -256,7 +256,7 @@ export default function ChatInterface() {
     if (activeTagFilter.length > 0) {
       const tagSet = new Set(activeTagFilter);
       filtered = filtered.filter(message => {
-        return message.tags?.some(tag => tagSet.has(tag));
+        return (message as Message & { tags?: string[] }).tags?.some((tag: string) => tagSet.has(tag));
       });
     }
     
@@ -273,32 +273,15 @@ export default function ChatInterface() {
   const { isDropdownOpen } = useDropdown();
   const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
   const { isDark } = useTheme();
-  const { currentSession, createSession, loadSession, loadSessions, renameSession, isLoadingSession, isProcessingMessage, clearCurrentSession } = useSession();
-  const { currentModel } = useModel();
+  const { currentSession, createSession, loadSession, renameSession, isLoadingSession, isProcessingMessage, clearCurrentSession } = useSession();
   const { data: authSession } = useAuthSession();
   const router = useRouter();
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
-    switch (textSize) {
-      case 'sm': return 'text-sm';
-      case 'base': return 'text-base';
-      case 'lg': return 'text-lg';
-      case 'xl': return 'text-xl';
-      default: return 'text-base';
-    }
+    return 'text-base'; // textSize is hardcoded to 'base'
   };
 
-  // Get prose size class for AI responses
-  const getProseSize = () => {
-    switch (textSize) {
-      case 'sm': return 'prose-sm';
-      case 'base': return 'prose-base';
-      case 'lg': return 'prose-lg';
-      case 'xl': return 'prose-xl';
-      default: return 'prose-base';
-    }
-  };
 
   // Helper function to clean markdown formatting for front page display
   const cleanMarkdownForDisplay = (text: string): string => {
@@ -356,7 +339,7 @@ export default function ChatInterface() {
     try {
       const newSession = await createSession(); // Creates session with auto-generated name
       // Update URL to reflect new session
-      const newUrl = new URL(window.location);
+      const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('session', newSession.sessionId);
       router.replace(newUrl.pathname + newUrl.search);
       
@@ -506,15 +489,6 @@ export default function ChatInterface() {
     }, 100); // 100ms debounce
   }, []);
 
-  const handleClearMessages = async () => {
-    clearMessages();
-    clearContext();
-    if (isContinuousMode) {
-      endConversation();
-    }
-    // Show new session modal to allow naming
-    setShowNewSessionModal(true);
-  };
 
   const handleCreateNewSession = async () => {
     try {
@@ -540,7 +514,7 @@ export default function ChatInterface() {
     }
   };
 
-  const handleMessageClick = useCallback((message: any) => {
+  const handleMessageClick = useCallback((message: Message) => {
     setSelectedMessage(message);
     setIsModalOpen(true);
   }, []);
@@ -554,7 +528,7 @@ export default function ChatInterface() {
     try {
       await loadSession(sessionId);
       // Update URL to reflect current session
-      const newUrl = new URL(window.location);
+      const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('session', sessionId);
       router.replace(newUrl.pathname + newUrl.search);
       // Clear any streaming state when switching sessions
@@ -576,14 +550,7 @@ export default function ChatInterface() {
     });
   }, []);
 
-  const expandAllMessages = useCallback(() => {
-    setCollapsedMessages(new Set());
-  }, []);
 
-  const collapseAllMessages = useCallback(() => {
-    const allMessageIds = new Set(messages.map(msg => msg.id));
-    setCollapsedMessages(allMessageIds);
-  }, [messages]);
 
   // Auto-collapse agent responses when there are more than 10 (optimized)
   const lastMessageCount = useRef(0);
@@ -623,25 +590,6 @@ export default function ChatInterface() {
   }, []);
 
 
-  const exportChat = () => {
-    const sessionName = formatSessionTitle(currentSession?.name || 'Untitled Session');
-    const chatContent = [
-      `Session: ${sessionName}`,
-      `Agent: ${currentAgent.name}`,
-      `Created: ${currentSession?.createdAt ? new Date(currentSession.createdAt).toLocaleString() : 'Unknown'}`,
-      `Messages: ${messages.length}`,
-      '',
-      ...messages.map(msg => `${msg.role.toUpperCase()}: ${msg.content}`)
-    ].join('\\n\\n');
-    
-    const blob = new Blob([chatContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `session-${sessionName.toLowerCase().replace(/\\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   // Archive/unarchive message functions
   const toggleArchiveMessage = (messageId: string) => {
@@ -732,7 +680,7 @@ export default function ChatInterface() {
                     onChange={(e) => setEditingSessionName(e.target.value)}
                     onKeyDown={async (e) => {
                       if (e.key === 'Enter') {
-                        if (editingSessionName.trim()) {
+                        if (editingSessionName.trim() && currentSession) {
                           const success = await renameSession(currentSession.sessionId, editingSessionName.trim());
                           if (success) {
                             setIsEditingSessionName(false);
@@ -757,7 +705,7 @@ export default function ChatInterface() {
                   />
                   <button
                     onClick={async () => {
-                      if (editingSessionName.trim()) {
+                      if (editingSessionName.trim() && currentSession) {
                         const success = await renameSession(currentSession.sessionId, editingSessionName.trim());
                         if (success) {
                           setIsEditingSessionName(false);
@@ -803,19 +751,23 @@ export default function ChatInterface() {
                         letterSpacing: '-0.01em'
                       }}
                       onClick={() => {
-                        setEditingSessionName(currentSession.name);
-                        setIsEditingSessionName(true);
+                        if (currentSession) {
+                          setEditingSessionName(currentSession.name);
+                          setIsEditingSessionName(true);
+                        }
                       }}
                       title="Click to rename session"
                     >
-                      {formatSessionTitle(currentSession.name)}
+                      {formatSessionTitle(currentSession?.name || '')}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
-                        setEditingSessionName(currentSession.name);
-                        setIsEditingSessionName(true);
+                        if (currentSession) {
+                          setEditingSessionName(currentSession.name);
+                          setIsEditingSessionName(true);
+                        }
                       }}
                       className="p-1.5 rounded-lg transition-colors hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30"
                       style={{ color: 'var(--text-tertiary)' }}
@@ -1305,7 +1257,7 @@ export default function ChatInterface() {
                         .filter(m => m.role === 'user')
                         .slice(-10) // Show last 10 user inputs
                         .reverse() // Most recent first
-                        .map((message, index) => (
+                        .map((message) => (
                           <div 
                             key={message.id}
                             className="p-2 rounded-lg cursor-pointer transition-colors text-sm"
@@ -1470,10 +1422,10 @@ export default function ChatInterface() {
                     </div>
                     <div className="space-y-4">
                       <h2 className="text-4xl font-bold text-gray-900 leading-tight">
-                        Hi! I'm your Rubber Ducky
+                        Hi! I&apos;m your Rubber Ducky
                       </h2>
                       <p className="text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium">
-                        I'm here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
+                        I&apos;m here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
                       </p>
                     </div>
                   </div>
@@ -1485,9 +1437,9 @@ export default function ChatInterface() {
                         <div className="flex items-start gap-6">
                           <Logo size="md" variant="minimal" showText={false} />
                           <div className="text-left space-y-3">
-                            <p className="text-gray-700 font-semibold text-base">Let's chat about:</p>
+                            <p className="text-gray-700 font-semibold text-base">Let&apos;s chat about:</p>
                             <p className="text-gray-800 text-lg leading-relaxed font-medium italic">
-                              "{conversationStarter}"
+                              &quot;{conversationStarter}&quot;
                             </p>
                           </div>
                         </div>
@@ -1527,7 +1479,7 @@ export default function ChatInterface() {
                         </div>
                         <div className="text-left space-y-2">
                           <span className="text-blue-800 font-bold text-lg">Rubber Ducky Live!</span>
-                          <span className="text-blue-700 text-sm font-medium">I'm listening and ready to help you think</span>
+                          <span className="text-blue-700 text-sm font-medium">I&apos;m listening and ready to help you think</span>
                         </div>
                       </div>
                     )}
@@ -2201,7 +2153,7 @@ export default function ChatInterface() {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-green-500 text-xs font-medium">🎙️ Current Transcription:</span>
                     </div>
-                    <div className="text-sm italic">"{currentTranscript}"</div>
+                    <div className="text-sm italic">&quot;{currentTranscript}&quot;</div>
                   </div>
                 )}
                 
@@ -2280,7 +2232,7 @@ export default function ChatInterface() {
             try {
               await loadSession(star.itemId);
               // Update URL to reflect current session
-              const newUrl = new URL(window.location);
+              const newUrl = new URL(window.location.href);
               newUrl.searchParams.set('session', star.itemId);
               router.replace(newUrl.pathname + newUrl.search);
               // Clear any streaming state when switching sessions
@@ -2380,8 +2332,7 @@ export default function ChatInterface() {
                       style={{
                         backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
                         borderColor: 'var(--border-primary)',
-                        color: 'var(--text-primary)',
-                        focusRingColor: 'var(--accent-primary)'
+                        color: 'var(--text-primary)'
                       }}
                       autoFocus
                     />

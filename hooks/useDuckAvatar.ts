@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 interface AvatarData {
   imageUrl: string;
@@ -54,7 +55,7 @@ export function useDuckAvatar(): UseDuckAvatarReturn {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
-      console.error('Avatar generation error:', err);
+      logger.error('Avatar generation error', { component: 'DuckAvatar', sessionId }, err);
       return null;
     } finally {
       setIsGenerating(false);

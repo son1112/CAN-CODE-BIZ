@@ -1,7 +1,6 @@
 'use client';
 
 import { Hash, X } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
 
 interface Tag {
   id: string;
@@ -29,7 +28,6 @@ export default function TagDisplay({
   removable = false,
   className = ""
 }: TagDisplayProps) {
-  const { isDark } = useTheme();
 
   if (!tags || tags.length === 0) return null;
 

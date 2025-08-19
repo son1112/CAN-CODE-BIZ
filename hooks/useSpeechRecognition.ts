@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { logger } from '@/lib/logger';
 
 interface SpeechRecognitionHook {
   transcript: string;
@@ -54,7 +55,7 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
         'MediaRecorder' in window && 
         'WebSocket' in window) {
       setIsSupported(true);
-      console.log('AssemblyAI Speech Recognition supported');
+      logger.info('AssemblyAI Speech Recognition supported', { component: 'SpeechRecognition' });
     }
     
     return () => {
@@ -63,7 +64,7 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
   }, []);
 
   useEffect(() => {
-    console.log('🔄 isInContinuousMode changed to:', isInContinuousMode);
+    logger.debug('Continuous mode state changed', { component: 'SpeechRecognition', isInContinuousMode });
     isInContinuousModeRef.current = isInContinuousMode;
   }, [isInContinuousMode]);
 
@@ -75,14 +76,14 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
         try {
           ws.audioContext.close();
         } catch (e) {
-          console.warn('Error closing AudioContext:', e);
+          logger.warn('Error closing AudioContext', { component: 'SpeechRecognition' }, e);
         }
       }
       if (ws.processor) {
         try {
           ws.processor.disconnect();
         } catch (e) {
-          console.warn('Error disconnecting processor:', e);
+          logger.warn('Error disconnecting processor', { component: 'SpeechRecognition' }, e);
         }
       }
       
@@ -194,7 +195,11 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
 
   const triggerAutoSend = useCallback((reason: string, transcriptToSend?: string) => {
     const currentTranscript = (transcriptToSend || transcript).trim();
-    console.log(`Auto-send triggered by ${reason}:`, currentTranscript);
+    logger.info('Auto-send triggered', { 
+      component: 'SpeechRecognition', 
+      reason, 
+      transcriptLength: currentTranscript.length 
+    });
     
     if (isInContinuousModeRef.current && continuousCallbackRef.current && shouldAutoSend(currentTranscript)) {
       clearAllTimers();
@@ -249,18 +254,21 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
       
       const { apiKey } = await apiKeyResponse.json();
       
-      console.log('API Key received:', apiKey ? `${apiKey.substring(0, 8)}...` : 'undefined');
+      logger.debug('API Key received', { 
+        component: 'SpeechRecognition', 
+        hasApiKey: !!apiKey 
+      });
       
       // Create WebSocket connection to AssemblyAI Universal Streaming
       // Universal Streaming requires specific parameters
       const wsUrl = `wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&encoding=pcm_s16le&token=${apiKey}`;
-      console.log('Connecting to Universal Streaming WebSocket URL:', wsUrl.replace(apiKey, apiKey ? `${apiKey.substring(0, 8)}...` : 'undefined'));
+      logger.info('Connecting to AssemblyAI Universal Streaming', { component: 'SpeechRecognition' });
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
       
       ws.onopen = () => {
-        console.log('AssemblyAI Universal Streaming WebSocket connected');
+        logger.info('AssemblyAI WebSocket connected', { component: 'SpeechRecognition' });
         setIsListening(true);
         
         // Create AudioContext for proper PCM16 conversion
@@ -300,11 +308,11 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('AssemblyAI message:', data);
+          logger.debug('AssemblyAI message received', { component: 'SpeechRecognition', type: data.type });
           
           // Handle AssemblyAI Universal Streaming message format
           if (data.type === 'Begin') {
-            console.log('AssemblyAI Universal Streaming session started:', data.id);
+            logger.info('AssemblyAI session started', { component: 'SpeechRecognition', sessionId: data.id });
           } else if (data.hasOwnProperty('transcript')) {
             // This is a transcript message with turn_order, end_of_turn, transcript fields
             const transcript = data.transcript || '';
@@ -322,22 +330,27 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
               }
             } else if (isEndOfTurn && transcript) {
               // Final transcript - add to main transcript
-              console.log('AssemblyAI FinalTranscript received:', transcript);
+              logger.debug('Final transcript received', { component: 'SpeechRecognition', transcript });
               lastActivityTimeRef.current = Date.now();
               
               setTranscript(prev => {
                 const newTranscript = prev + transcript.trim() + ' ';
-                console.log('Setting transcript to:', newTranscript);
-                console.log('🚨 DEBUG: isInContinuousMode:', isInContinuousMode);
-                console.log('🚨 DEBUG: isInContinuousModeRef.current:', isInContinuousModeRef.current);
-                console.log('🚨 DEBUG: continuousCallbackRef.current:', continuousCallbackRef.current);
+                logger.debug('Updating transcript', { 
+                  component: 'SpeechRecognition', 
+                  newLength: newTranscript.length,
+                  isInContinuousMode,
+                  hasCallback: !!continuousCallbackRef.current 
+                });
                 
                 // In continuous mode, implement multi-condition auto-send
                 // Don't process new speech while muted
                 if (isInContinuousModeRef.current && continuousCallbackRef.current && !isMuted) {
-                  console.log('🔍 Debug: In continuous mode, checking auto-send conditions');
-                  console.log('🔍 Debug: newTranscript:', newTranscript.trim());
-                  console.log('🔍 Debug: shouldAutoSend result:', shouldAutoSend(newTranscript));
+                  const shouldSend = shouldAutoSend(newTranscript);
+                  logger.debug('Checking auto-send conditions', { 
+                    component: 'SpeechRecognition', 
+                    transcriptLength: newTranscript.trim().length,
+                    shouldAutoSend: shouldSend 
+                  });
                   
                   // Check if we should send immediately based on content
                   const shouldSendImmediately = (
@@ -353,17 +366,17 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
                     /^(please|can you|could you|would you|tell me|show me|explain|help me)\b.{10,}[.!?]?$/i.test(newTranscript.trim())
                   );
                   
-                  console.log('🔍 Debug: shouldSendImmediately:', shouldSendImmediately);
+                  logger.debug('Immediate send check', { component: 'SpeechRecognition', shouldSendImmediately });
                   
                   if (shouldSendImmediately && shouldAutoSend(newTranscript)) {
                     // Immediate send for natural conversation breaks - defer to avoid render conflict
-                    console.log('🚀 Triggering immediate send for natural conversation break');
+                    logger.info('Triggering immediate send', { component: 'SpeechRecognition', reason: 'natural conversation break' });
                     clearAllTimers();
                     setTimeout(() => triggerAutoSend('natural conversation break', newTranscript), 100);
                   } else if (shouldAutoSend(newTranscript)) {
                     // Clear existing countdown to restart it
                     if (countdownTimerRef.current) {
-                      console.log('🔄 Clearing existing countdown');
+                      logger.debug('Clearing existing countdown', { component: 'SpeechRecognition' });
                       clearTimeout(countdownTimerRef.current);
                       countdownTimerRef.current = null;
                       setAutoSendCountdown(null);
@@ -371,17 +384,20 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
                     }
                     
                     // Standard silence detection with countdown
-                    console.log('⏰ Starting countdown for:', newTranscript.trim());
+                    logger.debug('Starting silence countdown', { 
+                      component: 'SpeechRecognition', 
+                      transcriptLength: newTranscript.trim().length 
+                    });
                     startCountdown(SILENCE_THRESHOLD, 'silence detected', () => {
                       triggerAutoSend('silence detection', newTranscript);
                     });
                   } else {
-                    console.log('❌ Not auto-sending - shouldAutoSend returned false');
+                    logger.debug('Auto-send conditions not met', { component: 'SpeechRecognition' });
                   }
                   
                   // Start max accumulation timer if not already running
                   if (!maxAccumulationTimerRef.current && newTranscript.trim()) {
-                    console.log('⏳ Starting max accumulation timer');
+                    logger.debug('Starting max accumulation timer', { component: 'SpeechRecognition' });
                     maxAccumulationTimerRef.current = setTimeout(() => {
                       triggerAutoSend('max accumulation time');
                     }, MAX_ACCUMULATION_TIME);
@@ -393,23 +409,27 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
               setInterimTranscript('');
             }
           } else if (data.type === 'Error' || data.error) {
-            console.error('AssemblyAI error:', data.error || data);
+            logger.error('AssemblyAI error received', { component: 'SpeechRecognition' }, data.error || data);
             setError(`Speech recognition error: ${data.error || 'Unknown error'}`);
             stopListening();
           }
         } catch (parseError) {
-          console.error('Error parsing AssemblyAI response:', parseError, event.data);
+          logger.error('Error parsing AssemblyAI response', { component: 'SpeechRecognition' }, parseError);
         }
       };
       
       ws.onerror = (error) => {
-        console.error('AssemblyAI WebSocket error:', error);
+        logger.error('AssemblyAI WebSocket error', { component: 'SpeechRecognition' }, error);
         setError('Speech recognition connection error. Please try again.');
         stopListening();
       };
       
       ws.onclose = (event) => {
-        console.log('AssemblyAI WebSocket closed:', event.code, event.reason);
+        logger.info('AssemblyAI WebSocket closed', { 
+          component: 'SpeechRecognition', 
+          code: event.code, 
+          reason: event.reason 
+        });
         setIsListening(false);
         
         // Handle specific error codes from AssemblyAI
@@ -422,7 +442,7 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
             break;
           case 3005:
             setError('Invalid audio data sent to AssemblyAI. Microphone may have issues.');
-            console.warn('Error 3005: Check audio encoding and data validation');
+            logger.warn('Audio encoding error detected', { component: 'SpeechRecognition' });
             break;
           case 4008:
             setError('AssemblyAI session timeout. Please try again.');
@@ -441,7 +461,7 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
       };
       
     } catch (err: any) {
-      console.error('Failed to start speech recognition:', err);
+      logger.error('Failed to start speech recognition', { component: 'SpeechRecognition' }, err);
       
       let errorMessage = 'Failed to start speech recognition.';
       
@@ -470,7 +490,10 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
 
   const sendCurrentTranscript = useCallback(() => {
     const currentTranscript = transcript.trim();
-    console.log('sendCurrentTranscript called with:', currentTranscript);
+    logger.debug('Sending current transcript', { 
+      component: 'SpeechRecognition', 
+      transcriptLength: currentTranscript.length 
+    });
     if (currentTranscript && onTranscriptCallbackRef.current) {
       onTranscriptCallbackRef.current(currentTranscript);
       resetTranscript();
@@ -482,17 +505,15 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
   }, []);
 
   const startContinuousMode = useCallback(async (callback: (text: string) => void) => {
-    console.log('🚀 Starting continuous conversation mode');
+    logger.info('Starting continuous conversation mode', { component: 'SpeechRecognition' });
     continuousCallbackRef.current = callback;
-    console.log('🚀 Setting isInContinuousMode to true');
     setIsInContinuousMode(true);
-    console.log('🚀 About to start listening');
     await startListening();
-    console.log('🚀 Start listening completed');
+    logger.info('Continuous mode started successfully', { component: 'SpeechRecognition' });
   }, [startListening]);
 
   const stopContinuousMode = useCallback(() => {
-    console.log('Stopping continuous conversation mode');
+    logger.info('Stopping continuous conversation mode', { component: 'SpeechRecognition' });
     setIsInContinuousMode(false);
     continuousCallbackRef.current = null;
     clearAllTimers();

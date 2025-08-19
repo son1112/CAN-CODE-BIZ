@@ -3,11 +3,10 @@ import { auth } from '@/lib/auth';
 import Session from '@/models/Session';
 import connectDB from '@/lib/mongodb';
 
-interface RouteContext {
-  params: { id: string };
-}
-
-export async function PUT(request: NextRequest, { params }: RouteContext) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await auth();
     

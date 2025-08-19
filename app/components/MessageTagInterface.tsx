@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Hash, Plus } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useTags } from '@/hooks/useTags';
 import TagInput from './TagInput';
 import TagDisplay from './TagDisplay';
@@ -18,7 +17,6 @@ export default function MessageTagInterface({
   tags, 
   onTagsUpdate 
 }: MessageTagInterfaceProps) {
-  const { isDark } = useTheme();
   const [isEditingTags, setIsEditingTags] = useState(false);
   const { tags: availableTags } = useTags({ limit: 50 });
 

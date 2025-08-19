@@ -1,4 +1,4 @@
-import { StarDocument, StarableType } from '@/models/Star';
+import { StarableType } from '@/models/Star';
 
 // Helper interfaces for different star types
 export interface MessageStar {
@@ -122,7 +122,7 @@ export function getPriorityIcon(priority: 'low' | 'medium' | 'high'): string {
 }
 
 // Category auto-detection
-export function deriveCategory(itemType: StarableType, context?: any): string {
+export function deriveCategory(itemType: StarableType, context?: Record<string, unknown>): string {
   switch (itemType) {
     case 'message':
       if (context?.agentId === 'real-estate-advisor') return 'Real Estate';

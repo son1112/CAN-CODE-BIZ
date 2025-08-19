@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAgent } from '@/contexts/AgentContext';
 import { useSession } from '@/contexts/SessionContext';
 import { useAgents } from '@/hooks/useAgents';
+import { logger } from '@/lib/logger';
 
 export function SessionAgentSync({ children }: { children: React.ReactNode }) {
   const { setAgent, setPowerAgent } = useAgent();
@@ -14,11 +15,11 @@ export function SessionAgentSync({ children }: { children: React.ReactNode }) {
   
   // Load power agents on mount and when needed
   useEffect(() => {
-    console.log('Calling loadAgents...');
+    logger.debug('Loading agents', { component: 'SessionAgentSync' });
     loadAgents().then(() => {
-      console.log('Agents loaded successfully');
+      logger.info('Agents loaded successfully', { component: 'SessionAgentSync' });
     }).catch((err) => {
-      console.error('Failed to load agents:', err);
+      logger.error('Failed to load agents', { component: 'SessionAgentSync' }, err);
     });
   }, [loadAgents]);
 
@@ -26,12 +27,19 @@ export function SessionAgentSync({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Only process if we're switching to a different session
     if (currentSessionId && currentSessionId !== lastRestoredSessionId.current && currentSession?.lastAgentUsed) {
-      console.log('Attempting to restore agent from session:', currentSession.lastAgentUsed);
+      logger.debug('Attempting to restore agent from session', { 
+        component: 'SessionAgentSync', 
+        sessionId: currentSessionId || undefined,
+        agentUsed: currentSession.lastAgentUsed 
+      });
       
       // Check if it's a power agent
       if (currentSession.lastAgentUsed.startsWith('power-agent:')) {
         const powerAgentName = currentSession.lastAgentUsed.replace('power-agent:', '');
-        console.log('Session uses power agent:', powerAgentName);
+        logger.debug('Session uses power agent', { 
+          component: 'SessionAgentSync', 
+          powerAgentName 
+        });
         
         // Store the pending power agent to restore when agents load
         setPendingPowerAgent(powerAgentName);
@@ -40,7 +48,11 @@ export function SessionAgentSync({ children }: { children: React.ReactNode }) {
         if (powerAgents.length > 0) {
           const powerAgent = powerAgents.find(a => a.name === powerAgentName);
           if (powerAgent) {
-            console.log('Restoring power agent immediately:', powerAgentName);
+            logger.info('Restoring power agent immediately', { 
+              component: 'SessionAgentSync', 
+              powerAgentName,
+              sessionId: currentSessionId || undefined 
+            });
             setPowerAgent(powerAgent);
             lastRestoredSessionId.current = currentSessionId;
             setPendingPowerAgent(null);
@@ -48,7 +60,11 @@ export function SessionAgentSync({ children }: { children: React.ReactNode }) {
         }
       } else {
         // It's a basic agent - restore immediately
-        console.log('Restoring basic agent:', currentSession.lastAgentUsed);
+        logger.info('Restoring basic agent', { 
+          component: 'SessionAgentSync', 
+          agentName: currentSession.lastAgentUsed,
+          sessionId: currentSessionId || undefined 
+        });
         setAgent(currentSession.lastAgentUsed);
         lastRestoredSessionId.current = currentSessionId;
         setPendingPowerAgent(null);
@@ -58,31 +74,42 @@ export function SessionAgentSync({ children }: { children: React.ReactNode }) {
 
   // Handle power agents loading
   useEffect(() => {
-    console.log('Power agents check - pending:', pendingPowerAgent, 'agents count:', powerAgents.length);
-    if (powerAgents.length > 0) {
-      console.log('All agent structures:', JSON.stringify(powerAgents, null, 2));
-      console.log('Available power agent names:', powerAgents.map(a => `"${a.name}"`));
-      console.log('Pending agent name:', `"${pendingPowerAgent}"`);
-    }
+    logger.debug('Power agents check', { 
+      component: 'SessionAgentSync', 
+      pendingPowerAgent, 
+      agentCount: powerAgents.length 
+    });
+    
     if (pendingPowerAgent && powerAgents.length > 0) {
-      console.log('Power agents loaded, attempting to restore:', pendingPowerAgent);
-      console.log('Exact name comparison - pending:', `"${pendingPowerAgent}"`, 'type:', typeof pendingPowerAgent);
-      powerAgents.forEach((agent, index) => {
-        console.log(`Agent ${index}:`, `"${agent.name}"`, 'type:', typeof agent.name, 'matches:', agent.name === pendingPowerAgent);
+      logger.debug('Power agents loaded, attempting to restore', { 
+        component: 'SessionAgentSync', 
+        pendingPowerAgent,
+        availableAgents: powerAgents.map(a => a.name) 
       });
+      
       const powerAgent = powerAgents.find(a => a.name === pendingPowerAgent);
       if (powerAgent) {
-        console.log('Found and restoring power agent:', powerAgent);
+        logger.info('Found and restoring power agent', { 
+          component: 'SessionAgentSync', 
+          powerAgentName: pendingPowerAgent,
+          sessionId: currentSessionId || undefined 
+        });
         setPowerAgent(powerAgent);
         lastRestoredSessionId.current = currentSessionId;
         setPendingPowerAgent(null);
       } else {
-        console.log('Power agent not found in list:', pendingPowerAgent);
-        console.log('Available agents:', powerAgents.map(a => a.name));
+        logger.warn('Power agent not found in list', { 
+          component: 'SessionAgentSync', 
+          pendingPowerAgent,
+          availableAgents: powerAgents.map(a => a.name) 
+        });
         setPendingPowerAgent(null);
       }
     } else if (pendingPowerAgent && powerAgents.length === 0) {
-      console.log('Waiting for agents to load, pending:', pendingPowerAgent);
+      logger.debug('Waiting for agents to load', { 
+        component: 'SessionAgentSync', 
+        pendingPowerAgent 
+      });
     }
   }, [powerAgents, pendingPowerAgent, setPowerAgent, currentSessionId]);
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Database, Download, AlertCircle, CheckCircle, Clock, RefreshCw, Trash2, Archive, Check, Square } from 'lucide-react';
+import { Database, AlertCircle, CheckCircle, Clock, RefreshCw, Trash2, Check } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface MigrationPreview {

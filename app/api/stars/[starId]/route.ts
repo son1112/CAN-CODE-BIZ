@@ -5,16 +5,18 @@ import Star from '@/models/Star';
 // PUT /api/stars/[starId] - Update a star
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { starId: string } }
+  { params }: { params: Promise<{ starId: string }> }
 ) {
   try {
     await connectDB();
     
-    const { starId } = params;
+    const { starId } = await params;
     const updates = await request.json();
     
-    // Remove fields that shouldn't be updated
-    const { starId: _, userId: __, itemType: ___, itemId: ____, ...allowedUpdates } = updates;
+    // Remove fields that shouldn't be updated directly
+    const { starId: _starIdUpdate, userId: _userIdUpdate, itemType: _itemTypeUpdate, itemId: _itemIdUpdate, ...allowedUpdates } = updates;
+    // These fields are ignored for security
+    void _starIdUpdate; void _userIdUpdate; void _itemTypeUpdate; void _itemIdUpdate;
     
     const star = await Star.findOneAndUpdate(
       { starId },
@@ -45,12 +47,12 @@ export async function PUT(
 // DELETE /api/stars/[starId] - Delete a star
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { starId: string } }
+  { params }: { params: Promise<{ starId: string }> }
 ) {
   try {
     await connectDB();
     
-    const { starId } = params;
+    const { starId } = await params;
     
     const star = await Star.findOneAndDelete({ starId });
 

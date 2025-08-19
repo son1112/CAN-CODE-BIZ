@@ -12,11 +12,10 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
   // Memoize the expensive formatting operation to prevent re-processing on parent re-renders
   const formattedContent = useMemo(() => {
     // Process the content to add structure and formatting
-    const formatMessage = (text: string): JSX.Element => {
+    const formatMessage = (text: string): React.ReactElement => {
     const lines = text.split('\n');
-    const elements: JSX.Element[] = [];
-    let currentListItems: JSX.Element[] = [];
-    let listLevel = 0;
+    const elements: React.ReactElement[] = [];
+    let currentListItems: React.ReactElement[] = [];
     let inCodeBlock = false;
     let codeBlockLines: string[] = [];
     let codeLanguage = '';
@@ -29,7 +28,6 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
           </ul>
         );
         currentListItems = [];
-        listLevel = 0;
       }
     };
 
@@ -396,11 +394,8 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       // Regular paragraph text
       flushList();
       
-      // Check if this looks like a continuation of a previous section
-      const prevElement = elements[elements.length - 1];
       const isShortLine = trimmedLine.length < 200;
       const startsWithCapital = /^[A-Z]/.test(trimmedLine);
-      
       
       elements.push(
         <p 

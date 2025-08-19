@@ -9,15 +9,14 @@ import Logo from '@/app/components/Logo';
 interface CreateAgentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAgentCreated: (agent: any) => void;
+  onAgentCreated: (agent: { name: string; description: string; prompt: string }) => void;
 }
 
 export default function CreateAgentModal({ isOpen, onClose, onAgentCreated }: CreateAgentModalProps) {
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
-  const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [createdAgent, setCreatedAgent] = useState<any>(null);
+  const [createdAgent, setCreatedAgent] = useState<{ name: string; description: string; prompt: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   
   // Text input fields
@@ -68,17 +67,14 @@ export default function CreateAgentModal({ isOpen, onClose, onAgentCreated }: Cr
     setError(null);
     setTranscript('');
     resetTranscript();
-    setIsRecording(true);
     try {
       await startListening();
-    } catch (err) {
+    } catch {
       setError('Failed to start recording');
-      setIsRecording(false);
     }
   };
 
   const handleStopRecording = async () => {
-    setIsRecording(false);
     setRecordingField(null);
     stopListening();
   };
@@ -90,7 +86,7 @@ export default function CreateAgentModal({ isOpen, onClose, onAgentCreated }: Cr
     resetTranscript();
     try {
       await startListening();
-    } catch (err) {
+    } catch {
       setError('Failed to start recording');
       setRecordingField(null);
     }
@@ -231,7 +227,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
               handleStartFieldRecording(fieldName);
             }
           }}
-          disabled={disabled || (recordingField && !isRecordingThis)}
+          disabled={disabled || Boolean(recordingField && !isRecordingThis)}
           className={`p-2 rounded-lg transition-all duration-200 ${
             isRecordingThis
               ? 'bg-red-100 text-red-600 hover:bg-red-200'
@@ -343,10 +339,10 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                       </h3>
                       {inputMode === 'voice' ? (
                         <ul className="text-sm text-blue-800 space-y-2">
-                          <li>• <strong>Describe what you want:</strong> "I want an agent that helps me with cooking recipes"</li>
-                          <li>• <strong>Explain the personality:</strong> "Make it friendly and encouraging"</li>
-                          <li>• <strong>Specify the tasks:</strong> "It should suggest ingredients and cooking steps"</li>
-                          <li>• <strong>Add any special features:</strong> "Include dietary restrictions and prep time"</li>
+                          <li>• <strong>Describe what you want:</strong> &quot;I want an agent that helps me with cooking recipes&quot;</li>
+                          <li>• <strong>Explain the personality:</strong> &quot;Make it friendly and encouraging&quot;</li>
+                          <li>• <strong>Specify the tasks:</strong> &quot;It should suggest ingredients and cooking steps&quot;</li>
+                          <li>• <strong>Add any special features:</strong> &quot;Include dietary restrictions and prep time&quot;</li>
                         </ul>
                       ) : (
                         <ul className="text-sm text-blue-800 space-y-2">
@@ -456,7 +452,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                         </div>
                         {fieldTranscripts.agentName && (
                           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                            <strong>Recorded:</strong> "{fieldTranscripts.agentName}"
+                            <strong>Recorded:</strong> &quot;{fieldTranscripts.agentName}&quot;
                           </div>
                         )}
                       </div>
@@ -480,7 +476,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                         </div>
                         {fieldTranscripts.agentPurpose && (
                           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                            <strong>Recorded:</strong> "{fieldTranscripts.agentPurpose}"
+                            <strong>Recorded:</strong> &quot;{fieldTranscripts.agentPurpose}&quot;
                           </div>
                         )}
                       </div>
@@ -502,7 +498,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                         </div>
                         {fieldTranscripts.agentPersonality && (
                           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                            <strong>Recorded:</strong> "{fieldTranscripts.agentPersonality}"
+                            <strong>Recorded:</strong> &quot;{fieldTranscripts.agentPersonality}&quot;
                           </div>
                         )}
                       </div>
@@ -526,7 +522,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                         </div>
                         {fieldTranscripts.agentTasks && (
                           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                            <strong>Recorded:</strong> "{fieldTranscripts.agentTasks}"
+                            <strong>Recorded:</strong> &quot;{fieldTranscripts.agentTasks}&quot;
                           </div>
                         )}
                       </div>
@@ -548,7 +544,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                         </div>
                         {fieldTranscripts.agentContext && (
                           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                            <strong>Recorded:</strong> "{fieldTranscripts.agentContext}"
+                            <strong>Recorded:</strong> &quot;{fieldTranscripts.agentContext}&quot;
                           </div>
                         )}
                       </div>
@@ -570,7 +566,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                         </div>
                         {fieldTranscripts.outputFormat && (
                           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                            <strong>Recorded:</strong> "{fieldTranscripts.outputFormat}"
+                            <strong>Recorded:</strong> &quot;{fieldTranscripts.outputFormat}&quot;
                           </div>
                         )}
                       </div>
@@ -612,7 +608,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                 
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">Agent Created Successfully!</h3>
-                  <p className="text-gray-600">Your new AI agent "<strong>{createdAgent.name}</strong>" is ready to use.</p>
+                  <p className="text-gray-600">Your new AI agent &quot;<strong>{createdAgent.name}</strong>&quot; is ready to use.</p>
                 </div>
                 
                 <div className="p-6 bg-gray-50 rounded-xl border border-gray-200 text-left">

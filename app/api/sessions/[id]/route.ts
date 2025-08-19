@@ -82,7 +82,7 @@ export async function PUT(
     const { name, tags, isArchived } = body;
 
     // Build update object
-    const update: any = {};
+    const update: Record<string, unknown> = {};
     if (name !== undefined) update.name = name;
     if (tags !== undefined) update.tags = tags;
     if (isArchived !== undefined) update.isArchived = isArchived;

@@ -199,7 +199,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           ...currentSession,
           name: updatedSession.name,
           updatedAt: updatedSession.updatedAt
-        });
+        } as SessionDocument);
       }
       
       await refreshSessions();
@@ -262,7 +262,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         throw new Error(errorData.error || 'Failed to re-import session');
       }
 
-      const { session: updatedSession } = await response.json();
+      await response.json();
       
       // Update current session if it's the one being re-imported
       if (currentSessionId === sessionId && currentSession) {
@@ -324,7 +324,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           ...currentSession,
           lastAccessedAt: new Date(),
           messages: [...messages, newMessage]
-        });
+        } as SessionDocument);
       }
       
       return true;
@@ -367,7 +367,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setCurrentSession({
           ...currentSession,
           messages: updatedMessages
-        });
+        } as SessionDocument);
       }
       
       return true;
@@ -430,7 +430,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem('rubber-ducky-current-session');
           // If URL parameter failed, clean up URL
           if (urlSessionId) {
-            const cleanUrl = new URL(window.location);
+            const cleanUrl = new URL(window.location.href);
             cleanUrl.searchParams.delete('session');
             window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search);
           }
@@ -440,7 +440,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('rubber-ducky-current-session');
         // If URL parameter failed, clean up URL
         if (urlSessionId) {
-          const cleanUrl = new URL(window.location);
+          const cleanUrl = new URL(window.location.href);
           cleanUrl.searchParams.delete('session');
           window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search);
         }

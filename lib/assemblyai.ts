@@ -1,5 +1,7 @@
+import { logger } from './logger';
+
 if (!process.env.ASSEMBLYAI_API_KEY) {
-  console.error('ASSEMBLYAI_API_KEY environment variable is required');
+  logger.error('ASSEMBLYAI_API_KEY environment variable is required', { component: 'assemblyai' });
 }
 
 export const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY!;

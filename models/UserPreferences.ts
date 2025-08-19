@@ -31,8 +31,7 @@ const UserPreferencesSchema = new Schema<UserPreferencesDocument>(
     userId: { 
       type: String, 
       required: true, 
-      unique: true,
-      index: true 
+      unique: true
     },
     notifications: {
       soundEffects: { type: Boolean, default: true },

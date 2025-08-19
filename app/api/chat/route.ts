@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { streamClaudeResponse } from '@/lib/claude';
 import { ClaudeModel, DEFAULT_MODEL } from '@/lib/models';
+import { logger } from '@/lib/logger';
+import { handleApiError, ValidationRequestError } from '@/lib/error-handler';
+import { validators } from '@/lib/validators';
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, systemPrompt, model = DEFAULT_MODEL } = await request.json();
-
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json(
-        { error: 'Messages array is required' },
-        { status: 400 }
-      );
+    const body = await request.json();
+    
+    // Validate request body
+    const validation = validators.chatRequest(body);
+    if (!validation.isValid) {
+      const errorMessages = validation.errors.map(e => `${e.field}: ${e.message}`).join(', ');
+      throw new ValidationRequestError('Invalid request data', errorMessages);
     }
+
+    const { messages, systemPrompt, model = DEFAULT_MODEL } = body;
 
     const encoder = new TextEncoder();
     
@@ -42,10 +47,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Chat API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'chat-api');
   }
 }

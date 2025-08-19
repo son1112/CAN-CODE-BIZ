@@ -6,7 +6,7 @@ import Conversation from '@/models/Conversation';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -15,12 +15,14 @@ export async function PUT(
     }
 
     await connectDB();
+    
+    const { id } = await params;
 
     const body = await request.json();
     const { name, color, category, description } = body;
 
     const tag = await Tag.findOneAndUpdate(
-      { _id: params.id, userId: session.user.id },
+      { _id: id, userId: session.user.id },
       {
         ...(name && { name: name.toLowerCase().trim() }),
         ...(color && { color }),
@@ -43,7 +45,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -52,9 +54,11 @@ export async function DELETE(
     }
 
     await connectDB();
+    
+    const { id } = await params;
 
     const tag = await Tag.findOneAndDelete({
-      _id: params.id,
+      _id: id,
       userId: session.user.id
     });
 

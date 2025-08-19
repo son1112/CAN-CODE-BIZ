@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Star from '@/models/Star';
-import { CreateStarOptions, StarFilterOptions, deriveCategory } from '@/lib/stars';
+import { CreateStarOptions, deriveCategory } from '@/lib/stars';
 
 // POST /api/stars - Create a new star
 export async function POST(request: NextRequest) {
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build filter object
-    const filters: any = { userId };
+    const filters: Record<string, unknown> = { userId };
     
     const itemType = searchParams.get('itemType');
     if (itemType) filters.itemType = itemType;

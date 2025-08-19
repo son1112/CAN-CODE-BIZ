@@ -6,12 +6,12 @@ import { StarableType } from '@/models/Star';
 // DELETE /api/stars/item/[itemType]/[itemId] - Unstar an item by type and ID
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { itemType: string; itemId: string } }
+  { params }: { params: Promise<{ itemType: string; itemId: string }> }
 ) {
   try {
     await connectDB();
     
-    const { itemType, itemId } = params;
+    const { itemType, itemId } = await params;
     
     // Get userId from request body for DELETE requests
     let userId: string;
@@ -73,12 +73,12 @@ export async function DELETE(
 // GET /api/stars/item/[itemType]/[itemId] - Check if an item is starred
 export async function GET(
   request: NextRequest,
-  { params }: { params: { itemType: string; itemId: string } }
+  { params }: { params: Promise<{ itemType: string; itemId: string }> }
 ) {
   try {
     await connectDB();
     
-    const { itemType, itemId } = params;
+    const { itemType, itemId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     

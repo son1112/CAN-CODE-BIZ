@@ -6,7 +6,7 @@ import Tag from '@/models/Tag';
 
 export async function PUT(
   request: Request,
-  { params }: { params: { messageId: string } }
+  { params }: { params: Promise<{ messageId: string }> }
 ) {
   try {
     const session = await auth();
@@ -75,7 +75,7 @@ export async function PUT(
 
     // Find the updated message to return
     const updatedMessage = sessionDoc.messages.find(
-      (msg) => msg.id === messageId
+      (msg: { id: string }) => msg.id === messageId
     );
 
     return NextResponse.json({ 
@@ -94,7 +94,7 @@ export async function PUT(
 
 export async function GET(
   request: Request,
-  { params }: { params: { messageId: string } }
+  { params }: { params: Promise<{ messageId: string }> }
 ) {
   try {
     const session = await auth();
