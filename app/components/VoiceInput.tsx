@@ -3,6 +3,7 @@
 import React from 'react';
 import { Mic, MicOff, AlertCircle, RotateCcw, Send, VolumeX, Volume2, MessageCircle } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { logger } from '@/lib/logger';
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
@@ -33,7 +34,11 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
 
   const handleSendTranscript = () => {
     const currentTranscript = transcript.trim();
-    console.log('VoiceInput: Manual send triggered with:', currentTranscript);
+    logger.debug('Manual send triggered', { 
+      component: 'VoiceInput',
+      transcriptLength: currentTranscript.length,
+      hasTranscript: !!currentTranscript
+    });
     if (currentTranscript) {
       onTranscript(currentTranscript);
       resetTranscript();
@@ -42,10 +47,10 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
 
   const handleContinuousToggle = () => {
     if (isInContinuousMode) {
-      console.log('VoiceInput: Stopping continuous mode');
+      logger.info('Stopping continuous mode', { component: 'VoiceInput' });
       stopContinuousMode();
     } else {
-      console.log('VoiceInput: Starting continuous mode');
+      logger.info('Starting continuous mode', { component: 'VoiceInput' });
       startContinuousMode(onTranscript);
     }
   };

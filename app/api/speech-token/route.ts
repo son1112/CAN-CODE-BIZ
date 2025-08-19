@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/middleware/auth';
 import { ApiResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/error-handler';
@@ -23,11 +23,11 @@ export async function POST(request: NextRequest) {
       userId
     });
 
-    // For now, return the API key securely for authenticated users only
+    // Return in the format expected by the frontend for backward compatibility
     // TODO: Implement proper token-based authentication for AssemblyAI
-    return ApiResponse.success({
+    return NextResponse.json({
       apiKey: process.env.ASSEMBLYAI_API_KEY
-    }, 'Speech recognition API key provided');
+    });
 
   } catch (error) {
     return handleApiError(error, 'speech-token-api');
