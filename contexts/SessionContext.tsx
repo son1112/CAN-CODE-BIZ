@@ -15,6 +15,7 @@ export interface SessionContextType {
   renameSession: (sessionId: string, name: string) => Promise<boolean>;
   deleteSession: (sessionId: string, permanent?: boolean) => Promise<boolean>;
   reimportSession: (sessionId: string) => Promise<boolean>;
+  clearCurrentSession: () => void;
   
   // Message management
   addMessage: (message: Omit<SessionMessage, 'id' | 'timestamp'>) => Promise<boolean>;
@@ -280,6 +281,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const clearCurrentSession = () => {
+    setCurrentSession(null);
+    setCurrentSessionId(null);
+    setMessages([]);
+    // Note: localStorage will be cleared automatically by the useEffect
+  };
+
   const addMessage = async (message: Omit<SessionMessage, 'id' | 'timestamp'>): Promise<boolean> => {
     // Ensure we have a session
     const sessionId = await ensureSession();
@@ -445,6 +453,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     renameSession,
     deleteSession,
     reimportSession,
+    clearCurrentSession,
     
     // Message management
     addMessage,

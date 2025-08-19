@@ -4,12 +4,41 @@ import Session from '@/models/Session';
 import connectDB from '@/lib/mongodb';
 import { v4 as uuidv4 } from 'uuid';
 
+// Random avatar selection for new sessions
+function getRandomAvatar(): { imageUrl: string; prompt: string } {
+  const avatars = [
+    { 
+      imageUrl: '/mock-avatars/Gemini_Generated_Image_f3qn6af3qn6af3qn.png', 
+      prompt: 'Smart Tech Duck - Perfect for debugging and development conversations' 
+    },
+    { 
+      imageUrl: '/mock-avatars/Gemini_Generated_Image_ir5hzair5hzair5h.png', 
+      prompt: 'Voice Bubble Duck - Great for general conversations and rubber duck debugging' 
+    },
+    { 
+      imageUrl: '/mock-avatars/Gemini_Generated_Image_ksuug0ksuug0ksuu (1).png', 
+      prompt: 'Minimal Tech Duck - Clean design for focused problem-solving sessions' 
+    },
+    { 
+      imageUrl: '/mock-avatars/default-duck.png', 
+      prompt: 'Classic Friendly Duck - Your traditional rubber duck companion' 
+    }
+  ];
+  
+  const randomIndex = Math.floor(Math.random() * avatars.length);
+  return avatars[randomIndex];
+}
+
 // GET /api/sessions - List user sessions with pagination/filtering
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.id) {
+    // Demo mode bypass for testing
+    const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+    const userId = isDemoMode ? 'demo-user' : session?.user?.id;
+    
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -27,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     // Build query
     const query: Record<string, any> = {
-      createdBy: session.user.id,
+      createdBy: userId,
       isArchived: archived
     };
 
@@ -49,7 +78,7 @@ export async function GET(request: NextRequest) {
     // Execute query with pagination
     const skip = (page - 1) * limit;
     const sessions = await Session.find(query)
-      .select('sessionId name createdAt updatedAt lastAccessedAt tags messages iterationCount')
+      .select('sessionId name createdAt updatedAt lastAccessedAt tags messages iterationCount avatar')
       .sort({ lastAccessedAt: -1, updatedAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -91,7 +120,11 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.id) {
+    // Demo mode bypass for testing
+    const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+    const userId = isDemoMode ? 'demo-user' : session?.user?.id;
+    
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -103,33 +136,44 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, tags = [], conversationStarter } = body;
 
-    // Auto-generate name if not provided
-    const sessionName = name || `Chat ${new Date().toLocaleString()}`;
     const sessionId = uuidv4();
+    
+    // Auto-generate unique name if not provided
+    const sessionName = name || `Chat ${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}-${sessionId.slice(-6)}`;
 
-    // Check if session name already exists for this user
-    const existingSession = await Session.findOne({
-      name: sessionName,
-      createdBy: session.user.id
-    });
+    // Only check for name collisions with user-provided names
+    if (name) {
+      const existingSession = await Session.findOne({
+        name: sessionName,
+        createdBy: userId
+      });
 
-    if (existingSession) {
-      return NextResponse.json(
-        { error: 'Session name already exists' },
-        { status: 409 }
-      );
+      if (existingSession) {
+        return NextResponse.json(
+          { error: 'Session name already exists' },
+          { status: 409 }
+        );
+      }
     }
+
+    // Assign a random avatar to the new session
+    const randomAvatar = getRandomAvatar();
 
     const newSession = new Session({
       sessionId,
       name: sessionName,
-      createdBy: session.user.id,
+      createdBy: userId,
       tags,
       conversationStarter,
       messages: [],
       iterations: [],
       isActive: true,
-      isArchived: false
+      isArchived: false,
+      avatar: {
+        imageUrl: randomAvatar.imageUrl,
+        prompt: randomAvatar.prompt,
+        generatedAt: new Date()
+      }
     });
 
     await newSession.save();

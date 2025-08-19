@@ -1,9 +1,10 @@
 'use client';
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash, RefreshCw, User, LogOut } from 'lucide-react';
+import { Send, Trash2, Download, MessageCircle, Type, History, ChevronUp, ChevronDown, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash, RefreshCw, User, LogOut, Archive, ArchiveRestore } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import VoiceInput from './VoiceInput';
 import AgentSelector from './AgentSelector';
 import Logo from './Logo';
@@ -17,6 +18,8 @@ import StarsBrowser from './StarsBrowser';
 import TagBrowser from './TagBrowser';
 import MessageTagInterface from './MessageTagInterface';
 import { SessionLoadingIndicator, ChatThinkingIndicator } from './LoadingIndicator';
+import DuckAvatar from './DuckAvatar';
+import { useDuckAvatar } from '@/hooks/useDuckAvatar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import { useAgent } from '@/contexts/AgentContext';
@@ -29,7 +32,7 @@ import SessionBrowser from './SessionBrowser';
 import { useSession as useAuthSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
 import { Settings } from 'lucide-react';
-import { getAgentById } from '@/lib/agents';
+import { getAgentById, getRandomConversationStarter } from '@/lib/agents';
 import { useAgents } from '@/hooks/useAgents';
 
 // Array of available hero images
@@ -162,6 +165,8 @@ export default function ChatInterface() {
   const [activeTab, setActiveTab] = useState<'menu' | 'tags'>('menu');
   const [activeTagFilter, setActiveTagFilter] = useState<string[]>([]);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [archivedMessages, setArchivedMessages] = useState<Set<string>>(new Set());
+  const [showArchivedMessages, setShowArchivedMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -172,6 +177,7 @@ export default function ChatInterface() {
   
   const { messages, isStreaming, error, sendMessage, clearMessages } = useStreamingChat();
   const { startOnboarding } = useOnboarding();
+  const { generateAvatar, isGenerating: isGeneratingAvatar, error: avatarError } = useDuckAvatar();
 
   // Helper function to format session names into readable titles
   const formatSessionTitle = (sessionName: string) => {
@@ -242,25 +248,35 @@ export default function ChatInterface() {
     return firstSentence.charAt(0).toUpperCase() + firstSentence.slice(1);
   };
   
-  // Filter messages based on active tag filter (optimized)
+  // Filter messages based on active tag filter and archive status (optimized)
   const filteredMessages = useMemo(() => {
-    if (activeTagFilter.length === 0) {
-      return messages;
+    let filtered = messages;
+    
+    // Filter by tags first
+    if (activeTagFilter.length > 0) {
+      const tagSet = new Set(activeTagFilter);
+      filtered = filtered.filter(message => {
+        return message.tags?.some(tag => tagSet.has(tag));
+      });
     }
-    // Use a Set for faster tag lookups
-    const tagSet = new Set(activeTagFilter);
-    return messages.filter(message => {
-      return message.tags?.some(tag => tagSet.has(tag));
+    
+    // Filter by archive status
+    filtered = filtered.filter(message => {
+      const isArchived = archivedMessages.has(message.id);
+      return showArchivedMessages ? isArchived : !isArchived;
     });
-  }, [messages, activeTagFilter]);
-  const { updateMessageTags } = useSession();
+    
+    return filtered;
+  }, [messages, activeTagFilter, archivedMessages, showArchivedMessages]);
+  const { updateMessageTags, addMessage } = useSession();
   const { currentAgent, clearContext } = useAgent();
   const { isDropdownOpen } = useDropdown();
   const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
   const { isDark } = useTheme();
-  const { currentSession, createSession, loadSession, loadSessions, renameSession, isLoadingSession, isProcessingMessage } = useSession();
+  const { currentSession, createSession, loadSession, loadSessions, renameSession, isLoadingSession, isProcessingMessage, clearCurrentSession } = useSession();
   const { currentModel } = useModel();
   const { data: authSession } = useAuthSession();
+  const router = useRouter();
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
@@ -284,16 +300,56 @@ export default function ChatInterface() {
     }
   };
 
+  // Helper function to clean markdown formatting for front page display
+  const cleanMarkdownForDisplay = (text: string): string => {
+    // Extract just the first sentence/paragraph before any formatting sections
+    const firstParagraph = text.split('\n\n')[0];
+    return firstParagraph
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold formatting
+      .replace(/🎯|💭|🚀|📊|💼|🏠/g, '') // Remove emojis
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+  };
+
   // Set conversation starter on client side to avoid hydration mismatch
   useEffect(() => {
     if (currentAgent.conversationStarters && currentAgent.conversationStarters.length > 0) {
       const randomIndex = Math.floor(Math.random() * currentAgent.conversationStarters.length);
-      setConversationStarter(currentAgent.conversationStarters[randomIndex]);
+      const rawStarter = currentAgent.conversationStarters[randomIndex];
+      const cleanedStarter = cleanMarkdownForDisplay(rawStarter);
+      setConversationStarter(cleanedStarter);
     }
   }, [currentAgent]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const addWelcomeMessage = async () => {
+    try {
+      const welcomeMessage = getRandomConversationStarter(currentAgent);
+      await addMessage({
+        role: 'assistant',
+        content: welcomeMessage,
+        agentUsed: currentAgent.id
+      });
+    } catch (error) {
+      console.error('Failed to add welcome message:', error);
+    }
+  };
+
+  const handleNavigateToHome = () => {
+    console.log('Logo clicked - navigating to home');
+    // Clear any ongoing conversations
+    clearMessages();
+    clearContext();
+    if (isContinuousMode) {
+      endConversation();
+    }
+    // Clear current session state (this will also clear localStorage)
+    clearCurrentSession();
+    // Navigate to home page
+    router.push('/');
   };
 
   const handleQuickNewSession = async () => {
@@ -304,6 +360,9 @@ export default function ChatInterface() {
       if (isContinuousMode) {
         endConversation();
       }
+      
+      // Add welcome message from current agent
+      await addWelcomeMessage();
     } catch (error) {
       console.error('Failed to create new session:', error);
     }
@@ -342,7 +401,54 @@ export default function ChatInterface() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim() && !isStreaming) {
-      await sendMessage(inputValue);
+      const userInput = inputValue.trim();
+      
+      // Check if we should generate an avatar - either first user message OR no avatar exists yet
+      // IMPORTANT: Check BEFORE sending the message
+      const shouldGenerateAvatar = currentSession && 
+        !currentSession.avatar && // No avatar exists yet
+        userInput.trim().length > 10; // Meaningful message (not just "hi")
+        
+      console.log('Avatar generation check (BEFORE sending):', {
+        sessionId: currentSession?.sessionId,
+        hasMessages: !!currentSession?.messages,
+        messageCount: currentSession?.messages?.length || 0,
+        userMessageCount: currentSession?.messages?.filter(m => m.role === 'user').length || 0,
+        hasAvatar: !!currentSession?.avatar,
+        shouldGenerateAvatar
+      });
+      
+      // Generate avatar BEFORE sending message if we should generate one
+      if (shouldGenerateAvatar && currentSession) {
+        console.log('🦆 Generating avatar for message (no avatar exists yet):', userInput);
+        
+        // Start avatar generation in parallel (don't await)
+        generateAvatar(userInput, currentSession.sessionId)
+          .then(async (avatarData) => {
+            if (avatarData) {
+              console.log('🎨 Avatar generated, saving to session:', avatarData.imageUrl);
+              // Save the avatar to the session
+              await fetch(`/api/sessions/${currentSession.sessionId}/avatar`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  imageUrl: avatarData.imageUrl,
+                  prompt: avatarData.prompt,
+                }),
+              });
+              console.log('✅ Avatar saved to session successfully!');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Failed to generate or save avatar:', error);
+          });
+      }
+      
+      // Send the message
+      await sendMessage(userInput);
+      
       setInputValue('');
       setCurrentTranscript('');
     }
@@ -411,6 +517,9 @@ export default function ChatInterface() {
       await createSession(sessionName);
       setShowNewSessionModal(false);
       setNewSessionName('');
+      
+      // Add welcome message from current agent
+      await addWelcomeMessage();
     } catch (error) {
       console.error('Failed to create new session:', error);
     }
@@ -525,6 +634,19 @@ export default function ChatInterface() {
     URL.revokeObjectURL(url);
   };
 
+  // Archive/unarchive message functions
+  const toggleArchiveMessage = (messageId: string) => {
+    setArchivedMessages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(messageId)) {
+        newSet.delete(messageId);
+      } else {
+        newSet.add(messageId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div 
       className="flex flex-col h-screen relative overflow-hidden bg-primary"
@@ -565,7 +687,7 @@ export default function ChatInterface() {
           boxShadow: 'var(--shadow-lg)',
           borderImage: 'linear-gradient(90deg, #3b82f6, #eab308, #10b981) 1',
           borderBottom: '2px solid transparent',
-          background: isDark 
+          backgroundImage: isDark 
             ? 'linear-gradient(rgba(13, 13, 13, 0.95), rgba(13, 13, 13, 0.95)), linear-gradient(90deg, #3b82f6, #eab308, #10b981)'
             : 'linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)), linear-gradient(90deg, #3b82f6, #eab308, #10b981)',
           backgroundClip: 'padding-box, border-box',
@@ -577,11 +699,7 @@ export default function ChatInterface() {
             <Logo 
               size="lg" 
               showText={false}
-              onClick={async () => {
-                // Navigate to home/welcome page by creating a new session
-                // This is the same as clicking "New Session" button
-                await handleQuickNewSession();
-              }}
+              onClick={handleNavigateToHome}
             />
           </div>
           
@@ -594,8 +712,8 @@ export default function ChatInterface() {
             <RefreshCw className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
           </button>
           
-          {/* Session Name Display/Edit */}
-          {currentSession ? (
+          {/* Removed session title from header - now in chat window */}
+          {false && currentSession ? (
             <div className="flex items-center gap-2 min-w-0 flex-shrink">
               {isEditingSessionName ? (
                 <div className="flex items-center gap-2">
@@ -603,7 +721,6 @@ export default function ChatInterface() {
                     type="text"
                     value={editingSessionName}
                     onChange={(e) => setEditingSessionName(e.target.value)}
-                    className="px-3 py-1 border-2 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
                     onKeyDown={async (e) => {
                       if (e.key === 'Enter') {
                         if (editingSessionName.trim()) {
@@ -668,9 +785,12 @@ export default function ChatInterface() {
                       }} 
                     />
                     <span
-                      className="text-lg font-semibold truncate cursor-pointer hover:text-blue-600 transition-colors duration-200"
+                      className="text-lg font-semibold truncate cursor-pointer hover:opacity-80 transition-all duration-200"
                       style={{ 
-                        color: 'var(--text-primary)',
+                        backgroundImage: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
                         letterSpacing: '-0.01em'
                       }}
                       onClick={() => {
@@ -682,17 +802,19 @@ export default function ChatInterface() {
                       {formatSessionTitle(currentSession.name)}
                     </span>
                   </div>
-                  <button
-                    onClick={() => {
-                      setEditingSessionName(currentSession.name);
-                      setIsEditingSessionName(true);
-                    }}
-                    className="p-1.5 rounded-lg transition-colors hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30"
-                    style={{ color: 'var(--text-tertiary)' }}
-                    title="Rename session"
-                  >
-                    <Edit3 style={{ width: '16px', height: '16px' }} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingSessionName(currentSession.name);
+                        setIsEditingSessionName(true);
+                      }}
+                      className="p-1.5 rounded-lg transition-colors hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30"
+                      style={{ color: 'var(--text-tertiary)' }}
+                      title="Rename session"
+                    >
+                      <Edit3 style={{ width: '16px', height: '16px' }} />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -720,10 +842,6 @@ export default function ChatInterface() {
               </span>
             </button>
           )}
-          
-          <div data-onboarding="agent-selector">
-            <AgentSelector />
-          </div>
         </div>
         <div className="flex items-center" style={{ gap: '8px' }}>
           {isContinuousMode && (
@@ -779,35 +897,6 @@ export default function ChatInterface() {
               <Plus style={{ width: '16px', height: '16px' }} />
             </button>
             
-            
-            {/* Continuous Mode */}
-            <button
-              data-onboarding="continuous-mode"
-              onClick={toggleContinuousMode}
-              className="rounded-lg transition-all duration-300"
-              style={{ 
-                padding: '6px',
-                backgroundColor: isContinuousMode ? 'var(--accent-primary)' : 'transparent',
-                color: isContinuousMode ? 'white' : 'var(--text-secondary)',
-                border: `1px solid ${isContinuousMode ? 'var(--accent-primary)' : 'transparent'}`,
-                boxShadow: isContinuousMode ? 'var(--shadow-md)' : 'none'
-              }}
-              onMouseEnter={(e) => {
-                if (!isContinuousMode) {
-                  e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-                  e.currentTarget.style.borderColor = 'var(--border-primary)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isContinuousMode) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.borderColor = 'transparent';
-                }
-              }}
-              title={isContinuousMode ? 'Disable continuous conversation' : 'Enable continuous conversation'}
-            >
-              <MessageCircle style={{ width: '16px', height: '16px' }} />
-            </button>
             
             {/* Tour Button */}
             <button
@@ -991,7 +1080,7 @@ export default function ChatInterface() {
           <button
             data-onboarding="sidebar-toggle"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="absolute z-50 transition-all duration-300 ease-in-out transform hover:scale-110 hover:shadow-lg"
+            className="absolute transition-all duration-300 ease-in-out transform hover:scale-110 hover:shadow-lg"
             style={{
               right: '-22px', // Position halfway outside the sidebar edge
               top: '50%',
@@ -999,6 +1088,7 @@ export default function ChatInterface() {
               padding: '12px 8px',
               backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
               border: '2px solid #3b82f6', // Blue when open
+              zIndex: 9999, // Very high to ensure it's above all content
               borderLeft: 'none', // No left border - attached to sidebar
               borderTopRightRadius: '12px',
               borderBottomRightRadius: '12px',
@@ -1157,6 +1247,41 @@ export default function ChatInterface() {
                   <span>Input History</span>
                   {showUserHistory && (
                     <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></div>
+                  )}
+                </button>
+
+                {/* Archive Messages Toggle */}
+                <button
+                  onClick={() => setShowArchivedMessages(!showArchivedMessages)}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left"
+                  style={{ 
+                    backgroundColor: showArchivedMessages ? 'var(--bg-tertiary)' : 'transparent',
+                    color: 'var(--text-primary)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showArchivedMessages) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showArchivedMessages) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  {showArchivedMessages ? (
+                    <ArchiveRestore style={{ width: '18px', height: '18px' }} />
+                  ) : (
+                    <Archive style={{ width: '18px', height: '18px' }} />
+                  )}
+                  <span>{showArchivedMessages ? 'Show Active Messages' : 'Show Archived Messages'}</span>
+                  {showArchivedMessages && (
+                    <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></div>
+                  )}
+                  {archivedMessages.size > 0 && !showArchivedMessages && (
+                    <span className="ml-auto text-xs px-2 py-1 bg-gray-200 text-gray-600 rounded-full">
+                      {archivedMessages.size}
+                    </span>
                   )}
                 </button>
 
@@ -1425,15 +1550,111 @@ export default function ChatInterface() {
                       color: 'var(--accent-primary)' 
                     }} 
                   />
-                  <h1 
-                    className="text-2xl font-bold"
-                    style={{ 
-                      color: 'var(--text-primary)',
-                      letterSpacing: '-0.02em'
-                    }}
-                  >
-                    {formatSessionTitle(currentSession.name)}
-                  </h1>
+                  {isEditingSessionName ? (
+                    <input
+                      type="text"
+                      value={editingSessionName}
+                      onChange={(e) => setEditingSessionName(e.target.value)}
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Enter') {
+                          if (editingSessionName.trim()) {
+                            const success = await renameSession(currentSession.sessionId, editingSessionName.trim());
+                            if (success) {
+                              setIsEditingSessionName(false);
+                              setEditingSessionName('');
+                            }
+                          }
+                        } else if (e.key === 'Escape') {
+                          setIsEditingSessionName(false);
+                          setEditingSessionName('');
+                        }
+                      }}
+                      autoFocus
+                      className="text-2xl font-bold px-3 py-1 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 rounded-lg transition-all duration-200 text-center bg-white/90"
+                      style={{
+                        backgroundImage: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        letterSpacing: '-0.02em',
+                        minWidth: '300px'
+                      }}
+                      placeholder="Session name..."
+                    />
+                  ) : (
+                    <h1 
+                      className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-all duration-200"
+                      style={{ 
+                        backgroundImage: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        letterSpacing: '-0.02em'
+                      }}
+                      onClick={() => {
+                        setEditingSessionName(currentSession.name);
+                        setIsEditingSessionName(true);
+                      }}
+                      title="Click to rename session"
+                    >
+                      {formatSessionTitle(currentSession.name)}
+                    </h1>
+                  )}
+
+                  {/* Duck Avatar for the session */}
+                  {currentSession && !isEditingSessionName && (
+                    <div className="flex justify-center mt-4 mb-6">
+                      <DuckAvatar
+                        imageUrl={currentSession.avatar?.imageUrl}
+                        prompt={currentSession.avatar?.prompt}
+                        isGenerating={isGeneratingAvatar}
+                        size="xl"
+                        showPrompt={true}
+                        className="shadow-lg hover:shadow-xl transition-shadow duration-300"
+                      />
+                      {avatarError && (
+                        <div className="ml-3 text-sm text-red-600 bg-red-50 px-3 py-1 rounded-full">
+                          Avatar generation failed
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Edit controls when editing session name */}
+                  {isEditingSessionName && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={async () => {
+                          if (editingSessionName.trim()) {
+                            const success = await renameSession(currentSession.sessionId, editingSessionName.trim());
+                            if (success) {
+                              setIsEditingSessionName(false);
+                              setEditingSessionName('');
+                            }
+                          }
+                        }}
+                        className="p-2 rounded-lg transition-colors bg-green-500 hover:bg-green-600 text-white shadow-sm"
+                        title="Save name"
+                      >
+                        <Check style={{ width: '16px', height: '16px' }} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditingSessionName(false);
+                          setEditingSessionName('');
+                        }}
+                        className="p-2 rounded-lg transition-colors bg-gray-500 hover:bg-gray-600 text-white shadow-sm"
+                        title="Cancel"
+                      >
+                        <X style={{ width: '16px', height: '16px' }} />
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Agent selector in chat window title area */}
+                  <div data-onboarding="agent-selector">
+                    <AgentSelector />
+                  </div>
                 </div>
                 {currentSession.createdAt && (
                   <p 
@@ -1510,7 +1731,13 @@ export default function ChatInterface() {
                             >
                               {/* User Message Title & Header */}
                               <div className="mb-3 border-b pb-2" style={{ borderColor: '#e5e7eb' }}>
-                                <h3 className="text-lg font-bold mb-1" style={{ color: '#1f2937' }}>
+                                <h3 className="text-lg font-bold mb-1" style={{ 
+                                  color: '#1e40af',
+                                  backgroundImage: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+                                  WebkitBackgroundClip: 'text',
+                                  WebkitTextFillColor: 'transparent',
+                                  backgroundClip: 'text'
+                                }}>
                                   {generateMessageTitle(message.content, 'user')}
                                 </h3>
                                 <div className="flex items-center justify-between">
@@ -1538,6 +1765,21 @@ export default function ChatInterface() {
                                       to {getAgentDisplayName(message.agentUsed)}
                                     </span>
                                   )}
+                                  {/* Archive button for user messages */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleArchiveMessage(message.id);
+                                    }}
+                                    className="opacity-60 hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-100"
+                                    title={archivedMessages.has(message.id) ? "Unarchive message" : "Archive message"}
+                                  >
+                                    {archivedMessages.has(message.id) ? (
+                                      <ArchiveRestore style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
+                                    ) : (
+                                      <Archive style={{ width: '14px', height: '14px', color: '#6b7280' }} />
+                                    )}
+                                  </button>
                                 </div>
                                 <span className="text-xs" style={{ color: '#6b7280' }}>
                                   {new Date(message.timestamp || new Date()).toLocaleTimeString('en-US', { 
@@ -1602,7 +1844,13 @@ export default function ChatInterface() {
                             
                             {/* Message Title & Header with Collapse Button */}
                             <div className="mb-3 border-b pb-2" style={{ borderColor: '#e5e7eb' }}>
-                              <h3 className="text-lg font-bold mb-1" style={{ color: '#1f2937' }}>
+                              <h3 className="text-lg font-bold mb-1" style={{ 
+                                color: '#d97706',
+                                backgroundImage: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text'
+                              }}>
                                 {generateMessageTitle(message.content, 'assistant')}
                               </h3>
                               <div className="relative flex items-center justify-between">
@@ -1652,6 +1900,21 @@ export default function ChatInterface() {
                                     size="sm"
                                   />
                                 </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleArchiveMessage(message.id);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-gray-100"
+                                  style={{ color: archivedMessages.has(message.id) ? '#3b82f6' : 'var(--text-tertiary)' }}
+                                  title={archivedMessages.has(message.id) ? "Unarchive message" : "Archive message"}
+                                >
+                                  {archivedMessages.has(message.id) ? (
+                                    <ArchiveRestore style={{ width: '16px', height: '16px' }} />
+                                  ) : (
+                                    <Archive style={{ width: '16px', height: '16px' }} />
+                                  )}
+                                </button>
                                 <button
                                   onClick={() => handleMessageClick(message)}
                                   className="p-1 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
@@ -1909,6 +2172,8 @@ export default function ChatInterface() {
                 onTranscript={handleVoiceTranscript}
                 isDisabled={isStreaming}
                 enableContinuousMode={isContinuousMode}
+                onContinuousModeToggle={toggleContinuousMode}
+                isContinuousMode={isContinuousMode}
               />
             </div>
             
@@ -2089,7 +2354,6 @@ export default function ChatInterface() {
                       type="text"
                       value={newSessionName}
                       onChange={(e) => setNewSessionName(e.target.value)}
-                      className="w-full px-4 py-2 border-2 border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg transition-all duration-200"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleCreateNewSession();
@@ -2151,7 +2415,7 @@ export default function ChatInterface() {
       {!isSidebarOpen && (
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="fixed z-50 transition-all duration-300 ease-in-out transform hover:scale-110 hover:shadow-lg"
+          className="fixed transition-all duration-300 ease-in-out transform hover:scale-110 hover:shadow-lg"
           style={{
           left: '0px', // Always at left edge when collapsed
           top: '50%',
@@ -2159,6 +2423,7 @@ export default function ChatInterface() {
           padding: '12px 8px',
           backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
           border: '2px solid #10b981', // Green when closed
+          zIndex: 9999, // Very high to ensure it's above all content
           borderLeft: 'none', // No left border - attached to edge
           borderTopRightRadius: '12px',
           borderBottomRightRadius: '12px',

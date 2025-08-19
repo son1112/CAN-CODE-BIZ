@@ -12,7 +12,11 @@ export async function POST(
   try {
     const session = await auth();
     
-    if (!session?.user?.id) {
+    // Demo mode bypass for testing
+    const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+    const userId = isDemoMode ? 'demo-user' : session?.user?.id;
+    
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -53,7 +57,7 @@ export async function POST(
     const updatedSession = await Session.findOneAndUpdate(
       {
         sessionId: id,
-        createdBy: session.user.id
+        createdBy: userId
       },
       {
         $push: { messages: newMessage },
@@ -111,7 +115,7 @@ export async function GET(
 
     const sessionDoc = await Session.findOne({
       sessionId: id,
-      createdBy: session.user.id
+      createdBy: userId
     }).lean();
 
     if (!sessionDoc) {

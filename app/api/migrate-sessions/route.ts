@@ -35,8 +35,8 @@ interface MigrationResult {
   }>;
 }
 
-// Default user ID for CLI sessions (from existing web sessions)
-const DEFAULT_CLI_USER_ID = '689df4fadbf2d345b9588c3c';
+// Default user ID for CLI sessions (current authenticated user)
+const DEFAULT_CLI_USER_ID = '68a33c99df2098d5e02a84e3';
 
 // Helper function to extract meaningful text from parsed objects
 function extractTextFromParsedObject(obj: unknown): string {

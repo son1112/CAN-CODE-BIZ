@@ -202,10 +202,11 @@ export default function OnboardingTour() {
 
       {/* Tooltip */}
       <div
-        className="fixed z-50 max-w-sm"
+        className="fixed max-w-sm"
         style={{
           ...tooltipPosition,
-          pointerEvents: 'auto'
+          pointerEvents: 'auto',
+          zIndex: 9999
         }}
       >
         <div

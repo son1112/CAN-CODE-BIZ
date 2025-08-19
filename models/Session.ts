@@ -51,6 +51,11 @@ export interface SessionDocument extends Document {
   createdBy: string;
   lastAgentUsed?: string;
   conversationStarter?: string;
+  avatar?: {
+    imageUrl: string;
+    prompt: string;
+    generatedAt: Date;
+  };
   
   // CLI compatibility
   iterationCount: number;
@@ -105,6 +110,11 @@ const SessionSchema = new Schema<SessionDocument>(
     createdBy: { type: String, required: true, index: true },
     lastAgentUsed: String,
     conversationStarter: String,
+    avatar: {
+      imageUrl: String,
+      prompt: String,
+      generatedAt: Date,
+    },
     
     // Access tracking
     lastAccessedAt: { type: Date, default: Date.now },

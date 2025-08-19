@@ -175,24 +175,46 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         return;
       }
 
-      // Main numbered sections (1., 2., 3., etc.)
-      const mainNumberMatch = trimmedLine.match(/^(\d+)\.\s*(.+)$/);
+      // Main numbered sections (1., 2., 3., etc.) including simple numbers
+      const mainNumberMatch = trimmedLine.match(/^(\d+)\.?\s*(.+)$/);
       if (mainNumberMatch) {
         flushList();
         const [, number, title] = mainNumberMatch;
-        elements.push(
-          <div key={`section-${index}`} className="mb-4 mt-6">
-            <h3 
-              className="text-lg font-bold mb-3 flex items-start gap-3"
-              style={{ color: expandedView ? 'var(--accent-primary)' : '#fef3c7' }}
-            >
-              <span className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-yellow-500 to-amber-500 text-black rounded-full text-sm font-bold flex-shrink-0 shadow-lg">
+        
+        // Check if this is a simple number without much content (like just "1", "2", "3")
+        const isSimpleNumber = title.length < 5;
+        
+        if (isSimpleNumber) {
+          // Handle short numbered items as list items
+          currentListItems.push(
+            <li key={`numbered-item-${index}`} className="flex items-start gap-3">
+              <span className="inline-flex items-center justify-center w-6 h-6 bg-gradient-to-br from-yellow-500 to-amber-500 text-black rounded-full text-sm font-bold flex-shrink-0 shadow-sm">
                 {number}
               </span>
-              <span className="leading-tight">{title}</span>
-            </h3>
-          </div>
-        );
+              <span 
+                className="leading-relaxed"
+                style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
+              >
+                {processInlineFormatting(title)}
+              </span>
+            </li>
+          );
+        } else {
+          // Handle longer numbered items as section headers
+          elements.push(
+            <div key={`section-${index}`} className="mb-4 mt-6">
+              <h3 
+                className="text-lg font-bold mb-3 flex items-start gap-3"
+                style={{ color: expandedView ? 'var(--accent-primary)' : '#fef3c7' }}
+              >
+                <span className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-yellow-500 to-amber-500 text-black rounded-full text-sm font-bold flex-shrink-0 shadow-lg">
+                  {number}
+                </span>
+                <span className="leading-tight">{processInlineFormatting(title)}</span>
+              </h3>
+            </div>
+          );
+        }
         return;
       }
 
@@ -217,8 +239,8 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         return;
       }
 
-      // Bullet points (-, •, or starting with hyphen)
-      const bulletMatch = trimmedLine.match(/^[-•*]\s*(.+)$/);
+      // Bullet points (-, •, ●, or starting with hyphen)
+      const bulletMatch = trimmedLine.match(/^[-•●*]\s*(.+)$/);
       if (bulletMatch) {
         const [, content] = bulletMatch;
         currentListItems.push(
@@ -235,9 +257,65 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         return;
       }
 
+      // Special handling for lines that start with bullet-like content but with special formatting
+      const specialBulletMatch = trimmedLine.match(/^([•●])\s*(.+)$/);
+      if (specialBulletMatch) {
+        const [, bullet, content] = specialBulletMatch;
+        currentListItems.push(
+          <li key={`special-bullet-${index}`} className="flex items-start gap-3">
+            <span className="text-yellow-400 mt-1 flex-shrink-0 font-bold">{bullet}</span>
+            <span 
+              className="leading-relaxed"
+              style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
+            >
+              {processInlineFormatting(content)}
+            </span>
+          </li>
+        );
+        return;
+      }
+
+      // Markdown headers (##, ###, ####)
+      const markdownHeaderMatch = trimmedLine.match(/^(#{2,4})\s*(.+)$/);
+      if (markdownHeaderMatch) {
+        flushList();
+        const [, hashes, title] = markdownHeaderMatch;
+        const level = hashes.length;
+        
+        // Choose styling based on header level
+        let className: string;
+        let titleSize: string;
+        
+        switch (level) {
+          case 2:
+            className = "text-xl font-bold mb-4 mt-6";
+            titleSize = "text-xl";
+            break;
+          case 3:
+            className = "text-lg font-bold mb-3 mt-5";
+            titleSize = "text-lg";
+            break;
+          default:
+            className = "text-base font-bold mb-2 mt-4";
+            titleSize = "text-base";
+        }
+        
+        elements.push(
+          <div key={`md-header-${index}`} className={`${className} border-l-4 border-yellow-500 pl-4 bg-gradient-to-r from-yellow-500/10 to-transparent py-2 rounded-r-md`}>
+            <h2 
+              className={titleSize}
+              style={{ color: expandedView ? 'var(--accent-primary)' : '#fcd34d' }}
+            >
+              {processInlineFormatting(title)}
+            </h2>
+          </div>
+        );
+        return;
+      }
+
       // Headers or emphasized text (text ending with :)
       const headerMatch = trimmedLine.match(/^(.+):$/);
-      if (headerMatch && trimmedLine.length < 100) {
+      if (headerMatch && trimmedLine.length < 100 && !trimmedLine.includes('##')) {
         flushList();
         const [, title] = headerMatch;
         elements.push(
@@ -248,6 +326,30 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
           >
             {processInlineFormatting(title)}
           </h4>
+        );
+        return;
+      }
+
+      // Markdown-style bold keywords with asterisks (like **High Interest Level**: text)
+      const markdownKeywordMatch = trimmedLine.match(/^\*\*([^*]+)\*\*:\s*(.+)$/);
+      if (markdownKeywordMatch) {
+        flushList();
+        const [, keyword, description] = markdownKeywordMatch;
+        elements.push(
+          <div key={`md-keyword-${index}`} className="mb-3 bg-gradient-to-r from-blue-500/5 to-transparent p-3 rounded-md border-l-2 border-blue-500/30">
+            <span 
+              className="font-bold"
+              style={{ color: expandedView ? 'var(--accent-primary)' : '#93c5fd' }}
+            >
+              {keyword}:
+            </span>
+            <span 
+              className="ml-2 leading-relaxed"
+              style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
+            >
+              {processInlineFormatting(description)}
+            </span>
+          </div>
         );
         return;
       }

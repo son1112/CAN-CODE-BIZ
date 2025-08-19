@@ -16,6 +16,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const [loadingStartTime] = useState(Date.now());
   const [loadingDuration, setLoadingDuration] = useState(0);
 
+  // Demo mode bypass for testing
+  const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
   // Add timeout for loading state
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -42,17 +45,17 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   }, [status, loadingStartTime]);
 
   useEffect(() => {
-    console.log('AuthGuard: status =', status, 'session =', !!session);
-    if (status === 'loading') return; // Still loading
+    console.log('AuthGuard: status =', status, 'session =', !!session, 'demoMode =', isDemoMode);
+    if (status === 'loading' && !isDemoMode) return; // Still loading
 
-    if (!session) {
+    if (!session && !isDemoMode) {
       console.log('AuthGuard: No session, redirecting to signin');
       router.push('/auth/signin');
       return;
     }
-  }, [session, status, router]);
+  }, [session, status, router, isDemoMode]);
 
-  if (status === 'loading') {
+  if (status === 'loading' && !isDemoMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         {/* Background Elements */}

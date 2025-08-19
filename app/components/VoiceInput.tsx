@@ -1,16 +1,18 @@
 'use client';
 
 import React from 'react';
-import { Mic, MicOff, AlertCircle, RotateCcw, Send, VolumeX, Volume2 } from 'lucide-react';
+import { Mic, MicOff, AlertCircle, RotateCcw, Send, VolumeX, Volume2, MessageCircle } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
   isDisabled?: boolean;
   enableContinuousMode?: boolean;
+  onContinuousModeToggle?: () => void;
+  isContinuousMode?: boolean;
 }
 
-export default function VoiceInput({ onTranscript, isDisabled = false, enableContinuousMode = false }: VoiceInputProps) {
+export default function VoiceInput({ onTranscript, isDisabled = false, enableContinuousMode = false, onContinuousModeToggle, isContinuousMode = false }: VoiceInputProps) {
   const {
     transcript,
     interimTranscript,
@@ -106,6 +108,24 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
             </>
           )}
         </button>
+
+        {/* Continuous Mode Toggle */}
+        {onContinuousModeToggle && (
+          <button
+            data-onboarding="continuous-mode"
+            onClick={onContinuousModeToggle}
+            disabled={isDisabled}
+            className={`rounded-xl transition-all duration-300 shadow-lg transform hover:scale-105 ${
+              isContinuousMode 
+                ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25' 
+                : 'bg-gradient-to-br from-gray-400 to-gray-500 text-white shadow-gray-500/25 hover:shadow-xl'
+            }`}
+            style={{ padding: '10px' }}
+            title={isContinuousMode ? 'Disable continuous conversation' : 'Enable continuous conversation'}
+          >
+            <MessageCircle style={{ width: '18px', height: '18px' }} />
+          </button>
+        )}
 
         {/* Mute Button - show in continuous mode when listening */}
         {enableContinuousMode && (isListening || isInContinuousMode) && (
