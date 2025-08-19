@@ -33,7 +33,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   }, [isOpen, searchTerm, selectedTags, loadSessions]);
 
   // Get unique tags from all sessions
-  const allTags = Array.from(new Set(sessions.flatMap(session => session.tags || [])));
+  const allTags = Array.from(new Set((sessions || []).flatMap(session => session.tags || [])));
 
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -112,7 +112,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   };
 
   const selectAllSessions = () => {
-    setSelectedSessions(new Set(sessions.map(s => s.sessionId)));
+    setSelectedSessions(new Set((sessions || []).map(s => s.sessionId)));
   };
 
   const clearAllSelections = () => {
@@ -273,7 +273,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                   Show Archived
                 </button>
                 
-                {sessions.length > 0 && (
+                {(sessions?.length || 0) > 0 && (
                   <button
                     onClick={() => setShowBulkActions(!showBulkActions)}
                     className="flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
@@ -385,7 +385,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                 <SessionOperationIndicator operation="Processing..." />
               </div>
             )}
-            {sessions.length === 0 ? (
+            {(sessions?.length || 0) === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <History style={{ width: '48px', height: '48px', color: 'var(--text-quaternary)', marginBottom: '16px' }} />
                 <p className="text-lg font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
@@ -397,7 +397,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
               </div>
             ) : (
               <div className="space-y-3">
-                {sessions.map((session) => (
+                {(sessions || []).map((session) => (
                   <div
                     key={session.sessionId}
                     className="rounded-lg border p-4 transition-all duration-200 hover:shadow-md"

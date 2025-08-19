@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireAuth } from '@/lib/middleware/auth';
+import { ApiResponse, createPagination, sanitizePagination } from '@/lib/api-response';
+import { handleApiError, validateRequest } from '@/lib/error-handler';
+import { validators } from '@/lib/validators';
 import Session from '@/models/Session';
 import connectDB from '@/lib/mongodb';
 import { v4 as uuidv4 } from 'uuid';
@@ -33,46 +36,25 @@ function getRandomAvatar(): { imageUrl: string; prompt: string } {
 // GET /api/sessions - List user sessions with pagination/filtering
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    // Demo mode bypass for testing
-    const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-    const userId = isDemoMode ? 'demo-user' : session?.user?.id;
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    // Use authentication middleware
+    const { userId } = await requireAuth(request);
 
     await connectDB();
 
-    const { searchParams } = new URL(request.url);
-    // Validate and sanitize query parameters
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20'))); // Limit between 1-100
-    const search = searchParams.get('search')?.trim().slice(0, 200) || ''; // Limit search length
-    const tags = searchParams.get('tags')?.split(',').filter(Boolean).slice(0, 10) || []; // Max 10 tags
+    const { searchParams } = request.nextUrl;
+    
+    // Use standardized pagination validation
+    const { page, limit, skip } = sanitizePagination(
+      searchParams.get('page'),
+      searchParams.get('limit'),
+      20, // default limit
+      100  // max limit
+    );
+    
+    // Validate and sanitize search parameters
+    const search = searchParams.get('search')?.trim().slice(0, 200) || '';
+    const tags = searchParams.get('tags')?.split(',').filter(Boolean).slice(0, 10) || [];
     const archived = searchParams.get('archived') === 'true';
-
-    // Validate page parameter
-    if (isNaN(page) || page < 1) {
-      logger.warn('Invalid page parameter', { component: 'sessions-api', page: searchParams.get('page') });
-      return NextResponse.json(
-        { error: 'Invalid page parameter' },
-        { status: 400 }
-      );
-    }
-
-    // Validate limit parameter
-    if (isNaN(limit) || limit < 1 || limit > 100) {
-      logger.warn('Invalid limit parameter', { component: 'sessions-api', limit: searchParams.get('limit') });
-      return NextResponse.json(
-        { error: 'Limit must be between 1 and 100' },
-        { status: 400 }
-      );
-    }
 
     // Build query
     const query: Record<string, unknown> = {
@@ -96,7 +78,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Execute query with pagination
-    const skip = (page - 1) * limit;
     const sessions = await Session.find(query)
       .select('sessionId name createdAt updatedAt lastAccessedAt tags messages iterationCount avatar')
       .sort({ lastAccessedAt: -1, updatedAt: -1 })
@@ -114,116 +95,42 @@ export async function GET(request: NextRequest) {
       hasIterations: (session.iterationCount || 0) > 0
     }));
 
+    // Create standardized pagination metadata
+    const pagination = createPagination(page, limit, totalCount);
+
+    logger.info('Sessions retrieved successfully', {
+      component: 'sessions-api',
+      userId,
+      sessionCount: sessions.length,
+      totalCount,
+      page,
+      limit
+    });
+
+    // Return in the format expected by the frontend for backward compatibility
     return NextResponse.json({
       sessions: sessionsWithPreview,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-        hasNext: page * limit < totalCount,
-        hasPrev: page > 1
-      }
+      pagination: pagination
     });
 
   } catch (error) {
-    logger.error('Failed to list sessions', { component: 'sessions-api' }, error);
-    
-    // Handle specific database errors
-    if (error instanceof Error) {
-      if (error.message.includes('timeout')) {
-        return NextResponse.json(
-          { error: 'Database request timeout' },
-          { status: 504 }
-        );
-      }
-      if (error.message.includes('connection')) {
-        return NextResponse.json(
-          { error: 'Database connection error' },
-          { status: 503 }
-        );
-      }
-    }
-    
-    return NextResponse.json(
-      { error: 'Failed to fetch sessions' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'sessions-api', { userId });
   }
 }
 
 // POST /api/sessions - Create new session
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    // Demo mode bypass for testing
-    const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-    const userId = isDemoMode ? 'demo-user' : session?.user?.id;
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    // Use authentication middleware
+    const { userId } = await requireAuth(request);
 
     await connectDB();
 
+    // Parse and validate request body
     const body = await request.json();
-    const { name, tags = [], conversationStarter } = body;
+    const validatedData = validateRequest(body, validators.createSession, 'sessions-api');
 
-    // Validate input data
-    if (name !== undefined && (typeof name !== 'string' || name.trim().length === 0)) {
-      logger.warn('Invalid session name provided', { component: 'sessions-api' });
-      return NextResponse.json(
-        { error: 'Session name must be a non-empty string' },
-        { status: 400 }
-      );
-    }
-
-    if (name && name.length > 200) {
-      logger.warn('Session name too long', { component: 'sessions-api', nameLength: name.length });
-      return NextResponse.json(
-        { error: 'Session name must be less than 200 characters' },
-        { status: 400 }
-      );
-    }
-
-    if (!Array.isArray(tags)) {
-      logger.warn('Invalid tags format', { component: 'sessions-api' });
-      return NextResponse.json(
-        { error: 'Tags must be an array' },
-        { status: 400 }
-      );
-    }
-
-    if (tags.length > 10) {
-      logger.warn('Too many tags provided', { component: 'sessions-api', tagCount: tags.length });
-      return NextResponse.json(
-        { error: 'Maximum 10 tags allowed' },
-        { status: 400 }
-      );
-    }
-
-    // Validate tag strings
-    const invalidTag = tags.find(tag => typeof tag !== 'string' || tag.trim().length === 0 || tag.length > 50);
-    if (invalidTag !== undefined) {
-      logger.warn('Invalid tag format', { component: 'sessions-api', invalidTag });
-      return NextResponse.json(
-        { error: 'Each tag must be a non-empty string with less than 50 characters' },
-        { status: 400 }
-      );
-    }
-
-    if (conversationStarter && (typeof conversationStarter !== 'string' || conversationStarter.length > 1000)) {
-      logger.warn('Invalid conversation starter', { component: 'sessions-api' });
-      return NextResponse.json(
-        { error: 'Conversation starter must be a string with less than 1000 characters' },
-        { status: 400 }
-      );
-    }
-
+    const { name, tags = [], conversationStarter } = validatedData;
     const sessionId = uuidv4();
     
     // Auto-generate unique name if not provided
@@ -237,10 +144,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (existingSession) {
-        return NextResponse.json(
-          { error: 'Session name already exists' },
-          { status: 409 }
-        );
+        return ApiResponse.conflict('Session name already exists');
       }
     }
 
@@ -266,57 +170,26 @@ export async function POST(request: NextRequest) {
 
     await newSession.save();
 
+    logger.info('Session created successfully', {
+      component: 'sessions-api',
+      userId,
+      sessionId: newSession.sessionId,
+      sessionName: newSession.name
+    });
+
+    // Return in the format expected by the frontend for backward compatibility
     return NextResponse.json({
       success: true,
       session: {
         sessionId: newSession.sessionId,
         name: newSession.name,
         createdAt: newSession.createdAt,
-        tags: newSession.tags
+        tags: newSession.tags,
+        avatar: newSession.avatar
       }
-    });
+    }, { status: 201 });
 
   } catch (error) {
-    logger.error('Failed to create session', { component: 'sessions-api' }, error);
-    
-    // Handle specific error types
-    if (error instanceof SyntaxError) {
-      return NextResponse.json(
-        { error: 'Invalid JSON in request body' },
-        { status: 400 }
-      );
-    }
-    
-    if (error instanceof Error) {
-      if (error.message.includes('duplicate key')) {
-        return NextResponse.json(
-          { error: 'Session name already exists' },
-          { status: 409 }
-        );
-      }
-      if (error.message.includes('validation')) {
-        return NextResponse.json(
-          { error: 'Invalid session data' },
-          { status: 400 }
-        );
-      }
-      if (error.message.includes('timeout')) {
-        return NextResponse.json(
-          { error: 'Database request timeout' },
-          { status: 504 }
-        );
-      }
-      if (error.message.includes('connection')) {
-        return NextResponse.json(
-          { error: 'Database connection error' },
-          { status: 503 }
-        );
-      }
-    }
-    
-    return NextResponse.json(
-      { error: 'Failed to create session' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'sessions-api', { userId });
   }
 }

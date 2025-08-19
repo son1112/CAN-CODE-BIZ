@@ -1,27 +1,35 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { requireAuth } from '@/lib/middleware/auth';
+import { ApiResponse } from '@/lib/api-response';
+import { handleApiError } from '@/lib/error-handler';
+import { logger } from '@/lib/logger';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    // Require authentication for this endpoint
+    const { userId } = await requireAuth(request);
+
     // Check if API key is configured
     if (!process.env.ASSEMBLYAI_API_KEY) {
-      console.error('ASSEMBLYAI_API_KEY environment variable is not set');
-      return NextResponse.json(
-        { error: 'AssemblyAI API key not configured' },
-        { status: 500 }
-      );
+      logger.error('AssemblyAI API key not configured', { 
+        component: 'speech-token-api',
+        userId 
+      });
+      return ApiResponse.internalError('Speech recognition service not configured');
     }
 
-    // For Universal Streaming, we just return the API key
-    // The client will use it in the WebSocket URL
-    console.log('Returning AssemblyAI API key for Universal Streaming');
-    return NextResponse.json({ 
-      apiKey: process.env.ASSEMBLYAI_API_KEY 
+    logger.info('Speech token requested', { 
+      component: 'speech-token-api',
+      userId
     });
-  } catch (error: unknown) {
-    console.error('Failed to get API key:', error);
-    return NextResponse.json(
-      { error: 'Failed to get API key', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+
+    // For now, return the API key securely for authenticated users only
+    // TODO: Implement proper token-based authentication for AssemblyAI
+    return ApiResponse.success({
+      apiKey: process.env.ASSEMBLYAI_API_KEY
+    }, 'Speech recognition API key provided');
+
+  } catch (error) {
+    return handleApiError(error, 'speech-token-api');
   }
 }
