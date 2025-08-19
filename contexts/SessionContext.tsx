@@ -178,7 +178,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/rename`, {
+      const response = await fetch(`/api/sessions/${sessionId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
