@@ -410,21 +410,40 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     await loadSessions();
   }, [loadSessions]);
 
-  // Load current session from localStorage on mount
+  // Load current session from URL params or localStorage on mount
   useEffect(() => {
-    const savedSessionId = localStorage.getItem('rubber-ducky-current-session');
-    if (savedSessionId) {
-      console.log('Restoring session from localStorage:', savedSessionId);
-      loadSession(savedSessionId).then((session) => {
+    // Check URL parameters first
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSessionId = urlParams.get('session');
+    
+    const sessionIdToLoad = urlSessionId || localStorage.getItem('rubber-ducky-current-session');
+    
+    if (sessionIdToLoad) {
+      const source = urlSessionId ? 'URL parameter' : 'localStorage';
+      console.log(`Restoring session from ${source}:`, sessionIdToLoad);
+      
+      loadSession(sessionIdToLoad).then((session) => {
         if (session) {
           console.log('Successfully restored session:', session.name);
         } else {
           console.log('Failed to restore session, clearing localStorage');
           localStorage.removeItem('rubber-ducky-current-session');
+          // If URL parameter failed, clean up URL
+          if (urlSessionId) {
+            const cleanUrl = new URL(window.location);
+            cleanUrl.searchParams.delete('session');
+            window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search);
+          }
         }
       }).catch((error) => {
         console.error('Error restoring session:', error);
         localStorage.removeItem('rubber-ducky-current-session');
+        // If URL parameter failed, clean up URL
+        if (urlSessionId) {
+          const cleanUrl = new URL(window.location);
+          cleanUrl.searchParams.delete('session');
+          window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search);
+        }
       });
     }
     loadSessions();

@@ -348,13 +348,18 @@ export default function ChatInterface() {
     }
     // Clear current session state (this will also clear localStorage)
     clearCurrentSession();
-    // Navigate to home page
+    // Navigate to home page and remove session URL parameter
     router.push('/');
   };
 
   const handleQuickNewSession = async () => {
     try {
-      await createSession(); // Creates session with auto-generated name
+      const newSession = await createSession(); // Creates session with auto-generated name
+      // Update URL to reflect new session
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.set('session', newSession.sessionId);
+      router.replace(newUrl.pathname + newUrl.search);
+      
       clearMessages();
       clearContext();
       if (isContinuousMode) {
@@ -548,6 +553,10 @@ export default function ChatInterface() {
   const handleSelectSession = async (sessionId: string) => {
     try {
       await loadSession(sessionId);
+      // Update URL to reflect current session
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.set('session', sessionId);
+      router.replace(newUrl.pathname + newUrl.search);
       // Clear any streaming state when switching sessions
       clearMessages();
     } catch (error) {
@@ -2270,6 +2279,10 @@ export default function ChatInterface() {
           if (star.itemType === 'session') {
             try {
               await loadSession(star.itemId);
+              // Update URL to reflect current session
+              const newUrl = new URL(window.location);
+              newUrl.searchParams.set('session', star.itemId);
+              router.replace(newUrl.pathname + newUrl.search);
               // Clear any streaming state when switching sessions
               clearMessages();
             } catch (error) {
