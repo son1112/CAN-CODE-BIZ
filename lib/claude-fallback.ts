@@ -14,16 +14,17 @@ export interface FallbackResult {
   originalModel: ClaudeModel;
 }
 
-// Default fallback configuration - ordered by cost tier to gracefully degrade
-// Using only real, existing Claude models
+// Default fallback configuration - ordered by performance tier with smart degradation
+// Primary: Claude 4 Sonnet (best balance) -> Reliable 3.5 -> Fast 3 Haiku -> Premium 4.1 Opus (last resort)
 export const DEFAULT_FALLBACK_CONFIG: ModelFallbackConfig = {
   models: [
-    'claude-3-5-sonnet-20241022',  // Primary (best balance of speed/quality)
-    'claude-3-haiku-20240307',     // Fast fallback (low cost, fastest)
-    'claude-3-opus-20240229'       // Final fallback (highest quality, slower)
+    'claude-sonnet-4-20250514',    // Primary (latest, best balance of speed/quality)
+    'claude-3-5-sonnet-20241022',  // Reliable fallback (proven performance)
+    'claude-3-haiku-20240307',     // Fast fallback (low cost, fastest response)
+    'claude-opus-4-1-20250805'     // Premium fallback (highest quality, most expensive)
   ],
   timeout: 45000, // 45 seconds - reasonable for most requests
-  maxRetries: 3
+  maxRetries: 4   // Increased to account for additional model tier
 };
 
 // Detect if error is overload/rate limit related

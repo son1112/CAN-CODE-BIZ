@@ -24,6 +24,12 @@ export default function ModelSelector({
 
   const currentConfig = getModelConfig(currentModel);
   
+  const sizeClasses = {
+    sm: 'text-xs px-2 py-1',
+    md: 'text-sm px-3 py-2',
+    lg: 'text-base px-4 py-3'
+  };
+  
   // Fallback if model config doesn't exist (during transitions)
   if (!currentConfig) {
     return (
@@ -41,7 +47,9 @@ export default function ModelSelector({
 
   const getModelIcon = (model: ClaudeModel) => {
     switch (model) {
-      case 'claude-3-opus-20240229':
+      case 'claude-sonnet-4-20250514':
+        return <Zap className="w-4 h-4" />;
+      case 'claude-opus-4-1-20250805':
         return <Sparkles className="w-4 h-4" />;
       case 'claude-3-5-sonnet-20241022':
         return <Zap className="w-4 h-4" />;
@@ -50,12 +58,6 @@ export default function ModelSelector({
       default:
         return <Cpu className="w-4 h-4" />;
     }
-  };
-
-  const sizeClasses = {
-    sm: 'text-xs px-2 py-1',
-    md: 'text-sm px-3 py-2',
-    lg: 'text-base px-4 py-3'
   };
 
   if (disabled) {
@@ -155,9 +157,10 @@ export default function ModelSelector({
             <div className="text-xs text-gray-600">
               <p className="font-medium mb-1">Model Selection Tips:</p>
               <ul className="space-y-0.5">
-                <li>• <strong>Opus:</strong> Best for complex tasks and creativity</li>
-                <li>• <strong>Sonnet:</strong> Balanced performance for most tasks</li>
-                <li>• <strong>Haiku:</strong> Fast and efficient for simple questions</li>
+                <li>• <strong>Claude 4 Sonnet:</strong> Latest model, best for most tasks</li>
+                <li>• <strong>Claude 4.1 Opus:</strong> Premium model for complex projects</li>
+                <li>• <strong>Claude 3.5 Sonnet:</strong> Reliable backup option</li>
+                <li>• <strong>Claude 3 Haiku:</strong> Fastest for simple questions</li>
               </ul>
             </div>
           </div>

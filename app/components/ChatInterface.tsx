@@ -2238,12 +2238,12 @@ export default function ChatInterface() {
         }}
       >
         <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(to top, rgba(13, 13, 13, 0.2), transparent)' : 'linear-gradient(to top, rgba(59, 130, 246, 0.08), transparent)' }}></div>
-        <div className="relative max-w-6xl mx-auto space-y-2 overflow-y-auto" style={{ maxHeight: 'min(40vh, 340px)' }}>
+        <div className="relative max-w-6xl mx-auto space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent" style={{ maxHeight: 'min(35vh, 280px)' }}>
           
           
           {/* Current Input/Transcription Area */}
-          <div className="flex items-start" style={{ gap: '12px' }}>
-            <div data-onboarding="voice-input" className="voice-input-wrapper">
+          <div className="flex flex-col sm:flex-row items-start" style={{ gap: '12px' }}>
+            <div data-onboarding="voice-input" className="voice-input-wrapper w-full sm:w-auto flex-shrink-0">
               <VoiceInput 
                 onTranscript={handleVoiceTranscript}
                 isDisabled={isStreaming}

@@ -1,8 +1,9 @@
 // Claude model types and configurations
 export type ClaudeModel = 
-  | 'claude-3-opus-20240229'
-  | 'claude-3-5-sonnet-20241022' 
-  | 'claude-3-haiku-20240307';
+  | 'claude-sonnet-4-20250514'      // Claude 4 Sonnet (primary - best balance)
+  | 'claude-opus-4-1-20250805'     // Claude 4.1 Opus (highest quality)  
+  | 'claude-3-5-sonnet-20241022'   // Claude 3.5 Sonnet (reliable fallback)
+  | 'claude-3-haiku-20240307';     // Claude 3 Haiku (fastest/cheapest fallback)
 
 export interface ModelConfig {
   model: ClaudeModel;
@@ -16,39 +17,49 @@ export interface ModelConfig {
 }
 
 export const MODEL_CONFIGS: Record<ClaudeModel, ModelConfig> = {
-  'claude-3-opus-20240229': {
-    model: 'claude-3-opus-20240229',
-    displayName: 'Claude 3 Opus',
-    description: 'Most capable Claude 3 model with exceptional reasoning',
+  'claude-sonnet-4-20250514': {
+    model: 'claude-sonnet-4-20250514',
+    displayName: 'Claude 4 Sonnet',
+    description: 'Latest Claude 4 model with state-of-the-art coding and reasoning',
+    costTier: 'medium',
+    strengths: ['Advanced coding (72.7% SWE-bench)', 'Hybrid thinking', 'Balanced performance', 'Extended reasoning'],
+    bestFor: ['Programming', 'General conversation', 'Complex analysis', 'Most daily tasks'],
+    maxTokens: 8192,
+    icon: '🚀'
+  },
+  'claude-opus-4-1-20250805': {
+    model: 'claude-opus-4-1-20250805',
+    displayName: 'Claude 4.1 Opus',
+    description: 'Most advanced model with exceptional coding and reasoning capabilities',
     costTier: 'high',
-    strengths: ['Complex reasoning', 'Creative writing', 'Detailed analysis', 'Code review'],
-    bestFor: ['Research', 'Creative projects', 'Complex problem solving', 'Code analysis'],
-    maxTokens: 4096,
+    strengths: ['Superior coding (74.5% SWE-bench)', 'Complex reasoning', 'Long-running tasks', 'Deep analysis'],
+    bestFor: ['Complex coding projects', 'Research', 'Detailed analysis', 'Multi-hour tasks'],
+    maxTokens: 8192,
     icon: '🎭'
   },
   'claude-3-5-sonnet-20241022': {
     model: 'claude-3-5-sonnet-20241022',
     displayName: 'Claude 3.5 Sonnet',
-    description: 'Balanced performance model with excellent capabilities',
+    description: 'Reliable Claude 3.5 model with excellent capabilities',
     costTier: 'medium',
-    strengths: ['Balanced capabilities', 'Good speed', 'Versatile', 'Coding'],
-    bestFor: ['General conversation', 'Programming help', 'Analysis', 'Most daily tasks'],
+    strengths: ['Proven reliability', 'Good speed', 'Versatile', 'Coding'],
+    bestFor: ['Fallback option', 'General tasks', 'Programming help', 'Analysis'],
     maxTokens: 8192,
     icon: '⚡'
   },
   'claude-3-haiku-20240307': {
     model: 'claude-3-haiku-20240307',
     displayName: 'Claude 3 Haiku',
-    description: 'Fast and efficient model for quick tasks',
+    description: 'Fast and cost-effective model for quick tasks',
     costTier: 'low',
     strengths: ['Speed', 'Efficiency', 'Cost-effective', 'Quick responses'],
-    bestFor: ['Quick questions', 'Simple tasks', 'High-volume usage', 'Fast chat'],
+    bestFor: ['Quick questions', 'Simple tasks', 'High-volume usage', 'Emergency fallback'],
     maxTokens: 4096,
-    icon: '⚡'
+    icon: '💨'
   }
 };
 
-export const DEFAULT_MODEL: ClaudeModel = 'claude-3-5-sonnet-20241022';
+export const DEFAULT_MODEL: ClaudeModel = 'claude-sonnet-4-20250514';
 
 export function getModelConfig(model: ClaudeModel): ModelConfig {
   return MODEL_CONFIGS[model];
@@ -77,7 +88,7 @@ export interface SessionModelSettings {
 }
 
 export const DEFAULT_SESSION_SETTINGS: SessionModelSettings = {
-  currentModel: 'claude-3-5-sonnet-20241022',
+  currentModel: 'claude-sonnet-4-20250514',
   overrideAgentDefault: false,
   modelHistory: []
 };

@@ -79,8 +79,9 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
   }
 
   return (
-    <div className="flex flex-col no-text-scale" style={{ gap: '10px' }}>
-      <div className="flex items-center" style={{ gap: '10px' }}>
+    <div className="voice-input-container no-text-scale">
+      {/* Stable Control Panel - always in the same position */}
+      <div className="voice-controls-panel flex flex-wrap items-center" style={{ gap: '8px', minHeight: '48px' }}>
         {/* Microphone Button */}
         <button
           onClick={handleMicToggle}
@@ -93,7 +94,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
             }
             ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}
           `}
-          style={{ padding: '12px' }}
+          style={{ padding: '12px', minHeight: '44px', minWidth: '44px' }}
           title={
             enableContinuousMode 
               ? (isInContinuousMode ? '🛑 Stop chat' : 'Start chat!')
@@ -125,7 +126,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
                 ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25' 
                 : 'bg-gradient-to-br from-gray-400 to-gray-500 text-white shadow-gray-500/25 hover:shadow-xl'
             }`}
-            style={{ padding: '10px' }}
+            style={{ padding: '10px', minHeight: '38px', minWidth: '38px' }}
             title={isContinuousMode ? 'Disable continuous conversation' : 'Enable continuous conversation'}
           >
             <MessageCircle style={{ width: '18px', height: '18px' }} />
@@ -142,7 +143,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
                 ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-red-500/25' 
                 : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25 hover:shadow-xl'
             }`}
-            style={{ padding: '8px' }}
+            style={{ padding: '8px', minHeight: '34px', minWidth: '34px' }}
             title={isMuted ? '🔊 Unmute to continue conversation' : '🔇 Mute and send current message'}
           >
             {isMuted ? <VolumeX style={{ width: '16px', height: '16px' }} /> : <Volume2 style={{ width: '16px', height: '16px' }} />}
@@ -155,19 +156,20 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
             onClick={handleSendTranscript}
             disabled={isDisabled}
             className="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 text-white rounded-xl transition-all duration-300 disabled:opacity-50 shadow-lg shadow-yellow-500/25 hover:shadow-xl transform hover:scale-105"
-            style={{ padding: '8px' }}
+            style={{ padding: '8px', minHeight: '32px', minWidth: '32px' }}
             title="Send message"
           >
             <Send style={{ width: '16px', height: '16px' }} className="filter drop-shadow-sm" />
           </button>
         )}
 
-        <div className="flex-1 min-w-0">
+        {/* Status Indicator - always visible in a stable position */}
+        <div className="voice-status flex items-center" style={{ gap: '8px', minHeight: '24px' }}>
           {(isListening || isInContinuousMode) && (
-            <div className="flex items-center" style={{ gap: '8px', marginBottom: '8px' }}>
+            <>
               <span className="font-semibold text-gray-700" style={{ fontSize: '12px' }}>
                 {isInContinuousMode 
-                  ? (isMuted ? '🔇 Muted (not listening) - unmute to continue' : 'Listening...')
+                  ? (isMuted ? '🔇 Muted' : 'Listening...')
                   : '🔴 Recording...'
                 }
               </span>
@@ -176,49 +178,12 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
                 <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '150ms' }} />
                 <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '300ms' }} />
               </div>
-            </div>
+            </>
           )}
           
-          {/* Current Transcript */}
-          {transcript.trim() && (
-            <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 border border-yellow-200/50 rounded-xl shadow-sm shadow-yellow-500/10 backdrop-blur-sm" style={{ padding: '8px', maxHeight: '120px', overflow: 'hidden' }}>
-              <div className="text-yellow-800 font-bold flex items-center" style={{ fontSize: '10px', marginBottom: '6px', gap: '6px' }}>
-                <span className="filter drop-shadow-sm" style={{ fontSize: '12px' }}>🦆</span>
-                What you said:
-              </div>
-              <div className="text-yellow-900 leading-relaxed font-medium overflow-y-auto" style={{ fontSize: '12px', marginBottom: '6px', maxHeight: '80px' }}>{transcript.trim()}</div>
-              
-              {/* Auto-send countdown */}
-              {autoSendCountdown !== null && autoSendReason && (
-                <div className="flex items-center bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm" style={{ gap: '6px', padding: '6px' }}>
-                  <div className="flex items-center" style={{ gap: '6px' }}>
-                    <div className="border-2 border-yellow-500 border-t-transparent rounded-full animate-spin shadow-sm" style={{ width: '12px', height: '12px' }}></div>
-                    <span className="font-semibold text-gray-800" style={{ fontSize: '10px' }}>
-                      Sending in {autoSendCountdown}s
-                    </span>
-                  </div>
-                  <span className="text-yellow-800 bg-gradient-to-r from-yellow-100 to-amber-100 rounded-full border border-yellow-300/50 font-semibold shadow-sm" style={{ fontSize: '10px', padding: '2px 6px' }}>
-                    {autoSendReason}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* Interim Transcript */}
-          {interimTranscript && (
-            <div className="bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-200/50 rounded-lg shadow-sm backdrop-blur-sm" style={{ marginTop: '6px', padding: '8px', maxHeight: '100px', overflow: 'hidden' }}>
-              <div className="text-gray-700 font-semibold flex items-center" style={{ fontSize: '10px', marginBottom: '6px', gap: '6px' }}>
-                <div className="bg-gray-500 rounded-full animate-pulse shadow-sm" style={{ width: '6px', height: '6px' }} />
-                Processing...
-              </div>
-              <div className="text-gray-800 italic leading-relaxed font-medium overflow-y-auto" style={{ fontSize: '12px', maxHeight: '60px' }}>{interimTranscript}</div>
-            </div>
-          )}
-
-          {/* Instructions */}
+          {/* Instructions when idle */}
           {!isListening && !isInContinuousMode && !transcript.trim() && (
-            <div className="text-gray-600 leading-relaxed font-medium" style={{ fontSize: '10px', padding: '2px 0' }}>
+            <div className="text-gray-600 leading-relaxed font-medium" style={{ fontSize: '10px' }}>
               {enableContinuousMode 
                 ? 'Click to start chat mode'
                 : 'Click to talk'
@@ -226,6 +191,46 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
             </div>
           )}
         </div>
+      </div>
+
+      {/* Expandable Transcript Area - positioned below controls */}
+      <div className="voice-transcript-area" style={{ marginTop: '8px' }}>
+        {/* Current Transcript */}
+        {transcript.trim() && (
+          <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 border border-yellow-200/50 rounded-xl shadow-sm shadow-yellow-500/10 backdrop-blur-sm" style={{ padding: '6px', marginBottom: '6px' }}>
+            <div className="text-yellow-800 font-bold flex items-center" style={{ fontSize: '9px', marginBottom: '4px', gap: '4px' }}>
+              <span className="filter drop-shadow-sm" style={{ fontSize: '11px' }}>🦆</span>
+              What you said:
+            </div>
+            <div className="text-yellow-900 leading-relaxed font-medium overflow-y-auto scrollbar-thin scrollbar-thumb-yellow-300 scrollbar-track-transparent" style={{ fontSize: '11px', marginBottom: '4px', maxHeight: '60px' }}>{transcript.trim()}</div>
+            
+            {/* Auto-send countdown */}
+            {autoSendCountdown !== null && autoSendReason && (
+              <div className="flex items-center bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm" style={{ gap: '6px', padding: '6px' }}>
+                <div className="flex items-center" style={{ gap: '6px' }}>
+                  <div className="border-2 border-yellow-500 border-t-transparent rounded-full animate-spin shadow-sm" style={{ width: '12px', height: '12px' }}></div>
+                  <span className="font-semibold text-gray-800" style={{ fontSize: '10px' }}>
+                    Sending in {autoSendCountdown}s
+                  </span>
+                </div>
+                <span className="text-yellow-800 bg-gradient-to-r from-yellow-100 to-amber-100 rounded-full border border-yellow-300/50 font-semibold shadow-sm" style={{ fontSize: '10px', padding: '2px 6px' }}>
+                  {autoSendReason}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Interim Transcript */}
+        {interimTranscript && (
+          <div className="bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-200/50 rounded-lg shadow-sm backdrop-blur-sm" style={{ padding: '6px' }}>
+            <div className="text-gray-700 font-semibold flex items-center" style={{ fontSize: '9px', marginBottom: '4px', gap: '4px' }}>
+              <div className="bg-gray-500 rounded-full animate-pulse shadow-sm" style={{ width: '5px', height: '5px' }} />
+              Processing...
+            </div>
+            <div className="text-gray-800 italic leading-relaxed font-medium overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent" style={{ fontSize: '11px', maxHeight: '50px' }}>{interimTranscript}</div>
+          </div>
+        )}
       </div>
 
       {error && (
