@@ -1,38 +1,50 @@
 * Rubber Ducky Live 🦆 - AI Chat Companion
 
-Your friendly rubber duck AI companion for thinking out loud, problem-solving, and casual conversations. Powered by Claude Sonnet AI and built with Next.js.
+Your friendly rubber duck AI companion for thinking out loud, problem-solving, and casual conversations. Powered by Claude AI (including Claude 4) and built with Next.js.
 
 ** Features & Screenshots
 
 *** Core Features
 - 🎤 Live speech-to-text conversion using AssemblyAI Real-time Streaming
 - 🦆 Real-time streaming responses from your AI rubber ducky
+- 🤖 Claude 4 integration with smart fallback system across multiple models
+- 🔐 Enhanced authentication with Google OAuth and demo mode support
+- 🏷️ Advanced message tagging system with multi-tag input and instant filtering
+- 📝 Comprehensive export capabilities (PDF, Word, local files)
+- 🌟 Star system for important messages with dedicated browser
 - 🤖 13+ specialized AI agent personalities (interview coach, storyteller, business advisor, etc.)
-- 📝 Markdown support with syntax highlighting
-- 💾 MongoDB conversation persistence with session management
-- 📱 Responsive design for all devices
-- 🔄 Server-Sent Events (SSE) for streaming
+- 📝 Markdown support with syntax highlighting and copy buttons
+- 💾 MongoDB conversation persistence with advanced session management
+- 📱 Fully responsive design with improved mobile UX
+- 🔄 Server-Sent Events (SSE) for streaming responses
 - 🌓 Light/Dark mode toggle
-- 📥 Export chat conversations
 - 🎨 Beautiful cycling image animations during loading states
+- 🔄 Message retry functionality and enhanced error handling
+- 📊 Comprehensive session migration and data management tools
 
 *** Main Interface
 The clean, friendly interface welcomes users with a rubber ducky theme and easy-to-use controls.
 
 [[./docs/screenshots/01-main-interface.png]]
 
-*** Comprehensive Session Management
-Browse, search, and manage all your chat sessions with filtering by tags and full-text search.
+*** Advanced Session Management
+Browse, search, and manage all your chat sessions with filtering by tags, full-text search, and comprehensive export options. Features include session migration tools, avatar generation, and intelligent data organization.
 
 [[./docs/screenshots/02-session-history-browser.png]]
 
+*** Message Tagging & Organization
+Advanced tagging system with multi-tag input, instant filter clearing, and dedicated tag browser for organizing conversations by topics and themes.
+
+*** Stars System
+Star important messages and browse them in a dedicated interface for quick access to valuable insights and key conversation moments.
+
 *** Multiple AI Agent Personalities
-Choose from 13+ specialized AI agents including interview coaches, storytellers, business advisors, and technical specialists.
+Choose from 13+ specialized AI agents including interview coaches, storytellers, business advisors, and technical specialists. Create custom agents with voice or text input.
 
 [[./docs/screenshots/03-agent-selector-dropdown.png]]
 
-*** Custom Agent Creation
-Create your own AI agents using either voice recording or text input with comprehensive guidance.
+*** Claude 4 Model Integration
+Smart model selection with Claude 4 support, automatic fallback systems, and cost-aware model switching for optimal performance and value.
 
 [[./docs/screenshots/04-create-agent-modal.png]]
 
@@ -41,8 +53,8 @@ Professional dark theme for comfortable extended use.
 
 [[./docs/screenshots/05-dark-mode-interface.png]]
 
-*** Active Chat Experience
-Engaging real-time conversations with proper message formatting and export capabilities.
+*** Enhanced Chat Experience
+Engaging real-time conversations with improved message formatting, copy buttons, retry functionality, comprehensive export capabilities (PDF, Word, local files), and enhanced responsive design.
 
 [[./docs/screenshots/06-active-chat-conversation.png]]
 
@@ -52,6 +64,8 @@ Engaging real-time conversations with proper message formatting and export capab
 - MongoDB instance (local or cloud)
 - Anthropic API key for Claude access
 - AssemblyAI API key for speech recognition
+- Google OAuth credentials (optional, for authentication)
+- Google Drive API credentials (optional, for cloud exports)
 
 ** Installation
 
@@ -77,6 +91,15 @@ Engaging real-time conversations with proper message formatting and export capab
    ANTHROPIC_API_KEY=your_anthropic_api_key_here
    ASSEMBLYAI_API_KEY=your_assemblyai_api_key_here
    NEXT_PUBLIC_APP_URL=http://localhost:3000
+   
+   # Optional: For Google OAuth authentication
+   GOOGLE_CLIENT_ID=your_google_client_id
+   GOOGLE_CLIENT_SECRET=your_google_client_secret
+   NEXTAUTH_SECRET=your_nextauth_secret
+   
+   # Optional: For Google Drive exports
+   GOOGLE_SERVICE_ACCOUNT_EMAIL=your_service_account_email
+   GOOGLE_PRIVATE_KEY=your_private_key
    #+end_src
 
 ** Development
@@ -87,6 +110,26 @@ npm run dev
 #+end_src
 
 Open [[http://localhost:3000]] in your browser.
+
+*** Development Commands
+#+begin_src bash
+# Linting and code quality
+npm run lint              # Run ESLint
+npm run build             # Type checking and build verification
+
+# Testing
+npm run test              # Run unit tests with Jest
+npm run test:watch        # Run tests in watch mode
+npm run test:coverage     # Generate test coverage report
+npm run test:e2e          # Run end-to-end tests with Playwright
+npm run test:e2e:ui       # Run e2e tests with Playwright UI
+
+# Versioning and releases
+npm run version:patch     # Patch release (0.1.0 -> 0.1.1)
+npm run version:minor     # Minor release (0.1.0 -> 0.2.0)
+npm run version:major     # Major release (0.1.0 -> 1.0.0)
+npm run release:dry-run   # Test release process without changes
+#+end_src
 
 ** Production Build
 
@@ -101,35 +144,78 @@ npm start
 rubber-ducky-live/
 ├── app/
 │   ├── api/              # API routes
+│   │   ├── auth/         # NextAuth.js authentication
 │   │   ├── chat/         # SSE streaming endpoint
-│   │   └── conversations/ # MongoDB CRUD operations
+│   │   ├── sessions/     # Session management
+│   │   ├── export/       # Export functionality (PDF, Word)
+│   │   ├── stars/        # Message starring system
+│   │   ├── tags/         # Message tagging system
+│   │   └── agents/       # AI agent management
 │   ├── components/       # React components
 │   │   ├── ChatInterface.tsx
 │   │   ├── VoiceInput.tsx
-│   │   └── MessageDisplay.tsx
+│   │   ├── MessageDisplay.tsx
+│   │   ├── MessageTagInterface.tsx
+│   │   ├── StarsBrowser.tsx
+│   │   ├── ModelSelector.tsx
+│   │   ├── SessionBrowser.tsx
+│   │   └── MessageExportButton.tsx
+│   ├── contexts/         # React context providers
 │   ├── layout.tsx
 │   └── page.tsx
 ├── hooks/                # Custom React hooks
 │   ├── useSpeechRecognition.ts
-│   └── useStreamingChat.ts
+│   ├── useStreamingChat.ts
+│   ├── useTags.ts
+│   ├── useStars.ts
+│   └── useAuth.ts
 ├── lib/                  # Utility functions
 │   ├── mongodb.ts        # Database connection
-│   └── claude.ts         # Claude API integration
+│   ├── claude.ts         # Claude API integration
+│   ├── auth.ts           # Authentication configuration
+│   ├── models.ts         # AI model configuration
+│   └── export/           # Export utilities
 ├── models/               # MongoDB schemas
-│   └── Conversation.ts
+│   ├── Session.ts
+│   ├── Message.ts
+│   └── User.ts
 └── types/                # TypeScript definitions
     └── index.ts
 #+end_src
 
 ** Usage
 
+*** Basic Chat Features
 1. *Voice Input*: Click the 🦆 microphone button to start talking to your rubber ducky. The app will automatically transcribe your speech and send it when you stop speaking.
 
 2. *Text Input*: Type your thoughts in the text area and press Enter or click Send to share them with your rubber ducky.
 
-3. *Export Chat*: Click the download button to export your conversation with the rubber ducky as a text file.
+3. *Model Selection*: Choose between different Claude models (including Claude 4) with automatic fallback and cost optimization.
 
-4. *Clear Chat*: Click the trash button to start a new conversation with your rubber ducky.
+4. *Agent Selection*: Pick from 13+ specialized AI agents or create custom agents with voice or text input.
+
+*** Advanced Features
+5. *Message Management*: 
+   - Star important messages for quick access via the Stars browser
+   - Tag messages with multiple tags for organization
+   - Copy message content with one-click copy buttons
+   - Retry failed messages with enhanced error handling
+
+6. *Export Options*:
+   - Export individual messages or entire conversations
+   - Multiple formats: PDF, Word documents, and local text files
+   - Cloud export to Google Drive (with proper authentication)
+
+7. *Session Management*:
+   - Browse all chat sessions with filtering and search
+   - Rename sessions and organize by tags
+   - Session migration tools for data management
+   - URL-based session routing (sessions persist across browser refreshes)
+
+8. *Authentication*:
+   - Google OAuth integration for user accounts
+   - Demo mode for anonymous usage
+   - Secure session persistence and user data management
 
 ** Browser Compatibility
 
@@ -141,20 +227,63 @@ Voice input requires a browser that supports WebSocket and MediaRecorder APIs:
 
 ** API Endpoints
 
-- =POST /api/chat= - Stream chat responses from Claude
-- =GET /api/conversations= - Fetch conversation history
-- =POST /api/conversations= - Save a new conversation
-- =PUT /api/conversations= - Update an existing conversation
+*** Core Chat & Sessions
+- =POST /api/chat= - Stream chat responses from Claude with model selection
+- =GET /api/sessions= - Fetch session history with filtering and pagination
+- =POST /api/sessions= - Create new chat session
+- =PUT /api/sessions/[id]= - Update session details (rename, etc.)
+- =DELETE /api/sessions/[id]= - Delete a session
 - =POST /api/speech-token= - Generate AssemblyAI authentication token
+
+*** Message Management
+- =PUT /api/sessions/messages/[messageId]/tags= - Update message tags
+- =POST /api/stars= - Star/unstar messages
+- =GET /api/stars= - Fetch starred messages with filtering
+- =GET /api/tags= - Fetch available tags with usage statistics
+
+*** Export & Data
+- =POST /api/export/pdf= - Export conversations to PDF
+- =POST /api/export/word= - Export conversations to Word documents
+- =POST /api/export/pdf-local= - Generate local PDF exports
+- =POST /api/export/word-local= - Generate local Word exports
+
+*** Authentication & Agents
+- =GET/POST /api/auth/[...nextauth]= - NextAuth.js authentication endpoints
+- =GET /api/agents= - Fetch available AI agents
+- =POST /api/agents= - Create custom AI agents
 
 ** Technologies Used
 
-- [[https://nextjs.org/][Next.js 14]] - React framework
-- [[https://www.typescriptlang.org/][TypeScript]] - Type safety
-- [[https://tailwindcss.com/][Tailwind CSS]] - Styling
-- [[https://www.mongodb.com/][MongoDB]] - Database
-- [[https://www.anthropic.com/][Claude Sonnet 3.5]] - AI rubber ducky brain
+*** Core Framework & Language
+- [[https://nextjs.org/][Next.js 15]] - React framework with App Router
+- [[https://www.typescriptlang.org/][TypeScript]] - Type safety and developer experience
+- [[https://react.dev/][React 19]] - UI library with latest features
+
+*** Styling & UI
+- [[https://tailwindcss.com/][Tailwind CSS]] - Utility-first styling
+- [[https://lucide.dev/][Lucide React]] - Beautiful icon library
+- Responsive design with mobile-first approach
+
+*** AI & ML Integration
+- [[https://www.anthropic.com/][Claude AI]] - Multiple models including Claude 4 with smart fallback
 - [[https://www.assemblyai.com/][AssemblyAI]] - Real-time speech recognition
+- [[https://replicate.com/][Replicate]] - AI avatar generation
+
+*** Database & Storage
+- [[https://www.mongodb.com/][MongoDB]] - Document database with Mongoose ODM
+- [[https://next-auth.js.org/][NextAuth.js]] - Authentication with MongoDB adapter
+
+*** Export & Integration
+- [[https://www.npmjs.com/package/jspdf][jsPDF]] - PDF generation
+- [[https://www.npmjs.com/package/docx][docx]] - Word document generation
+- [[https://developers.google.com/drive][Google Drive API]] - Cloud export integration
+- [[https://developers.google.com/identity][Google OAuth]] - Authentication
+
+*** Development & Testing
+- [[https://eslint.org/][ESLint]] - Code linting
+- [[https://prettier.io/][Prettier]] - Code formatting
+- [[https://jestjs.io/][Jest]] - Unit testing
+- [[https://playwright.dev/][Playwright]] - End-to-end testing
 
 ** License
 

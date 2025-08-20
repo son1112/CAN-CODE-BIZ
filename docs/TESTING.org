@@ -7,12 +7,16 @@
 This document outlines the comprehensive testing strategy for Rubber Ducky Live, a real-time voice-enabled AI chat companion powered by Claude Sonnet AI.
 
 ** Project Context
-- Framework: Next.js 14 with App Router
-- Language: TypeScript
-- Database: MongoDB with Mongoose ODM
-- AI Integration: Anthropic Claude API
+- Framework: Next.js 15.4.6 with App Router
+- Language: TypeScript 5
+- Runtime: React 19.1.0
+- Database: MongoDB with Mongoose ODM + native driver
+- AI Integration: Anthropic Claude API (Claude 4 with Sonnet 3.5 fallback)
+- Authentication: NextAuth.js 5.0 with Google OAuth + demo mode
 - Real-time: Server-Sent Events (SSE)
 - Voice Input: AssemblyAI Real-time Streaming
+- Export System: jsPDF + docx + Google Drive API
+- Testing: Jest + Playwright + React Testing Library
 
 * Testing Strategy
 
@@ -126,24 +130,33 @@ This document outlines the comprehensive testing strategy for Rubber Ducky Live,
 
 *** 🚧 PENDING: Additional Component Testing
 **** TODO High Priority Components
-- [ ] AgentSelector component
-- [ ] ChatInterface component  
-- [ ] ScrollNavigation component
+- [ ] ChatInterface component (enhanced with copy/retry functionality)
+- [ ] MessageDisplay component (with export buttons and markdown support)
+- [ ] MessageTagInterface component (advanced tagging system)
+- [ ] MessageExportButton component (Google Drive integration)
+- [ ] StarsBrowser component (favorites management)
 - [ ] AuthGuard component
 
 **** TODO Medium Priority Components
-- [ ] CreateAgentModal component
+- [ ] VoiceInput component (enhanced with continuous mode)
 - [ ] SessionBrowser component
 - [ ] ThemeToggle component
+- [ ] CreateAgentModal component (legacy)
+- [ ] AgentSelector component (legacy - deprecated in favor of optimized system)
 
 ** Integration Testing Progress
 
 *** 🚧 NOT STARTED: API Testing
-- [ ] /api/agents endpoint testing
-- [ ] /api/chat SSE endpoint testing
-- [ ] /api/stars CRUD operations
-- [ ] /api/sessions management
+- [ ] /api/chat SSE endpoint testing (Claude 4 with fallback)
+- [ ] /api/sessions management with avatars
+- [ ] /api/agents endpoint testing (optimized 115ms performance)
+- [ ] /api/stars CRUD operations with conflict resolution
+- [ ] /api/tags advanced tagging system
+- [ ] /api/export/* PDF/Word generation and Google Drive integration
 - [ ] /api/speech-token generation
+- [ ] /api/preferences user settings management
+- [ ] /api/migrate-sessions migration utilities
+- [ ] Authentication middleware testing (Google OAuth + demo mode)
 
 *** 🚧 NOT STARTED: Database Testing
 - [ ] MongoDB connection and operations
@@ -190,10 +203,12 @@ This document outlines the comprehensive testing strategy for Rubber Ducky Live,
 ** 🚧 REMAINING High Priority
 
 *** TODO Authentication Flow  
-- [ ] Sign in/out functionality
-- [ ] Session management and persistence
+- [ ] Google OAuth sign in/out functionality
+- [ ] Demo mode authentication bypass
+- [ ] NextAuth.js session management and persistence
+- [ ] JWT token handling and refresh
 - [ ] Unauthorized access protection
-- [ ] Auth guard behavior
+- [ ] Auth guard behavior and middleware testing
 
 *** TODO Session Management
 - [ ] Create new sessions
@@ -346,12 +361,14 @@ tests/
 - *Authentication*: 🔴 Not tested (0%)
 - *Session Management*: 🔴 Not tested (0%)
 
-** Next Testing Priorities (for resuming after optimization)
-1. *useConversationManager hook* (~15-20 tests)
-2. *useUserPreferences hook* (~10-15 tests)  
-3. *AgentSelector component* (~8-12 tests)
-4. *ChatInterface component* (~15-20 tests)
-5. *API integration tests* (~20-30 tests)
+** Next Testing Priorities (current focus areas)
+1. *Enhanced ChatInterface component* (~20-25 tests) - copy/retry functionality
+2. *MessageExportButton component* (~15-20 tests) - Google Drive integration
+3. *MessageTagInterface component* (~12-15 tests) - advanced tagging
+4. *Authentication system tests* (~25-30 tests) - Google OAuth + demo mode
+5. *Export API integration tests* (~20-25 tests) - PDF/Word generation
+6. *useConversationManager hook* (~15-20 tests) - conversation flow
+7. *useTags hook* (~12-15 tests) - message tagging system
 
 ** 🎯 Testing Achievements So Far
 - ✅ Comprehensive test infrastructure setup
