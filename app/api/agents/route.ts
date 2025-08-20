@@ -204,17 +204,24 @@ async function createAgent(voiceDescription: string) {
   "prompt": "A detailed prompt template that includes {{transcript}} placeholder where the user's input will be inserted"
 }
 
+IMPORTANT FORMATTING RULES:
+- Respond with ONLY valid JSON, no markdown code blocks
+- Escape all special characters in strings (quotes, newlines, etc.)
+- Use \\n for line breaks within the prompt string
+- Do not include any text before or after the JSON
+
 Guidelines:
 1. Create a unique, descriptive name in kebab-case (lowercase with hyphens)
 2. Write a thorough description explaining the agent's purpose and capabilities
 3. Craft a detailed prompt that will guide the AI to perform the requested task effectively
 4. Always include {{transcript}} in the prompt where user input should be processed
 5. Make the prompt specific and actionable based on the user's description
+6. Ensure all strings are properly JSON-escaped
 
 User's voice description of the agent they want:
 "${voiceDescription}"
 
-Respond with ONLY the JSON object, no additional text or explanation.`;
+Respond with valid JSON only:`;
 
     const response = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
@@ -232,13 +239,52 @@ Respond with ONLY the JSON object, no additional text or explanation.`;
     // Parse the Claude response to get the agent structure
     let newAgent;
     try {
-      newAgent = JSON.parse(responseText.trim());
+      // Clean the response text by removing any markdown code blocks
+      let cleanedResponse = responseText.trim();
+      
+      // Remove markdown code block markers if present
+      if (cleanedResponse.startsWith('```json')) {
+        cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/```\s*$/, '');
+      } else if (cleanedResponse.startsWith('```')) {
+        cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/```\s*$/, '');
+      }
+      
+      newAgent = JSON.parse(cleanedResponse);
     } catch (parseError) {
-      console.error('Failed to parse Claude response:', parseError, responseText);
-      return NextResponse.json(
-        { error: 'Failed to generate valid agent structure' },
-        { status: 500 }
-      );
+      console.error('Failed to parse Claude response:', parseError);
+      console.error('Raw response:', responseText);
+      
+      // Try to fix common JSON issues and parse again
+      try {
+        let fixedResponse = responseText.trim()
+          .replace(/^```json\s*/, '')
+          .replace(/```\s*$/, '')
+          .replace(/^```\s*/, '')
+          .replace(/```\s*$/, '');
+        
+        // Fix common JSON issues - escape unescaped quotes and newlines in string values
+        fixedResponse = fixedResponse.replace(
+          /"prompt":\s*"([^"]*(?:\\.[^"]*)*)"/g,
+          (match, content) => {
+            // Properly escape the content
+            const escapedContent = content
+              .replace(/\\/g, '\\\\')
+              .replace(/"/g, '\\"')
+              .replace(/\n/g, '\\n')
+              .replace(/\r/g, '\\r')
+              .replace(/\t/g, '\\t');
+            return `"prompt": "${escapedContent}"`;
+          }
+        );
+        
+        newAgent = JSON.parse(fixedResponse);
+      } catch (secondParseError) {
+        console.error('Failed to parse Claude response after cleanup:', secondParseError);
+        return NextResponse.json(
+          { error: 'Failed to generate valid agent structure. The AI response contained invalid JSON.' },
+          { status: 500 }
+        );
+      }
     }
 
     // Validate the agent structure

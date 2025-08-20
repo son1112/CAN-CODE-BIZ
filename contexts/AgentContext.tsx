@@ -74,6 +74,7 @@ export function AgentProvider({ children }: AgentProviderProps) {
   }, []);
 
   const setPowerAgent = useCallback((agent: Agent | null) => {
+    console.log('[DEBUG] AgentContext.setPowerAgent called with:', agent?.name || 'null');
     setCurrentPowerAgent(agent);
     // Clear context when switching agents
     setConversationContext([]);
@@ -142,6 +143,14 @@ export function AgentProvider({ children }: AgentProviderProps) {
   }, [currentAgent, currentPowerAgent]);
 
   const isUsingPowerAgent = Boolean(currentPowerAgent);
+  
+  // Debug logging for power agent state
+  useEffect(() => {
+    console.log('[DEBUG] AgentContext state update:', {
+      currentPowerAgent: currentPowerAgent?.name || 'null',
+      isUsingPowerAgent
+    });
+  }, [currentPowerAgent, isUsingPowerAgent]);
 
   return (
     <AgentContext.Provider

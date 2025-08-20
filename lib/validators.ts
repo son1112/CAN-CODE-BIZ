@@ -319,7 +319,7 @@ export const validators = {
         validator
           .required(msg.role, `messages[${index}].role`)
           .oneOf(msg.role, `messages[${index}].role`, ['user', 'assistant', 'system'])
-          .required(msg.content, `messages[${index}].content`, 10000);
+          .required(msg.content, `messages[${index}].content`, 50000); // Increased to handle longer AI responses
       });
 
       // Check total content length (increased limit for chat conversations)

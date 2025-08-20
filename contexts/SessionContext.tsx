@@ -13,6 +13,7 @@ export interface SessionContextType {
   loadSession: (sessionId: string) => Promise<SessionDocument | null>;
   updateSession: (sessionId: string, updates: Partial<SessionDocument>) => Promise<boolean>;
   renameSession: (sessionId: string, name: string) => Promise<boolean>;
+  setPrimaryAgent: (sessionId: string, agentId: string | null) => Promise<boolean>;
   deleteSession: (sessionId: string, permanent?: boolean) => Promise<boolean>;
   reimportSession: (sessionId: string) => Promise<boolean>;
   clearCurrentSession: () => void;
@@ -127,6 +128,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setCurrentSessionId(session.sessionId);
       setMessages(session.messages || []);
       
+      
       return session;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load session';
@@ -206,6 +208,42 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to rename session';
+      setError(errorMessage);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const setPrimaryAgent = async (sessionId: string, agentId: string | null): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/primary-agent`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ primaryAgent: agentId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to set primary agent');
+      }
+
+      const { session } = await response.json();
+      
+      // Update current session if it's the one being updated
+      if (currentSessionId === sessionId) {
+        setCurrentSession(session);
+      }
+      
+      await refreshSessions();
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to set primary agent';
       setError(errorMessage);
       return false;
     } finally {
@@ -470,6 +508,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     loadSession,
     updateSession,
     renameSession,
+    setPrimaryAgent,
     deleteSession,
     reimportSession,
     clearCurrentSession,

@@ -1,18 +1,15 @@
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/middleware/auth';
 import connectDB from '@/lib/mongodb';
 import Session from '@/models/Session';
 import Tag from '@/models/Tag';
 
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ messageId: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { userId } = await requireAuth(request);
 
     const { tags } = await request.json();
     
@@ -28,12 +25,12 @@ export async function PUT(
     for (const tagName of tags) {
       const trimmedTag = tagName.toLowerCase().trim();
       if (trimmedTag) {
-        console.log(`Creating/updating tag: ${trimmedTag} for user: ${session.user.id}`);
+        console.log(`Creating/updating tag: ${trimmedTag} for user: ${userId}`);
         
         // Check if tag exists first
         const existingTag = await Tag.findOne({
           name: trimmedTag,
-          userId: session.user.id
+          userId: userId
         });
 
         if (existingTag) {
@@ -47,7 +44,7 @@ export async function PUT(
           const newTag = new Tag({
             name: trimmedTag,
             color: '#3B82F6',
-            userId: session.user.id,
+            userId: userId,
             usageCount: 1
           });
           await newTag.save();
@@ -60,7 +57,7 @@ export async function PUT(
     const sessionDoc = await Session.findOneAndUpdate(
       { 
         'messages.id': messageId,
-        createdBy: session.user.id 
+        createdBy: userId 
       },
       { 
         $set: { 'messages.$.tags': tags },
@@ -93,14 +90,11 @@ export async function PUT(
 }
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ messageId: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { userId } = await requireAuth(request);
 
     await connectDB();
 
@@ -110,7 +104,7 @@ export async function GET(
     const sessionDoc = await Session.findOne(
       { 
         'messages.id': messageId,
-        createdBy: session.user.id 
+        createdBy: userId 
       },
       { 'messages.$': 1 }
     );

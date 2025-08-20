@@ -50,6 +50,7 @@ export interface SessionDocument extends Document {
   // User context
   createdBy: string;
   lastAgentUsed?: string;
+  primaryAgent?: string; // User-selected primary agent for session restoration
   conversationStarter?: string;
   avatar?: {
     imageUrl: string;
@@ -109,6 +110,7 @@ const SessionSchema = new Schema<SessionDocument>(
     // User context
     createdBy: { type: String, required: true },
     lastAgentUsed: String,
+    primaryAgent: String, // User-selected primary agent for session restoration
     conversationStarter: String,
     avatar: {
       imageUrl: String,

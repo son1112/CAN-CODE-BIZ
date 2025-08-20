@@ -33,7 +33,7 @@ export default function MessageTagInterface({
 
       if (response.ok) {
         onTagsUpdate(newTags);
-        setIsEditingTags(false);
+        // Don't close editing mode - let user continue adding tags
         console.log('Successfully updated message tags');
       } else {
         const errorData = await response.text();
@@ -42,6 +42,11 @@ export default function MessageTagInterface({
     } catch (error) {
       console.error('Error updating message tags:', error);
     }
+  };
+
+  const handleFinishEditing = async () => {
+    // Final save and close editing mode
+    setIsEditingTags(false);
   };
 
   const mappedAvailableTags = (availableTags || []).map(tag => ({
@@ -96,6 +101,16 @@ export default function MessageTagInterface({
             className="text-sm"
           />
           <div className="flex gap-2 mt-2">
+            <button
+              onClick={handleFinishEditing}
+              className="px-3 py-1 rounded text-xs transition-colors"
+              style={{
+                backgroundColor: 'var(--accent-primary)',
+                color: 'white'
+              }}
+            >
+              Done
+            </button>
             <button
               onClick={() => setIsEditingTags(false)}
               className="px-2 py-1 rounded text-xs transition-colors"

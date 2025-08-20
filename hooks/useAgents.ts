@@ -39,7 +39,12 @@ export function useAgents(): UseAgentsReturn {
 
   // Load agents from the API
   const loadAgents = useCallback(async () => {
-    if (status === 'loading' || !session?.user?.id || loadingRef.current) {
+    const isDemoMode = typeof window !== 'undefined' && 
+                      window.location.hostname === 'localhost' && 
+                      process.env.NODE_ENV === 'development';
+    
+    // In demo mode, bypass session check; otherwise require authentication
+    if (status === 'loading' || (!isDemoMode && !session?.user?.id) || loadingRef.current) {
       return;
     }
 
@@ -107,9 +112,13 @@ export function useAgents(): UseAgentsReturn {
     }
   }, [agents]);
 
-  // Load agents when session is ready
+  // Load agents when session is ready (or in demo mode)
   useEffect(() => {
-    if (status !== 'loading' && session?.user?.id) {
+    const isDemoMode = typeof window !== 'undefined' && 
+                      window.location.hostname === 'localhost' && 
+                      process.env.NODE_ENV === 'development';
+    
+    if (status !== 'loading' && (session?.user?.id || isDemoMode)) {
       loadAgents();
     }
   }, [session?.user?.id, status]); // Remove loadAgents dependency to prevent infinite loop
@@ -121,7 +130,11 @@ export function useAgents(): UseAgentsReturn {
 
   // Process content with a specific agent
   const processWithAgent = useCallback(async (agentName: string, content: string): Promise<string> => {
-    if (!session?.user?.id) {
+    const isDemoMode = typeof window !== 'undefined' && 
+                      window.location.hostname === 'localhost' && 
+                      process.env.NODE_ENV === 'development';
+                      
+    if (!isDemoMode && !session?.user?.id) {
       throw new Error('Authentication required');
     }
 
