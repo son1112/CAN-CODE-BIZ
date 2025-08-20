@@ -209,22 +209,42 @@ export default function TagBrowser({ onTagFilter, onClose }: TagBrowserProps) {
             <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
               Filter by tags:
             </span>
-            <button
-              onClick={handleApplyFilter}
-              className="px-3 py-1 rounded-lg text-xs font-medium transition-colors"
-              style={{
-                backgroundColor: 'var(--accent-primary)',
-                color: 'white'
-              }}
-            >
-              Apply Filter
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setSelectedTags([]);
+                  onTagFilter?.([]);
+                }}
+                className="px-2 py-1 rounded-lg text-xs font-medium transition-colors"
+                style={{
+                  backgroundColor: 'var(--bg-quaternary)',
+                  color: 'var(--text-secondary)'
+                }}
+                title="Clear all tag filters"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={handleApplyFilter}
+                className="px-3 py-1 rounded-lg text-xs font-medium transition-colors"
+                style={{
+                  backgroundColor: 'var(--accent-primary)',
+                  color: 'white'
+                }}
+              >
+                Apply Filter
+              </button>
+            </div>
           </div>
           <TagDisplay
             tags={selectedTags}
             availableTags={tags.map(t => ({ id: t._id, name: t.name, color: t.color, category: t.category }))}
             removable
-            onTagRemove={(tag) => setSelectedTags(prev => prev.filter(t => t !== tag))}
+            onTagRemove={(tag) => {
+              const newTags = selectedTags.filter(t => t !== tag);
+              setSelectedTags(newTags);
+              onTagFilter?.(newTags);
+            }}
             size="sm"
           />
         </div>
