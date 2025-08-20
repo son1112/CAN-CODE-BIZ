@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto, Roboto_Mono } from "next/font/google";
+import Script from "next/script";
 import { AgentProvider } from "@/contexts/AgentContext";
 import { DropdownProvider } from "@/contexts/DropdownContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -45,6 +46,8 @@ export default function RootLayout({
         {/* DNS prefetch for external services */}
         <link rel="dns-prefetch" href="//api.anthropic.com" />
         <link rel="dns-prefetch" href="//api.assemblyai.com" />
+        <link rel="dns-prefetch" href="//apis.google.com" />
+        
         <style dangerouslySetInnerHTML={{
           __html: `
             :root {

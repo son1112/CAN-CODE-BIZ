@@ -1,12 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { streamClaudeResponse } from '@/lib/claude';
 import { ClaudeModel, DEFAULT_MODEL } from '@/lib/models';
-import { logger } from '@/lib/logger';
 import { handleApiError, ValidationRequestError } from '@/lib/error-handler';
 import { validators } from '@/lib/validators';
+import { requireAuth } from '@/lib/middleware/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user - CRITICAL: Chat endpoint requires authentication
+    const { userId } = await requireAuth(request);
+    
     const body = await request.json();
     
     // Validate request body

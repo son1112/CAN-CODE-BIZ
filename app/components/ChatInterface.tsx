@@ -17,6 +17,7 @@ import StarButton from './StarButton';
 import StarsBrowser from './StarsBrowser';
 import TagBrowser from './TagBrowser';
 import MessageTagInterface from './MessageTagInterface';
+import MessageExportButton from './MessageExportButton';
 import { SessionLoadingIndicator } from './LoadingIndicator';
 import DuckAvatar from './DuckAvatar';
 import { useDuckAvatar } from '@/hooks/useDuckAvatar';
@@ -26,6 +27,7 @@ import { useAgent } from '@/contexts/AgentContext';
 import { useDropdown } from '@/contexts/DropdownContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useConversationManager } from '@/hooks/useConversationManager';
+import { useAuth } from '@/hooks/useAuth';
 import { useSession } from '@/contexts/SessionContext';
 import SessionBrowser from './SessionBrowser';
 import { useSession as useAuthSession } from 'next-auth/react';
@@ -46,12 +48,19 @@ const heroImages = [
 
 // Fast-loading Hero Section with cycling images
 function HeroSection() {
-  const [heroImage, setHeroImage] = useState(() => {
-    // Select a random image on mount
-    return heroImages[Math.floor(Math.random() * heroImages.length)];
-  });
+  // Start with first image to avoid hydration mismatch
+  const [heroImage, setHeroImage] = useState(heroImages[0]);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    // Set client flag and randomize initial image after hydration
+    setIsClient(true);
+    setHeroImage(heroImages[Math.floor(Math.random() * heroImages.length)]);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return; // Only start cycling after hydration
+
     // Change image every 10 seconds
     const interval = setInterval(() => {
       setHeroImage(prev => {
@@ -62,7 +71,7 @@ function HeroSection() {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isClient]);
 
   return (
     <div className="relative w-full max-w-4xl mx-auto">
@@ -131,6 +140,7 @@ function getFirstSentencePreview(content: string, maxLength: number = 80): strin
 
 export default function ChatInterface() {
   const { agents } = useAgents();
+  const { userId } = useAuth();
   
   // Helper function to get agent display name
   const getAgentDisplayName = (agentUsed: string | undefined) => {
@@ -1847,20 +1857,27 @@ export default function ChatInterface() {
                                 )}
                               </div>
                               <div className="flex items-center gap-2">
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <StarButton
-                                    userId="demo-user" // TODO: Replace with actual user ID from auth
-                                    itemType="message"
-                                    itemId={message.id}
-                                    context={{
-                                      sessionId: currentSession?.sessionId,
-                                      messageContent: message.content,
-                                      agentId: message.agentUsed || currentAgent.id,
-                                      title: `Message from ${new Date(message.timestamp || new Date()).toLocaleDateString()}`,
-                                    }}
-                                    size="sm"
-                                  />
-                                </div>
+                                {userId && (
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <StarButton
+                                      userId={userId}
+                                      itemType="message"
+                                      itemId={message.id}
+                                      context={{
+                                        sessionId: currentSession?.sessionId,
+                                        messageContent: message.content,
+                                        agentId: message.agentUsed || currentAgent.id,
+                                        title: `Message from ${new Date(message.timestamp || new Date()).toLocaleDateString()}`,
+                                      }}
+                                      size="sm"
+                                    />
+                                  </div>
+                                )}
+                                <MessageExportButton
+                                  messageId={message.id}
+                                  sessionId={currentSession?.sessionId || ''}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                />
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -2114,16 +2131,19 @@ export default function ChatInterface() {
       <div 
         className="relative border-t backdrop-blur-xl shadow-2xl scale-locked-footer" 
         style={{ 
-          padding: '16px 16px 20px 16px', // Increased bottom padding
+          padding: '16px 16px 20px 16px',
           position: 'relative', 
           zIndex: 100, 
           width: '100%',
-          backgroundColor: isDark ? 'rgba(13, 13, 13, 0.98)' : 'rgba(255, 255, 255, 0.98)', // Increased opacity
-          borderColor: 'var(--border-primary)'
+          minHeight: '120px', // Minimum stable height
+          maxHeight: 'min(50vh, 400px)', // Constrain footer height
+          backgroundColor: isDark ? 'rgba(13, 13, 13, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+          borderColor: 'var(--border-primary)',
+          overflow: 'hidden' // Prevent content from extending beyond footer
         }}
       >
         <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(to top, rgba(13, 13, 13, 0.2), transparent)' : 'linear-gradient(to top, rgba(59, 130, 246, 0.08), transparent)' }}></div>
-        <div className="relative max-w-6xl mx-auto space-y-2">
+        <div className="relative max-w-6xl mx-auto space-y-2 overflow-y-auto" style={{ maxHeight: 'min(40vh, 340px)' }}>
           
           
           {/* Current Input/Transcription Area */}
@@ -2147,13 +2167,15 @@ export default function ChatInterface() {
                     style={{
                       backgroundColor: 'var(--bg-tertiary)',
                       borderColor: 'var(--border-primary)',
-                      color: 'var(--text-secondary)'
+                      color: 'var(--text-secondary)',
+                      maxHeight: '100px',
+                      overflow: 'hidden'
                     }}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-green-500 text-xs font-medium">🎙️ Current Transcription:</span>
                     </div>
-                    <div className="text-sm italic">&quot;{currentTranscript}&quot;</div>
+                    <div className="text-sm italic overflow-y-auto" style={{ maxHeight: '60px' }}>&quot;{currentTranscript}&quot;</div>
                   </div>
                 )}
                 
@@ -2220,10 +2242,11 @@ export default function ChatInterface() {
       />
 
       {/* Stars Browser */}
-      <StarsBrowser
-        isOpen={isStarsBrowserOpen}
-        onClose={() => setIsStarsBrowserOpen(false)}
-        userId="demo-user" // TODO: Replace with actual user ID from auth
+      {userId && (
+        <StarsBrowser
+          isOpen={isStarsBrowserOpen}
+          onClose={() => setIsStarsBrowserOpen(false)}
+          userId={userId}
         onSelectStar={async (star) => {
           setIsStarsBrowserOpen(false);
           
@@ -2246,7 +2269,8 @@ export default function ChatInterface() {
             console.log('Selected star:', star);
           }
         }}
-      />
+        />
+      )}
 
       {/* New Session Modal */}
       {showNewSessionModal && (

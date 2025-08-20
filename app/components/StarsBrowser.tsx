@@ -30,7 +30,7 @@ export default function StarsBrowser({
   const [showFilters, setShowFilters] = useState(false);
 
   // Filter and sort stars
-  const filteredStars = stars
+  const filteredStars = (stars || [])
     .filter(star => {
       // Type filter
       if (selectedType !== 'all' && star.itemType !== selectedType) return false;

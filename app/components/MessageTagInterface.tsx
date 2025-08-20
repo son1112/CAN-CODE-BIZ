@@ -44,7 +44,7 @@ export default function MessageTagInterface({
     }
   };
 
-  const mappedAvailableTags = availableTags.map(tag => ({
+  const mappedAvailableTags = (availableTags || []).map(tag => ({
     id: tag._id,
     name: tag.name,
     color: tag.color,

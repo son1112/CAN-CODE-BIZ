@@ -7,6 +7,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { SessionOperationIndicator } from './LoadingIndicator';
 import SessionMigration from './SessionMigration';
 import StarButton from './StarButton';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SessionBrowserProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   const [isProcessingOperation, setIsProcessingOperation] = useState(false);
   const { sessions, loadSessions, deleteSession, reimportSession, currentSession } = useSession();
   const { isDark } = useTheme();
+  const { userId } = useAuth();
 
   // Load sessions when component opens
   useEffect(() => {
@@ -486,8 +488,9 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                       </div>
 
                       <div className="flex items-center gap-2 ml-4">
-                        <StarButton
-                          userId="demo-user" // TODO: Replace with actual user ID from auth
+                        {userId && (
+                          <StarButton
+                            userId={userId}
                           itemType="session"
                           itemId={session.sessionId}
                           context={{
@@ -496,7 +499,8 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                             agentId: session.lastAgentUsed,
                           }}
                           size="sm"
-                        />
+                          />
+                        )}
                         <button
                           onClick={() => handleSessionSelect(session.sessionId)}
                           className="p-2 rounded-lg transition-colors"

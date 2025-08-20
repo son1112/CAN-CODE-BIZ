@@ -63,6 +63,11 @@ export function useStars(userId: string): UseStarsReturn {
       });
 
       if (!response.ok) {
+        // Handle 409 Conflict (already starred) as success
+        if (response.status === 409) {
+          console.log('Item is already starred, treating as success');
+          return true;
+        }
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to star item');
       }
@@ -119,7 +124,7 @@ export function useStars(userId: string): UseStarsReturn {
   }, [userId]);
 
   const isStarred = useCallback((itemType: StarableType, itemId: string): boolean => {
-    return stars.some(star => star.itemType === itemType && star.itemId === itemId);
+    return (stars || []).some(star => star.itemType === itemType && star.itemId === itemId);
   }, [stars]);
 
   const updateStar = useCallback(async (starId: string, updates: Partial<StarDocument>): Promise<boolean> => {
@@ -153,20 +158,20 @@ export function useStars(userId: string): UseStarsReturn {
   }, []);
 
   const getStarsByType = useCallback((itemType: StarableType): StarDocument[] => {
-    return stars.filter(star => star.itemType === itemType);
+    return (stars || []).filter(star => star.itemType === itemType);
   }, [stars]);
 
   const getStarsByTag = useCallback((tag: string): StarDocument[] => {
-    return stars.filter(star => star.tags?.includes(tag));
+    return (stars || []).filter(star => star.tags?.includes(tag));
   }, [stars]);
 
   const getStarsByPriority = useCallback((priority: 'low' | 'medium' | 'high'): StarDocument[] => {
-    return stars.filter(star => star.priority === priority);
+    return (stars || []).filter(star => star.priority === priority);
   }, [stars]);
 
   const searchStars = useCallback((query: string): StarDocument[] => {
     const lowerQuery = query.toLowerCase();
-    return stars.filter(star => {
+    return (stars || []).filter(star => {
       const searchContent = [
         star.context?.title,
         star.context?.description,
@@ -224,11 +229,12 @@ export function useStars(userId: string): UseStarsReturn {
       }
 
       const { stars: starList } = await response.json();
-      setStars(starList);
+      const validStarList = Array.isArray(starList) ? starList : [];
+      setStars(validStarList);
       
       // Update cache with fresh data
       starsCache.set(cacheKey, { 
-        data: starList, 
+        data: validStarList, 
         timestamp: now, 
         loading: false 
       });
@@ -251,11 +257,11 @@ export function useStars(userId: string): UseStarsReturn {
   }, [loadStars]);
 
   const getTotalStars = useCallback((): number => {
-    return stars.length;
+    return (stars || []).length;
   }, [stars]);
 
   const getStarCountByType = useCallback((itemType: StarableType): number => {
-    return stars.filter(star => star.itemType === itemType).length;
+    return (stars || []).filter(star => star.itemType === itemType).length;
   }, [stars]);
 
   // Load stars on mount

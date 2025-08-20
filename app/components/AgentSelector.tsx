@@ -11,16 +11,18 @@ import Logo from '@/app/components/Logo';
 import CreateAgentModal from '@/app/components/CreateAgentModal';
 import StarButton from './StarButton';
 import { useStars } from '@/hooks/useStars';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AgentSelector() {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateAgentModalOpen, setIsCreateAgentModalOpen] = useState(false);
+  const { userId } = useAuth();
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLDivElement>(null);
   const { currentAgent, currentPowerAgent, setAgent, setPowerAgent, isUsingPowerAgent } = useAgent();
   const { agents: cliAgents, loading: cliLoading, error: cliError, loadAgents } = useAgents();
   const { setIsDropdownOpen } = useDropdown();
-  const { stars } = useStars('demo-user'); // TODO: Replace with actual user ID
+  const { stars } = useStars(userId || '');
 
   // Get display name for current selection
   const currentDisplayName = isUsingPowerAgent 
@@ -214,18 +216,20 @@ export default function AgentSelector() {
                         </div>
                         
                         {/* Star Button positioned absolutely */}
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <StarButton
-                            userId="demo-user" // TODO: Replace with actual user ID from auth
-                            itemType="agent"
-                            itemId={agent.name}
-                            context={{
-                              title: agent.name,
-                              description: agent.description,
-                            }}
-                            size="sm"
-                          />
-                        </div>
+                        {userId && (
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <StarButton
+                              userId={userId}
+                              itemType="agent"
+                              itemId={agent.name}
+                              context={{
+                                title: agent.name,
+                                description: agent.description,
+                              }}
+                              size="sm"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -295,18 +299,20 @@ export default function AgentSelector() {
                       </div>
                       
                       {/* Star Button positioned absolutely */}
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <StarButton
-                          userId="demo-user" // TODO: Replace with actual user ID from auth
-                          itemType="agent"
-                          itemId={agent.id}
-                          context={{
-                            title: agent.name,
-                            description: agent.description,
-                          }}
-                          size="sm"
-                        />
-                      </div>
+                      {userId && (
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <StarButton
+                            userId={userId}
+                            itemType="agent"
+                            itemId={agent.id}
+                            context={{
+                              title: agent.name,
+                              description: agent.description,
+                            }}
+                            size="sm"
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

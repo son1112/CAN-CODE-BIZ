@@ -9,7 +9,7 @@ const agentsCache = new Map<string, {
   loading: boolean;
 }>();
 
-const CACHE_DURATION = 60000; // 60 seconds for agents (they change less frequently)
+const CACHE_DURATION = 300000; // 5 minutes for agents (they change less frequently than other data)
 
 export interface Agent {
   name: string;

@@ -8,29 +8,13 @@ import connectDB from '@/lib/mongodb';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
 
-// Random avatar selection for new sessions
+// Simplified avatar selection for new sessions
 function getRandomAvatar(): { imageUrl: string; prompt: string } {
-  const avatars = [
-    { 
-      imageUrl: '/mock-avatars/Gemini_Generated_Image_f3qn6af3qn6af3qn.png', 
-      prompt: 'Smart Tech Duck - Perfect for debugging and development conversations' 
-    },
-    { 
-      imageUrl: '/mock-avatars/Gemini_Generated_Image_ir5hzair5hzair5h.png', 
-      prompt: 'Voice Bubble Duck - Great for general conversations and rubber duck debugging' 
-    },
-    { 
-      imageUrl: '/mock-avatars/Gemini_Generated_Image_ksuug0ksuug0ksuu (1).png', 
-      prompt: 'Minimal Tech Duck - Clean design for focused problem-solving sessions' 
-    },
-    { 
-      imageUrl: '/mock-avatars/default-duck.png', 
-      prompt: 'Classic Friendly Duck - Your traditional rubber duck companion' 
-    }
-  ];
-  
-  const randomIndex = Math.floor(Math.random() * avatars.length);
-  return avatars[randomIndex];
+  // Use consistent avatar for simplicity
+  return {
+    imageUrl: '/Gemini_Generated_Image_35trpk35trpk35tr.png',
+    prompt: 'Rubber Duck Companion - Your friendly AI assistant for thinking out loud'
+  };
 }
 
 // GET /api/sessions - List user sessions with pagination/filtering
@@ -114,7 +98,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    return handleApiError(error, 'sessions-api', { userId });
+    return handleApiError(error, 'sessions-api');
   }
 }
 
@@ -130,7 +114,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = validateRequest(body, validators.createSession, 'sessions-api');
 
-    const { name, tags = [], conversationStarter } = validatedData;
+    const { name, tags = [], conversationStarter } = validatedData as { name?: string; tags?: string[]; conversationStarter?: string };
     const sessionId = uuidv4();
     
     // Auto-generate unique name if not provided
@@ -190,6 +174,6 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    return handleApiError(error, 'sessions-api', { userId });
+    return handleApiError(error, 'sessions-api');
   }
 }

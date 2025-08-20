@@ -181,12 +181,12 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
           
           {/* Current Transcript */}
           {transcript.trim() && (
-            <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 border border-yellow-200/50 rounded-xl shadow-sm shadow-yellow-500/10 backdrop-blur-sm" style={{ padding: '8px' }}>
+            <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 border border-yellow-200/50 rounded-xl shadow-sm shadow-yellow-500/10 backdrop-blur-sm" style={{ padding: '8px', maxHeight: '120px', overflow: 'hidden' }}>
               <div className="text-yellow-800 font-bold flex items-center" style={{ fontSize: '10px', marginBottom: '6px', gap: '6px' }}>
                 <span className="filter drop-shadow-sm" style={{ fontSize: '12px' }}>🦆</span>
                 What you said:
               </div>
-              <div className="text-yellow-900 leading-relaxed font-medium" style={{ fontSize: '12px', marginBottom: '6px' }}>{transcript.trim()}</div>
+              <div className="text-yellow-900 leading-relaxed font-medium overflow-y-auto" style={{ fontSize: '12px', marginBottom: '6px', maxHeight: '80px' }}>{transcript.trim()}</div>
               
               {/* Auto-send countdown */}
               {autoSendCountdown !== null && autoSendReason && (
@@ -207,12 +207,12 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
           
           {/* Interim Transcript */}
           {interimTranscript && (
-            <div className="bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-200/50 rounded-lg shadow-sm backdrop-blur-sm" style={{ marginTop: '6px', padding: '8px' }}>
+            <div className="bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-200/50 rounded-lg shadow-sm backdrop-blur-sm" style={{ marginTop: '6px', padding: '8px', maxHeight: '100px', overflow: 'hidden' }}>
               <div className="text-gray-700 font-semibold flex items-center" style={{ fontSize: '10px', marginBottom: '6px', gap: '6px' }}>
                 <div className="bg-gray-500 rounded-full animate-pulse shadow-sm" style={{ width: '6px', height: '6px' }} />
                 Processing...
               </div>
-              <div className="text-gray-800 italic leading-relaxed font-medium" style={{ fontSize: '12px' }}>{interimTranscript}</div>
+              <div className="text-gray-800 italic leading-relaxed font-medium overflow-y-auto" style={{ fontSize: '12px', maxHeight: '60px' }}>{interimTranscript}</div>
             </div>
           )}
 

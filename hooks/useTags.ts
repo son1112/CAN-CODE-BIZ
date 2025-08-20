@@ -76,12 +76,14 @@ export function useTags(options: UseTagsOptions = {}) {
         throw new Error('Failed to fetch tags');
       }
 
-      const fetchedTags = await response.json();
-      setTags(fetchedTags);
+      const responseData = await response.json();
+      const fetchedTags = responseData.data || responseData; // Handle both new and old response formats
+      setTags(Array.isArray(fetchedTags) ? fetchedTags : []);
       
       // Update cache with fresh data
+      const tagsArray = Array.isArray(fetchedTags) ? fetchedTags : [];
       tagsCache.set(cacheKey, { 
-        data: fetchedTags, 
+        data: tagsArray, 
         timestamp: now, 
         loading: false 
       });
@@ -126,7 +128,8 @@ export function useTags(options: UseTagsOptions = {}) {
         throw new Error(errorData.error || 'Failed to create tag');
       }
 
-      const newTag = await response.json();
+      const responseData = await response.json();
+      const newTag = responseData.data || responseData; // Handle both new and old response formats
       setTags(prev => [newTag, ...prev]);
       
       // Invalidate cache after successful tag creation
@@ -157,7 +160,8 @@ export function useTags(options: UseTagsOptions = {}) {
         throw new Error(errorData.error || 'Failed to update tag');
       }
 
-      const updatedTag = await response.json();
+      const responseData = await response.json();
+      const updatedTag = responseData.data || responseData; // Handle both new and old response formats
       setTags(prev => 
         prev.map(tag => tag._id === tagId ? updatedTag : tag)
       );

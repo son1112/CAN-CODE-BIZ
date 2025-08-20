@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/middleware/auth';
+import { handleApiError, validateRequest } from '@/lib/error-handler';
+import { ApiResponse, sanitizePagination, createPagination } from '@/lib/api-response';
+import { logger } from '@/lib/logger';
 import connectDB from '@/lib/mongodb';
 import Star from '@/models/Star';
 import { CreateStarOptions, deriveCategory } from '@/lib/stars';
+import { validators } from '@/lib/validators';
 
 // POST /api/stars - Create a new star
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = await requireAuth(request);
     await connectDB();
     
-    const options: CreateStarOptions = await request.json();
+    const body = await request.json();
+    const validatedData = validateRequest(body, validators.createStar, 'stars-api');
     
-    // Validate required fields
-    if (!options.userId || !options.itemType || !options.itemId) {
-      return NextResponse.json(
-        { error: 'Missing required fields: userId, itemType, itemId' },
-        { status: 400 }
-      );
-    }
+    const validatedStarData = validatedData as { itemType: 'message' | 'session' | 'agent' | 'conversation-starter'; itemId: string; context?: Record<string, unknown>; tags?: string[]; priority?: 'low' | 'medium' | 'high' };
+    const options: CreateStarOptions = {
+      ...validatedStarData,
+      userId // Use authenticated user ID instead of body userId
+    };
 
     // Check if already starred
     const existingStar = await Star.findOne({
@@ -54,28 +59,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ star }, { status: 201 });
   } catch (error) {
-    console.error('Error creating star:', error);
-    return NextResponse.json(
-      { error: 'Failed to create star' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'stars-api-create');
   }
 }
 
 // GET /api/stars - Get user's stars with filtering
 export async function GET(request: NextRequest) {
   try {
+    const { userId } = await requireAuth(request);
     await connectDB();
     
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Missing required parameter: userId' },
-        { status: 400 }
-      );
-    }
+    const { searchParams } = request.nextUrl;
 
     // Build filter object
     const filters: Record<string, unknown> = { userId };
@@ -92,16 +86,19 @@ export async function GET(request: NextRequest) {
     const tags = searchParams.get('tags');
     if (tags) filters.tags = { $in: tags.split(',') };
 
-    // Pagination
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    // Use standardized pagination validation
+    const { page, limit, skip } = sanitizePagination(
+      searchParams.get('page'),
+      searchParams.get('limit'),
+      50, // default limit
+      100  // max limit
+    );
+    const offset = skip;
     
-    // Sorting
-    const sortBy = searchParams.get('sortBy') || 'starredAt';
+    // Validate and sanitize parameters
+    const sortBy = ['starredAt', 'priority', 'category'].includes(searchParams.get('sortBy') || '') ? searchParams.get('sortBy')! : 'starredAt';
     const sortOrder = searchParams.get('sortOrder') === 'asc' ? 1 : -1;
-    
-    // Search in content
-    const search = searchParams.get('search');
+    const search = searchParams.get('search')?.trim().slice(0, 200);
     if (search) {
       filters.$or = [
         { 'context.title': { $regex: search, $options: 'i' } },
@@ -118,21 +115,19 @@ export async function GET(request: NextRequest) {
       .lean();
 
     const total = await Star.countDocuments(filters);
+    const pagination = createPagination(page, limit, total);
 
-    return NextResponse.json({
-      stars,
-      pagination: {
-        total,
-        limit,
-        offset,
-        hasMore: offset + limit < total,
-      },
+    logger.info('Stars retrieved successfully', {
+      component: 'stars-api',
+      userId,
+      starCount: stars.length,
+      totalCount: total,
+      page,
+      limit
     });
+
+    return ApiResponse.paginated(stars, pagination, 'Stars retrieved successfully');
   } catch (error) {
-    console.error('Error fetching stars:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch stars' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'stars-api-get');
   }
 }

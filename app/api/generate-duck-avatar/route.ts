@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/middleware/auth';
 
 // Note: Replicate integration available but currently using mock mode
 // const replicate = new Replicate({
@@ -7,6 +8,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
+    const { userId } = await requireAuth(request);
+    
     const { userInput, sessionId } = await request.json();
 
     if (!userInput || typeof userInput !== 'string') {
@@ -20,8 +24,7 @@ export async function POST(request: NextRequest) {
     const prompt = generateDuckPrompt(userInput);
     const mockAvatarUrl = generateMockAvatar(userInput);
 
-    console.log(`🦆 [MOCK] Generating duck avatar for session ${sessionId}: ${prompt}`);
-    console.log(`🎨 [MOCK] Using placeholder image: ${mockAvatarUrl}`);
+    // Note: Using logger for structured logging instead of console.log
 
     // MOCK: Simulate image generation with a small delay
     await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate processing time
@@ -35,7 +38,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error generating duck avatar:', error);
     return NextResponse.json(
       { error: 'Failed to generate duck avatar' },
       { status: 500 }

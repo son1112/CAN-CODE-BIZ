@@ -47,17 +47,20 @@ async function checkUserData() {
       console.log(`  User ID: ${user._id}, Email: ${user.email}, Name: ${user.name}`);
     });
     
-    // Current authenticated user
-    console.log('\n🔐 Current authenticated user ID: 68a33c99df2098d5e02a84e3');
-    
-    // Check if current user exists
-    const currentUser = await usersCollection.findOne({ _id: '68a33c99df2098d5e02a84e3' });
-    if (currentUser) {
-      console.log('✅ Current user found in database');
-      console.log(`   Email: ${currentUser.email}`);
-      console.log(`   Name: ${currentUser.name}`);
+    // Check for specific user if USER_ID environment variable is provided
+    if (process.env.USER_ID) {
+      console.log(`\n🔐 Checking specific user ID: ${process.env.USER_ID}`);
+      
+      const currentUser = await usersCollection.findOne({ _id: process.env.USER_ID });
+      if (currentUser) {
+        console.log('✅ Specified user found in database');
+        console.log(`   Email: ${currentUser.email}`);
+        console.log(`   Name: ${currentUser.name}`);
+      } else {
+        console.log('❌ Specified user NOT found in database');
+      }
     } else {
-      console.log('❌ Current user NOT found in database');
+      console.log('\n💡 To check a specific user, set USER_ID environment variable');
     }
     
   } catch (error) {

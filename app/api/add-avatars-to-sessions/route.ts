@@ -3,29 +3,13 @@ import { auth } from '@/lib/auth';
 import Session from '@/models/Session';
 import connectDB from '@/lib/mongodb';
 
-// Random avatar selection for migration
+// Simplified avatar selection for migration
 function getRandomAvatar(): { imageUrl: string; prompt: string } {
-  const avatars = [
-    { 
-      imageUrl: '/mock-avatars/Gemini_Generated_Image_f3qn6af3qn6af3qn.png', 
-      prompt: 'Smart Tech Duck - Perfect for debugging and development conversations' 
-    },
-    { 
-      imageUrl: '/mock-avatars/Gemini_Generated_Image_ir5hzair5hzair5h.png', 
-      prompt: 'Voice Bubble Duck - Great for general conversations and rubber duck debugging' 
-    },
-    { 
-      imageUrl: '/mock-avatars/Gemini_Generated_Image_ksuug0ksuug0ksuu (1).png', 
-      prompt: 'Minimal Tech Duck - Clean design for focused problem-solving sessions' 
-    },
-    { 
-      imageUrl: '/mock-avatars/default-duck.png', 
-      prompt: 'Classic Friendly Duck - Your traditional rubber duck companion' 
-    }
-  ];
-  
-  const randomIndex = Math.floor(Math.random() * avatars.length);
-  return avatars[randomIndex];
+  // Use consistent avatar for simplicity
+  return {
+    imageUrl: '/Gemini_Generated_Image_35trpk35trpk35tr.png',
+    prompt: 'Rubber Duck Companion - Your friendly AI assistant for thinking out loud'
+  };
 }
 
 export async function POST() {
@@ -34,7 +18,8 @@ export async function POST() {
     
     // Demo mode bypass for testing
     const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-    const userId = isDemoMode ? 'demo-user' : session?.user?.id;
+    // After migration, always use the real user ID for data consistency
+    const userId = isDemoMode ? '68a33c99df2098d5e02a84e3' : session?.user?.id;
     
     if (!userId) {
       return NextResponse.json(

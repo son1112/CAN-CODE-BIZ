@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { requireAuth } from '@/lib/middleware/auth';
 import { spawn } from 'child_process';
 import path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
+import { getMongoDb } from '@/lib/mongodb-native';
 // Temporarily disable direct imports due to package export issues
 // Will use CLI approach until package exports are fixed
 // import { getAllAgents, createAgent as createAgentInPackage } from '@son1112/rubber-ducky-node';
@@ -45,31 +47,42 @@ async function executeCliCommand(command: string, args: string[] = []): Promise<
 }
 
 // GET /api/agents - List all available agents
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { userId } = await requireAuth(request);
 
-    // Use CLI to get agents from MongoDB (temporary until package exports are fixed)
+    // Direct MongoDB connection with connection pooling for much faster performance
     try {
-      const { stdout } = await executeCliCommand('list-agents');
+      console.log('🔄 Connecting to MongoDB for agents...');
+      const db = await getMongoDb();
+      const collection = db.collection('agents');
       
-      // Parse the CLI output to extract agent information
-      const agents = parseAgentListOutput(stdout);
+      console.log('📊 Querying agents collection...');
+      // Query active agents efficiently with optimized indexes
+      const agents = await collection
+        .find(
+          { isActive: { $ne: false } }, // Include agents without isActive field (legacy) and those marked as active
+          { 
+            projection: { 
+              name: 1, 
+              description: 1, 
+              prompt: 1,
+              _id: 0 // Exclude _id to reduce payload
+            } 
+          }
+        )
+        .sort({ createdAt: -1 }) // Show newest agents first
+        .limit(50) // Reasonable limit for UI performance
+        .toArray();
+
+      console.log(`✅ Found ${agents.length} agents`);
 
       return NextResponse.json({
         agents: agents,
         count: agents.length
       });
-    } catch (cliError) {
-      console.error('CLI agent listing error:', cliError);
-      // If CLI fails, this indicates MongoDB or package issues
+    } catch (dbError) {
+      console.error('Direct MongoDB agent listing error:', dbError);
       throw new Error('Failed to connect to agent storage');
     }
   } catch (error: unknown) {
@@ -95,14 +108,7 @@ export async function GET() {
 // POST /api/agents - Create a new agent or process text with an agent
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { userId } = await requireAuth(request);
 
     const body = await request.json();
     const { action, agentName, transcript, agentDefinition, voiceDescription } = body;
@@ -181,14 +187,8 @@ async function createAgent(voiceDescription: string) {
       );
     }
 
-    // Get session for user ID
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    // Use userId from auth
+    const { userId: userIdFromAuth } = await requireAuth();
 
     // Initialize Claude AI client
     const anthropic = new Anthropic({
@@ -249,45 +249,37 @@ Respond with ONLY the JSON object, no additional text or explanation.`;
       );
     }
 
-    // Create agent directly in MongoDB (since CLI add-agent is interactive only)
+    // Create agent directly in MongoDB using optimized connection
     try {
-      const { MongoClient } = await import('mongodb');
-      const client = new MongoClient(process.env.MONGODB_URI!);
+      const db = await getMongoDb();
+      const collection = db.collection('agents');
       
-      try {
-        await client.connect();
-        const db = client.db(process.env.MONGODB_DB || 'rubber-ducky');
-        const collection = db.collection('agents');
-        
-        // Check if agent with this name already exists
-        const existingAgent = await collection.findOne({ name: newAgent.name });
-        if (existingAgent) {
-          return NextResponse.json(
-            { error: `Agent with name "${newAgent.name}" already exists` },
-            { status: 409 }
-          );
-        }
-        
-        // Add metadata for web-created agents
-        const agentDocument = {
-          ...newAgent,
-          createdAt: new Date(),
-          createdBy: session.user.id,
-          source: 'web',
-          isActive: true
-        };
-        
-        const insertResult = await collection.insertOne(agentDocument);
-        
-        return NextResponse.json({
-          success: true,
-          agent: newAgent,
-          insertedId: insertResult.insertedId,
-          message: `Agent "${newAgent.name}" created successfully`
-        });
-      } finally {
-        await client.close();
+      // Check if agent with this name already exists
+      const existingAgent = await collection.findOne({ name: newAgent.name });
+      if (existingAgent) {
+        return NextResponse.json(
+          { error: `Agent with name "${newAgent.name}" already exists` },
+          { status: 409 }
+        );
       }
+      
+      // Add metadata for web-created agents
+      const agentDocument = {
+        ...newAgent,
+        createdAt: new Date(),
+        createdBy: userIdFromAuth,
+        source: 'web',
+        isActive: true
+      };
+      
+      const insertResult = await collection.insertOne(agentDocument);
+      
+      return NextResponse.json({
+        success: true,
+        agent: newAgent,
+        insertedId: insertResult.insertedId,
+        message: `Agent "${newAgent.name}" created successfully`
+      });
     } catch (error: unknown) {
       console.error('Agent creation error:', error);
       

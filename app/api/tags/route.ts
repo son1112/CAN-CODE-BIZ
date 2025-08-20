@@ -1,32 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest } from 'next/server';
+import { requireAuth } from '@/lib/middleware/auth';
+import { handleApiError, validateRequest } from '@/lib/error-handler';
+import { ApiResponse } from '@/lib/api-response';
+import { logger } from '@/lib/logger';
+import { validators } from '@/lib/validators';
 import connectDB from '@/lib/mongodb';
 import Tag from '@/models/Tag';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const { userId } = await requireAuth(request);
     await connectDB();
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const sortBy = searchParams.get('sortBy') || 'usageCount'; // 'usageCount', 'name', 'createdAt'
-    const limit = parseInt(searchParams.get('limit') || '50');
+    // Validate and sanitize parameters
+    const validatedLimit = parseInt(searchParams.get('limit') || '50');
+    const limit = Math.min(Math.max(validatedLimit, 1), 100); // Between 1 and 100
 
     // Build query
-    const query: Record<string, unknown> = { userId: session.user.id };
+    const query: Record<string, unknown> = { userId };
     
-    if (category && category !== 'all') {
-      query.category = category;
+    // Validate and sanitize search parameters
+    const searchTerm = search?.trim().slice(0, 100);
+    const categoryTerm = category?.trim().slice(0, 50);
+    
+    if (categoryTerm && categoryTerm !== 'all') {
+      query.category = categoryTerm;
     }
     
-    if (search) {
-      query.name = { $regex: search, $options: 'i' };
+    if (searchTerm) {
+      query.name = { $regex: searchTerm, $options: 'i' };
     }
 
     // Build sort
@@ -49,37 +55,38 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .lean();
 
-    return NextResponse.json(tags);
+    logger.info('Tags retrieved successfully', {
+      component: 'tags-api',
+      userId,
+      tagCount: tags.length,
+      category: categoryTerm,
+      search: searchTerm
+    });
+
+    return ApiResponse.success(tags, `Retrieved ${tags.length} tags`);
   } catch (error) {
-    console.error('Error fetching tags:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return handleApiError(error, 'tags-api-get');
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const { userId } = await requireAuth(request);
     await connectDB();
 
     const body = await request.json();
-    const { name, color, category, description } = body;
-
-    if (!name || !name.trim()) {
-      return NextResponse.json({ error: 'Tag name is required' }, { status: 400 });
-    }
+    const validatedData = validateRequest(body, validators.createTag, 'tags-api');
+    
+    const { name, color, category, description } = validatedData as { name: string; color?: string; category?: string; description?: string };
 
     // Check if tag already exists for this user
     const existingTag = await Tag.findOne({
-      userId: session.user.id,
+      userId,
       name: name.toLowerCase().trim()
     });
 
     if (existingTag) {
-      return NextResponse.json({ error: 'Tag already exists' }, { status: 409 });
+      return ApiResponse.conflict('Tag already exists');
     }
 
     const tag = new Tag({
@@ -87,15 +94,21 @@ export async function POST(request: NextRequest) {
       color: color || '#3B82F6',
       category: category?.toLowerCase().trim(),
       description: description?.trim(),
-      userId: session.user.id,
+      userId,
       usageCount: 0
     });
 
     await tag.save();
 
-    return NextResponse.json(tag, { status: 201 });
+    logger.info('Tag created successfully', {
+      component: 'tags-api',
+      userId,
+      tagName: tag.name,
+      tagId: tag._id
+    });
+
+    return ApiResponse.success(tag, 'Tag created successfully');
   } catch (error) {
-    console.error('Error creating tag:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return handleApiError(error, 'tags-api-create');
   }
 }

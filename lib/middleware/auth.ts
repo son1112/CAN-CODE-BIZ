@@ -34,8 +34,9 @@ export async function requireAuth(request?: NextRequest): Promise<AuthResult> {
         component: 'auth-middleware',
         path: request?.nextUrl?.pathname 
       });
+      // Use real user ID in demo mode for data consistency after migration
       return {
-        userId: 'demo-user',
+        userId: '68a33c99df2098d5e02a84e3',
         isDemo: true
       };
     }

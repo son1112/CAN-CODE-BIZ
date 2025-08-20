@@ -36,8 +36,8 @@ interface MigrationResult {
   }>;
 }
 
-// Default user ID for CLI sessions (current authenticated user)
-const DEFAULT_CLI_USER_ID = '68a33c99df2098d5e02a84e3';
+// Default user ID for CLI sessions - should be configured via environment variable
+const DEFAULT_CLI_USER_ID = process.env.DEFAULT_CLI_USER_ID || 'cli-user-placeholder';
 
 // Helper function to extract meaningful text from parsed objects
 function extractTextFromParsedObject(obj: unknown): string {

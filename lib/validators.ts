@@ -45,6 +45,21 @@ interface UserPreferencesRequest {
   };
 }
 
+interface CreateStarRequest {
+  itemType: string;
+  itemId: string;
+  context?: Record<string, unknown>;
+  tags?: string[];
+  priority?: string;
+}
+
+interface CreateTagRequest {
+  name: string;
+  color?: string;
+  category?: string;
+  description?: string;
+}
+
 export interface ValidationResult {
   isValid: boolean;
   errors: FieldValidationError[];
@@ -307,18 +322,18 @@ export const validators = {
           .required(msg.content, `messages[${index}].content`, 10000);
       });
 
-      // Check total content length
+      // Check total content length (increased limit for chat conversations)
       const totalLength = messages.reduce((total, msg) => 
         total + (typeof msg.content === 'string' ? msg.content.length : 0), 0
       );
       
-      if (totalLength > 50000) {
-        validator.addError('messages', 'total content length exceeds maximum (50KB)');
+      if (totalLength > 500000) { // 500KB for longer conversations
+        validator.addError('messages', 'total content length exceeds maximum (500KB)');
       }
     }
 
     return validator
-      .optionalString(systemPrompt, 'systemPrompt', 5000)
+      .optionalString(systemPrompt, 'systemPrompt', 50000) // Increased for agent system prompts
       .optionalString(model, 'model', 100)
       .getResult();
   },
@@ -385,5 +400,53 @@ export const validators = {
     }
 
     return validator.getResult();
+  },
+
+  /**
+   * Validate star creation request
+   */
+  createStar: (data: unknown) => {
+    const validator = createValidator();
+
+    if (typeof data !== 'object' || data === null) {
+      validator.addError('body', 'must be an object');
+      return validator.getResult();
+    }
+
+    const { itemType, itemId, tags, priority } = data as CreateStarRequest;
+
+    return validator
+      .required(itemType, 'itemType', 50)
+      .oneOf(itemType, 'itemType', ['message', 'session', 'agent', 'conversation-starter'])
+      .required(itemId, 'itemId', 100)
+      .stringArray(tags || [], 'tags', 20, 50)
+      .oneOf(priority || 'medium', 'priority', ['low', 'medium', 'high'])
+      .getResult();
+  },
+
+  /**
+   * Validate tag creation request
+   */
+  createTag: (data: unknown) => {
+    const validator = createValidator();
+
+    if (typeof data !== 'object' || data === null) {
+      validator.addError('body', 'must be an object');
+      return validator.getResult();
+    }
+
+    const { name, color, category, description } = data as CreateTagRequest;
+
+    // Validate color format if provided
+    const isValidColor = (colorStr: string) => {
+      return /^#([0-9A-Fa-f]{3}){1,2}$/.test(colorStr);
+    };
+
+    return validator
+      .required(name, 'name', 50)
+      .custom(!color || isValidColor(color), 'color', 'must be a valid hex color (e.g., #FF0000)')
+      .optionalString(category, 'category', 50)
+      .optionalString(description, 'description', 200)
+      .getResult();
   }
 };

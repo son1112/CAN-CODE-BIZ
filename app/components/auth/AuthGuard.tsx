@@ -83,7 +83,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  if (!session) {
+  if (!session && !isDemoMode) {
     return null; // Will redirect via useEffect
   }
 
