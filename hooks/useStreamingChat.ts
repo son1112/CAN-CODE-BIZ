@@ -5,18 +5,24 @@ import { useAgent } from '@/contexts/AgentContext';
 import { useSession as useAuthSession } from 'next-auth/react';
 import { useSession } from '@/contexts/SessionContext';
 import { useModel } from '@/contexts/ModelContext';
+import { selectOptimalContext, getAdaptiveConfig, getContextStats } from '@/lib/context-manager';
 
 interface StreamingChatHook {
   messages: Message[];
   isStreaming: boolean;
   error: string | null;
+  fallbackMessage: string | null;
+  failedMessages: Set<string>;
   sendMessage: (content: string) => Promise<void>;
+  retryMessage: (messageId: string) => Promise<void>;
   clearMessages: () => void;
 }
 
 export function useStreamingChat(): StreamingChatHook {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
+  const [failedMessages, setFailedMessages] = useState<Set<string>>(new Set());
   const abortControllerRef = useRef<AbortController | null>(null);
   const { getSystemPrompt, addContext, currentAgent, currentPowerAgent, getEffectiveModel } = useAgent();
   const { data: authSession } = useAuthSession();
@@ -33,6 +39,9 @@ export function useStreamingChat(): StreamingChatHook {
 
     setIsStreaming(true);
     setError(null);
+    setFallbackMessage(null);
+
+    let currentUserMessageId: string | null = null;
 
     try {
       // Add user message to session
@@ -47,24 +56,51 @@ export function useStreamingChat(): StreamingChatHook {
         throw new Error('Failed to add user message to session');
       }
 
+      // Find the user message that was just added
+      const recentUserMessages = messages.filter(msg => 
+        msg.role === 'user' && msg.content === content.trim()
+      );
+      if (recentUserMessages.length > 0) {
+        currentUserMessageId = recentUserMessages[recentUserMessages.length - 1].id;
+      }
+
       // Add user message to conversation context
       addContext(`User: ${content.trim()}`);
 
       abortControllerRef.current = new AbortController();
       
+      // Smart context management - select optimal messages for better performance
+      const adaptiveConfig = getAdaptiveConfig(messages);
+      const contextResult = selectOptimalContext(messages, adaptiveConfig);
+      
+      // Add the current user message to the optimized context
+      const messagesForAPI = [
+        ...contextResult.messages,
+        {
+          role: 'user' as const,
+          content: content.trim()
+        }
+      ];
+      
+      // Log context optimization stats for monitoring
+      if (contextResult.truncated) {
+        console.log('Context optimized:', {
+          strategy: contextResult.strategy,
+          originalMessages: messages.length,
+          selectedMessages: contextResult.messages.length,
+          finalMessageCount: messagesForAPI.length,
+          estimatedTokens: contextResult.totalTokens,
+          truncated: contextResult.truncated
+        });
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: messages.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-          })).concat([{
-            role: 'user',
-            content: content.trim()
-          }]),
+          messages: messagesForAPI,
           systemPrompt: getSystemPrompt(content.trim()),
           model: getSessionModel(currentAgent || undefined, currentPowerAgent || undefined),
         }),
@@ -101,6 +137,13 @@ export function useStreamingChat(): StreamingChatHook {
                 accumulatedContent += data.content;
               }
 
+              // Handle fallback notification
+              if (data.fallbackMessage) {
+                setFallbackMessage(data.fallbackMessage);
+                // Auto-clear fallback message after 5 seconds
+                setTimeout(() => setFallbackMessage(null), 5000);
+              }
+
               if (data.isComplete) {
                 setIsStreaming(false);
                 
@@ -131,6 +174,13 @@ export function useStreamingChat(): StreamingChatHook {
       if (err.name !== 'AbortError') {
         console.error('Streaming error:', err);
         setError(err.message || 'Failed to send message');
+        
+        // Mark the most recent user message as failed
+        const recentUserMessages = messages.filter(msg => msg.role === 'user');
+        if (recentUserMessages.length > 0) {
+          const lastUserMessage = recentUserMessages[recentUserMessages.length - 1];
+          setFailedMessages(prev => new Set([...prev, lastUserMessage.id]));
+        }
       }
     } finally {
       setIsStreaming(false);
@@ -138,11 +188,32 @@ export function useStreamingChat(): StreamingChatHook {
     }
   }, [messages, isStreaming, getSystemPrompt, addContext, addMessage, currentAgent, currentPowerAgent]);
 
+  const retryMessage = useCallback(async (messageId: string) => {
+    // Find the failed message
+    const failedMessage = messages.find(msg => msg.id === messageId);
+    if (!failedMessage || failedMessage.role !== 'user') {
+      console.error('Could not find failed user message to retry');
+      return;
+    }
+
+    // Remove from failed messages set
+    setFailedMessages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(messageId);
+      return newSet;
+    });
+
+    // Resend the message
+    await sendMessage(failedMessage.content);
+  }, [messages, sendMessage]);
+
   const clearMessages = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     setError(null);
+    setFallbackMessage(null);
+    setFailedMessages(new Set());
     setIsStreaming(false);
     // Note: Session clearing will be handled by the ChatInterface
     // when it calls clearContext() and potentially creates a new session
@@ -152,7 +223,10 @@ export function useStreamingChat(): StreamingChatHook {
     messages,
     isStreaming,
     error,
+    fallbackMessage,
+    failedMessages,
     sendMessage,
+    retryMessage,
     clearMessages,
   };
 }

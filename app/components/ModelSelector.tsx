@@ -23,6 +23,16 @@ export default function ModelSelector({
   const [showInfo, setShowInfo] = useState(false);
 
   const currentConfig = getModelConfig(currentModel);
+  
+  // Fallback if model config doesn't exist (during transitions)
+  if (!currentConfig) {
+    return (
+      <div className={`inline-flex items-center gap-2 opacity-50 ${sizeClasses[size]} ${className}`}>
+        <Cpu className="w-4 h-4" />
+        <span className="font-medium">Loading...</span>
+      </div>
+    );
+  }
 
   const handleModelSelect = (model: ClaudeModel) => {
     setSessionModel(model, 'Manual selection');

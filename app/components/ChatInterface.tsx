@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { Send, MessageCircle, Type, History, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash, RefreshCw, User, LogOut, Archive, ArchiveRestore } from 'lucide-react';
+import { Send, MessageCircle, Type, History, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash, RefreshCw, User, LogOut, Archive, ArchiveRestore, RotateCcw, Copy } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -18,6 +18,7 @@ import StarsBrowser from './StarsBrowser';
 import TagBrowser from './TagBrowser';
 import MessageTagInterface from './MessageTagInterface';
 import MessageExportButton from './MessageExportButton';
+import PrimaryAgentSelector from './PrimaryAgentSelector';
 import { SessionLoadingIndicator } from './LoadingIndicator';
 import DuckAvatar from './DuckAvatar';
 import { useDuckAvatar } from '@/hooks/useDuckAvatar';
@@ -185,9 +186,16 @@ export default function ChatInterface() {
   const [debouncedInputValue, setDebouncedInputValue] = useState('');
   const inputDebounceRef = useRef<NodeJS.Timeout | null>(null);
   
-  const { messages, isStreaming, error, sendMessage, clearMessages } = useStreamingChat();
+  const { messages, isStreaming, error, fallbackMessage, failedMessages, sendMessage, retryMessage, clearMessages } = useStreamingChat();
   const { startOnboarding } = useOnboarding();
   const { generateAvatar, isGenerating: isGeneratingAvatar, error: avatarError } = useDuckAvatar();
+  const { currentSession, createSession, loadSession, renameSession, isLoadingSession, isProcessingMessage, clearCurrentSession, updateMessageTags, addMessage } = useSession();
+  const { currentAgent, clearContext } = useAgent();
+  const { isDropdownOpen } = useDropdown();
+  const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
+  const { isDark } = useTheme();
+  const { data: authSession } = useAuthSession();
+  const router = useRouter();
 
   // Helper function to format session names into readable titles
   const formatSessionTitle = (sessionName: string) => {
@@ -260,7 +268,10 @@ export default function ChatInterface() {
   
   // Filter messages based on active tag filter and archive status (optimized)
   const filteredMessages = useMemo(() => {
-    let filtered = messages;
+    // Use session messages if available and streaming messages if not
+    // This ensures we show session content when loaded from URL
+    const sourceMessages = messages.length > 0 ? messages : (currentSession?.messages || []);
+    let filtered = sourceMessages;
     
     // Filter by tags first
     if (activeTagFilter.length > 0) {
@@ -277,15 +288,7 @@ export default function ChatInterface() {
     });
     
     return filtered;
-  }, [messages, activeTagFilter, archivedMessages, showArchivedMessages]);
-  const { updateMessageTags, addMessage } = useSession();
-  const { currentAgent, clearContext } = useAgent();
-  const { isDropdownOpen } = useDropdown();
-  const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
-  const { isDark } = useTheme();
-  const { currentSession, createSession, loadSession, renameSession, isLoadingSession, isProcessingMessage, clearCurrentSession } = useSession();
-  const { data: authSession } = useAuthSession();
-  const router = useRouter();
+  }, [messages, currentSession?.messages, activeTagFilter, archivedMessages, showArchivedMessages]);
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
@@ -571,21 +574,28 @@ export default function ChatInterface() {
       return;
     }
     
-    // Only filter assistant messages if we have enough messages
+    // Auto-collapse messages for better conversation scanning
     const agentMessages = messages.filter(msg => msg.role === 'assistant');
+    const userMessages = messages.filter(msg => msg.role === 'user');
     
-    if (agentMessages.length > 10) {
-      // Get IDs of all agent messages except the last 3 (keep recent ones expanded)
-      const messagesToCollapse = agentMessages
-        .slice(0, -3)
-        .map(msg => msg.id);
+    setCollapsedMessages(prev => {
+      const newSet = new Set(prev);
       
-      setCollapsedMessages(prev => {
-        const newSet = new Set(prev);
+      // Collapse all user messages by default (they can be expanded on click)
+      userMessages.forEach(msg => newSet.add(msg.id));
+      
+      // Auto-collapse older AI messages when conversation gets long
+      if (agentMessages.length > 10) {
+        // Get IDs of all agent messages except the last 3 (keep recent ones expanded)
+        const messagesToCollapse = agentMessages
+          .slice(0, -3)
+          .map(msg => msg.id);
+        
         messagesToCollapse.forEach(id => newSet.add(id));
-        return newSet;
-      });
-    }
+      }
+      
+      return newSet;
+    });
     
     lastMessageCount.current = messages.length;
   }, [messages.length]); // Only depend on length, not entire messages array
@@ -1626,6 +1636,16 @@ export default function ChatInterface() {
                   <div data-onboarding="agent-selector">
                     <AgentSelector />
                   </div>
+                  
+                  {/* Primary agent selector for session */}
+                  {currentSession && (
+                    <div className="mt-2">
+                      <PrimaryAgentSelector 
+                        sessionId={currentSession.sessionId}
+                        currentPrimaryAgent={currentSession.primaryAgent}
+                      />
+                    </div>
+                  )}
                 </div>
                 {currentSession.createdAt && (
                   <p 
@@ -1750,6 +1770,37 @@ export default function ChatInterface() {
                                     ) : (
                                       <Archive style={{ width: '14px', height: '14px', color: '#6b7280' }} />
                                     )}
+                                  </button>
+
+                                  {/* Retry button for all user messages */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      retryMessage(message.id);
+                                    }}
+                                    className={`opacity-60 hover:opacity-100 transition-opacity p-1 rounded ${
+                                      failedMessages.has(message.id) ? 'hover:bg-red-100' : 'hover:bg-blue-100'
+                                    }`}
+                                    title={failedMessages.has(message.id) ? "Retry failed message" : "Retry this message"}
+                                    disabled={isStreaming}
+                                  >
+                                    <RotateCcw style={{ 
+                                      width: '14px', 
+                                      height: '14px', 
+                                      color: failedMessages.has(message.id) ? '#dc2626' : '#3b82f6'
+                                    }} />
+                                  </button>
+
+                                  {/* Copy button for user messages */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(message.content);
+                                    }}
+                                    className="opacity-60 hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-100"
+                                    title="Copy message to clipboard"
+                                  >
+                                    <Copy style={{ width: '14px', height: '14px', color: '#6b7280' }} />
                                   </button>
                                 </div>
                                 <span className="text-xs" style={{ color: '#6b7280' }}>
@@ -2127,6 +2178,50 @@ export default function ChatInterface() {
         </div>
       )}
 
+      {/* Fallback message display */}
+      {fallbackMessage && (
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/50 rounded-xl text-amber-800 shadow-sm shadow-amber-500/10 backdrop-blur-sm" style={{ margin: '0 12px 6px 12px', padding: '8px', fontSize: '12px' }}>
+          <div className="flex items-center" style={{ gap: '6px' }}>
+            <RefreshCw className="w-3 h-3 flex-shrink-0" />
+            <span className="font-medium">{fallbackMessage}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Prominent Processing Indicator - Fixed position toast */}
+      {(isStreaming || isProcessingMessage) && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-2 fade-in-0 duration-300">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full shadow-2xl backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-3">
+              {/* Animated duck icon */}
+              <div className="relative">
+                <span className="text-xl animate-bounce">🦆</span>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+              </div>
+              
+              {/* Processing text with animation */}
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm">
+                  {isStreaming ? 'Claude is responding' : 'Processing your message'}
+                </span>
+                <div className="flex items-center space-x-1">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
+                      style={{ 
+                        animationDelay: `${i * 150}ms`,
+                        animationDuration: '1s' 
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Enhanced Footer with User Input History */}
       <div 
         className="relative border-t backdrop-blur-xl shadow-2xl scale-locked-footer" 
@@ -2135,8 +2230,8 @@ export default function ChatInterface() {
           position: 'relative', 
           zIndex: 100, 
           width: '100%',
-          minHeight: '120px', // Minimum stable height
-          maxHeight: 'min(50vh, 400px)', // Constrain footer height
+          minHeight: '140px', // Increased minimum height to accommodate stable controls
+          maxHeight: 'min(50vh, 450px)', // Slightly increased max height
           backgroundColor: isDark ? 'rgba(13, 13, 13, 0.98)' : 'rgba(255, 255, 255, 0.98)',
           borderColor: 'var(--border-primary)',
           overflow: 'hidden' // Prevent content from extending beyond footer
@@ -2147,8 +2242,8 @@ export default function ChatInterface() {
           
           
           {/* Current Input/Transcription Area */}
-          <div className="flex items-end" style={{ gap: '12px' }}>
-            <div data-onboarding="voice-input">
+          <div className="flex items-start" style={{ gap: '12px' }}>
+            <div data-onboarding="voice-input" className="voice-input-wrapper">
               <VoiceInput 
                 onTranscript={handleVoiceTranscript}
                 isDisabled={isStreaming}
@@ -2185,8 +2280,13 @@ export default function ChatInterface() {
                     value={inputValue}
                     onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
-                    placeholder={currentTranscript ? "Voice input active..." : "Share your thoughts with the rubber ducky..."}
-                    disabled={isStreaming}
+                    placeholder={
+                      isStreaming ? "Claude is responding..." : 
+                      isProcessingMessage ? "Processing your message..." :
+                      currentTranscript ? "Voice input active..." : 
+                      "Share your thoughts with the rubber ducky..."
+                    }
+                    disabled={isStreaming || isProcessingMessage}
                     rows={1}
                     className={`w-full border-2 backdrop-blur-sm resize-none focus:outline-none transition-all duration-300 font-medium rounded-xl ${debouncedInputValue.trim() ? 'border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600' : 'border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500'} disabled:opacity-50`}
                     style={useMemo(() => ({ 
@@ -2211,7 +2311,7 @@ export default function ChatInterface() {
               </div>
               <button
                 type="submit"
-                disabled={!inputValue.trim() || isStreaming}
+                disabled={!inputValue.trim() || isStreaming || isProcessingMessage}
                 className="relative bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 text-white rounded-xl hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center shadow-lg shadow-yellow-500/25 hover:shadow-xl hover:shadow-yellow-500/30 transform hover:scale-105"
                 style={{ 
                   padding: '12px 16px',
@@ -2219,7 +2319,11 @@ export default function ChatInterface() {
                   height: '44px'
                 }}
               >
-                <Send className="filter drop-shadow-sm" style={{ width: '16px', height: '16px' }} />
+                {(isStreaming || isProcessingMessage) ? (
+                  <RefreshCw className="filter drop-shadow-sm animate-spin" style={{ width: '16px', height: '16px' }} />
+                ) : (
+                  <Send className="filter drop-shadow-sm" style={{ width: '16px', height: '16px' }} />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-transparent rounded-xl"></div>
               </button>
             </form>

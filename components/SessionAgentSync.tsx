@@ -26,51 +26,87 @@ export function SessionAgentSync({ children }: { children: React.ReactNode }) {
   // Handle session changes and basic agent restoration
   useEffect(() => {
     // Only process if we're switching to a different session
-    if (currentSessionId && currentSessionId !== lastRestoredSessionId.current && currentSession?.lastAgentUsed) {
-      logger.debug('Attempting to restore agent from session', { 
-        component: 'SessionAgentSync', 
-        sessionId: currentSessionId || undefined,
-        agentUsed: currentSession.lastAgentUsed 
+    if (currentSessionId && currentSessionId !== lastRestoredSessionId.current) {
+      // Prefer primaryAgent over lastAgentUsed for better UX
+      const agentToRestore = currentSession?.primaryAgent || currentSession?.lastAgentUsed;
+      
+      // Enhanced logging to debug the issue
+      console.log('🔍 SessionAgentSync Debug:', {
+        sessionId: currentSessionId,
+        primaryAgent: currentSession?.primaryAgent,
+        lastAgentUsed: currentSession?.lastAgentUsed,
+        agentToRestore,
+        sessionName: currentSession?.name,
+        powerAgentsLoaded: powerAgents.length,
+        powerAgentNames: powerAgents.map(a => a.name)
       });
       
-      // Check if it's a power agent
-      if (currentSession.lastAgentUsed.startsWith('power-agent:')) {
-        const powerAgentName = currentSession.lastAgentUsed.replace('power-agent:', '');
-        logger.debug('Session uses power agent', { 
+      if (agentToRestore) {
+        logger.debug('Attempting to restore agent from session', { 
           component: 'SessionAgentSync', 
-          powerAgentName 
+          sessionId: currentSessionId || undefined,
+          primaryAgent: currentSession?.primaryAgent,
+          lastAgentUsed: currentSession?.lastAgentUsed,
+          agentToRestore
         });
         
-        // Store the pending power agent to restore when agents load
-        setPendingPowerAgent(powerAgentName);
-        
-        // Try to restore immediately if agents are already loaded
-        if (powerAgents.length > 0) {
-          const powerAgent = powerAgents.find(a => a.name === powerAgentName);
-          if (powerAgent) {
-            logger.info('Restoring power agent immediately', { 
+        // Check if it's a power agent (with or without prefix)
+        if (agentToRestore.startsWith('power-agent:')) {
+          const powerAgentName = agentToRestore.replace('power-agent:', '');
+          console.log('🎯 Restoring power agent with prefix:', { powerAgentName, agentToRestore });
+          
+          logger.debug('Session uses power agent', { 
+            component: 'SessionAgentSync', 
+            powerAgentName 
+          });
+          
+          // Store the pending power agent to restore when agents load
+          setPendingPowerAgent(powerAgentName);
+          
+          // Try to restore immediately if agents are already loaded
+          if (powerAgents.length > 0) {
+            const powerAgent = powerAgents.find(a => a.name === powerAgentName);
+            if (powerAgent) {
+              logger.info('Restoring power agent immediately', { 
+                component: 'SessionAgentSync', 
+                powerAgentName,
+                sessionId: currentSessionId || undefined 
+              });
+              setPowerAgent(powerAgent);
+              lastRestoredSessionId.current = currentSessionId;
+              setPendingPowerAgent(null);
+            }
+          }
+        } else {
+          // Check if it's actually a power agent without prefix
+          const possiblePowerAgent = powerAgents.find(a => a.name === agentToRestore);
+          if (possiblePowerAgent) {
+            console.log('🎯 Found power agent without prefix:', { agentName: agentToRestore, agent: possiblePowerAgent });
+            
+            logger.info('Restoring power agent (no prefix)', { 
               component: 'SessionAgentSync', 
-              powerAgentName,
+              powerAgentName: agentToRestore,
               sessionId: currentSessionId || undefined 
             });
-            setPowerAgent(powerAgent);
+            setPowerAgent(possiblePowerAgent);
             lastRestoredSessionId.current = currentSessionId;
-            setPendingPowerAgent(null);
+          } else {
+            // It's a basic agent - restore immediately
+            console.log('🎯 Restoring basic agent:', agentToRestore);
+            
+            logger.info('Restoring basic agent', { 
+              component: 'SessionAgentSync', 
+              agentName: agentToRestore,
+              sessionId: currentSessionId || undefined 
+            });
+            setAgent(agentToRestore);
+            lastRestoredSessionId.current = currentSessionId;
           }
+          setPendingPowerAgent(null);
         }
-      } else {
-        // It's a basic agent - restore immediately
-        logger.info('Restoring basic agent', { 
-          component: 'SessionAgentSync', 
-          agentName: currentSession.lastAgentUsed,
-          sessionId: currentSessionId || undefined 
-        });
-        setAgent(currentSession.lastAgentUsed);
-        lastRestoredSessionId.current = currentSessionId;
-        setPendingPowerAgent(null);
       }
     }
-  }, [currentSessionId, currentSession?.lastAgentUsed, setAgent, setPowerAgent, powerAgents]);
+  }, [currentSessionId, currentSession?.lastAgentUsed, currentSession?.primaryAgent, setAgent, setPowerAgent, powerAgents]);
 
   // Handle power agents loading
   useEffect(() => {

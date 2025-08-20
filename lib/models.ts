@@ -2,10 +2,7 @@
 export type ClaudeModel = 
   | 'claude-3-opus-20240229'
   | 'claude-3-5-sonnet-20241022' 
-  | 'claude-3-haiku-20240307'
-  | 'claude-4-sonnet-20250514'
-  | 'claude-4-opus-20250521'
-  | 'claude-4-haiku-20250521';
+  | 'claude-3-haiku-20240307';
 
 export interface ModelConfig {
   model: ClaudeModel;
@@ -19,40 +16,10 @@ export interface ModelConfig {
 }
 
 export const MODEL_CONFIGS: Record<ClaudeModel, ModelConfig> = {
-  'claude-4-sonnet-20250514': {
-    model: 'claude-4-sonnet-20250514',
-    displayName: 'Claude 4 Sonnet',
-    description: 'Latest generation model with enhanced capabilities and reasoning',
-    costTier: 'medium',
-    strengths: ['Advanced reasoning', 'Superior coding', 'Enhanced analysis', 'Latest features'],
-    bestFor: ['Complex coding', 'Advanced analysis', 'Research', 'General conversation'],
-    maxTokens: 8192,
-    icon: '🚀'
-  },
-  'claude-4-opus-20250521': {
-    model: 'claude-4-opus-20250521',
-    displayName: 'Claude 4 Opus',
-    description: 'Most advanced model with exceptional reasoning and creative capabilities',
-    costTier: 'high',
-    strengths: ['Exceptional reasoning', 'Advanced creativity', 'Complex analysis', 'Research excellence'],
-    bestFor: ['Complex research', 'Advanced creativity', 'Deep analysis', 'Expert-level tasks'],
-    maxTokens: 8192,
-    icon: '🎭'
-  },
-  'claude-4-haiku-20250521': {
-    model: 'claude-4-haiku-20250521',
-    displayName: 'Claude 4 Haiku',
-    description: 'Fastest new generation model for quick tasks and high-volume usage',
-    costTier: 'low',
-    strengths: ['Ultra-fast responses', 'Efficiency', 'Cost-effective', 'Latest speed'],
-    bestFor: ['Quick questions', 'Fast chat', 'High-volume usage', 'Rapid responses'],
-    maxTokens: 8192,
-    icon: '⚡'
-  },
   'claude-3-opus-20240229': {
     model: 'claude-3-opus-20240229',
-    displayName: 'Claude 3 Opus (Legacy)',
-    description: 'Previous generation - most capable Claude 3 model',
+    displayName: 'Claude 3 Opus',
+    description: 'Most capable Claude 3 model with exceptional reasoning',
     costTier: 'high',
     strengths: ['Complex reasoning', 'Creative writing', 'Detailed analysis', 'Code review'],
     bestFor: ['Research', 'Creative projects', 'Complex problem solving', 'Code analysis'],
@@ -61,8 +28,8 @@ export const MODEL_CONFIGS: Record<ClaudeModel, ModelConfig> = {
   },
   'claude-3-5-sonnet-20241022': {
     model: 'claude-3-5-sonnet-20241022',
-    displayName: 'Claude 3.5 Sonnet (Legacy)',
-    description: 'Previous generation - balanced performance model',
+    displayName: 'Claude 3.5 Sonnet',
+    description: 'Balanced performance model with excellent capabilities',
     costTier: 'medium',
     strengths: ['Balanced capabilities', 'Good speed', 'Versatile', 'Coding'],
     bestFor: ['General conversation', 'Programming help', 'Analysis', 'Most daily tasks'],
@@ -71,8 +38,8 @@ export const MODEL_CONFIGS: Record<ClaudeModel, ModelConfig> = {
   },
   'claude-3-haiku-20240307': {
     model: 'claude-3-haiku-20240307',
-    displayName: 'Claude 3 Haiku (Legacy)',
-    description: 'Previous generation - fast and efficient model',
+    displayName: 'Claude 3 Haiku',
+    description: 'Fast and efficient model for quick tasks',
     costTier: 'low',
     strengths: ['Speed', 'Efficiency', 'Cost-effective', 'Quick responses'],
     bestFor: ['Quick questions', 'Simple tasks', 'High-volume usage', 'Fast chat'],
@@ -81,7 +48,7 @@ export const MODEL_CONFIGS: Record<ClaudeModel, ModelConfig> = {
   }
 };
 
-export const DEFAULT_MODEL: ClaudeModel = 'claude-4-sonnet-20250514';
+export const DEFAULT_MODEL: ClaudeModel = 'claude-3-5-sonnet-20241022';
 
 export function getModelConfig(model: ClaudeModel): ModelConfig {
   return MODEL_CONFIGS[model];
@@ -110,7 +77,7 @@ export interface SessionModelSettings {
 }
 
 export const DEFAULT_SESSION_SETTINGS: SessionModelSettings = {
-  currentModel: 'claude-4-sonnet-20250514',
+  currentModel: 'claude-3-5-sonnet-20241022',
   overrideAgentDefault: false,
   modelHistory: []
 };
