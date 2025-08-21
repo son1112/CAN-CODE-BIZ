@@ -21,6 +21,8 @@ export interface SessionContextType {
   // Message management
   addMessage: (message: Omit<SessionMessage, 'id' | 'timestamp'>) => Promise<boolean>;
   updateMessageTags: (messageId: string, tags: string[]) => Promise<boolean>;
+  pinMessage: (messageId: string, isPinned: boolean) => Promise<boolean>;
+  getPinnedMessages: (sessionId: string) => Promise<SessionMessage[]>;
   messages: SessionMessage[];
   
   // Session list management
@@ -238,6 +240,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       // Update current session if it's the one being updated
       if (currentSessionId === sessionId) {
         setCurrentSession(session);
+        // Also update messages to ensure consistency
+        setMessages(session.messages || []);
       }
       
       await refreshSessions();
@@ -416,6 +420,69 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const pinMessage = async (messageId: string, isPinned: boolean): Promise<boolean> => {
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/sessions/messages/${messageId}/pin`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isPinned }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update message pin status');
+      }
+      
+      const { message: updatedMessage } = await response.json();
+      
+      // Update local messages array
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId ? updatedMessage : msg
+      ));
+      
+      // Update current session messages if available
+      if (currentSession) {
+        const updatedMessages = currentSession.messages.map(msg => 
+          msg.id === messageId ? updatedMessage : msg
+        );
+        setCurrentSession({
+          ...currentSession,
+          messages: updatedMessages
+        } as SessionDocument);
+      }
+      
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update message pin status';
+      setError(errorMessage);
+      return false;
+    }
+  };
+
+  const getPinnedMessages = async (sessionId: string): Promise<SessionMessage[]> => {
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/pinned-messages`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch pinned messages');
+      }
+      
+      const { pinnedMessages } = await response.json();
+      return pinnedMessages || [];
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch pinned messages';
+      setError(errorMessage);
+      return [];
+    }
+  };
+
   const loadSessions = useCallback(async (page = 1, search = '', tags: string[] = []): Promise<void> => {
     setIsLoading(true);
     setError(null);
@@ -516,6 +583,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     // Message management
     addMessage,
     updateMessageTags,
+    pinMessage,
+    getPinnedMessages,
     messages,
     
     // Session list management

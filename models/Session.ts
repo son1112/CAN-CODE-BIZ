@@ -11,6 +11,8 @@ export interface SessionMessage {
     language?: string;
   };
   agentUsed?: string;
+  isPinned?: boolean; // Message pinning support
+  pinnedAt?: Date; // When the message was pinned
 }
 
 export interface SessionIteration {
@@ -52,6 +54,9 @@ export interface SessionDocument extends Document {
   lastAgentUsed?: string;
   primaryAgent?: string; // User-selected primary agent for session restoration
   conversationStarter?: string;
+  isFavorite?: boolean; // Session favorites for quick access
+  isTemplate?: boolean; // Session templates for reuse
+  templateName?: string; // Name for template sessions
   avatar?: {
     imageUrl: string;
     prompt: string;
@@ -73,6 +78,8 @@ const SessionMessageSchema = new Schema({
     language: String,
   },
   agentUsed: String,
+  isPinned: { type: Boolean, default: false }, // Message pinning support
+  pinnedAt: { type: Date }, // When the message was pinned
 });
 
 const SessionIterationSchema = new Schema({
@@ -112,6 +119,9 @@ const SessionSchema = new Schema<SessionDocument>(
     lastAgentUsed: String,
     primaryAgent: String, // User-selected primary agent for session restoration
     conversationStarter: String,
+    isFavorite: { type: Boolean, default: false }, // Session favorites for quick access
+    isTemplate: { type: Boolean, default: false }, // Session templates for reuse
+    templateName: String, // Name for template sessions
     avatar: {
       imageUrl: String,
       prompt: String,
@@ -132,6 +142,8 @@ SessionSchema.index({ createdBy: 1, lastAccessedAt: -1 });
 SessionSchema.index({ name: 1, createdBy: 1 }, { unique: true });
 SessionSchema.index({ tags: 1 });
 SessionSchema.index({ isActive: 1, isArchived: 1 });
+SessionSchema.index({ createdBy: 1, isFavorite: 1 });
+SessionSchema.index({ createdBy: 1, isTemplate: 1 });
 
 // Note: name index is covered by compound index { name: 1, createdBy: 1 }
 

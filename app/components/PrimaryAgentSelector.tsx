@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pin, PinOff, Check, X } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { useAgent } from '@/contexts/AgentContext';
@@ -17,8 +17,15 @@ export default function PrimaryAgentSelector({ sessionId, currentPrimaryAgent }:
   const { currentAgent, currentPowerAgent } = useAgent();
   const { agents: powerAgents } = useAgents();
   const [isEditing, setIsEditing] = useState(false);
-  const [pendingAgent, setPendingAgent] = useState<string | null>(null);
+  const [pendingAgent, setPendingAgent] = useState<string | null>(currentPrimaryAgent || null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sync local state with prop changes
+  useEffect(() => {
+    if (!isEditing) {
+      setPendingAgent(currentPrimaryAgent || null);
+    }
+  }, [currentPrimaryAgent, isEditing]);
 
   // Get current effective agent ID
   const currentEffectiveAgentId = currentPowerAgent ? `power-agent:${currentPowerAgent.name}` : currentAgent.id;
@@ -152,7 +159,7 @@ export default function PrimaryAgentSelector({ sessionId, currentPrimaryAgent }:
         
         <button
           onClick={() => {
-            setPendingAgent(currentPrimaryAgent);
+            setPendingAgent(currentPrimaryAgent || null);
             setIsEditing(true);
           }}
           disabled={isLoading}

@@ -32,6 +32,19 @@ This file tracks future work items, feature requests, improvements, and technica
 - ESTIMATE: 1-2 days
 
 *** Performance Critical
+**** Application Load Time Optimization
+- Bundle size optimization to reduce initial load times
+- Implement advanced code splitting for components and routes
+- Optimize database connection initialization and pooling
+- Component lazy loading and dynamic imports optimization
+- Static asset optimization (images, fonts, CSS)
+- Initial page compilation optimization (6s+ compile times)
+- Reduce time-to-first-byte (TTFB) and initial API response times
+- CONTEXT: Current server startup shows 6s+ compilation times, initial API calls taking 4-7s, and slow initial page loads affecting UX
+- BUSINESS IMPACT: Load times directly affect user experience, bounce rates, and perceived application quality
+- STATUS: Not Started
+- ESTIMATE: 3-4 days
+
 **** Database Connection Optimization
 - Address MongoDB duplicate schema index warnings
 - Optimize connection pooling
@@ -84,6 +97,21 @@ This file tracks future work items, feature requests, improvements, and technica
 - Agent versioning and updates
 - STATUS: Not Started
 - ESTIMATE: 5-7 days
+
+**** Per-Session Agent Pinning
+- Implement primary agent pinning per session instead of globally
+- Current behavior: Pinned primary agent affects all sessions
+- Desired behavior: Each session maintains its own primary agent selection
+- Database schema changes: Add primaryAgentId field to Session model
+- UI updates: Session-specific agent selection and pinning indicators
+- Migration strategy: Update existing sessions with default agent assignments
+- Benefits: Improves user workflow when switching between different conversation contexts
+- Technical considerations: Update agent selection hooks, session management, and persistence layer
+- CONTEXT: User feedback - "pinned agent is pinned for every session; the pin/auto-selection should be implemented per session"
+- BUSINESS IMPACT: Enhances user experience for multi-context conversations and agent specialization
+- STATUS: Not Started
+- ESTIMATE: 3-4 days
+- DEPENDENCIES: Requires database migration, agent management system updates
 
 **** Power Agent Features
 - Enhanced agent switching mid-conversation

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { Send, MessageCircle, Type, History, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash, RefreshCw, User, LogOut, Archive, ArchiveRestore, RotateCcw, Copy } from 'lucide-react';
+import { Send, MessageCircle, Type, History, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash, RefreshCw, User, LogOut, Archive, ArchiveRestore, RotateCcw, Copy, Clock, Zap, TrendingUp, Activity } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -20,7 +20,6 @@ import MessageTagInterface from './MessageTagInterface';
 import MessageExportButton from './MessageExportButton';
 import PrimaryAgentSelector from './PrimaryAgentSelector';
 import { SessionLoadingIndicator } from './LoadingIndicator';
-import DuckAvatar from './DuckAvatar';
 import { useDuckAvatar } from '@/hooks/useDuckAvatar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
@@ -37,6 +36,21 @@ import { Settings } from 'lucide-react';
 import { getAgentById, getRandomConversationStarter } from '@/lib/agents';
 import { useAgents } from '@/hooks/useAgents';
 import type { Message } from '@/types';
+
+// Format token count for display
+const formatTokens = (tokens: number): string => {
+  if (tokens < 1000) return tokens.toString();
+  if (tokens < 1000000) return `${(tokens / 1000).toFixed(1)}K`;
+  if (tokens < 1000000000) return `${(tokens / 1000000).toFixed(1)}M`;
+  return `${(tokens / 1000000000).toFixed(1)}B`;
+};
+
+// Format model names for display
+const formatModelName = (modelName: string): string => {
+  if (modelName.includes('opus')) return 'Opus';
+  if (modelName.includes('sonnet')) return 'Sonnet';
+  return modelName.split('-')[1] || modelName;
+};
 
 // Array of available hero images
 const heroImages = [
@@ -178,6 +192,15 @@ export default function ChatInterface() {
   const [activeTagFilter, setActiveTagFilter] = useState<string[]>([]);
   const [archivedMessages, setArchivedMessages] = useState<Set<string>>(new Set());
   const [showArchivedMessages, setShowArchivedMessages] = useState(false);
+  const [usageData, setUsageData] = useState<{
+    projectTokens: number;
+    dailyInputTokens: number;
+    dailyOutputTokens: number;
+    dailyTotalTokens: number;
+    recentSessions: number;
+    dailyModels?: string[];
+    projectModels?: string[];
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -609,7 +632,28 @@ export default function ChatInterface() {
     };
   }, []);
 
+  // Fetch ccusage data for metrics
+  useEffect(() => {
+    const fetchUsageData = async () => {
+      try {
+        const response = await fetch('/api/usage');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setUsageData(result.data);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch usage data:', error);
+      }
+    };
 
+    // Fetch data on component mount and then every 5 minutes
+    fetchUsageData();
+    const interval = setInterval(fetchUsageData, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Archive/unarchive message functions
   const toggleArchiveMessage = (messageId: string) => {
@@ -1515,14 +1559,18 @@ export default function ChatInterface() {
                 className="sticky top-0 z-10 text-center py-6 border-b border-opacity-20"
                 style={{ 
                   borderColor: 'var(--border-primary)',
-                  backgroundColor: 'var(--bg-primary)',
-                  backdropFilter: 'blur(8px)'
+                  background: isDark 
+                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(16, 185, 129, 0.1) 100%)'
+                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(147, 51, 234, 0.05) 50%, rgba(16, 185, 129, 0.05) 100%)',
+                  backdropFilter: 'blur(12px)'
                 }}
               >
-                <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl" style={{
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-                  border: '1px solid',
-                  borderColor: 'var(--border-primary)'
+                <div className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl border-2" style={{
+                  background: isDark 
+                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.15) 100%)'
+                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.08) 100%)',
+                  borderColor: isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)',
+                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.2)'
                 }}>
                   <MessageCircle 
                     style={{ 
@@ -1582,24 +1630,6 @@ export default function ChatInterface() {
                     </h1>
                   )}
 
-                  {/* Duck Avatar for the session */}
-                  {currentSession && !isEditingSessionName && (
-                    <div className="flex justify-center mt-4 mb-6">
-                      <DuckAvatar
-                        imageUrl={currentSession.avatar?.imageUrl}
-                        prompt={currentSession.avatar?.prompt}
-                        isGenerating={isGeneratingAvatar}
-                        size="xl"
-                        showPrompt={true}
-                        className="shadow-lg hover:shadow-xl transition-shadow duration-300"
-                      />
-                      {avatarError && (
-                        <div className="ml-3 text-sm text-red-600 bg-red-50 px-3 py-1 rounded-full">
-                          Avatar generation failed
-                        </div>
-                      )}
-                    </div>
-                  )}
 
                   {/* Edit controls when editing session name */}
                   {isEditingSessionName && (
@@ -1681,6 +1711,119 @@ export default function ChatInterface() {
                     </button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Session Metrics Status Bar */}
+            {currentSession && filteredMessages.length > 0 && (
+              <div 
+                className="sticky top-0 z-10 border-b bg-gradient-to-r backdrop-blur-sm"
+                style={{
+                  borderColor: 'var(--border-primary)',
+                  backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(12px)'
+                }}
+              >
+                <div className="max-w-6xl mx-auto px-6 py-3">
+                  <div className="flex items-center justify-between gap-4 text-xs">
+                    {/* Left side metrics */}
+                    <div className="flex items-center gap-6">
+                      {/* Message Count */}
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+                        <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                          {filteredMessages.length} messages
+                        </span>
+                      </div>
+
+                      {/* Session Duration */}
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
+                        <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                          {(() => {
+                            if (!currentSession.createdAt) return 'New session';
+                            const duration = Date.now() - new Date(currentSession.createdAt).getTime();
+                            const hours = Math.floor(duration / (1000 * 60 * 60));
+                            const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+                            if (hours > 0) return `${hours}h ${minutes}m`;
+                            if (minutes > 0) return `${minutes}m`;
+                            return 'Just started';
+                          })()}
+                        </span>
+                      </div>
+
+                      {/* Agent Usage */}
+                      {currentSession.lastAgentUsed && (
+                        <div className="flex items-center gap-2">
+                          <Zap className="w-4 h-4" style={{ color: 'var(--status-success)' }} />
+                          <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                            {getAgentDisplayName(currentSession.lastAgentUsed)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right side metrics */}
+                    <div className="flex items-center gap-6">
+                      {/* Project Tokens (ccusage data) */}
+                      {usageData && (
+                        <div className="flex items-center gap-2" title={`Total tokens consumed by this project. Models used: ${usageData.projectModels?.map(formatModelName).join(', ') || 'Unknown'}.`}>
+                          <Activity className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
+                          <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                            {formatTokens(usageData.projectTokens)} project
+                            {usageData.projectModels && usageData.projectModels.length > 0 && (
+                              <span className="text-xs opacity-70 ml-1">
+                                ({usageData.projectModels.map(formatModelName).join('/')})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Daily Output Tokens */}
+                      {usageData && usageData.dailyOutputTokens > 0 && (
+                        <div className="flex items-center gap-2" title={`Output tokens generated today. Models used: ${usageData.dailyModels?.map(formatModelName).join(', ') || 'Unknown'}.`}>
+                          <TrendingUp className="w-4 h-4" style={{ color: 'var(--status-success)' }} />
+                          <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                            {formatTokens(usageData.dailyOutputTokens)} today
+                            {usageData.dailyModels && usageData.dailyModels.length > 0 && (
+                              <span className="text-xs opacity-70 ml-1">
+                                ({usageData.dailyModels.map(formatModelName).join('/')})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Response Performance */}
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+                        <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                          {(() => {
+                            const userMessages = filteredMessages.filter(m => m.role === 'user').length;
+                            const assistantMessages = filteredMessages.filter(m => m.role === 'assistant').length;
+                            const responseRate = userMessages > 0 ? Math.round((assistantMessages / userMessages) * 100) : 0;
+                            return `${responseRate}% response rate`;
+                          })()}
+                        </span>
+                      </div>
+
+                      {/* Session Status */}
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-2 h-2 rounded-full animate-pulse"
+                          style={{ 
+                            backgroundColor: isStreaming ? 'var(--status-warning)' : 'var(--status-success)'
+                          }}
+                        />
+                        <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                          {isStreaming ? 'Active' : 'Ready'}
+                        </span>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             

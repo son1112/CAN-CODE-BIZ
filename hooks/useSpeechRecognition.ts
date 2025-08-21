@@ -8,6 +8,7 @@ interface SpeechRecognitionHook {
   isSupported: boolean;
   startListening: () => void;
   stopListening: () => void;
+  cancelRecording: () => void;
   resetTranscript: () => void;
   sendCurrentTranscript: () => void;
   error: string | null;
@@ -483,6 +484,27 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
     cleanup();
   }, [isListening, cleanup]);
 
+  const cancelRecording = useCallback(() => {
+    logger.info('Canceling recording and discarding transcript', { component: 'SpeechRecognition' });
+    
+    // Stop listening first
+    if (isListening) {
+      setIsListening(false);
+      cleanup();
+    }
+    
+    // Clear all transcripts and timers
+    setTranscript('');
+    setInterimTranscript('');
+    clearAllTimers();
+    
+    // If in continuous mode, also stop that
+    if (isInContinuousMode) {
+      setIsInContinuousMode(false);
+      continuousCallbackRef.current = null;
+    }
+  }, [isListening, isInContinuousMode, cleanup, clearAllTimers]);
+
   const resetTranscript = useCallback(() => {
     setTranscript('');
     setInterimTranscript('');
@@ -542,6 +564,7 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
     isSupported,
     startListening,
     stopListening,
+    cancelRecording,
     resetTranscript,
     sendCurrentTranscript,
     error,

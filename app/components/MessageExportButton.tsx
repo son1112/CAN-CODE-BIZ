@@ -317,7 +317,7 @@ export default function MessageExportButton({
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         disabled={exportState.isExporting}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 hover:shadow-md hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+        className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
         title="Export message to Google Drive"
       >
         {exportState.isExporting ? (
@@ -330,7 +330,10 @@ export default function MessageExportButton({
 
       {/* Dropdown Menu */}
       {showDropdown && !exportState.isExporting && (
-        <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-800 rounded-xl shadow-2xl shadow-blue-500/20 z-50 min-w-52 animate-in slide-in-from-top-2 duration-200 backdrop-blur-sm">
+        <div 
+          className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-800 rounded-xl shadow-2xl shadow-blue-500/20 z-[60] min-w-52 animate-in slide-in-from-top-2 duration-200 backdrop-blur-sm"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="p-3">
             <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-3 px-2 flex items-center gap-2">
               <Download className="w-3 h-3" />
@@ -339,7 +342,7 @@ export default function MessageExportButton({
             
             <button
               onClick={() => handleExport('pdf')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-700 transition-all duration-200 hover:shadow-md hover:scale-[1.02] mb-2"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-700 transition-colors duration-200 mb-2"
             >
               <FileImage className="w-5 h-5 text-red-500" />
               <div className="text-left">
@@ -350,7 +353,7 @@ export default function MessageExportButton({
             
             <button
               onClick={() => handleExport('word')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-200"
             >
               <FileText className="w-5 h-5 text-blue-500" />
               <div className="text-left">
@@ -364,7 +367,7 @@ export default function MessageExportButton({
 
       {/* Status Messages */}
       {exportState.isExporting && (
-        <div className="absolute right-0 top-full mt-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 z-50 min-w-64">
+        <div className="absolute right-0 top-full mt-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 z-[65] min-w-64 pointer-events-none">
           <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
             <Loader className="w-4 h-4 animate-spin" />
             <span>
@@ -375,7 +378,7 @@ export default function MessageExportButton({
       )}
 
       {exportState.success && (
-        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 z-50 min-w-64 shadow-lg">
+        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 z-[65] min-w-64 shadow-lg">
           <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2">
             <CheckCircle className="w-4 h-4 text-green-600" />
             <span>
@@ -402,7 +405,7 @@ export default function MessageExportButton({
       )}
 
       {exportState.error && (
-        <div className="absolute right-0 top-full mt-1 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 z-50 min-w-64">
+        <div className="absolute right-0 top-full mt-1 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 z-[65] min-w-64 pointer-events-none">
           <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
             <AlertCircle className="w-4 h-4" />
             <span>{exportState.error}</span>
@@ -413,7 +416,7 @@ export default function MessageExportButton({
       {/* Click outside to close dropdown */}
       {showDropdown && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-[55]"
           onClick={() => setShowDropdown(false)}
         />
       )}

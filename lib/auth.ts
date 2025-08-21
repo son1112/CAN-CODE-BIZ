@@ -35,8 +35,12 @@ declare global {
   var _mongoClientPromise: Promise<MongoClient>;
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: MongoDBAdapter(clientPromise),
+// Check if we're in demo mode
+const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+// Configure NextAuth based on demo mode
+const authConfig = {
+  ...(isDemoMode ? {} : { adapter: MongoDBAdapter(clientPromise) }),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -71,8 +75,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   session: {
-    strategy: "database",
+    strategy: isDemoMode ? "jwt" as const : "database" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  debug: process.env.NODE_ENV === "development",
-})
+  debug: process.env.NODE_ENV === "development" && !isDemoMode,
+};
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)

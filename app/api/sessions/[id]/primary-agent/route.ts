@@ -29,7 +29,7 @@ export async function PUT(
     }
 
     // Update session
-    const updateData: any = {};
+    const updateData: { primaryAgent?: string; $unset?: { primaryAgent: string } } = {};
     if (primaryAgent) {
       updateData.primaryAgent = primaryAgent;
     } else {

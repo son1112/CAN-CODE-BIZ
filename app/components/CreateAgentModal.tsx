@@ -35,6 +35,7 @@ export default function CreateAgentModal({ isOpen, onClose, onAgentCreated }: Cr
     transcript: speechTranscript,
     startListening,
     stopListening,
+    cancelRecording,
     isListening,
     isSupported,
     error: speechError,
@@ -76,7 +77,7 @@ export default function CreateAgentModal({ isOpen, onClose, onAgentCreated }: Cr
 
   const handleStopRecording = async () => {
     setRecordingField(null);
-    stopListening();
+    cancelRecording(); // Use cancelRecording to discard transcript
   };
 
   // Handle field-specific recording
@@ -93,7 +94,7 @@ export default function CreateAgentModal({ isOpen, onClose, onAgentCreated }: Cr
   };
 
   const handleStopFieldRecording = () => {
-    stopListening();
+    cancelRecording(); // Use cancelRecording to discard transcript
     setRecordingField(null);
   };
 

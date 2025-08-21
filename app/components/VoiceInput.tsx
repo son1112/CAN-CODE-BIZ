@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Mic, MicOff, AlertCircle, RotateCcw, Send, VolumeX, Volume2, MessageCircle } from 'lucide-react';
+import { Mic, MicOff, AlertCircle, RotateCcw, Send, VolumeX, Volume2, MessageCircle, X } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { logger } from '@/lib/logger';
 
@@ -21,6 +21,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
     isSupported,
     startListening,
     stopListening,
+    cancelRecording,
     resetTranscript,
     error,
     isInContinuousMode,
@@ -163,6 +164,19 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
           </button>
         )}
 
+        {/* Cancel Button - show when recording or has transcript */}
+        {(isListening || isInContinuousMode || transcript.trim()) && (
+          <button
+            onClick={cancelRecording}
+            disabled={isDisabled}
+            className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-xl transition-all duration-300 disabled:opacity-50 shadow-lg shadow-red-500/25 hover:shadow-xl transform hover:scale-105"
+            style={{ padding: '8px', minHeight: '32px', minWidth: '32px' }}
+            title="Cancel recording and discard transcript"
+          >
+            <X style={{ width: '16px', height: '16px' }} className="filter drop-shadow-sm" />
+          </button>
+        )}
+
         {/* Status Indicator - always visible in a stable position */}
         <div className="voice-status flex items-center" style={{ gap: '8px', minHeight: '24px' }}>
           {(isListening || isInContinuousMode) && (
@@ -206,16 +220,25 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
             
             {/* Auto-send countdown */}
             {autoSendCountdown !== null && autoSendReason && (
-              <div className="flex items-center bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm" style={{ gap: '6px', padding: '6px' }}>
+              <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm" style={{ gap: '6px', padding: '6px' }}>
                 <div className="flex items-center" style={{ gap: '6px' }}>
                   <div className="border-2 border-yellow-500 border-t-transparent rounded-full animate-spin shadow-sm" style={{ width: '12px', height: '12px' }}></div>
                   <span className="font-semibold text-gray-800" style={{ fontSize: '10px' }}>
                     Sending in {autoSendCountdown}s
                   </span>
+                  <span className="text-yellow-800 bg-gradient-to-r from-yellow-100 to-amber-100 rounded-full border border-yellow-300/50 font-semibold shadow-sm" style={{ fontSize: '10px', padding: '2px 6px' }}>
+                    {autoSendReason}
+                  </span>
                 </div>
-                <span className="text-yellow-800 bg-gradient-to-r from-yellow-100 to-amber-100 rounded-full border border-yellow-300/50 font-semibold shadow-sm" style={{ fontSize: '10px', padding: '2px 6px' }}>
-                  {autoSendReason}
-                </span>
+                <button
+                  onClick={cancelRecording}
+                  disabled={isDisabled}
+                  className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-md transition-all duration-300 disabled:opacity-50 shadow-sm transform hover:scale-105"
+                  style={{ padding: '4px', fontSize: '8px' }}
+                  title="Cancel auto-send"
+                >
+                  <X style={{ width: '10px', height: '10px' }} />
+                </button>
               </div>
             )}
           </div>
