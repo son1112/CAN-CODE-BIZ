@@ -13,6 +13,8 @@ export interface SessionMessage {
   agentUsed?: string;
   isPinned?: boolean; // Message pinning support
   pinnedAt?: Date; // When the message was pinned
+  isArchived?: boolean; // Message archiving support
+  archivedAt?: Date; // When the message was archived
 }
 
 export interface SessionIteration {
@@ -80,6 +82,8 @@ const SessionMessageSchema = new Schema({
   agentUsed: String,
   isPinned: { type: Boolean, default: false }, // Message pinning support
   pinnedAt: { type: Date }, // When the message was pinned
+  isArchived: { type: Boolean, default: false }, // Message archiving support
+  archivedAt: { type: Date }, // When the message was archived
 });
 
 const SessionIterationSchema = new Schema({

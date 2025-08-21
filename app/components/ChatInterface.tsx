@@ -632,6 +632,19 @@ export default function ChatInterface() {
     };
   }, []);
 
+  // Load archived messages from session data
+  useEffect(() => {
+    if (currentSession?.messages) {
+      const archivedIds = new Set<string>();
+      currentSession.messages.forEach(message => {
+        if (message.isArchived) {
+          archivedIds.add(message.id);
+        }
+      });
+      setArchivedMessages(archivedIds);
+    }
+  }, [currentSession?.sessionId, currentSession?.messages]);
+
   // Fetch ccusage data for metrics
   useEffect(() => {
     const fetchUsageData = async () => {
@@ -656,16 +669,63 @@ export default function ChatInterface() {
   }, []);
 
   // Archive/unarchive message functions
-  const toggleArchiveMessage = (messageId: string) => {
+  const toggleArchiveMessage = async (messageId: string) => {
+    const isCurrentlyArchived = archivedMessages.has(messageId);
+    const newArchivedState = !isCurrentlyArchived;
+    
+    // Optimistic update
     setArchivedMessages(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(messageId)) {
-        newSet.delete(messageId);
-      } else {
+      if (newArchivedState) {
         newSet.add(messageId);
+      } else {
+        newSet.delete(messageId);
       }
       return newSet;
     });
+
+    try {
+      const response = await fetch(`/api/sessions/messages/${messageId}/archive`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isArchived: newArchivedState,
+          sessionId: currentSession?.sessionId || ''
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update archive status');
+      }
+
+      const result = await response.json();
+      
+      console.log('Message archive status updated', {
+        component: 'ChatInterface',
+        messageId,
+        isArchived: result.isArchived
+      });
+
+    } catch (error) {
+      // Revert optimistic update on error
+      setArchivedMessages(prev => {
+        const newSet = new Set(prev);
+        if (isCurrentlyArchived) {
+          newSet.add(messageId);
+        } else {
+          newSet.delete(messageId);
+        }
+        return newSet;
+      });
+      
+      console.error('Failed to toggle message archive status', {
+        component: 'ChatInterface',
+        messageId,
+        error
+      });
+    }
   };
 
   return (
