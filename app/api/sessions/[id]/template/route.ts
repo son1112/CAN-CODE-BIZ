@@ -8,10 +8,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await requireAuth(req);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await requireAuth(req);
+    if ('error' in authResult) {
+      return authResult;
     }
+    const { userId } = authResult;
 
     const { id: sessionId } = await params;
     const { isTemplate, templateName } = await req.json();

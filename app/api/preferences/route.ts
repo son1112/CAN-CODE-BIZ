@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const authResult = await requireAuth();
+    const authResult = await requireAuth(request);
     if ('error' in authResult) {
       return authResult;
     }
