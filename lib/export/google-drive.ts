@@ -174,7 +174,7 @@ export const DOCUMENT_MIME_TYPES = {
 export function generateExportFileName(
   sessionName: string,
   messageId: string,
-  format: 'pdf' | 'docx',
+  format: 'pdf' | 'docx' | 'txt',
   timestamp: Date = new Date()
 ): string {
   const dateStr = timestamp.toISOString().split('T')[0]; // YYYY-MM-DD
