@@ -1,0 +1,470 @@
+#+TITLE: Rubber Ducky Live - Developer Guide
+#+DATE: 2025-08-22
+#+AUTHOR: Development Team
+#+STARTUP: overview
+#+TODO: TODO(t) IN-PROGRESS(i) | DONE(d) CANCELLED(c)
+
+* Table of Contents
+  - [[#development-environment-setup][Development Environment Setup]]
+  - [[#local-development-workflow][Local Development Workflow]]
+  - [[#testing-and-validation][Testing and Validation]]
+  - [[#deployment-process][Deployment Process]]
+  - [[#troubleshooting][Troubleshooting]]
+  - [[#architecture-overview][Architecture Overview]]
+  - [[#contributing-guidelines][Contributing Guidelines]]
+
+* Development Environment Setup
+** Prerequisites
+   - Node.js 18.x or later
+   - npm 9.x or later
+   - MongoDB (local or Atlas)
+   - Git
+   - Vercel CLI (for deployment testing)
+
+** Initial Setup
+#+BEGIN_SRC bash
+# Clone the repository
+git clone https://github.com/son1112/rubber-ducky-live.git
+cd rubber-ducky-live
+
+# Install dependencies
+npm install
+
+# Install Vercel CLI globally for local build testing
+npm install -g vercel
+
+# Create environment file
+cp .env.example .env.local
+#+END_SRC
+
+** Environment Variables
+   Create `.env.local` with the following required variables:
+
+#+BEGIN_EXAMPLE
+# Core Application
+MONGODB_URI=mongodb://localhost:27017/rubber-ducky
+MONGODB_DB=rubber-ducky
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# AI Integration  
+ANTHROPIC_API_KEY=your_claude_api_key
+ASSEMBLYAI_API_KEY=your_assemblyai_key
+
+# Authentication (NextAuth.js)
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Development & Testing
+NEXT_PUBLIC_DEMO_MODE=true
+NODE_ENV=development
+
+# Optional: Google Drive Export
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_DRIVE_API_KEY=your_google_drive_api_key
+#+END_EXAMPLE
+
+* Local Development Workflow
+** Starting Development Server
+#+BEGIN_SRC bash
+# Start the development server
+npm run dev
+
+# The application will be available at http://localhost:3000
+#+END_SRC
+
+** Development Commands
+#+BEGIN_SRC bash
+# Run tests
+npm test                    # Run all tests
+npm run test:watch         # Run tests in watch mode
+npm run test:coverage      # Generate coverage report
+
+# End-to-end testing
+npm run test:e2e           # Run Playwright tests headless
+npm run test:e2e:ui        # Run Playwright tests with UI
+
+# Build and validation
+npm run build              # Build for production
+npm run lint               # Run ESLint
+npx tsc --noEmit          # TypeScript validation only
+
+# Vercel CLI commands (after setup)
+vercel build --prod        # Local build testing
+vercel dev                 # Run in Vercel environment locally
+#+END_SRC
+
+** Git Workflow
+#+BEGIN_SRC bash
+# Create feature branch
+git checkout -b feature/your-feature-name
+
+# Make changes and commit
+git add -A
+git commit -m "feat: description of changes
+
+Longer description if needed
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+# Push to remote
+git push origin feature/your-feature-name
+
+# Create pull request via GitHub
+#+END_SRC
+
+* Testing and Validation
+** Pre-commit Validation Checklist
+   Before committing changes, run these commands to catch issues early:
+
+#+BEGIN_SRC bash
+# 1. TypeScript validation (catches most build errors)
+npx tsc --noEmit
+
+# 2. Run linting
+npm run lint
+
+# 3. Run tests  
+npm test
+
+# 4. Build validation
+npm run build
+
+# 5. Vercel build testing (mimics production exactly)
+vercel build --prod
+
+# 6. End-to-end tests
+npm run test:e2e
+#+END_SRC
+
+** Authentication Pattern Validation
+   All API routes must follow this authentication pattern:
+
+#+BEGIN_SRC typescript
+export async function POST(request: NextRequest) {
+  try {
+    // Direct destructuring - requireAuth throws on failure
+    const { userId } = await requireAuth(request);
+
+    // Your route logic here
+    
+  } catch (error) {
+    // Handle authentication errors
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
+    // Handle other errors
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+#+END_SRC
+
+** Common TypeScript Issues
+*** Route Handler Parameters (Next.js 15)
+#+BEGIN_SRC typescript
+// Correct pattern for dynamic routes
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  // ... rest of handler
+}
+#+END_SRC
+
+*** Authentication Result Handling
+#+BEGIN_SRC typescript
+// ❌ WRONG - Don't check for error property
+const authResult = await requireAuth(req);
+if (authResult.error) {
+  return authResult.response;
+}
+
+// ✅ CORRECT - Direct destructuring with try-catch
+const { userId } = await requireAuth(req);
+#+END_SRC
+
+* Deployment Process
+** Vercel Deployment Strategy
+*** Phase 1: Vercel (Current)
+    - Cost: $20-50/month
+    - Timeline: Immediate deployment
+    - Features: Serverless, global CDN, automatic HTTPS
+    - Limitations: Function timeout (30s), cold starts
+
+*** Phase 2: Railway (Planned - Month 2)
+    - Cost: $8-25/month (40-60% cost reduction)
+    - Timeline: Month 2 migration
+    - Features: Persistent containers, better performance
+    - Benefits: Cost optimization, fewer cold starts
+
+*** Phase 3: AWS (Long-term - Month 6+)
+    - Cost: $25-100+/month (enterprise scale)
+    - Timeline: When reaching $500+/month usage
+    - Features: Full control, advanced scaling
+    - Benefits: Enterprise-grade infrastructure
+
+** Deployment Commands
+#+BEGIN_SRC bash
+# Push to trigger Vercel auto-deployment
+git push origin main
+
+# Manual deployment
+vercel --prod
+
+# Check deployment status
+vercel ls
+
+# View deployment logs
+vercel logs [deployment-url]
+#+END_SRC
+
+** Environment Variables in Vercel
+   Set these in Vercel Dashboard → Project → Settings → Environment Variables:
+
+#+BEGIN_EXAMPLE
+MONGODB_URI              (Production MongoDB Atlas URI)
+ANTHROPIC_API_KEY        (Production Claude API key)
+ASSEMBLYAI_API_KEY       (Production AssemblyAI key)
+NEXTAUTH_SECRET          (Production NextAuth secret)
+GOOGLE_CLIENT_ID         (Production Google OAuth ID)
+GOOGLE_CLIENT_SECRET     (Production Google OAuth secret)
+NEXTAUTH_URL            (Production domain URL)
+NODE_ENV                (Set to "production")
+#+END_EXAMPLE
+
+* Troubleshooting
+** Common Issues and Solutions
+*** Build Failures
+**** "Cannot find module 'X'" Errors
+     **Cause**: Build dependencies missing from production
+     **Solution**: Move from devDependencies to dependencies in package.json
+
+**** "Invalid export" Route Errors  
+     **Cause**: Incorrect Next.js 15 route handler patterns
+     **Solution**: Update to async params pattern and proper auth handling
+
+**** Module Resolution Failures
+     **Cause**: "@/" imports not resolving in production
+     **Solution**: Configure webpack aliases in next.config.js
+
+*** Authentication Errors
+**** Route Handler Auth Pattern
+     **Issue**: Property 'error' does not exist on type 'AuthResult'
+     **Solution**: Use direct destructuring, not error checking
+
+**** Missing Request Parameter
+     **Issue**: requireAuth() called without request parameter
+     **Solution**: Always pass request: requireAuth(request)
+
+*** Database Connection Issues
+**** MongoDB Connection Timeout
+     **Cause**: Network issues or incorrect connection string
+     **Solution**: Verify MONGODB_URI and network connectivity
+
+**** Duplicate Schema Warnings
+     **Cause**: Multiple schema registrations
+     **Solution**: Use mongoose connection caching in lib/mongodb.ts
+
+** Performance Issues
+*** Slow Development Compilation
+    - Check if MongoDB connection is timing out
+    - Verify all dependencies are properly installed
+    - Clear .next cache: `rm -rf .next`
+    - Restart development server
+
+*** Memory Usage in Development
+    - Long conversations may require periodic server restart
+    - Use `NODE_OPTIONS="--max-old-space-size=4096"` for larger heaps
+
+** Debug Commands
+#+BEGIN_SRC bash
+# TypeScript issues
+npx tsc --noEmit --pretty
+
+# Bundle analysis
+npm run build && npm run analyze
+
+# Database connection test
+node -e "require('./lib/mongodb.ts').default()"
+
+# Environment variables check
+vercel env pull .env.vercel
+
+# Dependency issues
+npm ls --depth=0
+npm audit fix
+#+END_SRC
+
+* Architecture Overview
+** Tech Stack
+   - **Framework**: Next.js 15.4.6 with App Router
+   - **Language**: TypeScript 5 with strict mode
+   - **Runtime**: React 19.1.0
+   - **Styling**: Tailwind CSS 3.4.17
+   - **Database**: MongoDB with Mongoose ODM + native driver
+   - **AI**: Claude 4 with Sonnet 3.5 fallback
+   - **Auth**: NextAuth.js 5.0 with Google OAuth
+   - **Real-time**: Server-Sent Events (SSE)
+   - **Voice**: AssemblyAI real-time streaming
+   - **Testing**: Jest + Playwright + React Testing Library
+   - **Deployment**: Vercel serverless functions
+
+** Key Architectural Patterns
+*** Dual Database Strategy
+    - Mongoose ODM for complex operations and schema validation
+    - Native MongoDB driver for high-performance read operations
+    - Connection pooling and caching for optimal performance
+
+*** Smart Fallback Systems
+    - Claude 4 → Claude 3.5 Sonnet fallback for AI responses
+    - Google Drive → local download fallback for exports
+    - Graceful degradation across all service integrations
+
+*** Authentication Architecture
+    - NextAuth.js 5.0 with Google OAuth 2.0
+    - Demo mode for development with real data consistency
+    - Unified middleware pattern across all API routes
+    - JWT token management with automatic refresh
+
+*** Real-time Communication
+    - Server-Sent Events (SSE) for streaming AI responses
+    - WebSocket integration for speech recognition
+    - Optimistic UI updates with server reconciliation
+
+** Directory Structure
+#+BEGIN_EXAMPLE
+rubber-ducky-live/
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   │   ├── chat/          # SSE streaming endpoints
+│   │   ├── sessions/      # Session management
+│   │   ├── export/        # Document export system
+│   │   └── ...           
+│   ├── components/        # React components
+│   └── ...
+├── lib/                   # Core libraries
+│   ├── mongodb.ts         # Database connection
+│   ├── claude.ts          # AI integration
+│   ├── middleware/        # Authentication middleware
+│   └── export/           # Export system libraries
+├── models/               # MongoDB schemas
+├── hooks/                # Custom React hooks  
+├── contexts/             # React contexts
+├── tests/                # Test suites
+│   ├── e2e/              # Playwright tests
+│   └── unit/             # Jest tests
+└── docs/                 # Documentation
+#+END_EXAMPLE
+
+* Contributing Guidelines
+** Code Standards
+*** TypeScript
+    - Use strict TypeScript configuration
+    - Prefer explicit typing over `any`
+    - Use interface declarations for object types
+    - Follow consistent naming conventions
+
+*** React Components
+    - Use functional components with hooks
+    - Implement proper error boundaries
+    - Follow accessibility guidelines (ARIA labels, keyboard nav)
+    - Use proper component composition patterns
+
+*** API Routes
+    - Follow unified authentication middleware pattern
+    - Implement proper error handling and logging
+    - Use consistent response formats
+    - Include comprehensive input validation
+
+*** Testing Requirements
+    - Unit tests for all business logic
+    - Integration tests for API endpoints
+    - E2E tests for critical user flows
+    - Maintain >90% test coverage for new code
+
+** Performance Considerations
+*** Database Operations
+    - Use projections to limit returned fields
+    - Implement proper indexing for queries
+    - Use aggregation pipelines for complex operations
+    - Monitor query performance and optimize slow queries
+
+*** Frontend Optimization
+    - Implement code splitting for large components
+    - Use React.memo() for expensive re-renders
+    - Optimize image loading with next/image
+    - Minimize bundle size through tree shaking
+
+*** API Performance
+    - Implement response caching where appropriate
+    - Use connection pooling for database operations
+    - Optimize serialization for large datasets
+    - Monitor API response times and memory usage
+
+** Security Best Practices
+*** Data Protection
+    - Never log sensitive user data or API keys
+    - Implement input validation and sanitization
+    - Use parameterized queries to prevent injection
+    - Encrypt sensitive data at rest
+
+*** Authentication Security
+    - Use secure session management
+    - Implement proper JWT token handling
+    - Follow OAuth 2.0 security best practices
+    - Regular security audit of authentication flows
+
+** Documentation Requirements
+*** Code Documentation
+    - Document all public interfaces and APIs
+    - Use TSDoc comments for TypeScript functions
+    - Maintain up-to-date README files
+    - Document architectural decisions in ADRs
+
+*** User Documentation
+    - Keep deployment guides current
+    - Document all environment variables
+    - Provide troubleshooting guides
+    - Maintain API documentation
+
+* Development Tools Configuration
+** VS Code Recommended Extensions
+   - TypeScript and JavaScript Language Features
+   - ESLint
+   - Prettier
+   - Tailwind CSS IntelliSense
+   - Playwright Test for VS Code
+   - Git Graph
+   - MongoDB for VS Code
+
+** ESLint Configuration
+   Project uses strict ESLint rules with TypeScript integration.
+   Configuration in `.eslintrc.json`.
+
+** Prettier Configuration
+   Automatic code formatting with Prettier.
+   Configuration in `.prettierrc`.
+
+** Jest Configuration  
+   Unit testing with Jest and React Testing Library.
+   Configuration in `jest.config.js`.
+
+** Playwright Configuration
+   End-to-end testing with Playwright.
+   Configuration in `playwright.config.ts`.
+
+---
+*Last updated: 2025-08-22*
+*Next.js Version: 15.4.6*
+*Target Platform: Vercel Serverless*

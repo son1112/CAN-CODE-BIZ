@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   try {
-    const userId = await requireAuth(req);
+    const { userId } = await requireAuth(req);
     const { sessionId, isFavorite } = await req.json();
 
     if (!sessionId || typeof isFavorite !== 'boolean') {
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = await requireAuth(req);
+    const { userId } = await requireAuth(req);
     
     await connectDB();
 

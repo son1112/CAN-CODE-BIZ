@@ -29,8 +29,8 @@ export async function GET(
 
     // Filter for pinned messages and sort by pinnedAt date (most recent first)
     const pinnedMessages = session.messages
-      .filter(msg => msg.isPinned === true)
-      .sort((a, b) => {
+      .filter((msg: any) => msg.isPinned === true)
+      .sort((a: any, b: any) => {
         if (!a.pinnedAt) return 1;
         if (!b.pinnedAt) return -1;
         return new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime();

@@ -12,11 +12,7 @@ export async function PUT(
     const { id } = await params;
     
     // Get user
-    const authResult = await requireAuth(request);
-    if (authResult.error) {
-      return authResult.response;
-    }
-    const userId = authResult.userId;
+    const { userId } = await requireAuth(request);
     const body = await request.json();
     const { primaryAgent } = body;
 
@@ -56,6 +52,12 @@ export async function PUT(
 
   } catch (error) {
     console.error('Error updating primary agent:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
