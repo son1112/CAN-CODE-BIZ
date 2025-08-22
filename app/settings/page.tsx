@@ -18,6 +18,7 @@ import {
 import Link from 'next/link';
 import AuthGuard from '@/app/components/auth/AuthGuard';
 import Logo from '@/app/components/Logo';
+import ContentSafetySettings from '@/app/components/ContentSafetySettings';
 
 
 export default function SettingsPage() {
@@ -346,6 +347,11 @@ export default function SettingsPage() {
                   </label>
                 </div>
               </div>
+            </div>
+
+            {/* Content Safety Settings */}
+            <div className="lg:col-span-2">
+              <ContentSafetySettings />
             </div>
           </div>
 

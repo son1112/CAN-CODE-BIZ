@@ -1,27 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { auth } from '@/lib/auth';
+import { requireAuth } from '@/lib/middleware/auth';
 import UserPreferences from '@/models/UserPreferences';
 
 export async function GET() {
   try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const authResult = await requireAuth();
+    if ('error' in authResult) {
+      return authResult;
     }
+    const { userId } = authResult;
 
     await connectDB();
     
-    let preferences = await UserPreferences.findOne({ userId: session.user.id });
+    let preferences = await UserPreferences.findOne({ userId });
     
     // If no preferences exist, create default ones
     if (!preferences) {
       const defaultPreferences = {
-        userId: session.user.id,
+        userId,
         notifications: {
           soundEffects: true,
           voiceAlerts: true,
@@ -60,14 +57,11 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const authResult = await requireAuth();
+    if ('error' in authResult) {
+      return authResult;
     }
+    const { userId } = authResult;
 
     await connectDB();
     
@@ -83,10 +77,10 @@ export async function PUT(request: NextRequest) {
 
     // Update or create preferences for the authenticated user
     const updatedPreferences = await UserPreferences.findOneAndUpdate(
-      { userId: session.user.id },
+      { userId },
       { 
         ...preferences,
-        userId: session.user.id,
+        userId,
         updatedAt: new Date(),
       },
       { 

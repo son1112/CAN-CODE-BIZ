@@ -66,7 +66,13 @@ export function useUserPreferences(): UseUserPreferencesReturn {
 
   // Load preferences from the server
   const loadPreferences = useCallback(async () => {
-    if (status === 'loading' || !session?.user?.id) {
+    if (status === 'loading') {
+      return;
+    }
+
+    // In demo mode or when authenticated, try to load preferences
+    const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+    if (!isDemoMode && !session?.user?.id) {
       return;
     }
 
@@ -126,8 +132,14 @@ export function useUserPreferences(): UseUserPreferencesReturn {
 
   // Save preferences to the server
   const savePreferences = useCallback(async () => {
-    if (!preferences || !session?.user?.id) {
-      throw new Error('Cannot save preferences: not authenticated or no preferences');
+    if (!preferences) {
+      throw new Error('Cannot save preferences: no preferences loaded');
+    }
+
+    // In demo mode or when authenticated, allow saving
+    const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+    if (!isDemoMode && !session?.user?.id) {
+      throw new Error('Cannot save preferences: not authenticated');
     }
 
     try {
@@ -158,7 +170,7 @@ export function useUserPreferences(): UseUserPreferencesReturn {
       setError(err.message || 'Failed to save preferences');
       throw err;
     }
-  }, [preferences, session]);
+  }, [preferences]);
 
   // Check if preferences have been modified
   const isModified = preferences && originalPreferences 

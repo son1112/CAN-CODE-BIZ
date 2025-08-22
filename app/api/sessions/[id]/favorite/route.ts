@@ -5,28 +5,28 @@ import { logger } from '@/lib/logger';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth(req);
-    if (!user) {
+    const { userId } = await requireAuth(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const sessionId = params.id;
+    const { id: sessionId } = await context.params;
     const { isFavorite } = await req.json();
 
     logger.info('Toggling session favorite', {
       component: 'SessionFavoriteAPI',
       sessionId,
-      userId: user.id,
+      userId,
       isFavorite
     });
 
     const session = await Session.findOneAndUpdate(
       { 
         sessionId, 
-        createdBy: user.id 
+        createdBy: userId 
       },
       { 
         isFavorite: Boolean(isFavorite),
@@ -39,7 +39,7 @@ export async function POST(
       logger.warn('Session not found for favorite toggle', {
         component: 'SessionFavoriteAPI',
         sessionId,
-        userId: user.id
+        userId
       });
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
@@ -56,9 +56,10 @@ export async function POST(
     });
 
   } catch (error) {
+    const { id: sessionId } = await context.params.catch(() => ({ id: 'unknown' }));
     logger.error('Failed to toggle session favorite', {
       component: 'SessionFavoriteAPI',
-      sessionId: params.id
+      sessionId
     }, error);
 
     return NextResponse.json(

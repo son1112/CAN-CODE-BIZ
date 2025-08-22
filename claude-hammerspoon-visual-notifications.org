@@ -1,0 +1,206 @@
+#+TITLE: Claude Code Visual Task Completion System
+#+AUTHOR: Claude & User
+#+DATE: 2025-08-22
+#+DESCRIPTION: A Hammerspoon-based visual notification system for Claude Code task completion
+
+* Overview
+
+This system provides visual feedback when Claude Code completes tasks, using a subtle blue screen flash instead of audio notifications. It integrates with Hammerspoon on macOS to create cross-screen overlays that automatically fade away.
+
+** Features
+- Visual blue screen flash for task completion
+- Auto-timeout (no manual cleanup needed)
+- Manual debug triggers
+- URL scheme integration for automation
+- Works across all Claude sessions
+
+* Installation and Setup
+
+** Prerequisites
+- macOS with Hammerspoon installed
+- Claude Code CLI tool
+
+** File Structure
+#+BEGIN_EXAMPLE
+~/.hammerspoon/
+├── init.lua              # Main Hammerspoon configuration
+└── claude-flash.lua      # Visual notification module
+~/.claude/
+└── CLAUDE.md             # Global Claude Code settings
+#+END_EXAMPLE
+
+* Implementation
+
+** Claude Flash Module
+:PROPERTIES:
+:header-args:lua: :tangle ~/.hammerspoon/claude-flash.lua
+:END:
+
+This module handles the visual notification system with configurable timing and appearance.
+
+#+BEGIN_SRC lua
+local claude = {}
+
+-- Configuration
+local FLASH_COLOR = {red=0.2, green=0.8, blue=1.0, alpha=0.3}
+local FLASH_DURATION = 0.8
+
+function claude.flashScreen()
+    local screen = hs.screen.mainScreen()
+    local frame = screen:frame()
+    
+    local overlay = hs.drawing.rectangle(frame)
+    overlay:setFillColor(FLASH_COLOR)
+    overlay:setFill(true)
+    overlay:setLevel(hs.drawing.windowLevels.overlay)
+    overlay:show()
+    
+    -- Auto-timeout (fixed)
+    hs.timer.doAfter(FLASH_DURATION, function()
+        overlay:delete()
+    end)
+end
+
+function claude.clearFlash()
+    -- Get all drawings and clear them
+    local drawings = hs.drawing.getAll()
+    for _, drawing in ipairs(drawings) do
+        drawing:delete()
+    end
+end
+
+return claude
+#+END_SRC
+
+** Main Hammerspoon Configuration
+:PROPERTIES:
+:header-args:lua: :tangle ~/.hammerspoon/init.lua :tangle-mode (identity #o644)
+:END:
+
+This section should be added to your existing ~init.lua~ file:
+
+#+BEGIN_SRC lua
+-- Load Claude flash module
+local claude = require('claude-flash')
+
+-- Manual triggers for debugging
+hs.hotkey.bind({"cmd", "shift"}, "f", claude.flashScreen)
+hs.hotkey.bind({"cmd", "shift"}, "c", claude.clearFlash)
+
+-- URL scheme for Claude Code automation
+hs.urlevents.bind("claude-flash", function(eventName, params)
+    claude.flashScreen()
+end)
+#+END_SRC
+
+** Global Claude Code Configuration
+:PROPERTIES:
+:header-args:markdown: :tangle ~/.claude/CLAUDE.md :tangle-mode (identity #o644)
+:END:
+
+Add this section to your global Claude Code configuration:
+
+#+BEGIN_SRC markdown
+# Visual Task Completion Notification
+
+- After completing any significant task (builds, deployments, file operations, etc.), trigger visual notification
+- Use: `open "hammerspoon://claude-flash"` 
+- This creates a brief blue screen flash to indicate task completion
+- Manual debug triggers: Cmd+Shift+F (flash), Cmd+Shift+C (clear)
+#+END_SRC
+
+* Usage
+
+** Manual Testing
+- *Cmd+Shift+F*: Trigger flash manually (for testing)
+- *Cmd+Shift+C*: Clear any stuck overlays (emergency cleanup)
+
+** Automated Integration
+Claude Code will automatically trigger the visual notification using:
+#+BEGIN_SRC bash
+open "hammerspoon://claude-flash"
+#+END_SRC
+
+** Testing the URL Scheme
+To verify the URL scheme works:
+#+BEGIN_SRC bash
+open "hammerspoon://claude-flash"
+#+END_SRC
+
+* Configuration Options
+
+** Visual Appearance
+- *FLASH_COLOR*: RGB color and transparency
+  - Default: Light blue at 30% opacity
+  - Format: ~{red=0.2, green=0.8, blue=1.0, alpha=0.3}~
+
+- *FLASH_DURATION*: How long the flash lasts
+  - Default: 0.8 seconds
+  - Adjust for longer/shorter flashes
+
+** Customization Examples
+#+BEGIN_SRC lua
+-- Shorter, more subtle flash
+local FLASH_COLOR = {red=0.1, green=0.9, blue=0.1, alpha=0.2}  -- Green
+local FLASH_DURATION = 0.4
+
+-- Longer, more prominent flash  
+local FLASH_COLOR = {red=1.0, green=0.5, blue=0.0, alpha=0.4}  -- Orange
+local FLASH_DURATION = 1.2
+#+END_SRC
+
+* Troubleshooting
+
+** Common Issues
+
+*** Flash doesn't appear
+- Check Hammerspoon console for errors
+- Verify ~claude-flash.lua~ is in the correct location
+- Reload Hammerspoon configuration
+
+*** Flash doesn't disappear
+- Use Cmd+Shift+C to force clear
+- Check timer functionality in Hammerspoon console
+
+*** URL scheme not working
+- Verify ~hs.urlevents.bind~ is properly registered
+- Check Hammerspoon console for "no registered callback" warnings
+- Test with manual trigger first
+
+** Debug Commands
+#+BEGIN_SRC bash
+# Test URL scheme
+open "hammerspoon://claude-flash"
+
+# Check Hammerspoon console
+# Open Hammerspoon app and check console for errors
+#+END_SRC
+
+* Implementation Notes
+
+** Design Decisions
+- Uses simple timeout instead of complex fade animation for reliability
+- Creates overlay at highest window level to ensure visibility
+- Automatically cleans up to prevent resource leaks
+- Provides emergency clear function for stuck overlays
+
+** Technical Details
+- Uses ~hs.drawing.rectangle~ for cross-screen overlay
+- ~hs.drawing.windowLevels.overlay~ ensures visibility above all windows
+- ~hs.timer.doAfter~ provides reliable auto-cleanup
+- ~hs.urlevents~ enables cross-application triggering
+
+** Future Enhancements
+- Multiple flash patterns for different task types
+- Position-specific flashes (corner, center, edge)
+- Integration with other notification systems
+- Fade-in/fade-out animations (when stable)
+
+* Changelog
+
+** 2025-08-22
+- Initial implementation
+- Fixed module loading and function references
+- Added URL scheme integration
+- Simplified timeout mechanism for reliability
+- Added emergency clear function

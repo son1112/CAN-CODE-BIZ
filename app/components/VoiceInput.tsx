@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, AlertCircle, RotateCcw, Send, VolumeX, Volume2, MessageCircle, X } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useContentSafety } from '@/contexts/ContentSafetyContext';
 import { logger } from '@/lib/logger';
 
 interface VoiceInputProps {
@@ -14,6 +15,8 @@ interface VoiceInputProps {
 }
 
 export default function VoiceInput({ onTranscript, isDisabled = false, enableContinuousMode = false, onContinuousModeToggle, isContinuousMode = false }: VoiceInputProps) {
+  const { settings: safetySettings } = useContentSafety();
+  
   const {
     transcript,
     interimTranscript,
@@ -31,7 +34,115 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
     autoSendReason,
     isMuted,
     toggleMute,
+    sentimentAnalysis,
+    sentimentHistory,
+    currentSpeaker,
+    speakerLabels,
+    speakerHistory,
+    contentSafety,
+    safetyWarnings,
+    transcriptionQuality,
+    qualityMetrics,
+    qualityHistory,
   } = useSpeechRecognition();
+
+  // Track if we're still checking browser support (to prevent hydration flash)
+  const [isCheckingSupport, setIsCheckingSupport] = useState(true);
+
+  useEffect(() => {
+    // Give a moment for the support check to complete
+    const timer = setTimeout(() => {
+      setIsCheckingSupport(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const getSentimentDisplay = (sentiment: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE', confidence: number) => {
+    const icons = {
+      POSITIVE: '😊',
+      NEUTRAL: '😐', 
+      NEGATIVE: '😞'
+    };
+    
+    const colors = {
+      POSITIVE: 'text-green-700 bg-green-50 border-green-200',
+      NEUTRAL: 'text-gray-700 bg-gray-50 border-gray-200',
+      NEGATIVE: 'text-red-700 bg-red-50 border-red-200'
+    };
+    
+    return {
+      icon: icons[sentiment],
+      color: colors[sentiment],
+      label: sentiment.charAt(0) + sentiment.slice(1).toLowerCase(),
+      confidenceText: `${Math.round(confidence * 100)}% confident`
+    };
+  };
+
+  const getSafetyDisplay = (safety: any) => {
+    const riskColors = {
+      low: 'text-yellow-700 bg-yellow-50 border-yellow-200',
+      medium: 'text-orange-700 bg-orange-50 border-orange-200',
+      high: 'text-red-700 bg-red-50 border-red-200'
+    };
+    
+    const riskIcons = {
+      low: '⚠️',
+      medium: '🚨',
+      high: '🛑'
+    };
+    
+    return {
+      color: riskColors[safety.summary.riskLevel] || riskColors.medium,
+      icon: riskIcons[safety.summary.riskLevel] || riskIcons.medium,
+      level: safety.summary.riskLevel.charAt(0).toUpperCase() + safety.summary.riskLevel.slice(1),
+      categories: safety.summary.flaggedCategories
+    };
+  };
+
+  const getSpeakerDisplay = (speaker: string) => {
+    const colors = [
+      'text-blue-700 bg-blue-50 border-blue-200',
+      'text-purple-700 bg-purple-50 border-purple-200', 
+      'text-green-700 bg-green-50 border-green-200',
+      'text-orange-700 bg-orange-50 border-orange-200',
+      'text-pink-700 bg-pink-50 border-pink-200',
+      'text-teal-700 bg-teal-50 border-teal-200'
+    ];
+    
+    // Hash speaker name to get consistent color
+    const hash = speaker.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colorIndex = hash % colors.length;
+    
+    return {
+      color: colors[colorIndex],
+      icon: '🎤',
+      displayName: speaker === 'A' ? 'Speaker A' : speaker === 'B' ? 'Speaker B' : speaker
+    };
+  };
+
+  const getQualityDisplay = (quality: any) => {
+    const qualityColors = {
+      excellent: 'text-green-700 bg-green-50 border-green-200',
+      good: 'text-blue-700 bg-blue-50 border-blue-200',
+      fair: 'text-yellow-700 bg-yellow-50 border-yellow-200',
+      poor: 'text-red-700 bg-red-50 border-red-200'
+    };
+    
+    const qualityIcons = {
+      excellent: '🎯',
+      good: '✅',
+      fair: '⚠️',
+      poor: '🔴'
+    };
+    
+    return {
+      color: qualityColors[quality.audioQuality] || qualityColors.fair,
+      icon: qualityIcons[quality.audioQuality] || qualityIcons.fair,
+      label: quality.audioQuality.charAt(0).toUpperCase() + quality.audioQuality.slice(1),
+      confidenceText: `${Math.round(quality.confidence * 100)}% confidence`,
+      clarityScore: `${Math.round(quality.speechClarityScore)}% clarity`
+    };
+  };
 
   const handleSendTranscript = () => {
     const currentTranscript = transcript.trim();
@@ -67,6 +178,18 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
       }
     }
   };
+
+  // Show loading state during initial support check to prevent hydration flash
+  if (isCheckingSupport) {
+    return (
+      <div className="flex items-center gap-4 text-blue-700 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200/50 rounded-2xl shadow-lg shadow-blue-500/10 backdrop-blur-sm">
+        <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+        <span className="text-base leading-relaxed font-medium">
+          🔍 Checking voice chat compatibility...
+        </span>
+      </div>
+    );
+  }
 
   if (!isSupported) {
     return (
@@ -218,6 +341,41 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
             </div>
             <div className="text-yellow-900 leading-relaxed font-medium overflow-y-auto scrollbar-thin scrollbar-thumb-yellow-300 scrollbar-track-transparent" style={{ fontSize: '11px', marginBottom: '4px', maxHeight: '60px' }}>{transcript.trim()}</div>
             
+            {/* Speaker Diarization Display */}
+            {currentSpeaker && (
+              <div className={`inline-flex items-center rounded-lg border shadow-sm ${getSpeakerDisplay(currentSpeaker).color}`} style={{ gap: '4px', padding: '3px 6px', marginBottom: '4px', fontSize: '10px' }}>
+                <span style={{ fontSize: '12px' }}>{getSpeakerDisplay(currentSpeaker).icon}</span>
+                <span className="font-semibold">{getSpeakerDisplay(currentSpeaker).displayName}</span>
+              </div>
+            )}
+
+            {/* Content Safety Display */}
+            {safetySettings.enabled && contentSafety && contentSafety.summary.flaggedCategories.length > 0 && (
+              <div className={`inline-flex items-center rounded-lg border shadow-sm ${getSafetyDisplay(contentSafety).color}`} style={{ gap: '4px', padding: '3px 6px', marginBottom: '4px', fontSize: '10px' }}>
+                <span style={{ fontSize: '12px' }}>{getSafetyDisplay(contentSafety).icon}</span>
+                <span className="font-semibold">{getSafetyDisplay(contentSafety).level} Risk</span>
+                <span className="opacity-75">({getSafetyDisplay(contentSafety).categories.join(', ')})</span>
+              </div>
+            )}
+
+            {/* Sentiment Analysis Display */}
+            {sentimentAnalysis && (
+              <div className={`inline-flex items-center rounded-lg border shadow-sm ${getSentimentDisplay(sentimentAnalysis.sentiment, sentimentAnalysis.confidence).color}`} style={{ gap: '4px', padding: '3px 6px', marginBottom: '4px', fontSize: '10px' }}>
+                <span style={{ fontSize: '12px' }}>{getSentimentDisplay(sentimentAnalysis.sentiment, sentimentAnalysis.confidence).icon}</span>
+                <span className="font-semibold">{getSentimentDisplay(sentimentAnalysis.sentiment, sentimentAnalysis.confidence).label}</span>
+                <span className="opacity-75">({getSentimentDisplay(sentimentAnalysis.sentiment, sentimentAnalysis.confidence).confidenceText})</span>
+              </div>
+            )}
+
+            {/* Transcription Quality Display */}
+            {transcriptionQuality && (
+              <div className={`inline-flex items-center rounded-lg border shadow-sm ${getQualityDisplay(transcriptionQuality).color}`} style={{ gap: '4px', padding: '3px 6px', marginBottom: '4px', fontSize: '10px' }}>
+                <span style={{ fontSize: '12px' }}>{getQualityDisplay(transcriptionQuality).icon}</span>
+                <span className="font-semibold">{getQualityDisplay(transcriptionQuality).label} Quality</span>
+                <span className="opacity-75">({getQualityDisplay(transcriptionQuality).confidenceText})</span>
+              </div>
+            )}
+            
             {/* Auto-send countdown */}
             {autoSendCountdown !== null && autoSendReason && (
               <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm" style={{ gap: '6px', padding: '6px' }}>
@@ -239,6 +397,54 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
                 >
                   <X style={{ width: '10px', height: '10px' }} />
                 </button>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Speaker History - show if multiple speakers detected */}
+        {Object.keys(speakerHistory).length > 1 && (
+          <div className="bg-gradient-to-br from-slate-50 to-gray-50 border border-gray-200/50 rounded-lg shadow-sm backdrop-blur-sm" style={{ padding: '6px', marginBottom: '6px' }}>
+            <div className="text-gray-700 font-semibold flex items-center" style={{ fontSize: '9px', marginBottom: '4px', gap: '4px' }}>
+              <span className="filter drop-shadow-sm" style={{ fontSize: '11px' }}>👥</span>
+              Multiple speakers detected:
+            </div>
+            <div className="flex flex-wrap" style={{ gap: '4px' }}>
+              {Object.keys(speakerHistory).map((speaker) => (
+                <div key={speaker} className={`inline-flex items-center rounded-md border shadow-sm ${getSpeakerDisplay(speaker).color}`} style={{ gap: '2px', padding: '2px 4px', fontSize: '9px' }}>
+                  <span style={{ fontSize: '10px' }}>{getSpeakerDisplay(speaker).icon}</span>
+                  <span className="font-semibold">{getSpeakerDisplay(speaker).displayName}</span>
+                  <span className="opacity-75">({speakerHistory[speaker].length} messages)</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quality Metrics Panel - show if we have quality data and recommendations */}
+        {qualityMetrics.totalWords > 0 && qualityMetrics.recommendations.length > 0 && (
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/50 rounded-lg shadow-sm backdrop-blur-sm" style={{ padding: '6px', marginBottom: '6px' }}>
+            <div className="text-blue-700 font-semibold flex items-center" style={{ fontSize: '9px', marginBottom: '4px', gap: '4px' }}>
+              <span className="filter drop-shadow-sm" style={{ fontSize: '11px' }}>📊</span>
+              Voice Quality Insights:
+            </div>
+            <div className="flex flex-wrap" style={{ gap: '4px', marginBottom: '4px' }}>
+              <div className="inline-flex items-center bg-white/70 border border-blue-200 rounded-md shadow-sm" style={{ gap: '2px', padding: '2px 4px', fontSize: '9px' }}>
+                <span className="text-blue-600 font-semibold">Avg: {Math.round(qualityMetrics.averageConfidence * 100)}%</span>
+              </div>
+              <div className="inline-flex items-center bg-white/70 border border-blue-200 rounded-md shadow-sm" style={{ gap: '2px', padding: '2px 4px', fontSize: '9px' }}>
+                <span className="text-green-600 font-semibold">High: {qualityMetrics.highConfidenceWords}</span>
+              </div>
+              <div className="inline-flex items-center bg-white/70 border border-blue-200 rounded-md shadow-sm" style={{ gap: '2px', padding: '2px 4px', fontSize: '9px' }}>
+                <span className="text-red-600 font-semibold">Low: {qualityMetrics.lowConfidenceWords}</span>
+              </div>
+              <div className="inline-flex items-center bg-white/70 border border-blue-200 rounded-md shadow-sm" style={{ gap: '2px', padding: '2px 4px', fontSize: '9px' }}>
+                <span className="text-gray-600 font-semibold">Trend: {qualityMetrics.qualityTrend === 'improving' ? '↗️' : qualityMetrics.qualityTrend === 'declining' ? '↘️' : '➡️'} {qualityMetrics.qualityTrend}</span>
+              </div>
+            </div>
+            {qualityMetrics.recommendations.length > 0 && (
+              <div className="text-blue-800 bg-blue-100/50 border border-blue-200 rounded-md" style={{ padding: '3px', fontSize: '9px' }}>
+                <span className="font-semibold">Tips:</span> {qualityMetrics.recommendations.join(', ')}
               </div>
             )}
           </div>

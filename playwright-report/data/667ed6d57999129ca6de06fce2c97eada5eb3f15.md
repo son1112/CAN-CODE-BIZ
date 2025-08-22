@@ -1,0 +1,42 @@
+# Page snapshot
+
+```yaml
+- img "Rubber Ducky"
+- button "Refresh page"
+- button "New Conversation"
+- button "Claude 4 Sonnet medium"
+- button "Model information"
+- button "Switch to dark mode"
+- button "New Session (Ctrl/Cmd + N)"
+- button "Show App Tour"
+- button:
+  - img
+- img "Rubber Ducky Hero"
+- img "Rubber Ducky Logo"
+- heading "Hi! I'm your Rubber Ducky" [level=2]
+- paragraph: I'm here to help you think out loud, solve problems, and have friendly conversations. Just like the classic rubber duck debugging technique!
+- img "Rubber Ducky"
+- paragraph: "Let's chat about:"
+- paragraph: "\"Hello! I'm here to assist with whatever you're thinking through.\""
+- paragraph: 🎙️ Ready to chat? Use your voice or type a message below!
+- button "Start recording"
+- button "Enable continuous conversation"
+- text: Click to talk
+- textbox "Share your thoughts with the rubber ducky..."
+- button [disabled]
+- button "Open Menu":
+  - img
+- button "Jump to top"
+- button "Jump to bottom"
+- alert
+- button
+- heading "Welcome to Rubber Ducky Live! 🦆" [level=3]
+- paragraph:
+  - text: Your AI thinking companion is here to help you work through problems, just like the classic
+  - strong: rubber duck debugging
+  - text: technique!
+- paragraph: Talk through your thoughts, get AI insights, and solve problems together.
+- button "Skip Tour"
+- text: 1 of 8
+- button "Next"
+```

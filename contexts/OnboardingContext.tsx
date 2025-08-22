@@ -65,14 +65,14 @@ export const onboardingSteps: OnboardingStep[] = [
   },
   {
     target: '[data-onboarding="voice-input"]',
-    title: 'Voice Recognition Magic 🎙️',
+    title: 'Advanced Voice Recognition 🎙️',
     content: (
       <div className="space-y-3">
         <p className="text-base leading-relaxed">
-          Click the microphone to <strong>talk directly</strong> to your AI companion! Enable <strong>continuous mode</strong> for hands-free conversations.
+          Click the microphone to <strong>talk directly</strong> to your AI companion! Our advanced voice system includes <strong>quality metrics</strong>, <strong>confidence scoring</strong>, and <strong>smart end-of-turn detection</strong>.
         </p>
         <p className="text-sm text-gray-600">
-          Perfect for thinking out loud while you work.
+          Watch for real-time quality indicators and personalized recommendations to improve your voice experience.
         </p>
       </div>
     ),
@@ -95,14 +95,14 @@ export const onboardingSteps: OnboardingStep[] = [
   },
   {
     target: '[data-onboarding="sidebar-toggle"]',
-    title: 'Session Management',
+    title: 'Session & Settings Management',
     content: (
       <div className="space-y-3">
         <p className="text-base leading-relaxed">
-          Access your <strong>conversation history</strong>, manage sessions, and organize your thoughts. All conversations are automatically saved.
+          Access your <strong>conversation history</strong>, manage sessions, and configure advanced features. The sidebar includes your profile and comprehensive settings.
         </p>
         <p className="text-sm text-gray-600">
-          Never lose track of important insights or previous discussions.
+          Find <strong>Content Safety</strong>, voice quality settings, and personalization options in the Settings section.
         </p>
       </div>
     ),
@@ -122,6 +122,21 @@ export const onboardingSteps: OnboardingStep[] = [
       </div>
     ),
     placement: 'bottom',
+  },
+  {
+    target: '[data-onboarding="logo"]',
+    title: 'Advanced AI Features 🧠',
+    content: (
+      <div className="space-y-3">
+        <p className="text-base leading-relaxed">
+          We've equipped you with cutting-edge AI capabilities: <strong>Claude 4</strong> with smart fallback, <strong>sentiment analysis</strong>, <strong>speaker diarization</strong> for multi-person conversations, and <strong>content safety detection</strong>.
+        </p>
+        <p className="text-sm text-gray-600">
+          All features are configurable in Settings with privacy-first defaults.
+        </p>
+      </div>
+    ),
+    placement: 'center',
   },
   {
     target: '[data-onboarding="message-input"]',
@@ -154,14 +169,14 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     const completed = localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true';
     setHasCompletedOnboarding(completed);
     
-    // Auto-start onboarding for new users (disabled for testing)
-    // if (!completed) {
-    //   // Small delay to ensure DOM is ready
-    //   const timer = setTimeout(() => {
-    //     setIsOnboardingActive(true);
-    //   }, 1000);
-    //   return () => clearTimeout(timer);
-    // }
+    // Auto-start onboarding for new users
+    if (!completed) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        setIsOnboardingActive(true);
+      }, 2000); // Increased delay to ensure all components are loaded
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const startOnboarding = () => {

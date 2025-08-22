@@ -337,3 +337,4 @@ See [docs/VERSIONING.md](docs/VERSIONING.md) for detailed versioning guidelines.
 - Include initial prompts in git commit messages
 - Maintain test coverage above 50%
 - Run whitespace cleanup, documentation updates, tests, and linting before commits
+- always allow `touch ~/.claude-flash-trigger`

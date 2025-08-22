@@ -5,21 +5,21 @@ import { logger } from '@/lib/logger';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth(req);
-    if (!user) {
+    const { userId } = await requireAuth(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const sessionId = params.id;
+    const { id: sessionId } = await params;
     const { isTemplate, templateName } = await req.json();
 
     logger.info('Toggling session template', {
       component: 'SessionTemplateAPI',
       sessionId,
-      userId: user.id,
+      userId,
       isTemplate,
       templateName
     });
@@ -47,7 +47,7 @@ export async function POST(
     const session = await Session.findOneAndUpdate(
       { 
         sessionId, 
-        createdBy: user.id 
+        createdBy: userId 
       },
       updateData,
       { new: true }
@@ -57,7 +57,7 @@ export async function POST(
       logger.warn('Session not found for template toggle', {
         component: 'SessionTemplateAPI',
         sessionId,
-        userId: user.id
+        userId
       });
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
@@ -76,9 +76,10 @@ export async function POST(
     });
 
   } catch (error) {
+    const { id: sessionId } = await params.catch(() => ({ id: 'unknown' }));
     logger.error('Failed to toggle session template', {
       component: 'SessionTemplateAPI',
-      sessionId: params.id
+      sessionId
     }, error);
 
     return NextResponse.json(

@@ -8,6 +8,7 @@ import { ModelProvider } from "@/contexts/ModelContext";
 import { SessionProvider } from "next-auth/react";
 import { SessionProvider as ChatSessionProvider } from "@/contexts/SessionContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
+import { ContentSafetyProvider } from "@/contexts/ContentSafetyContext";
 import { SessionAgentSync } from "@/components/SessionAgentSync";
 import "./globals.css";
 
@@ -99,13 +100,15 @@ export default function RootLayout({
             <ModelProvider>
               <AgentProvider>
                 <ChatSessionProvider>
-                  <SessionAgentSync>
-                    <DropdownProvider>
-                      <OnboardingProvider>
-                        {children}
-                      </OnboardingProvider>
-                    </DropdownProvider>
-                  </SessionAgentSync>
+                  <ContentSafetyProvider>
+                    <SessionAgentSync>
+                      <DropdownProvider>
+                        <OnboardingProvider>
+                          {children}
+                        </OnboardingProvider>
+                      </DropdownProvider>
+                    </SessionAgentSync>
+                  </ContentSafetyProvider>
                 </ChatSessionProvider>
               </AgentProvider>
             </ModelProvider>

@@ -15,6 +15,20 @@ This file tracks future work items, feature requests, improvements, and technica
 
 ** 🔴 HIGH Priority
 
+*** Deployment & Production Readiness
+**** Production Deployment Strategy Implementation
+- TIMELINE: Immediate Vercel deployment → Railway migration → AWS scaling
+- Phase 1 (Week 1): Deploy to Vercel production environment 
+- Phase 2 (Month 2): Migrate to Railway for 40-60% cost optimization ($8-25/month vs $20-50/month)
+- Phase 3 (Month 6+): Consider AWS for enterprise scale if reaching $500+/month
+- Environment management: dev/staging/production pipeline setup
+- MongoDB Atlas production configuration and optimization
+- CI/CD pipeline setup with automated deployments
+- Performance monitoring and error tracking implementation
+- BUSINESS IMPACT: Enable public testing, reduce hosting costs, establish scalable foundation
+- STATUS: Ready to Begin - Vercel already configured
+- ESTIMATE: Phase 1: 2-4 hours, Phase 2: 1-2 days, Phase 3: 3-5 days
+
 *** Security & Compliance
 **** Log cleanup - security
 - Remove sensitive information from application logs
@@ -66,6 +80,46 @@ This file tracks future work items, feature requests, improvements, and technica
 - CONTEXT: Currently shows "Access blocked: rubberDucky has not completed the Google verification process"
 - STATUS: Not Started
 - ESTIMATE: 3-5 days
+
+*** Current Session Backlog Items (August 22, 2025)
+**** System-Wide Agent Context Management
+- Design a core context for all rubber ducky agents that they inherit from system-wide
+- Allow system-wide context updates at any point through app by text or voice input
+- Implement special section in account settings for global agent context configuration
+- Plan for future access controls and user permission scenarios for CRUD views/resources
+- Integration with voice recognition for context updates via speech
+- Database schema changes: Add globalAgentContext field to User model
+- UI implementation: Account settings section with rich text editor for context management
+- Voice integration: "Update my global agent context to..." command processing
+- BENEFITS: Consistent agent behavior across all sessions, personalized AI interactions
+- CONTEXT: Foundation for advanced permission systems and multi-user scenarios
+- STATUS: Not Started
+- ESTIMATE: 4-5 days
+- DEPENDENCIES: User preferences system, voice command processing enhancements
+
+**** Message Export & Management Features
+- Add copy button to chat messages for quick content copy to clipboard
+- Implement session-wide export functionality (all messages) to PDF, Word, and Text formats
+- Support both local download and Google Drive upload for bulk exports
+- Make text input in recording bar resizable for better user experience
+- Get Google Drive API key for enhanced integration and export functionality
+- STATUS: Text export completed, copy button and session export pending
+- ESTIMATE: 2-3 days
+
+**** Session-Specific Features
+- Add right side menu for session-specific settings and tools
+- Implement URL research integration within session context
+- Section for URLs to be researched in relation to current discussion
+- Session-specific agent pinning (pinned agent not being selected when returning to session)
+- STATUS: Not Started
+- ESTIMATE: 3-4 days
+
+**** Voice Recognition Advanced Features
+- Spoken keyword triggers for automated actions (e.g., "add that date to my schedule" → calendar integration)
+- Contextual action recognition and execution
+- Smart assistant-like voice command processing
+- STATUS: Research Phase - requires investigation into action mapping
+- ESTIMATE: 4-6 days
 
 *** User Experience Enhancements
 **** Enhanced Session Management
@@ -241,6 +295,15 @@ This file tracks future work items, feature requests, improvements, and technica
 - ✅ Enhanced session name display as prominent title
 - ✅ Fixed starred session navigation to properly load sessions
 - ✅ Improved Google OAuth authentication flow
+
+** August 22, 2025 Session Completions
+- ✅ Implemented comprehensive Playwright testing framework (190+ test scenarios)
+- ✅ Created text export functionality for chat messages (plain text format)
+- ✅ Added local download and Google Drive integration for text exports
+- ✅ Fixed hanging export success notification timeout issue
+- ✅ Added missing data-testid attributes for reliable test automation
+- ✅ Created standardized test selectors and helper utilities
+- ✅ Established comprehensive export testing coverage (PDF, Word, Text formats)
 
 * Notes
 - This backlog is continuously updated based on user feedback and development priorities
