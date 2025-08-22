@@ -6,10 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireAuth(req);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { userId } = await requireAuth(req);
 
     const { templateSessionId, newSessionName } = await req.json();
 
@@ -24,13 +21,13 @@ export async function POST(req: NextRequest) {
       component: 'SessionFromTemplateAPI',
       templateSessionId,
       newSessionName,
-      userId: user.id
+      userId: userId
     });
 
     // Find the template session
     const templateSession = await Session.findOne({
       sessionId: templateSessionId,
-      createdBy: user.id,
+      createdBy: userId,
       isTemplate: true
     });
 
@@ -38,7 +35,7 @@ export async function POST(req: NextRequest) {
       logger.warn('Template session not found', {
         component: 'SessionFromTemplateAPI',
         templateSessionId,
-        userId: user.id
+        userId: userId
       });
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }
@@ -46,7 +43,7 @@ export async function POST(req: NextRequest) {
     // Check if session name already exists
     const existingSession = await Session.findOne({
       name: newSessionName,
-      createdBy: user.id
+      createdBy: userId
     });
 
     if (existingSession) {
@@ -61,7 +58,7 @@ export async function POST(req: NextRequest) {
     const newSession = new Session({
       sessionId: newSessionId,
       name: newSessionName,
-      createdBy: user.id,
+      createdBy: userId,
       messages: [], // Start with empty messages
       iterations: [],
       iterationCount: 0,
