@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
         createdBy: userId,
         primaryAgent: templateSession.primaryAgent,
         conversationStarter: templateSession.conversationStarter,
-        tags: templateSession.tags.filter(tag => tag !== 'template'),
+        tags: templateSession.tags.filter((tag: any) => tag !== 'template'),
         avatar: templateSession.avatar,
         messages: [],
         iterations: []

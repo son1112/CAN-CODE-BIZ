@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = await requireAuth(req);
+    const { userId } = await requireAuth(req);
     
     logger.info('Fetching ccusage data', {
       component: 'UsageAPI',
