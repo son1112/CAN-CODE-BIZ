@@ -3,9 +3,9 @@ import connectDB from '@/lib/mongodb';
 import { requireAuth } from '@/lib/middleware/auth';
 import UserPreferences from '@/models/UserPreferences';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const authResult = await requireAuth();
+    const authResult = await requireAuth(req);
     if ('error' in authResult) {
       return authResult;
     }

@@ -82,6 +82,17 @@ This file tracks future work items, feature requests, improvements, and technica
 - ESTIMATE: 3-5 days
 
 *** Current Session Backlog Items (August 22, 2025)
+**** Development Workflow Improvements
+- Switch to developing on develop branch instead of main
+- Implement proper Git workflow with feature branches
+- Keep main branch stable for production deployments
+- Create develop branch for ongoing development work
+- BENEFITS: Cleaner deployment pipeline, safer development workflow, proper separation of concerns
+- CONTEXT: Currently developing directly on main branch, should establish better Git flow practices
+- STATUS: Not Started
+- ESTIMATE: 30 minutes
+- DEPENDENCIES: Current Vercel deployment completion
+
 **** System-Wide Agent Context Management
 - Design a core context for all rubber ducky agents that they inherit from system-wide
 - Allow system-wide context updates at any point through app by text or voice input
