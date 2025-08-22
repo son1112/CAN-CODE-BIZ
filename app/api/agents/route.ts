@@ -82,11 +82,11 @@ export async function GET(request: NextRequest) {
         count: agents.length
       });
     } catch (dbError) {
-      console.error('Direct MongoDB agent listing error:', dbError);
+      console.error('Direct MongoDB agent listing error:', dbError instanceof Error ? dbError.message : 'Unknown database error');
       throw new Error('Failed to connect to agent storage');
     }
   } catch (error: unknown) {
-    console.error('List agents error:', error);
+    console.error('List agents error:', error instanceof Error ? error.message : 'Unknown error');
     
     // Provide specific error messages based on error type
     let errorMessage = 'Failed to fetch agents';
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('Agents API error:', error);
+    console.error('Agents API error:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
       { error: 'Agent operation failed' },
       { status: 500 }
@@ -169,7 +169,7 @@ async function processWithAgent(agentName: string, transcript: string) {
       throw processError;
     }
   } catch (error) {
-    console.error('Process with agent error:', error);
+    console.error('Process with agent error:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
       { error: `Failed to process with agent ${agentName}` },
       { status: 500 }

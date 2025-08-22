@@ -38,7 +38,7 @@ export async function PUT(
 
     return NextResponse.json(tag);
   } catch (error) {
-    console.error('Error updating tag:', error);
+    console.error('Error updating tag:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -79,7 +79,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Tag deleted successfully' });
   } catch (error) {
-    console.error('Error deleting tag:', error);
+    console.error('Error deleting tag:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

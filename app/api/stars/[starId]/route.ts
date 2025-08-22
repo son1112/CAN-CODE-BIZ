@@ -36,7 +36,7 @@ export async function PUT(
 
     return NextResponse.json({ star });
   } catch (error) {
-    console.error('Error updating star:', error);
+    console.error('Error updating star:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
       { error: 'Failed to update star' },
       { status: 500 }
@@ -65,7 +65,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Star deleted successfully' });
   } catch (error) {
-    console.error('Error deleting star:', error);
+    console.error('Error deleting star:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
       { error: 'Failed to delete star' },
       { status: 500 }

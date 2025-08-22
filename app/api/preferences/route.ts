@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(preferences);
   } catch (error) {
-    console.error('Get preferences error:', error);
+    console.error('Get preferences error:', error instanceof Error ? error.message : 'Unknown error');
     if (error instanceof Error && error.message.includes('Authentication')) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -90,7 +90,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedPreferences);
   } catch (error) {
-    console.error('Update preferences error:', error);
+    console.error('Update preferences error:', error instanceof Error ? error.message : 'Unknown error');
     if (error instanceof Error && error.message.includes('Authentication')) {
       return NextResponse.json(
         { error: 'Authentication required' },

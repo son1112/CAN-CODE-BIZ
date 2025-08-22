@@ -62,7 +62,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Item unstarred successfully' });
   } catch (error) {
-    console.error('Error unstarring item:', error);
+    console.error('Error unstarring item:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
       { error: 'Failed to unstar item' },
       { status: 500 }
@@ -100,7 +100,7 @@ export async function GET(
       star: star || null,
     });
   } catch (error) {
-    console.error('Error checking star status:', error);
+    console.error('Error checking star status:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
       { error: 'Failed to check star status' },
       { status: 500 }
