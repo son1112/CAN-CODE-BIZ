@@ -4,7 +4,6 @@
 
 import jsPDF from 'jspdf';
 import { logger } from '@/lib/logger';
-// @ts-expect-error - Font file is dynamically generated
 import { NotoSansRegularFont } from '@/lib/fonts/NotoSansRegular';
 
 export interface MessageExportData {

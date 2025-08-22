@@ -806,7 +806,9 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
                       transcriptLength: newTranscript.trim().length,
                       endOfTurnScore: endOfTurnAnalysis.score,
                       confidence: endOfTurnAnalysis.confidence,
-                      factors: endOfTurnAnalysis.factors
+                      silenceScore: endOfTurnAnalysis.factors.silenceScore,
+                      wordCount: endOfTurnAnalysis.factors.wordCount,
+                      hasPunctuation: endOfTurnAnalysis.factors.hasPunctuation
                     });
                     
                     // Adjust countdown duration based on end-of-turn confidence

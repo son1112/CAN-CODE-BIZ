@@ -52,21 +52,21 @@ const authConfig = {
     error: '/auth/error',
   },
   callbacks: {
-    async redirect({ url, baseUrl }) {
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       // Allows relative callback URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`
       // Allows callback URLs on the same origin
       else if (new URL(url).origin === baseUrl) return url
       return baseUrl
     },
-    async session({ session, token, user }) {
+    async session({ session, token, user }: { session: any; token: any; user: any }) {
       // Send properties to the client
       if (session.user) {
         session.user.id = user?.id || token?.sub || '';
       }
       return session;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: any; user: any }) {
       // Persist user id to the token right after signin
       if (user) {
         token.userId = user.id;

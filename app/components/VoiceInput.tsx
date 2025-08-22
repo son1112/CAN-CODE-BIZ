@@ -92,8 +92,8 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
     };
     
     return {
-      color: riskColors[safety.summary.riskLevel] || riskColors.medium,
-      icon: riskIcons[safety.summary.riskLevel] || riskIcons.medium,
+      color: riskColors[safety.summary.riskLevel as keyof typeof riskColors] || riskColors.medium,
+      icon: riskIcons[safety.summary.riskLevel as keyof typeof riskIcons] || riskIcons.medium,
       level: safety.summary.riskLevel.charAt(0).toUpperCase() + safety.summary.riskLevel.slice(1),
       categories: safety.summary.flaggedCategories
     };
@@ -136,8 +136,8 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
     };
     
     return {
-      color: qualityColors[quality.audioQuality] || qualityColors.fair,
-      icon: qualityIcons[quality.audioQuality] || qualityIcons.fair,
+      color: qualityColors[quality.audioQuality as keyof typeof qualityColors] || qualityColors.fair,
+      icon: qualityIcons[quality.audioQuality as keyof typeof qualityIcons] || qualityIcons.fair,
       label: quality.audioQuality.charAt(0).toUpperCase() + quality.audioQuality.slice(1),
       confidenceText: `${Math.round(quality.confidence * 100)}% confidence`,
       clarityScore: `${Math.round(quality.speechClarityScore)}% clarity`

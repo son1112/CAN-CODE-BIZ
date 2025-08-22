@@ -57,7 +57,9 @@ export function ContentSafetyProvider({ children }: { children: React.ReactNode 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSettings));
       logger.info('Content safety settings updated', { 
         component: 'ContentSafetyContext',
-        settings: updatedSettings 
+        enabled: updatedSettings.enabled,
+        mode: updatedSettings.mode,
+        sensitivity: updatedSettings.sensitivity
       });
     } catch (error) {
       logger.error('Failed to save content safety settings', { 
