@@ -5,11 +5,7 @@ import UserPreferences from '@/models/UserPreferences';
 
 export async function GET(req: NextRequest) {
   try {
-    const authResult = await requireAuth(req);
-    if ('error' in authResult) {
-      return authResult;
-    }
-    const { userId } = authResult;
+    const { userId } = await requireAuth(req);
 
     await connectDB();
     
@@ -48,6 +44,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(preferences);
   } catch (error) {
     console.error('Get preferences error:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       { error: 'Failed to fetch preferences' },
       { status: 500 }
@@ -57,11 +59,7 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const authResult = await requireAuth(request);
-    if ('error' in authResult) {
-      return authResult;
-    }
-    const { userId } = authResult;
+    const { userId } = await requireAuth(request);
 
     await connectDB();
     
@@ -93,6 +91,12 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(updatedPreferences);
   } catch (error) {
     console.error('Update preferences error:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       { error: 'Failed to update preferences' },
       { status: 500 }

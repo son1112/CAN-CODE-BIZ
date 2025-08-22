@@ -9,9 +9,6 @@ export async function POST(
 ) {
   try {
     const { userId } = await requireAuth(req);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const { id: sessionId } = await context.params;
     const { isFavorite } = await req.json();
@@ -57,6 +54,14 @@ export async function POST(
 
   } catch (error) {
     const { id: sessionId } = await context.params.catch(() => ({ id: 'unknown' }));
+    
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
     logger.error('Failed to toggle session favorite', {
       component: 'SessionFavoriteAPI',
       sessionId

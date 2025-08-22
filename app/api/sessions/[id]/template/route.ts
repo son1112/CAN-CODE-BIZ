@@ -8,11 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authResult = await requireAuth(req);
-    if ('error' in authResult) {
-      return authResult;
-    }
-    const { userId } = authResult;
+    const { userId } = await requireAuth(req);
 
     const { id: sessionId } = await params;
     const { isTemplate, templateName } = await req.json();
@@ -78,6 +74,14 @@ export async function POST(
 
   } catch (error) {
     const { id: sessionId } = await params.catch(() => ({ id: 'unknown' }));
+    
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
     logger.error('Failed to toggle session template', {
       component: 'SessionTemplateAPI',
       sessionId
