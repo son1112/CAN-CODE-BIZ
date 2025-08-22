@@ -12,11 +12,7 @@ export async function PUT(
     const { messageId } = await params;
     
     // Get user
-    const authResult = await requireAuth(request);
-    if (authResult.error) {
-      return authResult.response;
-    }
-    const userId = authResult.userId;
+    const { userId } = await requireAuth(request);
     
     const body = await request.json();
     const { isPinned } = body;
@@ -51,7 +47,7 @@ export async function PUT(
     }
 
     // Find the updated message
-    const updatedMessage = updatedSession.messages.find(msg => msg.id === messageId);
+    const updatedMessage = updatedSession.messages.find((msg: any) => msg.id === messageId);
 
     return NextResponse.json({ 
       message: updatedMessage,

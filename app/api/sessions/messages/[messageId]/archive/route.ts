@@ -49,7 +49,7 @@ export async function POST(
     }
 
     // Find and update the message
-    const message = session.messages.find((msg) => msg.id === messageId);
+    const message = session.messages.find((msg: any) => msg.id === messageId);
     
     if (!message) {
       logger.warn('Message not found for archive operation', {
