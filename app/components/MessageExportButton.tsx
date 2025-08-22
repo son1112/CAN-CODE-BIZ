@@ -231,6 +231,11 @@ export default function MessageExportButton({
           exportType: type
         });
 
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => {
+          setExportState(prev => ({ ...prev, success: null }));
+        }, 3000);
+
         return;
       }
 
@@ -289,10 +294,10 @@ export default function MessageExportButton({
         fileId: result.data.fileId
       });
 
-      // Auto-hide success message after 5 seconds
+      // Auto-hide success message after 3 seconds
       setTimeout(() => {
         setExportState(prev => ({ ...prev, success: null }));
-      }, 5000);
+      }, 3000);
 
     } catch (error) {
       logger.error('Export failed', {
