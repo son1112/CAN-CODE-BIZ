@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Download, FileText, FileImage, ExternalLink, Loader, CheckCircle, AlertCircle } from 'lucide-react';
+import { Download, FileText, FileImage, File, ExternalLink, Loader, CheckCircle, AlertCircle } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { loadGoogleServices, isGoogleServicesReady } from '@/lib/googleServices';
 
@@ -13,9 +13,9 @@ interface MessageExportButtonProps {
 
 interface ExportState {
   isExporting: boolean;
-  exportType: 'pdf' | 'word' | null;
+  exportType: 'pdf' | 'word' | 'text' | null;
   error: string | null;
-  success: { type: 'pdf' | 'word'; link: string } | null;
+  success: { type: 'pdf' | 'word' | 'text'; link: string } | null;
 }
 
 export default function MessageExportButton({
@@ -144,7 +144,7 @@ export default function MessageExportButton({
     }
   };
 
-  const handleExport = async (type: 'pdf' | 'word') => {
+  const handleExport = async (type: 'pdf' | 'word' | 'text') => {
     setExportState({
       isExporting: true,
       exportType: type,
@@ -176,7 +176,9 @@ export default function MessageExportButton({
         });
 
         // Call local export API (without Google Drive upload)
-        const endpoint = type === 'pdf' ? '/api/export/pdf-local' : '/api/export/word-local';
+        const endpoint = type === 'pdf' ? '/api/export/pdf-local' : 
+                        type === 'word' ? '/api/export/word-local' : 
+                        '/api/export/text-local';
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -206,7 +208,7 @@ export default function MessageExportButton({
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `message-export-${Date.now()}.${type === 'pdf' ? 'pdf' : 'docx'}`;
+        link.download = `message-export-${Date.now()}.${type === 'pdf' ? 'pdf' : type === 'word' ? 'docx' : 'txt'}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -239,7 +241,9 @@ export default function MessageExportButton({
       }
 
       // Call export API
-      const endpoint = type === 'pdf' ? '/api/export/pdf' : '/api/export/word';
+      const endpoint = type === 'pdf' ? '/api/export/pdf' : 
+                      type === 'word' ? '/api/export/word' : 
+                      '/api/export/text';
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -315,6 +319,7 @@ export default function MessageExportButton({
     <div className={`relative ${className}`}>
       {/* Export Button */}
       <button
+        data-testid="export-button"
         onClick={() => setShowDropdown(!showDropdown)}
         disabled={exportState.isExporting}
         className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -331,6 +336,7 @@ export default function MessageExportButton({
       {/* Dropdown Menu */}
       {showDropdown && !exportState.isExporting && (
         <div 
+          data-testid="export-menu"
           className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-800 rounded-xl shadow-2xl shadow-blue-500/20 z-[60] min-w-52 animate-in slide-in-from-top-2 duration-200 backdrop-blur-sm"
           onClick={(e) => e.stopPropagation()}
         >
@@ -341,6 +347,7 @@ export default function MessageExportButton({
             </div>
             
             <button
+              data-testid="export-pdf"
               onClick={() => handleExport('pdf')}
               className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-700 transition-colors duration-200 mb-2"
             >
@@ -352,13 +359,26 @@ export default function MessageExportButton({
             </button>
             
             <button
+              data-testid="export-word"
               onClick={() => handleExport('word')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-200"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-200 mb-2"
             >
               <FileText className="w-5 h-5 text-blue-500" />
               <div className="text-left">
                 <div>Export as Word</div>
                 <div className="text-xs text-blue-500/70">Microsoft Word document</div>
+              </div>
+            </button>
+            
+            <button
+              data-testid="export-text"
+              onClick={() => handleExport('text')}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-300 hover:border-green-300 dark:hover:border-green-700 transition-colors duration-200"
+            >
+              <File className="w-5 h-5 text-green-500" />
+              <div className="text-left">
+                <div>Export as Text</div>
+                <div className="text-xs text-green-500/70">Plain text file</div>
               </div>
             </button>
           </div>

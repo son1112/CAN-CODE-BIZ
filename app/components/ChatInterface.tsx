@@ -730,6 +730,7 @@ export default function ChatInterface() {
 
   return (
     <div 
+      data-testid="chat-interface"
       className="flex flex-col h-screen relative overflow-hidden bg-primary"
       style={{
         background: isDark 
@@ -1088,6 +1089,7 @@ export default function ChatInterface() {
                 {/* Continuous Mode */}
                 <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                 <button
+                  data-onboarding="continuous-mode"
                   onClick={() => {
                     toggleContinuousMode();
                     setIsOverflowMenuOpen(false);
@@ -1124,27 +1126,6 @@ export default function ChatInterface() {
             )}
           </div>
 
-          {/* Account Avatar - Far Right */}
-          {authSession?.user?.image && (
-            <button
-              onClick={() => {
-                setActiveTab('menu');
-                setShowAccountMenu(true);
-                setIsSidebarOpen(true);
-              }}
-              className="rounded-full overflow-hidden border-2 hover:border-blue-400 transition-all duration-200 ml-auto hover:shadow-lg hover:scale-105"
-              style={{ borderColor: 'var(--border-primary)' }}
-              title="Account settings"
-            >
-              <Image
-                src={authSession.user.image}
-                alt="Account"
-                width={32}
-                height={32}
-                className="rounded-full"
-              />
-            </button>
-          )}
         </div>
       </div>
 
@@ -1369,6 +1350,7 @@ export default function ChatInterface() {
                     </span>
                   )}
                 </button>
+
 
                 {/* Input History Section */}
                 {showUserHistory && messages.filter(m => m.role === 'user').length > 0 && (
@@ -2479,6 +2461,7 @@ export default function ChatInterface() {
                 
                 <div className="relative">
                   <textarea
+                    data-testid="message-input"
                     ref={inputRef}
                     value={inputValue}
                     onChange={handleInputChange}
@@ -2513,6 +2496,7 @@ export default function ChatInterface() {
                 </div>
               </div>
               <button
+                data-testid="send-button"
                 type="submit"
                 disabled={!inputValue.trim() || isStreaming || isProcessingMessage}
                 className="relative bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 text-white rounded-xl hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center shadow-lg shadow-yellow-500/25 hover:shadow-xl hover:shadow-yellow-500/30 transform hover:scale-105"
