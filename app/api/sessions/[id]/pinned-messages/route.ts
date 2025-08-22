@@ -12,11 +12,7 @@ export async function GET(
     const { id } = await params;
     
     // Get user
-    const authResult = await requireAuth(request);
-    if (authResult.error) {
-      return authResult.response;
-    }
-    const userId = authResult.userId;
+    const { userId } = await requireAuth(request);
 
     // Find session and filter for pinned messages
     const session = await Session.findOne(
@@ -49,6 +45,12 @@ export async function GET(
 
   } catch (error) {
     console.error('Error fetching pinned messages:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
