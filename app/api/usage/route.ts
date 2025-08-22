@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
     logger.info('ccusage data fetched successfully', {
       component: 'UsageAPI',
       userId,
-      projectCost: usageData.projectCost,
-      projectTokens: usageData.projectTokens
+      projectTokens: usageData.projectTokens,
+      dailyTotalTokens: usageData.dailyTotalTokens
     });
 
     return NextResponse.json({

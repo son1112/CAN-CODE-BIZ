@@ -56,7 +56,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error('Error updating message pin status:', error);
+    console.error('Error updating message pin status:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -81,7 +81,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error('Error updating message tags:', error);
+    console.error('Error updating message tags:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
       { error: 'Failed to update message tags' },
       { status: 500 }
@@ -120,7 +120,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching message tags:', error);
+    console.error('Error fetching message tags:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
       { error: 'Failed to fetch message tags' },
       { status: 500 }
