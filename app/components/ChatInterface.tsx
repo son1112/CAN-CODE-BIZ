@@ -788,8 +788,7 @@ export default function ChatInterface() {
           {/* Refresh button to reload current state */}
           <button
             onClick={() => window.location.reload()}
-            className="rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors hover:shadow-md"
-            className="p-3 sm:p-2 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
+            className="rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors hover:shadow-md p-3 sm:p-2 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
             title="Refresh page"
           >
             <RefreshCw className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
@@ -908,8 +907,7 @@ export default function ChatInterface() {
           ) : (
             <button
               onClick={handleQuickNewSession}
-              className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 cursor-pointer"
-              className="px-3 py-2.5 sm:px-2 sm:py-1 min-h-[44px] sm:min-h-0"
+              className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 cursor-pointer px-3 py-2.5 sm:px-2 sm:py-1 min-h-[44px] sm:min-h-0"
               title="Start a new conversation"
             >
               <MessageCircle 
