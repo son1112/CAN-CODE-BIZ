@@ -11,8 +11,8 @@ if (process.env.NODE_ENV === 'development') {
   // In development mode, use a global variable to preserve the value across HMR
   if (!global._mongoClientPromise) {
     client = new MongoClient(process.env.MONGODB_URI!, {
-      connectTimeoutMS: 8000,
-      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 8000,
       maxPoolSize: 10,
       minPoolSize: 1,
     });
@@ -20,14 +20,17 @@ if (process.env.NODE_ENV === 'development') {
   }
   clientPromise = global._mongoClientPromise;
 } else {
-  // In production mode, it's best to not use a global variable
-  client = new MongoClient(process.env.MONGODB_URI!, {
-    connectTimeoutMS: 8000,
-    serverSelectionTimeoutMS: 5000,
-    maxPoolSize: 10,
-    minPoolSize: 1,
-  });
-  clientPromise = client.connect();
+  // In production mode, use cached connection to avoid cold start issues
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(process.env.MONGODB_URI!, {
+      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 8000,
+      maxPoolSize: 15,
+      minPoolSize: 2,
+    });
+    global._mongoClientPromise = client.connect();
+  }
+  clientPromise = global._mongoClientPromise;
 }
 
 // Extend the global type
@@ -75,7 +78,7 @@ const authConfig = {
     },
   },
   session: {
-    strategy: isDemoMode ? "jwt" as const : "database" as const,
+    strategy: "jwt" as const, // Temporarily using JWT for production stability
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   debug: process.env.NODE_ENV === "development" && !isDemoMode,

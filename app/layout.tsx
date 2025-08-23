@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto, Roboto_Mono } from "next/font/google";
+// Cache bust: 2025-08-22-mobile-fix
 import Script from "next/script";
 import { AgentProvider } from "@/contexts/AgentContext";
 import { DropdownProvider } from "@/contexts/DropdownContext";
