@@ -15,11 +15,11 @@ export default function MessageDisplay({ message, isStreaming = false }: Message
   const isVoice = message.audioMetadata;
 
   return (
-    <div className={`relative px-4 py-6 ${isUser ? 'bg-white' : 'bg-gradient-to-br from-slate-50 to-slate-100/50'}`}>
-      <div className="max-w-4xl mx-auto">
-        <div className={`flex gap-4 ${isUser ? 'justify-start' : 'justify-start'}`}>
-          {/* Avatar */}
-          <div className="flex-shrink-0">
+    <div className={`relative px-2 sm:px-4 py-4 sm:py-6 ${isUser ? 'bg-white' : 'bg-gradient-to-br from-slate-50 to-slate-100/50'}`}>
+      <div className="w-full max-w-full sm:max-w-4xl mx-auto overflow-hidden">
+        <div className={`flex gap-2 sm:gap-4 ${isUser ? 'justify-start' : 'justify-start'}`}>
+          {/* Avatar - Hidden on small and medium screens */}
+          <div className="hidden lg:flex flex-shrink-0">
             {isUser ? (
               <div className="relative">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
@@ -64,14 +64,14 @@ export default function MessageDisplay({ message, isStreaming = false }: Message
               isUser 
                 ? 'bg-white border border-blue-200 rounded-2xl rounded-tl-md shadow-sm' 
                 : 'bg-gradient-to-br from-white to-purple-50/30 border border-purple-200/50 rounded-2xl rounded-tl-md shadow-sm'
-            } p-4 ${isStreaming && !isUser ? 'min-h-[3rem]' : ''}`}>
+            } p-3 sm:p-4 ${isStreaming && !isUser ? 'min-h-[3rem]' : ''} max-w-full overflow-hidden`}>
               
               {/* Message Text */}
-              <div className={`prose prose-sm max-w-none ${
+              <div className={`prose prose-sm max-w-none break-words overflow-wrap-anywhere ${
                 isUser 
                   ? 'prose-blue text-gray-800' 
                   : 'prose-purple text-gray-700'
-              }`}>
+              }`} style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}>
                 {isUser ? (
                   <p className="mb-0 leading-relaxed">{message.content}</p>
                 ) : (

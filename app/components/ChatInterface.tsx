@@ -760,7 +760,7 @@ export default function ChatInterface() {
       <div 
         className="relative flex items-center justify-between backdrop-blur-xl border-b scale-locked-header" 
         style={{ 
-          padding: '12px 20px', 
+          padding: '8px 16px', 
           position: 'relative', 
           zIndex: 100, 
           width: '100%',
@@ -776,7 +776,7 @@ export default function ChatInterface() {
           backgroundOrigin: 'padding-box, border-box'
         }}
       >
-        <div className="flex items-center min-w-0 flex-1" style={{ gap: '20px' }}>
+        <div className="flex items-center min-w-0 flex-1 gap-3 sm:gap-5">
           <div data-onboarding="logo">
             <Logo 
               size="lg" 
@@ -788,7 +788,8 @@ export default function ChatInterface() {
           {/* Refresh button to reload current state */}
           <button
             onClick={() => window.location.reload()}
-            className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors hover:shadow-md"
+            className="rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors hover:shadow-md"
+            className="p-3 sm:p-2 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
             title="Refresh page"
           >
             <RefreshCw className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
@@ -907,7 +908,8 @@ export default function ChatInterface() {
           ) : (
             <button
               onClick={handleQuickNewSession}
-              className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg px-2 py-1 transition-all duration-200 cursor-pointer"
+              className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 cursor-pointer"
+              className="px-3 py-2.5 sm:px-2 sm:py-1 min-h-[44px] sm:min-h-0"
               title="Start a new conversation"
             >
               <MessageCircle 
@@ -1594,11 +1596,11 @@ export default function ChatInterface() {
               )}
             </div>
           ) : (
-            <div className="relative flex-1 flex flex-col">
+            <div className="relative flex-1 flex flex-col max-w-full overflow-hidden">
             {/* Session Title - Sticky */}
             {currentSession && filteredMessages.length > 0 && (
               <div 
-                className="sticky top-0 z-10 text-center py-6 border-b border-opacity-20"
+                className="sticky top-0 z-10 text-center py-3 sm:py-6 border-b border-opacity-20 px-2 sm:px-0 max-w-full overflow-hidden"
                 style={{ 
                   borderColor: 'var(--border-primary)',
                   background: isDark 
@@ -1607,7 +1609,7 @@ export default function ChatInterface() {
                   backdropFilter: 'blur(12px)'
                 }}
               >
-                <div className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl border-2" style={{
+                <div className="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-8 py-3 sm:py-4 rounded-2xl border-2 max-w-full overflow-hidden" style={{
                   background: isDark 
                     ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.15) 100%)'
                     : 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.08) 100%)',
@@ -1871,7 +1873,7 @@ export default function ChatInterface() {
             
             <div 
               ref={chatContainerRef} 
-              className="flex-1 overflow-y-auto p-8 pb-4 space-y-6"
+              className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-8 py-4 sm:pb-4 space-y-4 sm:space-y-6 w-full max-w-full"
               style={{
                 backgroundColor: '#f0f0f0',
                 backgroundImage: `
@@ -2006,11 +2008,11 @@ export default function ChatInterface() {
                         </div>
                       ) : (
                         /* AI Assistant Message */
-                        <div className="w-full">
-                          <div className="flex items-start gap-6">
+                        <div className="w-full max-w-full overflow-hidden">
+                          <div className="flex items-start gap-2 sm:gap-6">
                             {/* AI Avatar */}
                             <div 
-                              className="rounded-full flex items-center justify-center flex-shrink-0 relative shadow-lg transform transition-transform duration-300 group-hover:scale-110"
+                              className="hidden lg:flex rounded-full items-center justify-center flex-shrink-0 relative shadow-lg transform transition-transform duration-300 group-hover:scale-110"
                               style={{
                                 width: '64px',
                                 height: '64px',
@@ -2031,9 +2033,10 @@ export default function ChatInterface() {
                           
                           {/* Full-width AI Message - Professional Paper Style */}
                           <div 
-                            className="flex-1 relative shadow-xl transition-all duration-300 group-hover:shadow-2xl rounded-lg border-l-4"
-                            style={{ 
-                              padding: collapsedMessages.has(message.id) ? '0.75rem 1.5rem' : '2rem 3rem',
+                            className={`flex-1 relative shadow-xl transition-all duration-300 group-hover:shadow-2xl rounded-lg border-l-4 w-full max-w-full overflow-hidden ${
+                              collapsedMessages.has(message.id) ? 'p-3 sm:p-6' : 'p-4 sm:p-8 lg:p-12'
+                            }`}
+                            style={{
                               borderLeftColor: '#eab308',
                               backgroundColor: isDark ? '#ffffff' : '#ffffff',
                               color: isDark ? '#1f2937' : '#1f2937',
@@ -2221,11 +2224,11 @@ export default function ChatInterface() {
               {(isProcessingMessage || (isStreaming && messages.filter(m => m.role === 'assistant').length === 0)) && (
                 <div className="group">
                   {/* Thinking bubble that matches AI response style */}
-                  <div className="w-full">
-                    <div className="flex items-start gap-6">
+                  <div className="w-full max-w-full overflow-hidden">
+                    <div className="flex items-start gap-2 sm:gap-6">
                       {/* AI Avatar */}
                       <div 
-                        className="rounded-full flex items-center justify-center flex-shrink-0 relative shadow-lg"
+                        className="hidden lg:flex rounded-full items-center justify-center flex-shrink-0 relative shadow-lg"
                         style={{
                           width: '64px',
                           height: '64px',
@@ -2246,9 +2249,8 @@ export default function ChatInterface() {
                       
                       {/* Thinking bubble - Professional Paper Style */}
                       <div 
-                        className="flex-1 relative shadow-xl rounded-lg border-l-4 animate-pulse"
-                        style={{ 
-                          padding: '2rem 3rem',
+                        className="flex-1 relative shadow-xl rounded-lg border-l-4 animate-pulse w-full max-w-full overflow-hidden p-4 sm:p-8 lg:p-12"
+                        style={{
                           borderLeftColor: '#eab308',
                           backgroundColor: isDark ? '#ffffff' : '#ffffff',
                           color: isDark ? '#1f2937' : '#1f2937',
