@@ -23,6 +23,7 @@ interface SessionHeaderProps {
   loadSession: (sessionId: string) => Promise<void>;
 }
 
+// SessionHeader component - extracted from ChatInterface for better maintainability
 export default function SessionHeader({
   currentSession,
   filteredMessages,
