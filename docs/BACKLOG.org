@@ -1125,6 +1125,72 @@ This documentation format should be used as a template for future backlog items 
 **** Complexity: Medium (UI integration + state management)
 **** Related Files: Session header components, useStars hook, stars API
 
+*** 🟡 MEDIUM PRIORITY: Consider Vercel Pro Upgrade for Separate Deploy Environments
+**** Problem Statement
+- Current Vercel free tier limits proper environment separation
+- All projects share same deployment constraints and configuration limitations
+- Need better isolation between staging, testing, and production environments
+- Branch-based deployment configuration is limited on free tier
+
+**** Technical Requirements
+- Evaluate Vercel Pro features for environment management
+- Assess cost-benefit of upgraded deployment capabilities
+- Research advanced branch deployment controls
+- Consider team collaboration features
+
+**** Implementation Approach
+1. Research Vercel Pro pricing and features
+2. Evaluate benefits for multi-environment deployments
+3. Assess team collaboration and access control features
+4. Compare with alternative deployment platforms
+5. Present cost-benefit analysis for decision
+
+**** Current Workaround
+- Using develop:vercel-testing approach for now
+- Manual branch configuration via dashboard
+- Acceptable for current team size and needs
+
+**** Acceptance Criteria
+- Cost-benefit analysis completed
+- Feature comparison documented
+- Decision documented with rationale
+- Migration plan if upgrade approved
+
+**** Priority: 🟡 MEDIUM (infrastructure planning)
+**** Complexity: Simple (research and analysis)
+**** Dependencies: Current deployment workflow stability
+
+*** 🟢 LOW PRIORITY: Desktop Header Optimization
+**** Problem Statement
+- Desktop header layout and spacing could be optimized for better user experience
+- May have inefficient use of screen space or suboptimal component arrangement
+- Currently functional but not optimized (to be addressed in later phases)
+
+**** Technical Requirements
+- Analyze current desktop header layout and component arrangement
+- Identify opportunities for better space utilization
+- Maintain all current functionality while improving visual design
+- Ensure responsive behavior across different desktop screen sizes
+
+**** Implementation Approach
+1. Audit current desktop header design and layout
+2. Identify specific areas for improvement (spacing, alignment, hierarchy)
+3. Create design mockups for optimized layout
+4. Implement responsive improvements
+5. Test across various desktop screen sizes and resolutions
+6. Ensure mobile responsiveness is not affected
+
+**** Acceptance Criteria
+- Header uses screen space more efficiently
+- Visual hierarchy and component arrangement improved
+- All existing functionality preserved
+- Responsive design maintained across screen sizes
+- No regression in mobile experience
+
+**** Priority: 🟢 LOW (optimization for later phases)
+**** Complexity: Medium (UI/UX design + responsive implementation)
+**** Related Files: Header components, layout components, CSS/styling files
+
 *** 🟢 LOW PRIORITY: Export Tooltip Z-Index Fix  
 **** Problem Statement
 - Export functionality tooltip has z-index layering issues

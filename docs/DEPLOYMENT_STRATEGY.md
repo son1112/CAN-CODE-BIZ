@@ -217,8 +217,18 @@ Select: Vercel - rubber-ducky-live-alpha (for develop branch)
 3. ✅ Configure environment-specific variables
 4. ✅ Test deployment pipeline
 
-### Phase 1.5: Future Consideration (Optional)
-**Note**: The `develop` branch is currently working well with the staging environment. We may revisit creating dedicated testing branches later if needed, but the current setup provides good separation between staging and production.
+### Phase 1.5: Current Approach (develop:vercel-testing)
+**Note**: For now, we're using a `develop:vercel-testing` approach where the develop branch is used for testing deployments. The Vercel Pro upgrade for better environment separation has been added to the backlog as a MEDIUM priority item for future consideration.
+
+**Current Limitations:**
+- Free tier Vercel has limited environment separation capabilities
+- Manual branch configuration required via dashboard
+- All projects share same deployment constraints
+
+**Future Consideration:**
+- Vercel Pro upgrade evaluation in backlog
+- Would provide better environment isolation and deployment controls
+- Team collaboration features assessment needed
 
 ### Phase 2: Enhancement (Next Sprint)
 1. Set up separate MongoDB databases
