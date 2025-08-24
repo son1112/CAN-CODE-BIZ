@@ -30,42 +30,100 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
 
-  /* Configure projects for major browsers */
+  /* Configure projects for comprehensive cross-browser testing */
   projects: [
+    // Desktop Browsers - Core Testing
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
     },
-
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
 
-    /* Test against mobile viewports. */
+    // Desktop Browsers - Real Browser Testing
     {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      name: 'Microsoft Edge',
+      use: { 
+        ...devices['Desktop Edge'], 
+        channel: 'msedge',
+        // Test PWA features specifically in Edge
+        contextOptions: {
+          serviceWorkers: 'allow',
+        }
+      },
     },
     {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
+      name: 'Google Chrome',
+      use: { 
+        ...devices['Desktop Chrome'], 
+        channel: 'chrome',
+        // Test with real Chrome for OAuth and PWA features
+        contextOptions: {
+          serviceWorkers: 'allow',
+          permissions: ['microphone', 'notifications'],
+        }
+      },
     },
 
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
+    // Mobile - Modern Devices (High Priority)
+    {
+      name: 'Mobile Chrome Android',
+      use: { 
+        ...devices['Pixel 5'],
+        // Test mobile-specific features
+        contextOptions: {
+          geolocation: { latitude: 37.7749, longitude: -122.4194 },
+          permissions: ['geolocation', 'microphone'],
+        }
+      },
+    },
+    {
+      name: 'Mobile Safari iOS',
+      use: { 
+        ...devices['iPhone 12'],
+        // Test iOS-specific behaviors
+        contextOptions: {
+          permissions: ['microphone'],
+        }
+      },
+    },
+
+    // Mobile - Additional Coverage
+    {
+      name: 'Mobile Chrome Large',
+      use: { ...devices['Pixel 7'] },
+    },
+    {
+      name: 'Mobile Safari Large',
+      use: { ...devices['iPhone 14 Pro Max'] },
+    },
+    {
+      name: 'Tablet iPad',
+      use: { ...devices['iPad Pro'] },
+    },
+    {
+      name: 'Tablet Android',
+      use: { ...devices['Galaxy Tab S4'] },
+    },
+
+    // Legacy/Compatibility Testing (Lower Priority)
+    {
+      name: 'Mobile Safari Old',
+      use: { ...devices['iPhone SE'] },
+    },
+    {
+      name: 'Desktop Chrome Small',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1024, height: 768 },
+      },
+    },
   ],
 
   /* Run your local dev server before starting the tests */

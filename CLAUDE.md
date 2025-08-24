@@ -104,7 +104,10 @@ npm run build
 # 6. Check test coverage (maintain >50%)
 npm run test:coverage
 
-# 7. Only commit if all checks pass
+# 7. Run cross-browser testing for critical paths
+npm run test:critical
+
+# 8. Only commit if all checks pass
 ```
 
 #### Session Startup Protocol
