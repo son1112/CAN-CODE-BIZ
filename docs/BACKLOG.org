@@ -1094,6 +1094,37 @@ This documentation format should be used as a template for future backlog items 
 **** Priority: 🟡 MEDIUM
 **** Complexity: Medium (API debugging + state management)
 
+*** 🟡 MEDIUM PRIORITY: Ability to Star a Session While in Chat
+**** Problem Statement
+- Users cannot star/favorite a session while actively in the chat interface
+- Must navigate back to session list to favorite important conversations
+- Reduces user engagement with favoriting system due to friction
+
+**** Technical Requirements
+- Add star/favorite button to chat session interface
+- Sync star status with session list and favorites system
+- Provide visual feedback when session is starred/unstarred
+- Maintain consistency with existing stars API and UI patterns
+
+**** Implementation Approach
+1. Add star toggle button to chat session header/controls
+2. Integrate with existing `useStars` hook and stars API
+3. Implement optimistic UI updates for immediate feedback
+4. Handle 409 conflicts gracefully (existing stars API issue)
+5. Update session metadata and refresh session list state
+6. Add keyboard shortcut consideration for power users
+
+**** Acceptance Criteria
+- Star button visible and accessible in active chat session
+- Click to star/unstar works immediately with visual feedback
+- Session appears in favorites list without page refresh
+- Consistent behavior with existing message starring
+- Mobile-friendly button placement and sizing
+
+**** Priority: 🟡 MEDIUM (improves user engagement)
+**** Complexity: Medium (UI integration + state management)
+**** Related Files: Session header components, useStars hook, stars API
+
 *** 🟢 LOW PRIORITY: Export Tooltip Z-Index Fix  
 **** Problem Statement
 - Export functionality tooltip has z-index layering issues
