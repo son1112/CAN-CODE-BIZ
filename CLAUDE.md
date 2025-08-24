@@ -63,25 +63,48 @@ git push origin develop
 4. **Auto-switch to develop** if accidentally on main: `git checkout develop`
 5. **Create feature branches** for larger features: `git checkout -b feature/feature-name`
 
+#### Next.js Cache Management Protocol
+Next.js cache corruption is a recurring issue. Include these preventive measures:
+
+```bash
+# Clear Next.js cache if experiencing build issues
+rm -rf .next
+
+# Clean development command (use when dev server acts weird)
+npm run clean:dev  # or: rm -rf .next && npm run dev
+
+# Full clean (nuclear option for persistent issues)
+npm run clean:all  # or: rm -rf .next node_modules package-lock.json && npm install
+```
+
+**When to clear cache:**
+- Dev server showing old/wrong content
+- 404 errors for /_next/static/ assets
+- MIME type errors for CSS/JS files
+- Build inconsistencies after major changes
+
 #### Pre-Commit Checklist (MANDATORY)
 Before ANY commit, ALWAYS run in this order:
 ```bash
 # 1. Verify branch (should be develop or feature/*)
 git branch
 
-# 2. Run tests (must pass)
+# 2. Clear Next.js cache if issues occurred during development
+rm -rf .next
+
+# 3. Run tests (must pass)
 npm test
 
-# 3. Run linting (must pass) 
+# 4. Run linting (must pass) 
 npm run lint
 
-# 4. Run type checking
+# 5. Run type checking
 npm run build
 
-# 5. Check test coverage (maintain >50%)
+# 6. Check test coverage (maintain >50%)
 npm run test:coverage
 
-# 6. Only commit if all checks pass
+# 7. Only commit if all checks pass
 ```
 
 #### Session Startup Protocol
