@@ -20,6 +20,7 @@ import MessageTagInterface from './MessageTagInterface';
 import MessageExportButton from './MessageExportButton';
 import InstallPrompt, { InstallButton } from './InstallPrompt';
 import PrimaryAgentSelector from './PrimaryAgentSelector';
+import SessionHeader from './SessionHeader';
 import { SessionLoadingIndicator } from './LoadingIndicator';
 import MobileOptimizedHeader from './MobileOptimizedHeader';
 import VirtualizedMessageList from './VirtualizedMessageList';
@@ -165,8 +166,8 @@ export default function ChatInterface() {
   const { isMobile, isTablet } = useMobileNavigation();
 
   // Helper function to get agent display name
-  const getAgentDisplayName = (agentUsed: string | undefined) => {
-    if (!agentUsed) return null;
+  const getAgentDisplayName = (agentUsed: string | undefined): string => {
+    if (!agentUsed) return 'Default Agent';
 
     if (agentUsed.startsWith('power-agent:')) {
       const powerAgentId = agentUsed.replace('power-agent:', '');
@@ -1331,295 +1332,41 @@ export default function ChatInterface() {
             </div>
           ) : (
             <div className="relative flex-1 flex flex-col max-w-full overflow-hidden">
-            {/* Session Title - Sticky */}
-            {currentSession && filteredMessages.length > 0 && (
+              {/* Session Header Component */}
+              <SessionHeader
+                currentSession={currentSession}
+                filteredMessages={filteredMessages}
+                isEditingSessionName={isEditingSessionName}
+                editingSessionName={editingSessionName}
+                activeTagFilter={activeTagFilter}
+                isDark={isDark}
+                isStreaming={isStreaming}
+                formatSessionTitle={formatSessionTitle}
+                getAgentDisplayName={getAgentDisplayName}
+                setEditingSessionName={setEditingSessionName}
+                setIsEditingSessionName={setIsEditingSessionName}
+                setActiveTagFilter={setActiveTagFilter}
+                renameSession={renameSession}
+                loadSession={async (sessionId: string) => {
+                  await loadSession(sessionId);
+                }}
+              />
+
               <div
-                className="sticky top-0 z-10 text-center py-3 sm:py-6 border-b border-opacity-20 px-2 sm:px-0 max-w-full overflow-hidden"
+                ref={chatContainerRef}
+                className={`flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-8 py-4 sm:pb-4 space-y-4 sm:space-y-6 w-full max-w-full ${
+                  (isMobile || isTablet) ? 'mobile-chat-container mobile-scroll-momentum mobile-scrollbar' : ''
+                }`}
                 style={{
-                  borderColor: 'var(--border-primary)',
-                  background: isDark
-                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(16, 185, 129, 0.1) 100%)'
-                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(147, 51, 234, 0.05) 50%, rgba(16, 185, 129, 0.05) 100%)',
-                  backdropFilter: 'blur(12px)'
+                  backgroundColor: '#f0f0f0',
+                  backgroundImage: `
+                    linear-gradient(90deg, #d1d5db 1px, transparent 1px),
+                    linear-gradient(#d1d5db 1px, transparent 1px)
+                  `,
+                  backgroundSize: '24px 24px',
+                  backgroundPosition: '0 0, 0 0'
                 }}
               >
-                <div className="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-8 py-3 sm:py-4 rounded-2xl border-2 max-w-full overflow-hidden" style={{
-                  background: isDark
-                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.15) 100%)'
-                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.08) 100%)',
-                  borderColor: isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)',
-                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.2)'
-                }}>
-                  <MessageCircle
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      color: 'var(--accent-primary)'
-                    }}
-                  />
-                  {isEditingSessionName ? (
-                    <input
-                      type="text"
-                      value={editingSessionName}
-                      onChange={(e) => setEditingSessionName(e.target.value)}
-                      onKeyDown={async (e) => {
-                        if (e.key === 'Enter') {
-                          if (editingSessionName.trim()) {
-                            const success = await renameSession(currentSession.sessionId, editingSessionName.trim());
-                            if (success) {
-                              setIsEditingSessionName(false);
-                              setEditingSessionName('');
-                            }
-                          }
-                        } else if (e.key === 'Escape') {
-                          setIsEditingSessionName(false);
-                          setEditingSessionName('');
-                        }
-                      }}
-                      autoFocus
-                      className="text-2xl font-bold px-3 py-1 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 rounded-lg transition-all duration-200 text-center bg-white/90"
-                      style={{
-                        backgroundImage: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        letterSpacing: '-0.02em',
-                        minWidth: '300px'
-                      }}
-                      placeholder="Session name..."
-                    />
-                  ) : (
-                    <h1
-                      className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-all duration-200"
-                      style={{
-                        backgroundImage: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        letterSpacing: '-0.02em'
-                      }}
-                      onClick={() => {
-                        setEditingSessionName(currentSession.name);
-                        setIsEditingSessionName(true);
-                      }}
-                      title="Click to rename session"
-                    >
-                      {formatSessionTitle(currentSession.name)}
-                    </h1>
-                  )}
-
-
-                  {/* Edit controls when editing session name */}
-                  {isEditingSessionName && (
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={async () => {
-                          if (editingSessionName.trim()) {
-                            const success = await renameSession(currentSession.sessionId, editingSessionName.trim());
-                            if (success) {
-                              setIsEditingSessionName(false);
-                              setEditingSessionName('');
-                            }
-                          }
-                        }}
-                        className="p-2 rounded-lg transition-colors bg-green-500 hover:bg-green-600 text-white shadow-sm"
-                        title="Save name"
-                      >
-                        <Check style={{ width: '16px', height: '16px' }} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditingSessionName(false);
-                          setEditingSessionName('');
-                        }}
-                        className="p-2 rounded-lg transition-colors bg-gray-500 hover:bg-gray-600 text-white shadow-sm"
-                        title="Cancel"
-                      >
-                        <X style={{ width: '16px', height: '16px' }} />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Agent selector in chat window title area */}
-                  <div data-onboarding="agent-selector">
-                    <AgentSelector />
-                  </div>
-
-                  {/* Primary agent selector for session */}
-                  {currentSession && (
-                    <div className="mt-2">
-                      <PrimaryAgentSelector
-                        sessionId={currentSession.sessionId}
-                        currentPrimaryAgent={currentSession.primaryAgent}
-                      />
-                    </div>
-                  )}
-                </div>
-                {currentSession.createdAt && (
-                  <p
-                    className="mt-2 text-sm"
-                    style={{ color: 'var(--text-tertiary)' }}
-                  >
-                    Started {new Date(currentSession.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                )}
-
-                {/* Active Tag Filter Indicator */}
-                {activeTagFilter.length > 0 && (
-                  <div className="mt-3 flex items-center justify-center gap-2">
-                    <Hash style={{ width: '14px', height: '14px', color: 'var(--accent-primary)' }} />
-                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      Filtering by: {activeTagFilter.join(', ')}
-                    </span>
-                    <button
-                      onClick={() => setActiveTagFilter([])}
-                      className="text-xs px-2 py-1 rounded transition-colors"
-                      style={{
-                        backgroundColor: 'var(--bg-tertiary)',
-                        color: 'var(--text-tertiary)'
-                      }}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Session Metrics Status Bar */}
-            {currentSession && filteredMessages.length > 0 && (
-              <div
-                className="sticky top-0 z-10 border-b bg-gradient-to-r backdrop-blur-sm"
-                style={{
-                  borderColor: 'var(--border-primary)',
-                  backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(12px)'
-                }}
-              >
-                <div className="max-w-6xl mx-auto px-6 py-3">
-                  <div className="flex items-center justify-between gap-4 text-xs">
-                    {/* Left side metrics */}
-                    <div className="flex items-center gap-6">
-                      {/* Message Count */}
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                        <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                          {filteredMessages.length} messages
-                        </span>
-                      </div>
-
-                      {/* Session Duration */}
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
-                        <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                          {(() => {
-                            if (!currentSession.createdAt) return 'New session';
-                            const duration = Date.now() - new Date(currentSession.createdAt).getTime();
-                            const hours = Math.floor(duration / (1000 * 60 * 60));
-                            const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
-                            if (hours > 0) return `${hours}h ${minutes}m`;
-                            if (minutes > 0) return `${minutes}m`;
-                            return 'Just started';
-                          })()}
-                        </span>
-                      </div>
-
-                      {/* Agent Usage */}
-                      {currentSession.lastAgentUsed && (
-                        <div className="flex items-center gap-2">
-                          <Zap className="w-4 h-4" style={{ color: 'var(--status-success)' }} />
-                          <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                            {getAgentDisplayName(currentSession.lastAgentUsed)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Right side metrics */}
-                    <div className="flex items-center gap-6">
-                      {/* Project Tokens (ccusage data) */}
-                      {usageData && (
-                        <div className="flex items-center gap-2" title={`Total tokens consumed by this project. Models used: ${usageData.projectModels?.map(formatModelName).join(', ') || 'Unknown'}.`}>
-                          <Activity className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
-                          <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                            {formatTokens(usageData.projectTokens)} project
-                            {usageData.projectModels && usageData.projectModels.length > 0 && (
-                              <span className="text-xs opacity-70 ml-1">
-                                ({usageData.projectModels.map(formatModelName).join('/')})
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Daily Output Tokens */}
-                      {usageData && usageData.dailyOutputTokens > 0 && (
-                        <div className="flex items-center gap-2" title={`Output tokens generated today. Models used: ${usageData.dailyModels?.map(formatModelName).join(', ') || 'Unknown'}.`}>
-                          <TrendingUp className="w-4 h-4" style={{ color: 'var(--status-success)' }} />
-                          <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                            {formatTokens(usageData.dailyOutputTokens)} today
-                            {usageData.dailyModels && usageData.dailyModels.length > 0 && (
-                              <span className="text-xs opacity-70 ml-1">
-                                ({usageData.dailyModels.map(formatModelName).join('/')})
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Response Performance */}
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                        <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                          {(() => {
-                            const userMessages = filteredMessages.filter(m => m.role === 'user').length;
-                            const assistantMessages = filteredMessages.filter(m => m.role === 'assistant').length;
-                            const responseRate = userMessages > 0 ? Math.round((assistantMessages / userMessages) * 100) : 0;
-                            return `${responseRate}% response rate`;
-                          })()}
-                        </span>
-                      </div>
-
-                      {/* Session Status */}
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-2 h-2 rounded-full animate-pulse"
-                          style={{
-                            backgroundColor: isStreaming ? 'var(--status-warning)' : 'var(--status-success)'
-                          }}
-                        />
-                        <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                          {isStreaming ? 'Active' : 'Ready'}
-                        </span>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div
-              ref={chatContainerRef}
-              className={`flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-8 py-4 sm:pb-4 space-y-4 sm:space-y-6 w-full max-w-full ${
-                (isMobile || isTablet) ? 'mobile-chat-container mobile-scroll-momentum mobile-scrollbar' : ''
-              }`}
-              style={{
-                backgroundColor: '#f0f0f0',
-                backgroundImage: `
-                  linear-gradient(90deg, #d1d5db 1px, transparent 1px),
-                  linear-gradient(#d1d5db 1px, transparent 1px)
-                `,
-                backgroundSize: '24px 24px',
-                backgroundPosition: '0 0, 0 0'
-              }}
-            >
 
               {shouldVirtualize ? (
                 <VirtualizedMessageList
@@ -1772,11 +1519,12 @@ export default function ChatInterface() {
                   </div>
                 </div>
               )}
+              </div>
+
+              <div ref={messagesEndRef} />
             </div>
-          </div>
-        )}
+          )}
         </div>
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Error display */}
