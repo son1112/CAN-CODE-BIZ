@@ -2,9 +2,109 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚨 CRITICAL: Branch Management First!
+
+**PRODUCTION DEPLOYMENT ACTIVE**: This project auto-deploys to live site on push to `main`. 
+
+**IMMEDIATE ACTION REQUIRED FOR EVERY SESSION:**
+```bash
+# 1. Check current branch (MUST be develop or feature/*)
+git branch
+
+# 2. If on main, switch immediately
+git checkout develop
+```
+
+**NEVER commit directly to main unless explicitly requested for hotfixes!**
+
 ## Project Overview
 
 Rubber Ducky Live is a comprehensive real-time voice-enabled AI chat companion powered by Claude 4 AI with smart fallback to Claude 3.5 Sonnet. Inspired by the classic "rubber duck debugging" technique, it provides a friendly AI partner for thinking out loud, problem-solving, and casual conversations. Features include advanced speech-to-text input, streaming AI responses, MongoDB persistence, Google OAuth authentication with demo mode, comprehensive message export system (PDF/Word to Google Drive), star system for favorites, message tagging, and responsive mobile-friendly design.
+
+## Branch Management & Development Workflow
+
+**CRITICAL**: This project uses automated deployment on push to `main`. All development MUST happen on the `develop` branch or feature branches.
+
+### Branch Structure
+- **`main`**: Production branch with automatic deployment to live site
+- **`develop`**: Primary development branch for all new work 
+- **`feature/*`**: Feature branches created from `develop`
+- **`hotfix/*`**: Emergency fixes branched from `main`
+
+### Development Workflow
+```bash
+# ALWAYS start from develop branch
+git checkout develop
+git pull origin develop
+
+# For new features, create a feature branch
+git checkout -b feature/your-feature-name
+
+# Work on your changes, commit frequently
+git add .
+git commit -m "your commit message"
+
+# When ready, merge back to develop
+git checkout develop
+git merge feature/your-feature-name
+
+# Push develop (NOT main)
+git push origin develop
+
+# Only merge develop to main when ready for production deployment
+```
+
+### Claude Code Instructions
+
+#### Branch Safety Protocol
+1. **NEVER push directly to main** unless explicitly requested for hotfixes
+2. **ALWAYS work on develop branch** for all regular development
+3. **MANDATORY: Check current branch** with `git branch` at session start
+4. **Auto-switch to develop** if accidentally on main: `git checkout develop`
+5. **Create feature branches** for larger features: `git checkout -b feature/feature-name`
+
+#### Pre-Commit Checklist (MANDATORY)
+Before ANY commit, ALWAYS run in this order:
+```bash
+# 1. Verify branch (should be develop or feature/*)
+git branch
+
+# 2. Run tests (must pass)
+npm test
+
+# 3. Run linting (must pass) 
+npm run lint
+
+# 4. Run type checking
+npm run build
+
+# 5. Check test coverage (maintain >50%)
+npm run test:coverage
+
+# 6. Only commit if all checks pass
+```
+
+#### Session Startup Protocol
+**ALWAYS start each Claude Code session with:**
+```bash
+# Check current branch - should be develop
+git branch
+
+# If on main, immediately switch to develop
+git checkout develop
+
+# Pull latest changes
+git pull origin develop
+
+# Check git status
+git status
+```
+
+#### Deployment Safety
+- **develop → main merges**: Only for production-ready releases
+- **Automatic deployment**: Triggered on every push to main
+- **Testing requirement**: All tests must pass before any push
+- **Rollback plan**: Keep develop branch stable for quick rollback
 
 ## Development Commands
 
