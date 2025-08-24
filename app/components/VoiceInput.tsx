@@ -6,6 +6,8 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useContentSafety } from '@/contexts/ContentSafetyContext';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { logger } from '@/lib/logger';
+import VoiceWaveform, { useAudioLevel } from './VoiceWaveform';
+import { useButtonHaptics } from '@/hooks/useHapticFeedback';
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
@@ -51,6 +53,12 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
     qualityMetrics,
     qualityHistory,
   } = useSpeechRecognition();
+  
+  // Audio level for waveform visualization
+  const audioLevel = useAudioLevel(isListening || isInContinuousMode);
+  
+  // Haptic feedback for mobile interactions
+  const { onPress, onLongPress, onSuccess, onError } = useButtonHaptics();
 
   // Track if we're still checking browser support (to prevent hydration flash)
   const [isCheckingSupport, setIsCheckingSupport] = useState(true);
@@ -158,8 +166,17 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
       hasTranscript: !!currentTranscript
     });
     if (currentTranscript) {
+      // Haptic feedback on successful send
+      if (isMobileLayout) {
+        onSuccess();
+      }
       onTranscript(currentTranscript);
       resetTranscript();
+    } else {
+      // Error haptic if no transcript
+      if (isMobileLayout) {
+        onError();
+      }
     }
   };
 
@@ -174,6 +191,15 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
   };
 
   const handleMicToggle = () => {
+    // Haptic feedback for mobile
+    if (isMobileLayout) {
+      if (isListening || isInContinuousMode) {
+        onSuccess(); // Success haptic when stopping
+      } else {
+        onLongPress(); // Strong haptic when starting
+      }
+    }
+    
     if (enableContinuousMode) {
       handleContinuousToggle();
     } else {
@@ -199,11 +225,29 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
 
   if (!isSupported) {
     return (
-      <div className="flex items-center gap-4 text-amber-700 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200/50 rounded-2xl shadow-lg shadow-amber-500/10 backdrop-blur-sm">
-        <AlertCircle className="w-5 h-5 flex-shrink-0" />
-        <span className="text-base leading-relaxed font-medium">
-          😊 Voice chat needs a modern browser like Chrome, Firefox, or Safari to work its magic!
-        </span>
+      <div className="flex flex-col gap-3 text-amber-700 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200/50 rounded-2xl shadow-lg shadow-amber-500/10 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-6 h-6 flex-shrink-0" />
+          <span className="text-base leading-relaxed font-semibold mobile-typography-base">
+            😊 Voice Chat Not Available
+          </span>
+        </div>
+        <div className="text-sm text-amber-600 mobile-typography-sm">
+          {isMobileLayout 
+            ? "Voice chat requires microphone access. Please use Chrome, Firefox, or Safari browser and allow microphone permissions when prompted."
+            : "Voice chat needs a modern browser like Chrome, Firefox, or Safari to work its magic!"
+          }
+        </div>
+        {isMobileLayout && (
+          <div className="bg-amber-100/50 border border-amber-200 rounded-lg p-3 mt-2">
+            <div className="text-xs text-amber-700 font-medium mb-1">📱 Mobile Tips:</div>
+            <ul className="text-xs text-amber-600 space-y-1 ml-4">
+              <li>• Check microphone permissions in browser settings</li>
+              <li>• Try refreshing the page and allowing permissions</li>
+              <li>• Ensure you're using HTTPS (secure connection)</li>
+            </ul>
+          </div>
+        )}
       </div>
     );
   }
@@ -215,103 +259,163 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
         <div className="voice-controls-mobile">
           {/* Primary Controls Row */}
           <div className="flex items-center justify-center gap-3 mb-3">
-            {/* Main Action Button - Context Aware */}
+            {/* Enhanced Main Action Button - Mobile Optimized */}
             <button
               onClick={handleMicToggle}
               disabled={isDisabled}
               className={`
-                relative rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95
+                relative rounded-3xl transition-all duration-300 shadow-xl transform active:scale-95 touch-target
                 ${(isListening || isInContinuousMode)
-                  ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-red-500/25'
-                  : 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-green-500/25'
+                  ? 'bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-red-500/40'
+                  : 'bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white shadow-blue-500/40 hover:shadow-blue-500/50'
                 }
                 ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}
+                overflow-hidden
               `}
-              style={{ padding: '16px', minHeight: '56px', minWidth: '56px' }}
+              style={{ 
+                padding: '20px', 
+                minHeight: '72px', 
+                minWidth: '72px',
+                position: 'relative'
+              }}
               title={
                 enableContinuousMode
                   ? (isInContinuousMode ? '🛑 Stop chat' : 'Start chat!')
                   : (isListening ? '⏹️ Stop recording' : 'Start recording')
               }
             >
-              {(isListening || isInContinuousMode) ? (
-                <MicOff style={{ width: '24px', height: '24px' }} className="text-white" />
-              ) : (
-                <Mic style={{ width: '24px', height: '24px' }} className="text-white" />
-              )}
+              {/* Background pulse effect */}
               {(isListening || isInContinuousMode) && (
                 <>
-                  <span className="absolute inset-0 rounded-2xl animate-ping bg-red-400/50" />
-                  <span className="absolute inset-1 rounded-2xl animate-pulse bg-red-400/30" />
+                  <span className="absolute inset-0 rounded-3xl animate-ping bg-red-400/40" style={{ animationDuration: '2s' }} />
+                  <span className="absolute inset-2 rounded-3xl animate-pulse bg-red-400/20" style={{ animationDuration: '3s' }} />
+                  <span className="absolute inset-4 rounded-3xl animate-ping bg-white/20" style={{ animationDuration: '1.5s' }} />
                 </>
+              )}
+              
+              {/* Microphone icon with enhanced styling */}
+              <div className="relative z-10 flex items-center justify-center">
+                {(isListening || isInContinuousMode) ? (
+                  <MicOff style={{ width: '28px', height: '28px' }} className="text-white drop-shadow-lg" />
+                ) : (
+                  <Mic style={{ width: '28px', height: '28px' }} className="text-white drop-shadow-lg" />
+                )}
+              </div>
+              
+              {/* Recording indicator ring */}
+              {(isListening || isInContinuousMode) && (
+                <div className="absolute inset-1 rounded-3xl border-2 border-white/50 animate-pulse" style={{ animationDuration: '2s' }} />
               )}
             </button>
 
             {/* Send Button - show when transcript available */}
             {!enableContinuousMode && transcript.trim() && (
               <button
-                onClick={handleSendTranscript}
+                onClick={() => {
+                  if (isMobileLayout) onPress();
+                  handleSendTranscript();
+                }}
                 disabled={isDisabled}
-                className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95"
-                style={{ padding: '12px', minHeight: '48px', minWidth: '48px' }}
+                className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95 touch-target relative overflow-hidden"
+                style={{ padding: '16px', minHeight: '64px', minWidth: '64px' }}
                 title="Send message"
               >
-                <Send style={{ width: '20px', height: '20px' }} />
+                <Send style={{ width: '24px', height: '24px' }} className="drop-shadow-lg" />
+                <div className="absolute inset-1 rounded-xl border border-white/20 animate-pulse" />
               </button>
             )}
 
             {/* Cancel Button - show when active */}
             {(isListening || isInContinuousMode || transcript.trim()) && (
               <button
-                onClick={cancelRecording}
+                onClick={() => {
+                  if (isMobileLayout) onPress();
+                  cancelRecording();
+                }}
                 disabled={isDisabled}
-                className="bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95"
-                style={{ padding: '12px', minHeight: '48px', minWidth: '48px' }}
+                className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95 touch-target"
+                style={{ padding: '14px', minHeight: '56px', minWidth: '56px' }}
                 title="Cancel"
               >
-                <X style={{ width: '20px', height: '20px' }} />
+                <X style={{ width: '22px', height: '22px' }} className="drop-shadow-lg" />
               </button>
             )}
 
             {/* Advanced Controls Toggle */}
             <button
-              onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+              onClick={() => {
+                if (isMobileLayout) onPress();
+                setShowAdvancedControls(!showAdvancedControls);
+              }}
               disabled={isDisabled}
-              className={`bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95 ${
-                showAdvancedControls ? 'ring-2 ring-purple-300' : ''
+              className={`bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95 touch-target relative ${
+                showAdvancedControls ? 'ring-2 ring-purple-300 shadow-purple-500/40' : ''
               }`}
-              style={{ padding: '12px', minHeight: '48px', minWidth: '48px' }}
+              style={{ padding: '14px', minHeight: '56px', minWidth: '56px' }}
               title="More options"
             >
               {showAdvancedControls ?
-                <ChevronUp style={{ width: '20px', height: '20px' }} /> :
-                <MoreHorizontal style={{ width: '20px', height: '20px' }} />
+                <ChevronUp style={{ width: '22px', height: '22px' }} className="drop-shadow-lg" /> :
+                <MoreHorizontal style={{ width: '22px', height: '22px' }} className="drop-shadow-lg" />
               }
+              {showAdvancedControls && (
+                <div className="absolute inset-1 rounded-xl border border-white/30 animate-pulse" />
+              )}
             </button>
           </div>
 
-          {/* Status Display */}
-          <div className="text-center mb-2">
+          {/* Enhanced Mobile Status Display */}
+          <div className="text-center mb-3">
             {(isListening || isInContinuousMode) ? (
-              <div className="flex items-center justify-center gap-2">
-                <span className="font-semibold text-gray-700 text-sm">
-                  {isInContinuousMode
-                    ? (isMuted ? '🔇 Muted' : 'Listening...')
-                    : '🔴 Recording...'
-                  }
-                </span>
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="bg-gradient-to-r from-red-50 via-red-100 to-red-50 border-2 border-red-200 rounded-2xl px-4 py-3 shadow-lg animate-pulse">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <div className="relative">
+                    <div className="w-4 h-4 bg-red-500 rounded-full animate-ping" />
+                    <div className="absolute inset-0 w-4 h-4 bg-red-600 rounded-full animate-pulse" />
+                  </div>
+                  <span className="font-bold text-red-700 text-base mobile-typography-base">
+                    {isInContinuousMode
+                      ? (isMuted ? '🔇 Muted' : '🎤 Listening...')
+                      : '🔴 Recording...'
+                    }
+                  </span>
+                </div>
+                {/* Enhanced bouncing dots */}
+                <div className="flex items-center justify-center gap-1.5">
+                  <span className="w-3 h-3 bg-red-400 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms', animationDuration: '1s' }} />
+                  <span className="w-3 h-3 bg-red-500 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '200ms', animationDuration: '1s' }} />
+                  <span className="w-3 h-3 bg-red-400 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '400ms', animationDuration: '1s' }} />
                 </div>
               </div>
             ) : (
-              <span className="text-gray-600 text-sm font-medium">
-                {enableContinuousMode ? 'Click to start chat mode' : 'Click to talk'}
-              </span>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl px-4 py-2">
+                <span className="text-blue-700 text-base font-semibold mobile-typography-base">
+                  {enableContinuousMode ? '🎤 Tap to start chat mode' : '🎤 Tap to start talking'}
+                </span>
+              </div>
             )}
           </div>
+
+          {/* Voice Waveform Visualization - Mobile Only */}
+          {isMobileLayout && (isListening || isInContinuousMode) && (
+            <div className="mb-4">
+              <div className="bg-gradient-to-r from-red-50/80 via-red-100/50 to-red-50/80 border border-red-200/50 rounded-2xl p-3 backdrop-blur-sm">
+                <div className="text-center mb-2">
+                  <span className="text-red-600 text-xs font-medium mobile-typography-sm">
+                    🎵 Voice Activity
+                  </span>
+                </div>
+                <VoiceWaveform
+                  isActive={isListening || isInContinuousMode}
+                  audioLevel={audioLevel}
+                  color="#ef4444"
+                  barCount={16}
+                  height={32}
+                  className="rounded-lg"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Advanced Controls - Collapsible */}
           {showAdvancedControls && (
@@ -325,16 +429,23 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
                   </div>
                   <button
                     data-onboarding="continuous-mode"
-                    onClick={onContinuousModeToggle}
+                    onClick={() => {
+                      if (isMobileLayout) onPress();
+                      onContinuousModeToggle?.();
+                    }}
                     disabled={isDisabled}
-                    className={`rounded-xl transition-all duration-300 ${
+                    className={`rounded-xl transition-all duration-300 touch-target relative overflow-hidden ${
                       isContinuousMode
-                        ? 'bg-blue-500 text-white shadow-lg'
-                        : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
+                        ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
+                        : 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-600 hover:from-gray-400 hover:to-gray-500'
                     }`}
-                    style={{ padding: '8px', minHeight: '36px', minWidth: '36px' }}
+                    style={{ padding: '12px', minHeight: '44px', minWidth: '44px' }}
+                    title={isContinuousMode ? 'Disable continuous mode' : 'Enable continuous mode'}
                   >
-                    <MessageCircle style={{ width: '16px', height: '16px' }} />
+                    <MessageCircle style={{ width: '18px', height: '18px' }} />
+                    {isContinuousMode && (
+                      <div className="absolute inset-1 rounded-lg border border-white/30 animate-pulse" />
+                    )}
                   </button>
                 </div>
               )}
@@ -626,21 +737,56 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
       </div>
 
       {error && (
-        <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-md" style={{ padding: '6px' }}>
-          <div className="flex items-center text-red-700" style={{ gap: '6px' }}>
-            <AlertCircle style={{ width: '12px', height: '12px' }} className="flex-shrink-0" />
-            <span style={{ fontSize: '10px' }}>{error}</span>
+        <div className={`voice-error-container ${
+          isMobileLayout 
+            ? 'bg-gradient-to-r from-red-50 via-red-100 to-red-50 border-2 border-red-200 rounded-2xl p-4 shadow-lg'
+            : 'bg-red-50 border border-red-200 rounded-md'
+        }`} style={isMobileLayout ? {} : { padding: '6px' }}>
+          <div className="flex items-start gap-3 mb-3">
+            <AlertCircle 
+              className={`flex-shrink-0 ${isMobileLayout ? 'w-5 h-5' : 'w-3 h-3'}`} 
+              style={{ color: '#dc2626' }} 
+            />
+            <div className="flex-1">
+              <div className={`font-semibold text-red-700 mb-1 ${
+                isMobileLayout ? 'text-sm mobile-typography-sm' : 'text-xs'
+              }`}>
+                🎤 Voice Error
+              </div>
+              <div className={`text-red-600 ${
+                isMobileLayout ? 'text-sm mobile-typography-sm' : 'text-xs'
+              }`}>
+                {error}
+              </div>
+              
+              {/* Mobile-specific error help */}
+              {isMobileLayout && error.includes('permission') && (
+                <div className="bg-red-100/50 border border-red-200/50 rounded-lg p-2 mt-2">
+                  <div className="text-xs text-red-700 font-medium mb-1">🔍 Troubleshooting:</div>
+                  <ul className="text-xs text-red-600 space-y-1">
+                    <li>• Check browser microphone permissions</li>
+                    <li>• Close other apps using the microphone</li>
+                    <li>• Try refreshing the page</li>
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
-          {(error.includes('connection error') || error.includes('authentication failed')) && (
-            <button
-              onClick={startListening}
-              disabled={isDisabled || isListening}
-              className="flex items-center bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 transition-all duration-200"
-              style={{ gap: '2px', padding: '4px 6px', fontSize: '10px' }}
-            >
-              <RotateCcw style={{ width: '10px', height: '10px' }} />
-              Retry
-            </button>
+          
+          {(error.includes('connection error') || error.includes('authentication failed') || error.includes('permission')) && (
+            <div className="flex gap-2">
+              <button
+                onClick={startListening}
+                disabled={isDisabled || isListening}
+                className={`flex items-center bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-all duration-200 touch-target ${
+                  isMobileLayout ? 'px-4 py-2 text-sm' : 'px-2 py-1 text-xs'
+                }`}
+                style={isMobileLayout ? {} : { gap: '2px' }}
+              >
+                <RotateCcw className={isMobileLayout ? 'w-4 h-4 mr-2' : 'w-3 h-3'} />
+                Try Again
+              </button>
+            </div>
           )}
         </div>
       )}

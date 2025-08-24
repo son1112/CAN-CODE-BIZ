@@ -1,5 +1,20 @@
 /* Mobile Touch Optimization Styles */
 
+/* Safe Area Support for Mobile Devices */
+.safe-area-bottom {
+  bottom: max(24px, env(safe-area-inset-bottom, 24px)) !important;
+}
+
+.safe-area-top {
+  top: max(20px, env(safe-area-inset-top, 20px)) !important;
+}
+
+/* Mobile keyboard accommodation */
+.mobile-keyboard-safe {
+  padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+  margin-bottom: env(keyboard-inset-height, 0px);
+}
+
 /* Ensure proper touch targets (minimum 44px) */
 .touch-target {
   min-width: 44px;
@@ -14,8 +29,36 @@
 
 /* Enhanced touch feedback */
 .touch-target:active {
-  transform: scale(0.95);
-  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(0.96);
+  background-color: rgba(59, 130, 246, 0.08);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Improved touch feedback for buttons */
+.touch-target:hover {
+  background-color: rgba(59, 130, 246, 0.04);
+  transform: translateY(-1px);
+}
+
+/* Ripple effect for mobile touches */
+@keyframes mobile-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.touch-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.3);
+  pointer-events: none;
+  animation: mobile-ripple 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Mobile message container enhancements */

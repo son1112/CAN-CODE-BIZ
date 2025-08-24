@@ -166,11 +166,19 @@ export default function MobileFloatingActions({
   // Don't render on non-mobile devices (after all hooks are called)
   if (!isMobileDevice) return null;
 
-  // Position classes
+  // Position classes with safe area consideration for mobile
   const positionClasses = {
-    'bottom-right': 'bottom-6 right-6',
-    'bottom-left': 'bottom-6 left-6',
-    'bottom-center': 'bottom-6 left-1/2 transform -translate-x-1/2'
+    'bottom-right': isMobileDevice ? 'right-4 safe-area-bottom' : 'bottom-6 right-6',
+    'bottom-left': isMobileDevice ? 'left-4 safe-area-bottom' : 'bottom-6 left-6',
+    'bottom-center': isMobileDevice ? 'left-1/2 transform -translate-x-1/2 safe-area-bottom' : 'bottom-6 left-1/2 transform -translate-x-1/2'
+  };
+
+  // Calculate bottom position dynamically for mobile to avoid keyboard/input conflicts
+  const getBottomPosition = () => {
+    if (!isMobileDevice) return {};
+    return {
+      bottom: 'max(180px, calc(160px + env(safe-area-inset-bottom, 24px)))' // Above input area + safe area
+    };
   };
 
   return (
@@ -186,7 +194,10 @@ export default function MobileFloatingActions({
       {/* Floating Actions Container */}
       <div
         className={`fixed z-40 ${positionClasses[position]} ${className}`}
-        style={{ pointerEvents: 'auto' }}
+        style={{ 
+          pointerEvents: 'auto',
+          ...getBottomPosition()
+        }}
       >
         {/* Secondary Actions (appear when expanded) */}
         {isExpanded && (

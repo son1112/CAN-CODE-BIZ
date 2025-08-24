@@ -1,0 +1,194 @@
+{
+  "name": "Rubber Ducky Live - AI Chat Companion",
+  "short_name": "Rubber Ducky",
+  "description": "Your friendly rubber duck AI companion for thinking out loud, problem-solving, and casual conversations. Powered by Claude AI with advanced voice features.",
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "lang": "en",
+  "dir": "ltr",
+  
+  "categories": ["productivity", "utilities", "communication", "education"],
+  "keywords": [
+    "AI chat", 
+    "rubber duck debugging", 
+    "voice chat", 
+    "problem solving", 
+    "Claude AI", 
+    "conversation", 
+    "thinking partner"
+  ],
+
+  "icons": [
+    {
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-chat.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile chat interface with voice input"
+    },
+    {
+      "src": "/screenshots/desktop-chat.png", 
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop chat interface with full features"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "New Conversation",
+      "short_name": "New Chat",
+      "description": "Start a new conversation with your rubber duck",
+      "url": "/?new=true",
+      "icons": [
+        {
+          "src": "/icons/shortcut-new-chat.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Voice Chat",
+      "short_name": "Voice",
+      "description": "Start voice conversation with continuous mode",
+      "url": "/?voice=true",
+      "icons": [
+        {
+          "src": "/icons/shortcut-voice.png",
+          "sizes": "96x96", 
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Session History",
+      "short_name": "History",
+      "description": "Browse your conversation history",
+      "url": "/?view=sessions",
+      "icons": [
+        {
+          "src": "/icons/shortcut-history.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Starred Messages",
+      "short_name": "Starred",
+      "description": "View your starred messages and favorites",
+      "url": "/?view=stars",
+      "icons": [
+        {
+          "src": "/icons/shortcut-stars.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+rubberducky",
+      "url": "/?chat=%s"
+    }
+  ],
+
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://rubber-ducky-live.vercel.app/manifest.json"
+    }
+  ],
+
+  "prefer_related_applications": false,
+
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "text/plain": [".txt"],
+        "text/markdown": [".md"]
+      }
+    }
+  ]
+}

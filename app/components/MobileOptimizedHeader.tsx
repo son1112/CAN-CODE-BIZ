@@ -145,12 +145,15 @@ export default function MobileOptimizedHeader({
             {/* Right Side: Hamburger Menu */}
             <button
               onClick={toggleMenu}
-              className="flex-shrink-0 rounded-lg transition-all duration-200 p-2"
+              className="flex-shrink-0 rounded-lg transition-all duration-200 p-2 touch-target"
               style={{
-                minWidth: '44px',
-                minHeight: '44px',
+                minWidth: '48px', // Larger touch target
+                minHeight: '48px',
                 backgroundColor: isMenuOpen ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                 border: isMenuOpen ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
               aria-label="Open menu"
             >

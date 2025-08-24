@@ -31,12 +31,15 @@ export default function MobileBreadcrumb({ items, className = '' }: MobileBreadc
             {/* Breadcrumb Item */}
             <div
               className={`flex items-center gap-1.5 min-w-0 ${
-                item.onClick ? 'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md px-2 py-1 transition-colors touch-target' : ''
+                item.onClick ? 'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg px-3 py-2 transition-colors touch-target' : ''
               }`}
               onClick={item.onClick}
               style={{
-                minHeight: '32px',
-                minWidth: item.onClick ? '44px' : 'auto'
+                minHeight: item.onClick ? '48px' : '32px', // Larger touch targets
+                minWidth: item.onClick ? '48px' : 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               {item.icon && (

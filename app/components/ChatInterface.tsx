@@ -18,6 +18,7 @@ import StarsBrowser from './StarsBrowser';
 import TagBrowser from './TagBrowser';
 import MessageTagInterface from './MessageTagInterface';
 import MessageExportButton from './MessageExportButton';
+import InstallPrompt, { InstallButton } from './InstallPrompt';
 import PrimaryAgentSelector from './PrimaryAgentSelector';
 import { SessionLoadingIndicator } from './LoadingIndicator';
 import MobileOptimizedHeader from './MobileOptimizedHeader';
@@ -1836,15 +1837,16 @@ export default function ChatInterface() {
       <div
         className="relative border-t backdrop-blur-xl shadow-2xl scale-locked-footer"
         style={{
-          padding: '16px 16px 20px 16px',
+          padding: isVirtualMobileLayout ? '20px 16px max(24px, env(safe-area-inset-bottom, 24px))' : '16px 16px 20px 16px',
           position: 'relative',
           zIndex: 100,
           width: '100%',
-          minHeight: '140px', // Increased minimum height to accommodate stable controls
-          maxHeight: 'min(50vh, 450px)', // Slightly increased max height
+          minHeight: isVirtualMobileLayout ? '160px' : '140px', // Increased for mobile
+          maxHeight: isVirtualMobileLayout ? 'min(55vh, 500px)' : 'min(50vh, 450px)', // More space for mobile
           backgroundColor: isDark ? 'rgba(13, 13, 13, 0.98)' : 'rgba(255, 255, 255, 0.98)',
           borderColor: 'var(--border-primary)',
-          overflow: 'hidden' // Prevent content from extending beyond footer
+          overflow: 'hidden', // Prevent content from extending beyond footer
+          paddingBottom: isVirtualMobileLayout ? 'max(24px, env(safe-area-inset-bottom, 24px))' : '20px' // Safe area for mobile
         }}
       >
         <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(to top, rgba(13, 13, 13, 0.2), transparent)' : 'linear-gradient(to top, rgba(59, 130, 246, 0.08), transparent)' }}></div>
@@ -1905,15 +1907,17 @@ export default function ChatInterface() {
                         : ''
                     } ${debouncedInputValue.trim() ? 'border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600' : 'border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500'} disabled:opacity-50`}
                     style={useMemo(() => ({
-                      padding: isVirtualMobileLayout ? '14px 16px' : '12px 16px',
+                      padding: isVirtualMobileLayout ? '16px 18px' : '12px 16px',
                       fontSize: isVirtualMobileLayout ? '16px' : '14px', // Prevent iOS zoom
-                      lineHeight: isVirtualMobileLayout ? '22px' : '20px',
-                      minHeight: isVirtualMobileLayout ? '48px' : '44px',
-                      maxHeight: isVirtualMobileLayout ? '120px' : '100px',
+                      lineHeight: isVirtualMobileLayout ? '24px' : '20px',
+                      minHeight: isVirtualMobileLayout ? '52px' : '44px',
+                      maxHeight: isVirtualMobileLayout ? '160px' : '100px',
                       backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
                       color: 'var(--text-primary)',
                       WebkitTextSizeAdjust: '100%', // Prevent iOS font scaling
                       WebkitAppearance: 'none', // Remove iOS styling
+                      overflowY: 'auto', // Enable scrolling for long text
+                      scrollbarWidth: 'thin', // Modern scrollbar styling
                     }), [isDark, isVirtualMobileLayout])}
                   />
                   {inputValue.trim() && (
@@ -1930,11 +1934,12 @@ export default function ChatInterface() {
                 data-testid="send-button"
                 type="submit"
                 disabled={!inputValue.trim() || isStreaming || isProcessingMessage}
-                className="relative bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 text-white rounded-xl hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center shadow-lg shadow-yellow-500/25 hover:shadow-xl hover:shadow-yellow-500/30 transform hover:scale-105"
+                className="relative bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 text-white rounded-xl hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center shadow-lg shadow-yellow-500/25 hover:shadow-xl hover:shadow-yellow-500/30 transform hover:scale-105 touch-target"
                 style={{
-                  padding: isVirtualMobileLayout ? '14px 18px' : '12px 16px',
-                  minWidth: isVirtualMobileLayout ? '48px' : '44px',
-                  height: isVirtualMobileLayout ? '48px' : '44px'
+                  padding: isVirtualMobileLayout ? '16px 20px' : '12px 16px',
+                  minWidth: isVirtualMobileLayout ? '52px' : '44px',
+                  minHeight: isVirtualMobileLayout ? '52px' : '44px',
+                  alignSelf: 'flex-end' // Align button to bottom when textarea grows
                 }}
               >
                 {(isStreaming || isProcessingMessage) ? (
@@ -1955,6 +1960,10 @@ export default function ChatInterface() {
         onClose={handleCloseModal}
         message={selectedMessage}
       />
+      
+      {/* PWA Install Prompts */}
+      <InstallPrompt />
+      <InstallButton />
 
       {/* Session Browser */}
       <SessionBrowser
