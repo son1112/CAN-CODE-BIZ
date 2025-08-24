@@ -23,17 +23,37 @@ export default function OnboardingTour() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({});
   const [isVisible, setIsVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const currentStep = steps[currentStepIndex];
 
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const calculateTooltipPosition = useCallback((targetSelector: string, placement: string = 'bottom') => {
     const target = document.querySelector(targetSelector);
-    if (!target) return {};
+    if (!target) {
+      console.warn(`Onboarding target not found: ${targetSelector}`);
+      // Return center position as fallback
+      return {
+        top: window.innerHeight / 2 - 125,
+        left: window.innerWidth / 2 - (isMobile ? 175 : 200),
+        transform: 'none'
+      };
+    }
 
     const rect = target.getBoundingClientRect();
-    const tooltipWidth = 400;
-    const tooltipHeight = 200; // Approximate
-    const offset = 20;
+    const tooltipWidth = isMobile ? Math.min(350, window.innerWidth - 40) : 400;
+    const tooltipHeight = isMobile ? 250 : 200; // More height for mobile content
+    const offset = isMobile ? 15 : 20;
 
     const position: TooltipPosition = {};
 
@@ -63,18 +83,33 @@ export default function OnboardingTour() {
         position.left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
     }
 
-    // Ensure tooltip stays within viewport
-    if (position.left && position.left < 10) position.left = 10;
-    if (position.left && position.left + tooltipWidth > window.innerWidth - 10) {
-      position.left = window.innerWidth - tooltipWidth - 10;
+    // Enhanced mobile viewport constraints
+    const margin = isMobile ? 20 : 10;
+    const safeAreaTop = isMobile ? 50 : 10; // Account for mobile status bar
+    const safeAreaBottom = isMobile ? 100 : 10; // Account for mobile home indicator
+    
+    // Ensure tooltip stays within safe areas
+    if (position.left && position.left < margin) position.left = margin;
+    if (position.left && position.left + tooltipWidth > window.innerWidth - margin) {
+      position.left = window.innerWidth - tooltipWidth - margin;
     }
-    if (position.top && position.top < 10) position.top = 10;
-    if (position.top && position.top + tooltipHeight > window.innerHeight - 10) {
-      position.top = window.innerHeight - tooltipHeight - 10;
+    if (position.top && position.top < safeAreaTop) position.top = safeAreaTop;
+    if (position.top && position.top + tooltipHeight > window.innerHeight - safeAreaBottom) {
+      position.top = window.innerHeight - tooltipHeight - safeAreaBottom;
+    }
+
+    // On mobile, prefer center positioning for better readability
+    if (isMobile && (placement === 'left' || placement === 'right')) {
+      position.top = Math.max(safeAreaTop, Math.min(
+        window.innerHeight - tooltipHeight - safeAreaBottom,
+        rect.top + (rect.height / 2) - (tooltipHeight / 2)
+      ));
+      position.left = margin;
+      position.transform = 'none';
     }
 
     return position;
-  }, []);
+  }, [isMobile]);
 
   const scrollToTarget = useCallback((targetSelector: string) => {
     const target = document.querySelector(targetSelector);
@@ -202,26 +237,32 @@ export default function OnboardingTour() {
 
       {/* Tooltip */}
       <div
-        className="fixed max-w-sm"
+        className={`fixed ${isMobile ? 'max-w-none mx-5' : 'max-w-sm'}`}
         style={{
           ...tooltipPosition,
           pointerEvents: 'auto',
-          zIndex: 9999
+          zIndex: 9999,
+          width: isMobile ? `${Math.min(350, window.innerWidth - 40)}px` : 'auto'
         }}
       >
         <div
-          className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
+          className={`bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden ${
+            isMobile ? 'text-sm' : ''
+          }`}
           style={{
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(59, 130, 246, 0.1)',
             backdropFilter: 'blur(10px)',
           }}
         >
-          {/* Close Button */}
+          {/* Close Button - Mobile Optimized */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 z-10 p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className={`absolute top-4 right-4 z-10 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors ${
+              isMobile ? 'p-3' : 'p-2'
+            }`}
+            style={{ minWidth: '44px', minHeight: '44px' }} // Touch-friendly minimum size
           >
-            <X size={16} />
+            <X size={isMobile ? 20 : 16} />
           </button>
 
           {/* Content */}
@@ -236,36 +277,53 @@ export default function OnboardingTour() {
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          {/* Footer - Mobile Responsive */}
+          <div className={`px-6 py-4 bg-gray-50 border-t border-gray-100 ${
+            isMobile ? 'flex flex-col gap-3' : 'flex items-center justify-between'
+          }`}>
+            {/* Top row on mobile - Progress and Skip */}
+            <div className={`flex items-center ${isMobile ? 'justify-between' : 'gap-3'}`}>
               <button
                 onClick={handleSkip}
-                className="text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors flex items-center gap-1"
+                className={`text-gray-500 hover:text-gray-700 font-medium transition-colors flex items-center gap-1 ${
+                  isMobile ? 'text-sm py-2 px-1' : 'text-sm'
+                }`}
+                style={{ minHeight: '44px' }} // Touch-friendly
               >
-                <SkipForward size={14} />
+                <SkipForward size={isMobile ? 16 : 14} />
                 Skip Tour
               </button>
 
-              <div className="text-xs text-gray-400">
+              <div className={`text-gray-400 font-medium ${
+                isMobile ? 'text-sm' : 'text-xs'
+              }`}>
                 {currentStepIndex + 1} of {steps.length}
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Bottom row on mobile - Navigation buttons */}
+            <div className={`flex items-center gap-3 ${
+              isMobile ? 'w-full' : ''
+            }`}>
               {!isFirstStep && (
                 <button
                   onClick={handlePrevious}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex items-center gap-1"
+                  className={`text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center gap-1 ${
+                    isMobile ? 'px-4 py-3 text-base flex-1' : 'px-4 py-2 text-sm'
+                  }`}
+                  style={{ minHeight: '44px' }} // Touch-friendly
                 >
-                  <ArrowLeft size={14} />
+                  <ArrowLeft size={isMobile ? 16 : 14} />
                   Back
                 </button>
               )}
 
               <button
                 onClick={handleNext}
-                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center gap-1 shadow-sm"
+                className={`bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center gap-1 shadow-sm ${
+                  isMobile ? 'px-6 py-3 text-base flex-1 justify-center' : 'px-5 py-2 text-sm'
+                }`}
+                style={{ minHeight: '44px' }} // Touch-friendly
               >
                 {isLastStep ? (
                   <>
@@ -275,7 +333,7 @@ export default function OnboardingTour() {
                 ) : (
                   <>
                     Next
-                    <ArrowRight size={14} />
+                    <ArrowRight size={isMobile ? 16 : 14} />
                   </>
                 )}
               </button>

@@ -69,10 +69,10 @@ export const onboardingSteps: OnboardingStep[] = [
     content: (
       <div className="space-y-3">
         <p className="text-base leading-relaxed">
-          Click the microphone to <strong>talk directly</strong> to your AI companion! Our advanced voice system includes <strong>quality metrics</strong>, <strong>confidence scoring</strong>, and <strong>smart end-of-turn detection</strong>.
+          <span className="sm:hidden">Tap</span><span className="hidden sm:inline">Click</span> the microphone to <strong>talk directly</strong> to your AI companion! Our advanced voice system includes <strong>quality metrics</strong>, <strong>confidence scoring</strong>, and <strong>smart end-of-turn detection</strong>.
         </p>
         <p className="text-sm text-gray-600">
-          Watch for real-time quality indicators and personalized recommendations to improve your voice experience.
+          <span className="sm:hidden">Perfect for hands-free mobile conversations!</span><span className="hidden sm:inline">Watch for real-time quality indicators and personalized recommendations to improve your voice experience.</span>
         </p>
       </div>
     ),
@@ -99,7 +99,7 @@ export const onboardingSteps: OnboardingStep[] = [
     content: (
       <div className="space-y-3">
         <p className="text-base leading-relaxed">
-          Access your <strong>conversation history</strong>, manage sessions, and configure advanced features. The sidebar includes your profile and comprehensive settings.
+          <span className="sm:hidden">Tap the menu</span><span className="hidden sm:inline">Click here</span> to access your <strong>conversation history</strong>, manage sessions, and configure advanced features. <span className="sm:hidden">The mobile menu</span><span className="hidden sm:inline">The sidebar</span> includes your profile and comprehensive settings.
         </p>
         <p className="text-sm text-gray-600">
           Find <strong>Content Safety</strong>, voice quality settings, and personalization options in the Settings section.
@@ -161,22 +161,50 @@ interface OnboardingProviderProps {
 
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [isOnboardingActive, setIsOnboardingActive] = useState(false);
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(true);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false); // Fixed: default to false
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {
-    // Check if user has completed onboarding
-    const completed = localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true';
-    setHasCompletedOnboarding(completed);
+    // Check localStorage for onboarding completion status
+    const checkOnboardingStatus = () => {
+      try {
+        const completed = localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true';
+        setHasCompletedOnboarding(completed);
 
-    // Auto-start onboarding for new users
-    if (!completed) {
-      // Small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        setIsOnboardingActive(true);
-      }, 2000); // Increased delay to ensure all components are loaded
-      return () => clearTimeout(timer);
-    }
+        // Auto-start onboarding for new users (only if not completed)
+        if (!completed) {
+          // Wait for DOM to be ready and all essential elements to load
+          const startOnboardingWhenReady = () => {
+            // Check if essential tour targets exist
+            const essentialTargets = [
+              '[data-onboarding="logo"]',
+              '[data-onboarding="message-input"]'
+            ];
+            
+            const allTargetsExist = essentialTargets.every(selector => 
+              document.querySelector(selector)
+            );
+            
+            if (allTargetsExist) {
+              setIsOnboardingActive(true);
+            } else {
+              // Retry after a short delay if targets aren't ready
+              setTimeout(startOnboardingWhenReady, 500);
+            }
+          };
+          
+          // Initial delay to let the page settle, then check readiness
+          const timer = setTimeout(startOnboardingWhenReady, 1500);
+          return () => clearTimeout(timer);
+        }
+      } catch (error) {
+        console.warn('Failed to check onboarding status:', error);
+        // Default to not showing onboarding if localStorage fails
+        setHasCompletedOnboarding(true);
+      }
+    };
+    
+    checkOnboardingStatus();
   }, []);
 
   const startOnboarding = () => {
