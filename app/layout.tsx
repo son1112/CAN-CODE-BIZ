@@ -138,8 +138,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
 
-        {/* Preload critical resources for better LCP */}
-        <link rel="preload" href="/rubber-duck-avatar.png" as="image" type="image/png" />
+        {/* Preload critical resources for better LCP - rubber-duck-avatar only used during streaming */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
 
