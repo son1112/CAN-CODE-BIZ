@@ -30,9 +30,9 @@ export const useMobileNavigation = () => {
     return () => window.removeEventListener('resize', checkDevice);
   }, [isHydrated]);
 
-  // Close menu when clicking outside
+  // Close menu when clicking/touching outside
   useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
+    const handleOutsideInteraction = (event: MouseEvent | TouchEvent) => {
       const target = event.target as Element;
       if (isMenuOpen && !target.closest('[data-mobile-menu]')) {
         setIsMenuOpen(false);
@@ -40,14 +40,17 @@ export const useMobileNavigation = () => {
     };
 
     if (isMenuOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
+      // Add both mouse and touch event listeners for better mobile support
+      document.addEventListener('mousedown', handleOutsideInteraction);
+      document.addEventListener('touchstart', handleOutsideInteraction);
       document.body.style.overflow = 'hidden'; // Prevent background scroll
     } else {
       document.body.style.overflow = '';
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('mousedown', handleOutsideInteraction);
+      document.removeEventListener('touchstart', handleOutsideInteraction);
       document.body.style.overflow = '';
     };
   }, [isMenuOpen]);

@@ -143,26 +143,32 @@ export default function MobileOptimizedHeader({
               </div>
             </div>
 
-            {/* Right Side: Hamburger Menu */}
-            <button
-              onClick={toggleMenu}
-              className="flex-shrink-0 rounded-lg transition-all duration-200 p-2 touch-target"
-              style={{
-                minWidth: '48px', // Larger touch target
-                minHeight: '48px',
-                backgroundColor: isMenuOpen ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                border: isMenuOpen ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              aria-label="Open menu"
-            >
-              <Menu
-                className="w-5 h-5"
-                style={{ color: isMenuOpen ? '#3b82f6' : 'var(--text-secondary)' }}
-              />
-            </button>
+            {/* Right Side: Theme Toggle + Hamburger Menu */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Mobile Theme Toggle */}
+              <ThemeToggle />
+              
+              {/* Hamburger Menu Button */}
+              <button
+                onClick={toggleMenu}
+                className="rounded-lg transition-all duration-200 p-2 touch-target"
+                style={{
+                  minWidth: '48px', // Larger touch target
+                  minHeight: '48px',
+                  backgroundColor: isMenuOpen ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                  border: isMenuOpen ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                aria-label="Open menu"
+              >
+                <Menu
+                  className="w-5 h-5"
+                  style={{ color: isMenuOpen ? '#3b82f6' : 'var(--text-secondary)' }}
+                />
+              </button>
+            </div>
           </div>
 
           {/* Continuous Mode Banner - Mobile */}
