@@ -151,6 +151,40 @@ vercel --prod --yes --scope can-code-alpha-projects --project-name rubber-ducky-
 - Staging: Copy of production data for testing (periodic refresh)
 - Development: Test data, reset regularly
 
+## GitHub-Vercel Integration 🔗
+
+### Automatic Deployment Status Reporting
+The GitHub-Vercel integration provides **real-time deployment feedback** directly in the GitHub interface:
+
+#### Commit-Level Status Checks
+- ✅/❌ **Vercel - rubber-ducky-live** (Production deployment status)
+- ✅/❌ **Vercel - rubber-ducky-live-alpha** (Staging deployment status)  
+- ✅/❌ **Vercel - rubber-ducky-live-test** (Test deployment status)
+- ✅ **Vercel Preview Comments** (PR comment integration)
+
+#### Benefits
+- **Immediate visibility**: See deployment status right in commit history
+- **PR protection**: Block merges if deployments fail
+- **Direct debugging**: "Details" links go straight to Vercel dashboard
+- **Team coordination**: Everyone can see deployment health at a glance
+- **Prevents bad deployments**: Catch issues before they reach production
+
+#### Usage in Workflow
+1. **Push to branch** → GitHub shows pending deployment checks
+2. **Deployment completes** → Status updates with ✅ success or ❌ failure
+3. **Click "Details"** → Opens Vercel dashboard with logs and debugging info
+4. **PR reviews** → Can see deployment status before approving merges
+
+### Configuring Branch Protection (Recommended)
+Consider adding branch protection rules to require successful deployments:
+```
+Settings > Branches > Branch protection rules
+☑️ Require status checks to pass before merging
+☑️ Require branches to be up to date before merging
+Select: Vercel - rubber-ducky-live (for main branch)
+Select: Vercel - rubber-ducky-live-alpha (for develop branch)
+```
+
 ## Monitoring and Alerting
 
 ### Health Checks
@@ -162,6 +196,11 @@ vercel --prod --yes --scope can-code-alpha-projects --project-name rubber-ducky-
 - `/api/health` - Environment-specific health checks
 - `/api/debug-db` - Database connection status
 - `/api/debug-auth` - Authentication configuration
+
+### Integration Monitoring
+- **GitHub Checks**: Monitor deployment status in commit history
+- **Vercel Dashboard**: Direct access via GitHub "Details" links
+- **PR Comments**: Automatic deployment URL sharing in pull requests
 
 ## Security Considerations
 
@@ -201,10 +240,45 @@ vercel --prod --yes --scope can-code-alpha-projects --project-name rubber-ducky-
 - ✅ Reduced deployment anxiety
 - ✅ Improved testing confidence
 
+## Troubleshooting Deployment Failures
+
+### Using GitHub-Vercel Integration for Debugging
+When deployments fail, the GitHub integration provides immediate feedback:
+
+1. **Check commit status** - Look for ❌ red X marks on commits
+2. **Click "Details"** - Opens Vercel dashboard with specific error logs
+3. **Review build logs** - Common issues:
+   - TypeScript compilation errors
+   - Missing environment variables
+   - Build timeouts
+   - Package installation failures
+
+### Common Deployment Failure Patterns
+- **All 3 environments failing**: Usually code-level issues (TypeScript, syntax)
+- **Production only failing**: Environment-specific configuration issues
+- **Staging/Test failing**: Branch-specific problems or conflicts
+
+### Quick Fix Workflow
+1. **Identify failure** via GitHub checks
+2. **Click "Details"** → Vercel dashboard → Build logs
+3. **Fix issue** in code
+4. **Push fix** → GitHub automatically retriggers deployments
+5. **Verify** ✅ green checks appear
+
+### Emergency Procedures
+- **Production down**: Use Vercel dashboard for instant rollback to previous deployment
+- **Staging issues**: Safe to experiment with fixes since it doesn't affect production
+- **Build failures**: GitHub prevents automatic merges, protecting production
+
 ## Rollback Strategy
 
 - **Production**: Instant rollback via Vercel dashboard
 - **Staging**: Git revert and redeploy
 - **Development**: Reset to last known good state
+
+### Rollback via GitHub Integration
+- Navigate to previous successful commit with ✅ status
+- Use Vercel dashboard "Promote to Production" feature
+- GitHub checks will show rollback deployment status
 
 This strategy ensures safe, reliable deployments while maintaining development velocity and production stability.
