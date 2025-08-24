@@ -1,0 +1,17 @@
+# Force Vercel to ignore cache directories and rebuild from scratch
+.next/
+.vercel/
+node_modules/.cache/
+.cache/
+dist/
+build/
+
+# Also ignore development files that shouldn't affect deployment
+.env.local
+*.log
+.DS_Store
+.vscode/
+.idea/
+
+# Force fresh build by ignoring any Vercel build artifacts
+.vercel/output/

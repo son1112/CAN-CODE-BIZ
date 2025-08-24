@@ -1,0 +1,19 @@
+VERCEL_CACHE_BUST_TIMESTAMP=$(date)
+BUILD_ID=$(git rev-parse HEAD)
+FORCE_REBUILD=true
+
+This file forces Vercel to do a complete rebuild by creating a unique file
+that changes with each commit to bust any aggressive caching.
+
+Current issues:
+- SessionHeader component not deploying despite being committed
+- PWA icons not deploying despite being generated and committed  
+- Vercel appears to be using stale cached builds
+
+Cache-busting strategies:
+1. Version bump in package.json
+2. .vercelignore to exclude cache directories
+3. Build timestamp environment variable
+4. This unique timestamp file
+
+Generated: Sat Aug 24 16:32:46 CDT 2025
