@@ -346,7 +346,14 @@ export default function OfflineIndicator({
 // Compact version for headers or status bars
 export function OfflineStatusBadge({ className = '' }: { className?: string }) {
   const { isOnline, cacheStats } = useOfflineMode();
+  const { isHydrated } = useMobileNavigation();
 
+  // Prevent hydration mismatch by not rendering until hydrated
+  if (!isHydrated) {
+    return null;
+  }
+
+  // Don't show if online and no pending items
   if (isOnline && cacheStats.pendingItems === 0) return null;
 
   return (
