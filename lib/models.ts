@@ -1,7 +1,7 @@
 // Claude model types and configurations
-export type ClaudeModel = 
+export type ClaudeModel =
   | 'claude-sonnet-4-20250514'      // Claude 4 Sonnet (primary - best balance)
-  | 'claude-opus-4-1-20250805'     // Claude 4.1 Opus (highest quality)  
+  | 'claude-opus-4-1-20250805'     // Claude 4.1 Opus (highest quality)
   | 'claude-3-5-sonnet-20241022'   // Claude 3.5 Sonnet (reliable fallback)
   | 'claude-3-haiku-20240307';     // Claude 3 Haiku (fastest/cheapest fallback)
 

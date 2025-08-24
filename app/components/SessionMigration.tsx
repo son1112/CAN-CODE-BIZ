@@ -75,17 +75,17 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
       alert('Please select at least one session to migrate.');
       return;
     }
-    
+
     setIsLoading(true);
     setStep('migrating');
-    
+
     try {
       const response = await fetch('/api/migrate-sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           dryRun,
           selectedSessions: Array.from(selectedSessions)
         }),
@@ -137,9 +137,9 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
     if (!confirm(`Are you sure you want to permanently delete "${sessionName}"?`)) {
       return;
     }
-    
+
     setIsDeleting(prev => new Set([...prev, sessionName]));
-    
+
     try {
       const response = await fetch('/api/migrate-sessions/delete', {
         method: 'DELETE',
@@ -148,7 +148,7 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
         },
         body: JSON.stringify({ sessionName }),
       });
-      
+
       if (response.ok) {
         // Refresh the preview
         await loadPreview();
@@ -187,17 +187,17 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 backdrop-blur-sm"
         style={{
           backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)'
         }}
         onClick={handleClose}
       />
-      
+
       {/* Modal */}
       <div className="relative flex h-full items-center justify-center p-4">
-        <div 
+        <div
           className="relative w-full max-w-4xl max-h-[85vh] rounded-2xl border shadow-2xl overflow-hidden"
           style={{
             backgroundColor: isDark ? 'var(--bg-primary)' : 'white',
@@ -205,7 +205,7 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
           }}
         >
           {/* Header */}
-          <div 
+          <div
             className="flex items-center justify-between border-b px-6 py-4"
             style={{
               borderColor: 'var(--border-primary)',
@@ -236,13 +236,13 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
             {step === 'preview' && (
               <div className="text-center space-y-6">
                 <div className="space-y-4">
-                  <Database 
-                    style={{ 
-                      width: '64px', 
-                      height: '64px', 
-                      color: 'var(--accent-primary)', 
-                      margin: '0 auto' 
-                    }} 
+                  <Database
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      color: 'var(--accent-primary)',
+                      margin: '0 auto'
+                    }}
                   />
                   <div>
                     <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
@@ -337,10 +337,10 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
                           const isSelected = selectedSessions.has(session.name);
                           const isBeingDeleted = isDeleting.has(session.name);
                           return (
-                            <div 
+                            <div
                               key={session.name}
                               className="flex items-center gap-3 p-3 rounded-lg border transition-colors"
-                              style={{ 
+                              style={{
                                 backgroundColor: isSelected ? 'var(--bg-quaternary)' : 'var(--bg-tertiary)',
                                 borderColor: isSelected ? 'var(--accent-primary)' : 'var(--border-primary)',
                                 opacity: isBeingDeleted ? 0.5 : 1
@@ -357,7 +357,7 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
                               >
                                 {isSelected && <Check style={{ width: '12px', height: '12px', color: 'white' }} />}
                               </button>
-                              
+
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
                                   {session.name}
@@ -366,7 +366,7 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
                                   {session.iterationCount} iterations • {session.agentNames.join(', ')}
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-center gap-2">
                                 <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                                   {new Date(session.updatedAt).toLocaleDateString()}
@@ -429,13 +429,13 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
 
                 {preview.migratable === 0 && (
                   <div className="text-center py-8">
-                    <CheckCircle 
-                      style={{ 
-                        width: '48px', 
-                        height: '48px', 
-                        color: 'var(--status-success)', 
-                        margin: '0 auto 16px' 
-                      }} 
+                    <CheckCircle
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        color: 'var(--status-success)',
+                        margin: '0 auto 16px'
+                      }}
                     />
                     <p className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
                       All sessions already migrated!
@@ -451,14 +451,14 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
             {/* Step 3: Migrating */}
             {step === 'migrating' && (
               <div className="text-center space-y-6">
-                <Clock 
+                <Clock
                   className="animate-spin"
-                  style={{ 
-                    width: '64px', 
-                    height: '64px', 
-                    color: 'var(--accent-primary)', 
-                    margin: '0 auto' 
-                  }} 
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    color: 'var(--accent-primary)',
+                    margin: '0 auto'
+                  }}
                 />
                 <div>
                   <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
@@ -476,22 +476,22 @@ export default function SessionMigration({ isOpen, onClose, onComplete }: Sessio
               <div className="space-y-6">
                 <div className="text-center">
                   {result.success ? (
-                    <CheckCircle 
-                      style={{ 
-                        width: '64px', 
-                        height: '64px', 
-                        color: 'var(--status-success)', 
-                        margin: '0 auto 16px' 
-                      }} 
+                    <CheckCircle
+                      style={{
+                        width: '64px',
+                        height: '64px',
+                        color: 'var(--status-success)',
+                        margin: '0 auto 16px'
+                      }}
                     />
                   ) : (
-                    <AlertCircle 
-                      style={{ 
-                        width: '64px', 
-                        height: '64px', 
-                        color: 'var(--status-error)', 
-                        margin: '0 auto 16px' 
-                      }} 
+                    <AlertCircle
+                      style={{
+                        width: '64px',
+                        height: '64px',
+                        color: 'var(--status-error)',
+                        margin: '0 auto 16px'
+                      }}
                     />
                   )}
                   <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>

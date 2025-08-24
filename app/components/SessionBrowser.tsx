@@ -4,10 +4,14 @@ import { useState, useEffect } from 'react';
 import { History, Search, Calendar, MessageCircle, Archive, Trash2, X, Eye, Database, Check, MoreHorizontal, RefreshCw, Heart, FileText, Copy } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { SessionOperationIndicator } from './LoadingIndicator';
 import SessionMigration from './SessionMigration';
 import StarButton from './StarButton';
+import { SessionsPullToRefresh } from './PullToRefresh';
+import { useRefreshManager } from '@/hooks/useRefreshManager';
 import { useAuth } from '@/hooks/useAuth';
+import { SessionShare } from './WebShare';
 
 interface SessionBrowserProps {
   isOpen: boolean;
@@ -23,7 +27,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [isProcessingOperation, setIsProcessingOperation] = useState(false);
-  
+
   // Enhanced filtering states
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
@@ -36,6 +40,20 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   const { sessions, loadSessions, deleteSession, reimportSession, currentSession } = useSession();
   const { isDark } = useTheme();
   const { userId } = useAuth();
+  const { isMobile, isTablet } = useMobileNavigation();
+
+  // Pull-to-refresh functionality
+  const { smartRefresh, isRefreshing } = useRefreshManager({
+    onRefreshStart: () => setIsProcessingOperation(true),
+    onRefreshComplete: () => setIsProcessingOperation(false),
+    onRefreshError: (error) => {
+      console.error('Session refresh failed:', error);
+      setIsProcessingOperation(false);
+    }
+  });
+
+  // Mobile layout detection
+  const isMobileLayout = isMobile || isTablet;
 
   // Load sessions when component opens
   useEffect(() => {
@@ -46,7 +64,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
 
   // Get unique tags from all sessions
   const allTags = Array.from(new Set((sessions || []).flatMap(session => session.tags || [])));
-  
+
   // Get unique agents from all sessions
   const allAgents = Array.from(new Set((sessions || [])
     .filter(session => session.lastAgentUsed)
@@ -57,24 +75,24 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   const filteredSessions = (sessions || []).filter(session => {
     // Apply existing filters
     if (!showArchived && session.isArchived) return false;
-    
+
     // Text search filter
     if (searchTerm && !session.name.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
-    
+
     // Tag filter
     if (selectedTags.length > 0 && !selectedTags.some(tag => session.tags?.includes(tag))) {
       return false;
     }
-    
+
     // Date filter
     if (dateFilter !== 'all') {
       const sessionDate = new Date(session.lastAccessedAt || session.createdAt);
       const now = new Date();
       const diffTime = now.getTime() - sessionDate.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       switch (dateFilter) {
         case 'today':
           if (diffDays > 1) return false;
@@ -87,7 +105,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
           break;
       }
     }
-    
+
     // Message count filter
     if (messageCountFilter !== 'all') {
       const messageCount = session.messages?.length || 0;
@@ -103,22 +121,22 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
           break;
       }
     }
-    
+
     // Agent filter
     if (agentFilter !== 'all' && session.lastAgentUsed !== agentFilter) {
       return false;
     }
-    
+
     // Favorites filter
     if (showFavoritesOnly && !session.isFavorite) {
       return false;
     }
-    
+
     // Templates filter
     if (showTemplatesOnly && !session.isTemplate) {
       return false;
     }
-    
+
     return true;
   });
 
@@ -150,8 +168,8 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
+    setSelectedTags(prev =>
+      prev.includes(tag)
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
     );
@@ -164,7 +182,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
 
   const handleReimportSession = async (sessionId: string) => {
     const confirmed = confirm('Are you sure you want to re-import this session? This will update the messages with enhanced parsing.');
-    
+
     if (!confirmed) return;
 
     setIsProcessingOperation(true);
@@ -181,7 +199,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
 
   // Check if a session has CLI iterations (was migrated from CLI)
   const hasCliIterations = (session: { tags?: string[]; iterationCount?: number }) => {
-    return session.tags?.includes('cli-migrated') || 
+    return session.tags?.includes('cli-migrated') ||
            session.tags?.includes('rubber-ducky-node') ||
            (session.iterationCount && session.iterationCount > 0);
   };
@@ -209,16 +227,16 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
 
   const handleBulkDelete = async (permanent = false) => {
     if (selectedSessions.size === 0) return;
-    
+
     const action = permanent ? 'permanently delete' : 'archive';
     const confirmed = confirm(`Are you sure you want to ${action} ${selectedSessions.size} session(s)?`);
-    
+
     if (!confirmed) return;
 
-    const promises = Array.from(selectedSessions).map(sessionId => 
+    const promises = Array.from(selectedSessions).map(sessionId =>
       deleteSession(sessionId, permanent)
     );
-    
+
     await Promise.all(promises);
     clearAllSelections();
     loadSessions(1, searchTerm, selectedTags);
@@ -226,12 +244,12 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
 
   const handleBulkExport = async (format: 'pdf' | 'word') => {
     if (selectedSessions.size === 0) return;
-    
+
     const confirmed = confirm(`Export ${selectedSessions.size} session(s) as ${format.toUpperCase()}? This may take a few moments.`);
     if (!confirmed) return;
 
     setIsProcessingOperation(true);
-    
+
     try {
       // Create a bulk export by generating individual exports for each session
       const sessionIds = Array.from(selectedSessions);
@@ -242,7 +260,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               sessionId,
               includeAllMessages: true,
               bulkExport: true
@@ -256,7 +274,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
           const blob = await response.blob();
           const session = sessions?.find(s => s.sessionId === sessionId);
           const filename = `${session?.name || 'session'}-${sessionId.slice(0, 8)}.${format === 'pdf' ? 'pdf' : 'docx'}`;
-          
+
           // Download the file
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -267,7 +285,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
           a.click();
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
-          
+
           return true;
         } catch (error) {
           console.error(`Failed to export session ${sessionId}:`, error);
@@ -278,13 +296,13 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
       const results = await Promise.all(exportPromises);
       const successCount = results.filter(Boolean).length;
       const failureCount = results.length - successCount;
-      
+
       if (successCount > 0) {
         alert(`Successfully exported ${successCount} session(s) as ${format.toUpperCase()}.${failureCount > 0 ? ` ${failureCount} export(s) failed.` : ''}`);
       } else {
         alert('All exports failed. Please try again.');
       }
-      
+
     } catch (error) {
       console.error('Bulk export failed:', error);
       alert('Bulk export failed. Please try again.');
@@ -301,21 +319,21 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          templateSessionId, 
+        body: JSON.stringify({
+          templateSessionId,
           newSessionName
         }),
       });
 
       if (response.ok) {
         const result = await response.json();
-        
+
         // Refresh sessions to show the new one
         await loadSessions(1, searchTerm, selectedTags);
-        
+
         // Open the new session
         handleSessionSelect(result.session.sessionId);
-        
+
         alert(`New session "${newSessionName}" created from template successfully!`);
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -363,7 +381,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           isTemplate: !currentValue,
           templateName: !currentValue ? templateName.trim() : undefined
         }),
@@ -387,44 +405,64 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 backdrop-blur-sm"
         style={{
           backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)'
         }}
         onClick={onClose}
       />
-      
+
       {/* Modal */}
-      <div className="relative flex h-full items-center justify-center p-4">
-        <div 
-          className="relative w-full max-w-4xl h-[80vh] rounded-2xl border shadow-2xl overflow-hidden"
+      <div className={`relative flex h-full ${
+        isMobileLayout ? 'items-start p-0' : 'items-center justify-center p-4'
+      }`}>
+        <div
+          className={`relative w-full ${
+            isMobileLayout
+              ? 'h-full rounded-none'
+              : 'max-w-4xl h-[80vh] rounded-2xl'
+          } border shadow-2xl overflow-hidden`}
           style={{
             backgroundColor: isDark ? 'var(--bg-primary)' : 'white',
-            borderColor: 'var(--border-primary)'
+            borderColor: 'var(--border-primary)',
+            ...(isMobileLayout && { borderRadius: 0, maxWidth: '100vw' })
           }}
         >
           {/* Header */}
-          <div 
-            className="flex items-center justify-between border-b"
+          <div
+            className={`flex items-center justify-between border-b ${
+              isMobileLayout ? 'px-4 py-3' : 'px-6 py-5'
+            }`}
             style={{
-              padding: '20px 24px',
               borderColor: 'var(--border-primary)',
               backgroundColor: isDark ? 'var(--bg-secondary)' : 'var(--bg-secondary)'
             }}
           >
-            <div className="flex items-center gap-3">
-              <History style={{ width: '24px', height: '24px', color: 'var(--accent-primary)' }} />
-              <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                Session History
+            <div className={`flex items-center ${isMobileLayout ? 'gap-2' : 'gap-3'}`}>
+              <History style={{
+                width: isMobileLayout ? '20px' : '24px',
+                height: isMobileLayout ? '20px' : '24px',
+                color: 'var(--accent-primary)'
+              }} />
+              <h2 className={`${
+                isMobileLayout
+                  ? 'text-lg mobile-heading-secondary'
+                  : 'text-xl'
+              } font-bold`} style={{ color: 'var(--text-primary)' }}>
+                {isMobileLayout ? 'Sessions' : 'Session History'}
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="rounded-lg p-2 transition-colors"
+              className={`rounded-lg transition-colors touch-target ${
+                isMobileLayout ? 'p-3' : 'p-2'
+              }`}
               style={{
                 color: 'var(--text-secondary)',
-                backgroundColor: 'transparent'
+                backgroundColor: 'transparent',
+                minWidth: isMobileLayout ? '44px' : 'auto',
+                minHeight: isMobileLayout ? '44px' : 'auto'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
@@ -438,37 +476,41 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
           </div>
 
           {/* Search and Filters */}
-          <div 
+          <div
             className="border-b"
             style={{
-              padding: '16px 24px',
+              padding: isMobileLayout ? '12px 16px' : '16px 24px',
               borderColor: 'var(--border-primary)',
               backgroundColor: isDark ? 'var(--bg-primary)' : 'white'
             }}
           >
             {/* Search Bar */}
             <div className="relative mb-4">
-              <Search 
-                style={{ 
-                  position: 'absolute', 
-                  left: '12px', 
-                  top: '50%', 
-                  transform: 'translateY(-50%)', 
-                  width: '16px', 
+              <Search
+                style={{
+                  position: 'absolute',
+                  left: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '16px',
                   height: '16px',
                   color: 'var(--text-tertiary)'
-                }} 
+                }}
               />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search sessions..."
-                className="w-full rounded-lg border pl-10 pr-4 py-2 transition-colors focus:outline-none focus:ring-2"
+                placeholder={isMobileLayout ? "Search..." : "Search sessions..."}
+                className={`w-full rounded-lg border pl-10 pr-4 transition-colors focus:outline-none focus:ring-2 ${
+                  isMobileLayout ? 'py-3 mobile-typography-base' : 'py-2'
+                }`}
                 style={{
                   backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',
                   borderColor: 'var(--border-primary)',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
+                  minHeight: isMobileLayout ? '44px' : 'auto',
+                  fontSize: isMobileLayout ? '16px' : '14px' // Prevent iOS zoom
                 }}
               />
             </div>
@@ -486,11 +528,11 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                       onClick={() => toggleTag(tag)}
                       className="px-3 py-1 rounded-full text-sm font-medium transition-colors"
                       style={{
-                        backgroundColor: selectedTags.includes(tag) 
-                          ? 'var(--accent-primary)' 
+                        backgroundColor: selectedTags.includes(tag)
+                          ? 'var(--accent-primary)'
                           : isDark ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
-                        color: selectedTags.includes(tag) 
-                          ? 'white' 
+                        color: selectedTags.includes(tag)
+                          ? 'white'
                           : 'var(--text-secondary)',
                         border: `1px solid ${selectedTags.includes(tag) ? 'var(--accent-primary)' : 'var(--border-primary)'}`
                       }}
@@ -510,14 +552,14 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                 style={{ color: 'var(--text-secondary)' }}
               >
                 <span>Advanced Filters</span>
-                <span style={{ 
+                <span style={{
                   transform: showAdvancedFilters ? 'rotate(180deg)' : 'rotate(0deg)',
                   transition: 'transform 0.2s'
                 }}>
                   ▼
                 </span>
               </button>
-              
+
               {showAdvancedFilters && (
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Date Filter */}
@@ -541,7 +583,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                       <option value="month">This Month</option>
                     </select>
                   </div>
-                  
+
                   {/* Message Count Filter */}
                   <div>
                     <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-tertiary)' }}>
@@ -563,7 +605,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                       <option value="long">Long (51+ messages)</option>
                     </select>
                   </div>
-                  
+
                   {/* Agent Filter */}
                   <div>
                     <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-tertiary)' }}>
@@ -631,7 +673,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                   <Archive style={{ width: '14px', height: '14px' }} />
                   Show Archived
                 </button>
-                
+
                 {(sessions?.length || 0) > 0 && (
                   <button
                     onClick={() => setShowBulkActions(!showBulkActions)}
@@ -673,12 +715,12 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                 Import CLI Sessions
               </button>
             </div>
-            
+
             {/* Bulk Actions Bar */}
             {showBulkActions && (
-              <div className="mt-4 p-3 rounded-lg border" style={{ 
-                backgroundColor: 'var(--bg-secondary)', 
-                borderColor: 'var(--border-primary)' 
+              <div className="mt-4 p-3 rounded-lg border" style={{
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--border-primary)'
               }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -759,7 +801,18 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
           </div>
 
           {/* Sessions List */}
-          <div className="relative flex-1 overflow-y-auto px-6 pt-6 pb-32" style={{ maxHeight: 'calc(80vh - 200px)' }}>
+          <SessionsPullToRefresh
+            onRefresh={async () => {
+              await smartRefresh('sessions');
+            }}
+          >
+            <div className={`relative flex-1 ${
+              isMobileLayout
+                ? 'px-4 pt-4 pb-24'
+                : 'px-6 pt-6 pb-32'
+            }`} style={{
+              maxHeight: isMobileLayout ? 'calc(100vh - 180px)' : 'calc(80vh - 200px)'
+            }}>
             {/* Loading overlay */}
             {isProcessingOperation && (
               <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)', backdropFilter: 'blur(2px)' }}>
@@ -777,21 +830,26 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className={isMobileLayout ? 'space-y-2' : 'space-y-3'}>
                 {filteredSessions.map((session) => (
                   <div
                     key={session.sessionId}
-                    className="rounded-lg border p-4 transition-all duration-200 hover:shadow-md"
+                    className={`rounded-lg border transition-all duration-200 hover:shadow-md ${
+                      isMobileLayout
+                        ? 'p-3 mobile-chat-message touch-target'
+                        : 'p-4'
+                    }`}
                     style={{
-                      backgroundColor: currentSession?.sessionId === session.sessionId 
+                      backgroundColor: currentSession?.sessionId === session.sessionId
                         ? isDark ? 'var(--bg-tertiary)' : 'var(--bg-secondary)'
                         : isDark ? 'var(--bg-secondary)' : 'white',
-                      borderColor: currentSession?.sessionId === session.sessionId 
-                        ? 'var(--accent-primary)' 
+                      borderColor: currentSession?.sessionId === session.sessionId
+                        ? 'var(--accent-primary)'
                         : selectedSessions.has(session.sessionId) && showBulkActions
                         ? 'var(--accent-primary)'
                         : 'var(--border-primary)',
-                      borderWidth: currentSession?.sessionId === session.sessionId || (selectedSessions.has(session.sessionId) && showBulkActions) ? '2px' : '1px'
+                      borderWidth: currentSession?.sessionId === session.sessionId || (selectedSessions.has(session.sessionId) && showBulkActions) ? '2px' : '1px',
+                      minHeight: isMobileLayout ? '44px' : 'auto'
                     }}
                   >
                     <div className="flex items-start justify-between">
@@ -808,40 +866,59 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                         </button>
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 
-                            className="font-semibold truncate"
+                        <div className={`flex items-center gap-2 ${isMobileLayout ? 'mb-1' : 'mb-2'}`}>
+                          <h3
+                            className={`font-semibold truncate ${
+                              isMobileLayout ? 'mobile-typography-base' : ''
+                            }`}
                             style={{ color: 'var(--text-primary)' }}
                           >
                             {session.name}
                           </h3>
                           {currentSession?.sessionId === session.sessionId && (
-                            <span 
-                              className="px-2 py-1 rounded-full text-xs font-medium"
+                            <span
+                              className={`rounded-full font-medium ${
+                                isMobileLayout
+                                  ? 'px-1.5 py-0.5 text-xs mobile-typography-sm'
+                                  : 'px-2 py-1 text-xs'
+                              }`}
                               style={{
                                 backgroundColor: 'var(--accent-primary)',
                                 color: 'white'
                               }}
                             >
-                              Current
+                              {isMobileLayout ? '•' : 'Current'}
                             </span>
                           )}
                         </div>
-                        
-                        <div className="flex items-center gap-4 text-sm mb-2" style={{ color: 'var(--text-tertiary)' }}>
+
+                        <div className={`flex items-center ${
+                          isMobileLayout ? 'gap-3 text-xs mb-1' : 'gap-4 text-sm mb-2'
+                        }`} style={{ color: 'var(--text-tertiary)' }}>
                           <div className="flex items-center gap-1">
-                            <Calendar style={{ width: '14px', height: '14px' }} />
-                            {formatDate(session.lastAccessedAt || session.createdAt)}
+                            <Calendar style={{
+                              width: isMobileLayout ? '12px' : '14px',
+                              height: isMobileLayout ? '12px' : '14px'
+                            }} />
+                            <span className={isMobileLayout ? 'mobile-typography-sm' : ''}>
+                              {formatDate(session.lastAccessedAt || session.createdAt)}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <MessageCircle style={{ width: '14px', height: '14px' }} />
-                            {(session as unknown as { messageCount?: number }).messageCount || 0} messages
+                            <MessageCircle style={{
+                              width: isMobileLayout ? '12px' : '14px',
+                              height: isMobileLayout ? '12px' : '14px'
+                            }} />
+                            <span className={isMobileLayout ? 'mobile-typography-sm' : ''}>
+                              {(session as unknown as { messageCount?: number }).messageCount || 0}
+                              {isMobileLayout ? '' : ' messages'}
+                            </span>
                           </div>
                         </div>
 
-                        {(session as unknown as { lastMessage?: string }).lastMessage && (
-                          <p 
-                            className="text-sm truncate mb-2"
+                        {(session as unknown as { lastMessage?: string }).lastMessage && !isMobileLayout && (
+                          <p
+                            className="text-sm truncate mb-2 mobile-message-text"
                             style={{ color: 'var(--text-secondary)' }}
                           >
                             {(session as unknown as { lastMessage?: string }).lastMessage}
@@ -850,10 +927,14 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
 
                         {session.tags && session.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1">
-                            {session.tags.map((tag) => (
+                            {(isMobileLayout ? session.tags.slice(0, 2) : session.tags).map((tag) => (
                               <span
                                 key={tag}
-                                className="px-2 py-1 rounded-full text-xs"
+                                className={`rounded-full ${
+                                  isMobileLayout
+                                    ? 'px-1.5 py-0.5 text-xs mobile-typography-sm'
+                                    : 'px-2 py-1 text-xs'
+                                }`}
                                 style={{
                                   backgroundColor: isDark ? 'var(--bg-quaternary)' : 'var(--bg-tertiary)',
                                   color: 'var(--text-tertiary)'
@@ -862,6 +943,17 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                                 {tag}
                               </span>
                             ))}
+                            {isMobileLayout && session.tags.length > 2 && (
+                              <span
+                                className="px-1.5 py-0.5 text-xs mobile-typography-sm rounded-full"
+                                style={{
+                                  backgroundColor: isDark ? 'var(--bg-quaternary)' : 'var(--bg-tertiary)',
+                                  color: 'var(--text-tertiary)'
+                                }}
+                              >
+                                +{session.tags.length - 2}
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -880,19 +972,19 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                           size="sm"
                           />
                         )}
-                        
+
                         {/* Favorite Button */}
                         <button
                           onClick={() => handleToggleFavorite(session.sessionId, session.isFavorite || false)}
                           className="p-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                           title={session.isFavorite ? "Remove from favorites" : "Add to favorites"}
                         >
-                          <Heart 
+                          <Heart
                             className={`w-4 h-4 transition-colors ${
-                              session.isFavorite 
-                                ? 'text-red-500 fill-red-500' 
+                              session.isFavorite
+                                ? 'text-red-500 fill-red-500'
                                 : 'text-gray-400 hover:text-red-400'
-                            }`} 
+                            }`}
                           />
                         </button>
 
@@ -902,14 +994,24 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                           className="p-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                           title={session.isTemplate ? "Remove template status" : "Make template"}
                         >
-                          <FileText 
+                          <FileText
                             className={`w-4 h-4 transition-colors ${
-                              session.isTemplate 
-                                ? 'text-blue-500' 
+                              session.isTemplate
+                                ? 'text-blue-500'
                                 : 'text-gray-400 hover:text-blue-400'
-                            }`} 
+                            }`}
                           />
                         </button>
+
+                        {/* Share Button */}
+                        <div className="p-2">
+                          <SessionShare
+                            sessionId={session.sessionId}
+                            sessionName={session.name}
+                            messageCount={(session as unknown as { messageCount?: number }).messageCount}
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                          />
+                        </div>
 
                         {/* Create from Template Button */}
                         {session.isTemplate && (
@@ -926,7 +1028,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                             <Copy className="w-4 h-4 text-gray-400 hover:text-green-400" />
                           </button>
                         )}
-                        
+
                         <button
                           onClick={() => handleSessionSelect(session.sessionId)}
                           className="p-2 rounded-lg transition-colors"
@@ -997,14 +1099,15 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                 ))}
               </div>
             )}
-          </div>
+            </div>
+          </SessionsPullToRefresh>
         </div>
       </div>
 
       {/* Template Name Dialog */}
       {showTemplateDialog && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-50">
-          <div 
+          <div
             className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-[90vw] mx-4"
             style={{
               backgroundColor: isDark ? 'var(--bg-secondary)' : 'white',

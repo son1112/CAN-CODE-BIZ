@@ -2,7 +2,7 @@
 
 /**
  * Migration Script: Transfer demo-user data to real user account
- * 
+ *
  * This script migrates all sessions, messages, stars, and other data
  * from 'demo-user' to the authenticated user account.
  */
@@ -63,7 +63,7 @@ async function migrateData() {
     const demoStars = await db.collection('stars').find({ userId: SOURCE_USER_ID }).toArray();
     let starsMigrated = 0;
     let starsSkipped = 0;
-    
+
     for (const star of demoStars) {
       try {
         // Check if star already exists for target user
@@ -72,7 +72,7 @@ async function migrateData() {
           itemId: star.itemId,
           itemType: star.itemType
         });
-        
+
         if (!existing) {
           // Update the star to new user ID
           await db.collection('stars').updateOne(
@@ -90,7 +90,7 @@ async function migrateData() {
         starsSkipped++;
       }
     }
-    
+
     summary.stars = starsMigrated;
     console.log(`   ✅ ${starsMigrated} stars migrated, ${starsSkipped} duplicates removed`);
 
@@ -115,20 +115,20 @@ async function migrateData() {
     // 6. Check for any other collections that might have user data
     console.log('\n🔍 Checking for other collections...');
     const collections = await db.listCollections().toArray();
-    const userCollections = collections.filter(col => 
+    const userCollections = collections.filter(col =>
       !['sessions', 'messages', 'stars', 'tags', 'preferences', 'accounts', 'sessions', 'users', 'verification_tokens'].includes(col.name)
     );
 
     for (const collection of userCollections) {
       console.log(`   🔍 Checking collection: ${collection.name}`);
-      const sampleDoc = await db.collection(collection.name).findOne({ 
+      const sampleDoc = await db.collection(collection.name).findOne({
         $or: [
           { userId: SOURCE_USER_ID },
           { createdBy: SOURCE_USER_ID },
           { user: SOURCE_USER_ID }
         ]
       });
-      
+
       if (sampleDoc) {
         console.log(`   ⚠️  Found potential user data in ${collection.name} - manual review needed`);
         console.log(`   📄 Sample: ${JSON.stringify(sampleDoc, null, 2)}`);

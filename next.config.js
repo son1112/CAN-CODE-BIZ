@@ -11,18 +11,18 @@ const nextConfig = {
     };
     return config;
   },
-  
+
   // ESLint configuration
   eslint: {
     // Allow production builds to complete even with ESLint errors
     ignoreDuringBuilds: true,
   },
-  
+
   // Performance optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  
+
   // Image optimization for better LCP
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -31,7 +31,7 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    
+
     remotePatterns: [
       {
         protocol: 'https',
@@ -73,10 +73,10 @@ const nextConfig = {
       },
     ],
   },
-  
+
   // Enable compression
   compress: true,
-  
+
   // Experimental features for performance
   experimental: {
     optimizePackageImports: ['lucide-react'],

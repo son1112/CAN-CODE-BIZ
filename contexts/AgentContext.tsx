@@ -37,7 +37,7 @@ export function AgentProvider({ children }: AgentProviderProps) {
   const [currentAgent, setCurrentAgent] = useState<AgentPersona>(DEFAULT_AGENT);
   const [currentPowerAgent, setCurrentPowerAgent] = useState<Agent | null>(null);
   const [conversationContext, setConversationContext] = useState<string[]>([]);
-  
+
   // Load saved agent from localStorage on mount
   useEffect(() => {
     const savedAgentId = localStorage.getItem('rubber-ducky-current-agent');
@@ -94,24 +94,24 @@ export function AgentProvider({ children }: AgentProviderProps) {
 
   const getSystemPrompt = useCallback((userInput?: string) => {
     let prompt = currentPowerAgent ? currentPowerAgent.prompt : currentAgent.systemPrompt;
-    
+
     // Handle Power Agent template placeholders
     if (currentPowerAgent && userInput) {
       // Replace {{transcript}} with user input for Power agents that expect transcript format
       if (prompt.includes('{{transcript}}')) {
         prompt = prompt.replace(/\{\{transcript\}\}/g, userInput);
       }
-      
+
       // Replace {{userNote}} with user input for agents that expect user notes
       if (prompt.includes('{{userNote}}')) {
         prompt = prompt.replace(/\{\{userNote\}\}/g, userInput);
       }
     }
-    
+
     if (conversationContext.length > 0) {
       prompt += `\n\nConversation context (recent topics and flow):\n${conversationContext.join('\n')}`;
     }
-    
+
     return prompt;
   }, [currentAgent.systemPrompt, currentPowerAgent, conversationContext]);
 
@@ -120,12 +120,12 @@ export function AgentProvider({ children }: AgentProviderProps) {
     if (currentPowerAgent?.preferredModel) {
       return currentPowerAgent.preferredModel;
     }
-    
+
     // Return basic agent's preferred model if available
     if (currentAgent?.preferredModel) {
       return currentAgent.preferredModel;
     }
-    
+
     // Fall back to system default
     return DEFAULT_MODEL;
   }, [currentAgent, currentPowerAgent]);
@@ -134,16 +134,16 @@ export function AgentProvider({ children }: AgentProviderProps) {
     if (currentPowerAgent?.modelJustification) {
       return currentPowerAgent.modelJustification;
     }
-    
+
     if (currentAgent?.modelRationale) {
       return currentAgent.modelRationale;
     }
-    
+
     return 'Using default model for general conversation';
   }, [currentAgent, currentPowerAgent]);
 
   const isUsingPowerAgent = Boolean(currentPowerAgent);
-  
+
   // Debug logging for power agent state
   useEffect(() => {
     console.log('[DEBUG] AgentContext state update:', {

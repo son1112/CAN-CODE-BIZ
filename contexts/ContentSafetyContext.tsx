@@ -37,14 +37,14 @@ export function ContentSafetyProvider({ children }: { children: React.ReactNode 
       if (saved) {
         const parsedSettings = JSON.parse(saved);
         setSettings(prev => ({ ...prev, ...parsedSettings }));
-        logger.debug('Loaded content safety settings from localStorage', { 
+        logger.debug('Loaded content safety settings from localStorage', {
           component: 'ContentSafetyContext',
-          settings: parsedSettings 
+          settings: parsedSettings
         });
       }
     } catch (error) {
-      logger.warn('Failed to load content safety settings', { 
-        component: 'ContentSafetyContext' 
+      logger.warn('Failed to load content safety settings', {
+        component: 'ContentSafetyContext'
       }, error);
     }
   }, []);
@@ -52,18 +52,18 @@ export function ContentSafetyProvider({ children }: { children: React.ReactNode 
   const updateSettings = (newSettings: Partial<ContentSafetySettings>) => {
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
-    
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSettings));
-      logger.info('Content safety settings updated', { 
+      logger.info('Content safety settings updated', {
         component: 'ContentSafetyContext',
         enabled: updatedSettings.enabled,
         mode: updatedSettings.mode,
         sensitivity: updatedSettings.sensitivity
       });
     } catch (error) {
-      logger.error('Failed to save content safety settings', { 
-        component: 'ContentSafetyContext' 
+      logger.error('Failed to save content safety settings', {
+        component: 'ContentSafetyContext'
       }, error);
     }
   };

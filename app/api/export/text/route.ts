@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Generate text content
     let textContent = '';
-    
+
     // Add header with metadata
     if (includeMetadata) {
       textContent += `RUBBER DUCKY LIVE - MESSAGE EXPORT\n`;
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     // Add message role indicator
     const roleIndicator = message.role === 'user' ? 'USER' : 'ASSISTANT';
     textContent += `[${roleIndicator}]\n`;
-    
+
     // Add message content
     textContent += message.content;
 

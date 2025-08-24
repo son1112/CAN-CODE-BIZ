@@ -6,20 +6,20 @@ import { logger } from '@/lib/logger';
 export async function GET(req: NextRequest) {
   try {
     const { userId } = await requireAuth(req);
-    
+
     logger.info('Fetching ccusage data', {
       component: 'UsageAPI',
       userId
     });
 
     const usageData = await getCurrentProjectUsage();
-    
+
     if (!usageData) {
       logger.warn('No ccusage data available', {
         component: 'UsageAPI',
         userId
       });
-      
+
       return NextResponse.json({
         success: false,
         message: 'No usage data available'

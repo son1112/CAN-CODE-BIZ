@@ -10,16 +10,16 @@ interface ModelContextType {
   // Current model state
   currentModel: ClaudeModel;
   sessionModelSettings: SessionModelSettings;
-  
+
   // Model management
   setSessionModel: (model: ClaudeModel, reason?: string) => void;
   resetToAgentDefault: () => void;
-  
+
   // Model information
   availableModels: ModelConfig[];
   getModelConfig: (model: ClaudeModel) => ModelConfig;
   getEffectiveModel: (agent?: AgentPersona, powerAgent?: Agent) => ClaudeModel;
-  
+
   // Cost and usage tracking
   messageCount: number;
   incrementMessageCount: () => void;
@@ -76,10 +76,10 @@ export function ModelProvider({ children }: ModelProviderProps) {
       overrideAgentDefault: true,
       modelHistory: [
         ...prev.modelHistory,
-        { 
-          model, 
-          timestamp: new Date(), 
-          reason 
+        {
+          model,
+          timestamp: new Date(),
+          reason
         }
       ].slice(-10) // Keep only last 10 changes
     }));
@@ -91,10 +91,10 @@ export function ModelProvider({ children }: ModelProviderProps) {
       overrideAgentDefault: false,
       modelHistory: [
         ...prev.modelHistory,
-        { 
-          model: prev.currentModel, 
-          timestamp: new Date(), 
-          reason: 'Reset to agent default' 
+        {
+          model: prev.currentModel,
+          timestamp: new Date(),
+          reason: 'Reset to agent default'
         }
       ].slice(-10)
     }));
@@ -105,17 +105,17 @@ export function ModelProvider({ children }: ModelProviderProps) {
     if (sessionModelSettings.overrideAgentDefault) {
       return sessionModelSettings.currentModel;
     }
-    
+
     // Use power agent's preferred model if available
     if (powerAgent?.preferredModel) {
       return powerAgent.preferredModel;
     }
-    
+
     // Use basic agent's preferred model if available
     if (agent?.preferredModel) {
       return agent.preferredModel;
     }
-    
+
     // Fall back to session default or global default
     return sessionModelSettings.currentModel;
   }, [sessionModelSettings]);

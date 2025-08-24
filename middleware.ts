@@ -7,7 +7,7 @@ export function middleware(req: NextRequest) {
   const publicRoutes = [
     '/api/auth',
     '/auth/signin',
-    '/auth/error', 
+    '/auth/error',
     '/_next',
     '/favicon.ico'
   ]

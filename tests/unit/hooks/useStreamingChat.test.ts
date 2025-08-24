@@ -17,6 +17,7 @@ jest.mock('next-auth/react', () => ({
 
 // Mock contexts
 const mockAgent = {
+  id: 'claude-3.5-sonnet',
   name: 'claude-3.5-sonnet',
   description: 'Default Claude agent',
   prompt: 'You are a helpful assistant.',
@@ -38,7 +39,7 @@ const mockMessages = [
     timestamp: new Date(),
   },
   {
-    id: '2', 
+    id: '2',
     role: 'assistant' as const,
     content: 'Hi there!',
     timestamp: new Date(),
@@ -79,7 +80,7 @@ class MockReader {
     if (this.index >= this.chunks.length) {
       return { done: true }
     }
-    
+
     const chunk = this.chunks[this.index++]
     const encoder = new TextEncoder()
     return { done: false, value: encoder.encode(chunk) }
@@ -144,7 +145,7 @@ describe('useStreamingChat', () => {
       const { result } = renderHook(() => useStreamingChat())
 
       // Mock a long-running stream to simulate streaming state
-      mockFetch.mockImplementationOnce(() => 
+      mockFetch.mockImplementationOnce(() =>
         new Promise(() => {}) // Never resolves
       )
 
@@ -169,7 +170,7 @@ describe('useStreamingChat', () => {
     it('should successfully send a message and handle streaming response', async () => {
       const mockAddMessage = jest.fn(() => Promise.resolve(true))
       const mockAddContext = jest.fn()
-      
+
       mockUseSession.mockReturnValue({
         messages: mockMessages,
         addMessage: mockAddMessage,
@@ -240,7 +241,7 @@ describe('useStreamingChat', () => {
 
     it('should handle HTTP errors', async () => {
       const mockAddMessage = jest.fn(() => Promise.resolve(true))
-      
+
       mockUseSession.mockReturnValue({
         messages: mockMessages,
         addMessage: mockAddMessage,
@@ -264,7 +265,7 @@ describe('useStreamingChat', () => {
 
     it('should handle network errors', async () => {
       const mockAddMessage = jest.fn(() => Promise.resolve(true))
-      
+
       mockUseSession.mockReturnValue({
         messages: mockMessages,
         addMessage: mockAddMessage,
@@ -285,7 +286,7 @@ describe('useStreamingChat', () => {
 
     it('should handle streaming errors', async () => {
       const mockAddMessage = jest.fn(() => Promise.resolve(true))
-      
+
       mockUseSession.mockReturnValue({
         messages: mockMessages,
         addMessage: mockAddMessage,
@@ -320,7 +321,7 @@ describe('useStreamingChat', () => {
 
     it('should handle failed user message addition', async () => {
       const mockAddMessage = jest.fn(() => Promise.resolve(false))
-      
+
       mockUseSession.mockReturnValue({
         messages: mockMessages,
         addMessage: mockAddMessage,
@@ -340,7 +341,7 @@ describe('useStreamingChat', () => {
 
     it('should handle missing response body', async () => {
       const mockAddMessage = jest.fn(() => Promise.resolve(true))
-      
+
       mockUseSession.mockReturnValue({
         messages: mockMessages,
         addMessage: mockAddMessage,
@@ -364,7 +365,7 @@ describe('useStreamingChat', () => {
 
     it('should handle malformed JSON in stream', async () => {
       const mockAddMessage = jest.fn(() => Promise.resolve(true))
-      
+
       mockUseSession.mockReturnValue({
         messages: mockMessages,
         addMessage: mockAddMessage,
@@ -398,7 +399,7 @@ describe('useStreamingChat', () => {
     it('should use power agent when available', async () => {
       const mockAddMessage = jest.fn(() => Promise.resolve(true))
       const mockGetEffectiveModel = jest.fn(() => 'claude-3-opus-20240229')
-      
+
       mockUseSession.mockReturnValue({
         messages: mockMessages,
         addMessage: mockAddMessage,
@@ -465,7 +466,7 @@ describe('useStreamingChat', () => {
 
     it('should abort ongoing requests', async () => {
       const mockAddMessage = jest.fn(() => Promise.resolve(true))
-      
+
       mockUseSession.mockReturnValue({
         messages: mockMessages,
         addMessage: mockAddMessage,
@@ -475,14 +476,14 @@ describe('useStreamingChat', () => {
       // Mock AbortController
       const mockAbort = jest.fn()
       const originalAbortController = global.AbortController
-      
+
       global.AbortController = jest.fn().mockImplementation(() => ({
         abort: mockAbort,
         signal: {} as AbortSignal
       }))
 
       // Start a streaming request that never resolves
-      mockFetch.mockImplementationOnce(() => 
+      mockFetch.mockImplementationOnce(() =>
         new Promise(() => {}) // Never resolves to simulate ongoing request
       )
 
@@ -504,7 +505,7 @@ describe('useStreamingChat', () => {
       })
 
       expect(mockAbort).toHaveBeenCalled()
-      
+
       // Restore original AbortController
       global.AbortController = originalAbortController
     })
@@ -515,7 +516,7 @@ describe('useStreamingChat', () => {
       const mockAddMessage = jest.fn(() => Promise.resolve(true))
       const mockAddContext = jest.fn()
       const mockGetSystemPrompt = jest.fn(() => 'System prompt for: Hi')
-      
+
       mockUseSession.mockReturnValue({
         messages: [],
         addMessage: mockAddMessage,
@@ -553,15 +554,15 @@ describe('useStreamingChat', () => {
       expect(mockGetSystemPrompt).toHaveBeenCalledWith('Hi')
       expect(mockAddContext).toHaveBeenCalledWith('User: Hi')
       expect(mockAddContext).toHaveBeenCalledWith('Assistant: Hello')
-      
+
       expect(mockAddMessage).toHaveBeenNthCalledWith(1, {
         role: 'user',
         content: 'Hi',
         agentUsed: 'claude-3.5-sonnet'
       })
-      
+
       expect(mockAddMessage).toHaveBeenNthCalledWith(2, {
-        role: 'assistant', 
+        role: 'assistant',
         content: 'Hello',
         agentUsed: 'claude-3.5-sonnet'
       })

@@ -34,19 +34,19 @@ const sizeConfig = {
   },
 };
 
-export default function Logo({ 
-  size = 'md', 
-  variant = 'default', 
-  showText = true, 
+export default function Logo({
+  size = 'md',
+  variant = 'default',
+  showText = true,
   className,
   onClick
 }: LogoProps) {
   const config = sizeConfig[size];
-  
+
   if (variant === 'minimal') {
     return (
       <div className={cn('flex items-center', className)}>
-        <div 
+        <div
           className={cn(
             'relative rounded-full overflow-hidden flex items-center justify-center',
             'bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50',
@@ -77,11 +77,11 @@ export default function Logo({
   }
 
   return (
-    <div 
+    <div
       className={cn('flex items-center gap-3', onClick ? 'cursor-pointer' : '', className)}
       onClick={onClick}
     >
-      <div 
+      <div
         className={cn(
           'relative rounded-full overflow-hidden flex items-center justify-center',
           'bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50',
@@ -105,7 +105,7 @@ export default function Logo({
         />
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/15 to-transparent rounded-full"></div>
       </div>
-      
+
       {showText && (
         <div>
           <h1 className={cn(

@@ -15,7 +15,7 @@ export async function PUT(
     }
 
     await connectDB();
-    
+
     const { id } = await params;
 
     const body = await request.json();
@@ -54,7 +54,7 @@ export async function DELETE(
     }
 
     await connectDB();
-    
+
     const { id } = await params;
 
     const tag = await Tag.findOneAndDelete({

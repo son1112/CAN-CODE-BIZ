@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Rubber Ducky Live</title>
+    <meta name="description" content="You are currently offline. Your rubber ducky is taking a swim!">
+    <link rel="icon" href="/favicon.ico" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+        }
+
+        .offline-container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .duck-animation {
+            font-size: 5rem;
+            margin-bottom: 2rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 300;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .description {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            opacity: 0.8;
+            line-height: 1.8;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .retry-button, .cache-button {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            min-width: 180px;
+        }
+
+        .retry-button:hover, .cache-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .retry-button {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+
+        .retry-button:hover {
+            background: rgba(16, 185, 129, 0.5);
+            border-color: rgba(16, 185, 129, 0.7);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.online {
+            background: #10b981;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .features {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .features h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .features ul {
+            list-style: none;
+            text-align: left;
+        }
+
+        .features li {
+            padding: 0.5rem 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .features li:before {
+            content: '✨ ';
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .offline-container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .duck-animation {
+                font-size: 4rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="duck-animation">🦆</div>
+        
+        <h1>You're Offline</h1>
+        <p class="subtitle">Your rubber ducky is taking a swim!</p>
+        
+        <p class="description">
+            Don't worry! Your cached messages and sessions are still available. 
+            When you reconnect, everything will sync automatically.
+        </p>
+
+        <div class="actions">
+            <button class="retry-button" onclick="retryConnection()">
+                🔄 Try Again
+            </button>
+            <button class="cache-button" onclick="openApp()">
+                📱 Open App (Cached)
+            </button>
+        </div>
+
+        <div class="status-indicator">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Offline</span>
+        </div>
+
+        <div class="features">
+            <h3>Available Offline:</h3>
+            <ul>
+                <li>View cached messages and conversations</li>
+                <li>Create new messages (will sync when online)</li>
+                <li>Browse your session history</li>
+                <li>Access starred and tagged content</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Update connection status
+        function updateStatus() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (navigator.onLine) {
+                statusDot.classList.add('online');
+                statusText.textContent = 'Back Online!';
+                
+                // Auto-redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            } else {
+                statusDot.classList.remove('online');
+                statusText.textContent = 'Offline';
+            }
+        }
+
+        // Retry connection
+        function retryConnection() {
+            const button = document.querySelector('.retry-button');
+            button.textContent = '🔄 Checking...';
+            button.disabled = true;
+            
+            // Check connection
+            fetch('/', { 
+                method: 'HEAD',
+                cache: 'no-cache'
+            }).then(() => {
+                button.textContent = '✅ Connected!';
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+            }).catch(() => {
+                button.textContent = '❌ Still Offline';
+                setTimeout(() => {
+                    button.textContent = '🔄 Try Again';
+                    button.disabled = false;
+                }, 2000);
+            });
+        }
+
+        // Open cached app
+        function openApp() {
+            // Try to open the main app (it should work with cached resources)
+            window.location.href = '/';
+        }
+
+        // Listen for connection changes
+        window.addEventListener('online', updateStatus);
+        window.addEventListener('offline', updateStatus);
+
+        // Initial status check
+        updateStatus();
+
+        // Periodic connection check
+        setInterval(() => {
+            if (!navigator.onLine) {
+                // Try a lightweight connection test
+                fetch('/', { 
+                    method: 'HEAD',
+                    cache: 'no-cache',
+                    timeout: 3000
+                }).then(() => {
+                    // Connection restored but navigator.onLine might be stale
+                    if (!navigator.onLine) {
+                        updateStatus();
+                    }
+                }).catch(() => {
+                    // Still offline
+                });
+            }
+        }, 10000);
+    </script>
+</body>
+</html>

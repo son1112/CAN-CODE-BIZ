@@ -16,18 +16,18 @@ export default function ScrollNavigation({ containerRef }: ScrollNavigationProps
 
   useEffect(() => {
     const container = containerRef?.current || document.documentElement;
-    
+
     const checkScrollPosition = () => {
       const scrollTop = container.scrollTop;
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
-      
+
       const atTop = scrollTop <= 10;
       const atBottom = scrollTop + clientHeight >= scrollHeight - 10;
-      
+
       setIsAtTop(atTop);
       setIsAtBottom(atBottom);
-      
+
       // Show buttons if there's scrollable content (very lenient threshold)
       const hasScrollableContent = scrollHeight > clientHeight + 5;
       // Force show if content height is substantial (like when there are messages)
@@ -85,13 +85,13 @@ export default function ScrollNavigation({ containerRef }: ScrollNavigationProps
           }}
           title="Jump to top"
         >
-          <ChevronUp 
+          <ChevronUp
             className="w-5 h-5 transition-colors duration-200"
-            style={{ 
+            style={{
               color: 'var(--text-secondary)'
             }}
           />
-          <div 
+          <div
             className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-200"
             style={{ backgroundColor: 'var(--accent-primary)' }}
           />
@@ -110,13 +110,13 @@ export default function ScrollNavigation({ containerRef }: ScrollNavigationProps
           }}
           title="Jump to bottom"
         >
-          <ChevronDown 
+          <ChevronDown
             className="w-5 h-5 transition-colors duration-200"
-            style={{ 
+            style={{
               color: 'var(--text-secondary)'
             }}
           />
-          <div 
+          <div
             className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-200"
             style={{ backgroundColor: 'var(--accent-primary)' }}
           />

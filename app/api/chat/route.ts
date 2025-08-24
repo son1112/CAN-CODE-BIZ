@@ -9,9 +9,9 @@ export async function POST(request: NextRequest) {
   try {
     // Authenticate user - CRITICAL: Chat endpoint requires authentication
     const { userId } = await requireAuth(request);
-    
+
     const body = await request.json();
-    
+
     // Validate request body
     const validation = validators.chatRequest(body);
     if (!validation.isValid) {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const { messages, systemPrompt, model = DEFAULT_MODEL } = body;
 
     const encoder = new TextEncoder();
-    
+
     const stream = new ReadableStream({
       async start(controller) {
         try {
@@ -31,9 +31,9 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(data));
           }
         } catch (error) {
-          const errorData = `data: ${JSON.stringify({ 
+          const errorData = `data: ${JSON.stringify({
             error: error instanceof Error ? error.message : 'Unknown error',
-            isComplete: true 
+            isComplete: true
           })}\n\n`;
           controller.enqueue(encoder.encode(errorData));
         } finally {

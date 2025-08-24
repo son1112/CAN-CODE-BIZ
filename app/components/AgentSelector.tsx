@@ -25,29 +25,29 @@ export default function AgentSelector() {
   const { stars } = useStars(userId || '');
 
   // Get display name for current selection
-  const currentDisplayName = isUsingPowerAgent 
-    ? currentPowerAgent?.name 
+  const currentDisplayName = isUsingPowerAgent
+    ? currentPowerAgent?.name
     : currentAgent.name;
-    
+
   // Sort agents to show starred ones first
   const sortedCliAgents = useMemo(() => {
     if (!cliAgents) return [];
-    
+
     // Get starred agent IDs
     const starredAgentIds = new Set(
       stars
         .filter(star => star.itemType === 'agent')
         .map(star => star.itemId)
     );
-    
+
     // Sort agents: starred first, then alphabetically
     return [...cliAgents].sort((a, b) => {
       const aIsStarred = starredAgentIds.has(a.name);
       const bIsStarred = starredAgentIds.has(b.name);
-      
+
       if (aIsStarred && !bIsStarred) return -1;
       if (!aIsStarred && bIsStarred) return 1;
-      
+
       // If both are starred or both are not, sort alphabetically
       return a.name.localeCompare(b.name);
     });
@@ -119,9 +119,9 @@ export default function AgentSelector() {
               setIsDropdownOpen(false);
             }}
           />
-          
+
           {/* Dropdown */}
-          <div 
+          <div
             className="fixed w-96 bg-white border border-gray-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto no-text-scale"
             style={{
               top: `${dropdownPosition.top}px`,
@@ -150,7 +150,7 @@ export default function AgentSelector() {
                       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600">
                         <Plus className="w-4 h-4 text-white" />
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
                           Create New Agent
@@ -179,14 +179,14 @@ export default function AgentSelector() {
                       ✅ Power Agents Working: {cliAgents.length} agents loaded
                     </div>
                     {sortedCliAgents.map((agent) => (
-                      <div 
+                      <div
                         key={`cli-${agent.name}`}
                         className={`
                           group w-full text-left rounded-md hover:bg-purple-50 transition-colors border border-transparent hover:border-purple-200 relative
                           ${currentPowerAgent?.name === agent.name ? 'bg-purple-50 border-purple-200' : ''}
                         `}
                       >
-                        <div 
+                        <div
                           className="flex items-start gap-3 p-3 cursor-pointer"
                           onClick={() => {
                             console.log('Selected Power Agent:', agent.name);
@@ -198,7 +198,7 @@ export default function AgentSelector() {
                           <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-500 to-pink-500">
                             <Zap className="w-4 h-4 text-white" />
                           </div>
-                          
+
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-gray-900 text-sm flex items-center gap-2">
                               {stars.some(star => star.itemType === 'agent' && star.itemId === agent.name) && <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
@@ -208,13 +208,13 @@ export default function AgentSelector() {
                               </span>
                             </div>
                             <div className="text-xs text-gray-500 mt-1 line-clamp-3">
-                              {agent.description.length > 150 
-                                ? agent.description.substring(0, 150) + '...' 
+                              {agent.description.length > 150
+                                ? agent.description.substring(0, 150) + '...'
                                 : agent.description}
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Star Button positioned absolutely */}
                         {userId && (
                           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -244,14 +244,14 @@ export default function AgentSelector() {
                 </div>
                 <div className="space-y-1">
                   {AVAILABLE_AGENTS.map((agent) => (
-                    <div 
+                    <div
                       key={agent.id}
                       className={`
                         group w-full text-left rounded-md hover:bg-gray-50 transition-colors relative
                         ${currentAgent.id === agent.id && !isUsingPowerAgent ? 'bg-blue-50 border border-blue-200' : ''}
                       `}
                     >
-                      <div 
+                      <div
                         className="flex items-start gap-3 p-3 cursor-pointer"
                         onClick={() => {
                           setAgent(agent.id);
@@ -269,7 +269,7 @@ export default function AgentSelector() {
                             <Bot className="w-4 h-4 text-gray-600" />
                           )}
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 text-sm">
                             {agent.name}
@@ -277,7 +277,7 @@ export default function AgentSelector() {
                           <div className="text-xs text-gray-500 mt-1 line-clamp-2">
                             {agent.description}
                           </div>
-                          
+
                           {agent.keyTopics && agent.keyTopics.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-2">
                               {agent.keyTopics.slice(0, 3).map((topic) => (
@@ -297,7 +297,7 @@ export default function AgentSelector() {
                           )}
                         </div>
                       </div>
-                      
+
                       {/* Star Button positioned absolutely */}
                       {userId && (
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -372,7 +372,7 @@ export default function AgentSelector() {
         </>,
         document.body
       )}
-      
+
       {/* Create Agent Modal */}
       <CreateAgentModal
         isOpen={isCreateAgentModalOpen}

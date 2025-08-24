@@ -10,9 +10,9 @@ export async function DELETE(
 ) {
   try {
     await connectDB();
-    
+
     const { itemType, itemId } = await params;
-    
+
     // Get userId from request body for DELETE requests
     let userId: string;
     try {
@@ -23,7 +23,7 @@ export async function DELETE(
       const { searchParams } = new URL(request.url);
       userId = searchParams.get('userId') || '';
     }
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Missing required parameter: userId' },
@@ -33,20 +33,20 @@ export async function DELETE(
 
     // Validate itemType
     const validItemTypes: StarableType[] = [
-      'message', 
-      'session', 
-      'agent', 
-      'conversation-starter', 
+      'message',
+      'session',
+      'agent',
+      'conversation-starter',
       'code-snippet'
     ];
-    
+
     if (!validItemTypes.includes(itemType as StarableType)) {
       return NextResponse.json(
         { error: 'Invalid itemType' },
         { status: 400 }
       );
     }
-    
+
     const star = await Star.findOneAndDelete({
       userId,
       itemType: itemType as StarableType,
@@ -77,11 +77,11 @@ export async function GET(
 ) {
   try {
     await connectDB();
-    
+
     const { itemType, itemId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Missing required parameter: userId' },
@@ -95,7 +95,7 @@ export async function GET(
       itemId,
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       isStarred: !!star,
       star: star || null,
     });

@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const { userId } = await requireAuth(req);
-    
+
     await connectDB();
 
     logger.info('Fetching favorite sessions', {

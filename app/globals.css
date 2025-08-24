@@ -329,3 +329,6 @@ body {
   font-size: inherit !important;
 }
 */
+
+/* Progressive Image Loading Styles */
+@import '../styles/progressive-image.css';

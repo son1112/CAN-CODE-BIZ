@@ -15,12 +15,12 @@ function getRandomAvatar(): { imageUrl: string; prompt: string } {
 export async function POST() {
   try {
     const session = await auth();
-    
+
     // Demo mode bypass for testing
     const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
     // After migration, always use the real user ID for data consistency
     const userId = isDemoMode ? '68a33c99df2098d5e02a84e3' : session?.user?.id;
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -42,11 +42,11 @@ export async function POST() {
     console.log(`🔄 Found ${sessionsWithoutAvatars.length} sessions without avatars for user ${userId}`);
 
     let updatedCount = 0;
-    
+
     // Update each session with a random avatar
     for (const sessionDoc of sessionsWithoutAvatars) {
       const randomAvatar = getRandomAvatar();
-      
+
       await Session.findByIdAndUpdate(sessionDoc._id, {
         avatar: {
           imageUrl: randomAvatar.imageUrl,
@@ -54,7 +54,7 @@ export async function POST() {
           generatedAt: new Date()
         }
       });
-      
+
       updatedCount++;
       console.log(`✅ Updated session ${sessionDoc.sessionId} with avatar: ${randomAvatar.imageUrl}`);
     }

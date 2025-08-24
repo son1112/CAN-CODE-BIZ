@@ -120,7 +120,7 @@ export default function TagBrowser({ onTagFilter, onClose }: TagBrowserProps) {
 
       {/* Analytics View */}
       {showAnalytics && tags.length > 0 && (
-        <div className="mb-4 p-4 rounded-lg border" style={{ 
+        <div className="mb-4 p-4 rounded-lg border" style={{
           backgroundColor: 'var(--bg-secondary)',
           borderColor: 'var(--border-primary)'
         }}>
@@ -132,16 +132,16 @@ export default function TagBrowser({ onTagFilter, onClose }: TagBrowserProps) {
       <div className="space-y-3 mb-4">
         {/* Search */}
         <div className="relative">
-          <Search 
-            style={{ 
-              width: '16px', 
+          <Search
+            style={{
+              width: '16px',
               height: '16px',
               color: 'var(--text-tertiary)',
               position: 'absolute',
               left: '12px',
               top: '50%',
               transform: 'translateY(-50%)'
-            }} 
+            }}
           />
           <input
             type="text"
@@ -194,7 +194,7 @@ export default function TagBrowser({ onTagFilter, onClose }: TagBrowserProps) {
 
       {/* Create Tag Form */}
       {showCreateForm && (
-        <div className="mb-4 p-4 rounded-lg border" style={{ 
+        <div className="mb-4 p-4 rounded-lg border" style={{
           backgroundColor: 'var(--bg-tertiary)',
           borderColor: 'var(--border-primary)'
         }}>
@@ -253,9 +253,9 @@ export default function TagBrowser({ onTagFilter, onClose }: TagBrowserProps) {
       {/* Tags List */}
       <div className="flex-1 overflow-y-auto space-y-2">
         {error && (
-          <div className="p-3 rounded-lg" style={{ 
+          <div className="p-3 rounded-lg" style={{
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            color: '#EF4444' 
+            color: '#EF4444'
           }}>
             {error}
           </div>
@@ -263,9 +263,9 @@ export default function TagBrowser({ onTagFilter, onClose }: TagBrowserProps) {
 
         {tags.length === 0 ? (
           <div className="text-center py-8">
-            <Hash style={{ 
-              width: '48px', 
-              height: '48px', 
+            <Hash style={{
+              width: '48px',
+              height: '48px',
               color: 'var(--text-tertiary)',
               margin: '0 auto 16px'
             }} />
@@ -283,8 +283,8 @@ export default function TagBrowser({ onTagFilter, onClose }: TagBrowserProps) {
               tag={tag}
               isSelected={selectedTags.includes(tag.name)}
               onSelect={(tagName) => {
-                setSelectedTags(prev => 
-                  prev.includes(tagName) 
+                setSelectedTags(prev =>
+                  prev.includes(tagName)
                     ? prev.filter(t => t !== tagName)
                     : [...prev, tagName]
                 );
@@ -317,12 +317,12 @@ export default function TagBrowser({ onTagFilter, onClose }: TagBrowserProps) {
 }
 
 // Individual Tag Item Component
-function TagItem({ 
-  tag, 
-  isSelected, 
-  onSelect, 
-  onEdit, 
-  onDelete 
+function TagItem({
+  tag,
+  isSelected,
+  onSelect,
+  onEdit,
+  onDelete
 }: {
   tag: {
     _id: string;
@@ -410,9 +410,9 @@ function TagItem({
 }
 
 // Create Tag Form Component
-function CreateTagForm({ 
-  onSubmit, 
-  onCancel 
+function CreateTagForm({
+  onSubmit,
+  onCancel
 }: {
   onSubmit: (data: { name: string; color: string; category?: string; description?: string }) => void;
   onCancel: () => void;
@@ -449,7 +449,7 @@ function CreateTagForm({
           required
         />
       </div>
-      
+
       <div className="grid grid-cols-2 gap-2">
         <input
           type="color"
@@ -513,7 +513,7 @@ function TagAnalytics({ tags }: { tags: Array<{
   const topTags = tags
     .sort((a, b) => b.usageCount - a.usageCount)
     .slice(0, 5);
-  
+
   const categoryCounts = tags.reduce((acc, tag) => {
     const category = tag.category || 'uncategorized';
     acc[category] = (acc[category] || 0) + 1;

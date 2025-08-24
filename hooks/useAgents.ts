@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { ClaudeModel } from '@/lib/models';
 
-// Global cache to prevent multiple API calls 
+// Global cache to prevent multiple API calls
 const agentsCache = new Map<string, {
   data: Agent[];
   timestamp: number;
@@ -39,10 +39,10 @@ export function useAgents(): UseAgentsReturn {
 
   // Load agents from the API
   const loadAgents = useCallback(async () => {
-    const isDemoMode = typeof window !== 'undefined' && 
-                      window.location.hostname === 'localhost' && 
+    const isDemoMode = typeof window !== 'undefined' &&
+                      window.location.hostname === 'localhost' &&
                       process.env.NODE_ENV === 'development';
-    
+
     // In demo mode, bypass session check; otherwise require authentication
     if (status === 'loading' || (!isDemoMode && !session?.user?.id) || loadingRef.current) {
       return;
@@ -51,14 +51,14 @@ export function useAgents(): UseAgentsReturn {
     const cacheKey = 'agents';
     const cached = agentsCache.get(cacheKey);
     const now = Date.now();
-    
+
     // Use cache if valid and recent
     if (cached && (now - cached.timestamp < CACHE_DURATION)) {
       setAgents(cached.data);
       setLoading(cached.loading);
       return;
     }
-    
+
     // If already loading, don't start another request
     if (cached?.loading) {
       setLoading(true);
@@ -68,13 +68,13 @@ export function useAgents(): UseAgentsReturn {
     loadingRef.current = true;
     setLoading(true);
     setError(null);
-    
+
     // Mark as loading in cache
     agentsCache.set(cacheKey, { data: agents, timestamp: now, loading: true });
 
     try {
       const response = await fetch('/api/agents');
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           setError('Authentication required');
@@ -86,14 +86,14 @@ export function useAgents(): UseAgentsReturn {
       const data = await response.json();
       const agentsList = data.agents || [];
       setAgents(agentsList);
-      
+
       // Update cache with fresh data
-      agentsCache.set(cacheKey, { 
-        data: agentsList, 
-        timestamp: now, 
-        loading: false 
+      agentsCache.set(cacheKey, {
+        data: agentsList,
+        timestamp: now,
+        loading: false
       });
-      
+
       // If we have agents but no selected agent, select the first one
       if (agentsList.length > 0) {
         setSelectedAgent(prevSelected => prevSelected || agentsList[0]);
@@ -101,7 +101,7 @@ export function useAgents(): UseAgentsReturn {
     } catch (err: any) {
       console.error('Error loading agents:', err);
       setError(err.message || 'Failed to load agents');
-      
+
       // Remove loading flag from cache on error
       if (cached) {
         agentsCache.set(cacheKey, { ...cached, loading: false });
@@ -114,10 +114,10 @@ export function useAgents(): UseAgentsReturn {
 
   // Load agents when session is ready (or in demo mode)
   useEffect(() => {
-    const isDemoMode = typeof window !== 'undefined' && 
-                      window.location.hostname === 'localhost' && 
+    const isDemoMode = typeof window !== 'undefined' &&
+                      window.location.hostname === 'localhost' &&
                       process.env.NODE_ENV === 'development';
-    
+
     if (status !== 'loading' && (session?.user?.id || isDemoMode)) {
       loadAgents();
     }
@@ -130,10 +130,10 @@ export function useAgents(): UseAgentsReturn {
 
   // Process content with a specific agent
   const processWithAgent = useCallback(async (agentName: string, content: string): Promise<string> => {
-    const isDemoMode = typeof window !== 'undefined' && 
-                      window.location.hostname === 'localhost' && 
+    const isDemoMode = typeof window !== 'undefined' &&
+                      window.location.hostname === 'localhost' &&
                       process.env.NODE_ENV === 'development';
-                      
+
     if (!isDemoMode && !session?.user?.id) {
       throw new Error('Authentication required');
     }

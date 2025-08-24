@@ -150,7 +150,7 @@ const defaultMocks = {
 describe('ChatInterface', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Apply default mocks
     mockUseSession.mockReturnValue(defaultMocks.useSession);
     mockUseStreamingChat.mockReturnValue(defaultMocks.useStreamingChat);
@@ -164,7 +164,7 @@ describe('ChatInterface', () => {
   describe('Component Rendering', () => {
     it('should render the main chat interface', () => {
       render(<ChatInterface />);
-      
+
       // Check for key components
       expect(screen.getByTestId('logo')).toBeInTheDocument();
       expect(screen.getByTestId('agent-selector')).toBeInTheDocument();
@@ -190,13 +190,13 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       expect(screen.getByText('Test Session')).toBeInTheDocument();
     });
 
     it('should show rubber ducky introduction when no messages', () => {
       render(<ChatInterface />);
-      
+
       expect(screen.getByText("Hi! I'm your Rubber Ducky")).toBeInTheDocument();
       expect(screen.getByText(/I'm here to help you think out loud/)).toBeInTheDocument();
     });
@@ -208,7 +208,7 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // Should show loading state instead of messages
       expect(screen.queryByText("Hi! I'm your Rubber Ducky")).not.toBeInTheDocument();
     });
@@ -217,7 +217,7 @@ describe('ChatInterface', () => {
   describe('Responsive Navigation', () => {
     it('should show desktop navigation controls', () => {
       render(<ChatInterface />);
-      
+
       // Should show desktop controls - check for New Session button which is hidden on mobile
       expect(screen.getByTitle(/New Session/i)).toBeInTheDocument();
     });
@@ -228,56 +228,56 @@ describe('ChatInterface', () => {
         sessionId: 'new-session',
         name: 'New Session',
       });
-      
+
       mockUseSession.mockReturnValue({
         ...defaultMocks.useSession,
         createSession: createSessionMock,
       });
 
       render(<ChatInterface />);
-      
+
       // Find and click new session button by title attribute
       const newSessionButton = screen.getByTitle(/New Session/i);
       await user.click(newSessionButton);
-      
+
       expect(createSessionMock).toHaveBeenCalled();
     });
 
     it('should open session browser when session history is clicked', async () => {
       const user = userEvent.setup();
-      
+
       render(<ChatInterface />);
-      
+
       const sessionHistoryButton = screen.getByTitle(/Session History/i);
       await user.click(sessionHistoryButton);
-      
+
       expect(screen.getByTestId('session-browser')).toBeInTheDocument();
     });
 
     it('should close session browser when close button is clicked', async () => {
       const user = userEvent.setup();
-      
+
       render(<ChatInterface />);
-      
+
       // Open session browser
       const sessionHistoryButton = screen.getByTitle(/Session History/i);
       await user.click(sessionHistoryButton);
-      
+
       // Close it
       const closeButton = screen.getByTestId('close-session-browser');
       await user.click(closeButton);
-      
+
       expect(screen.queryByTestId('session-browser')).not.toBeInTheDocument();
     });
 
     it('should open stars browser when starred items is clicked', async () => {
       const user = userEvent.setup();
-      
+
       render(<ChatInterface />);
-      
+
       const starredItemsButton = screen.getByTitle(/Starred Items/i);
       await user.click(starredItemsButton);
-      
+
       expect(screen.getByTestId('stars-browser')).toBeInTheDocument();
     });
 
@@ -285,7 +285,7 @@ describe('ChatInterface', () => {
       const user = userEvent.setup();
       const startConversationMock = jest.fn();
       const endConversationMock = jest.fn();
-      
+
       mockUseConversationManager.mockReturnValue({
         ...defaultMocks.useConversationManager,
         startConversation: startConversationMock,
@@ -293,10 +293,10 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       const continuousModeButton = screen.getByTitle(/Enable continuous conversation/i);
       await user.click(continuousModeButton);
-      
+
       expect(startConversationMock).toHaveBeenCalled();
     });
   });
@@ -304,7 +304,7 @@ describe('ChatInterface', () => {
   describe('Message Input and Sending', () => {
     it('should render message input textarea', () => {
       render(<ChatInterface />);
-      
+
       const textarea = screen.getByPlaceholderText(/Share your thoughts with the rubber ducky/i);
       expect(textarea).toBeInTheDocument();
       expect(textarea.tagName).toBe('TEXTAREA');
@@ -312,68 +312,68 @@ describe('ChatInterface', () => {
 
     it('should handle text input changes', async () => {
       const user = userEvent.setup();
-      
+
       render(<ChatInterface />);
-      
+
       const textarea = screen.getByPlaceholderText(/Share your thoughts with the rubber ducky/i);
       await user.type(textarea, 'Hello, world!');
-      
+
       expect(textarea).toHaveValue('Hello, world!');
     });
 
     it('should send message when send button is clicked', async () => {
       const user = userEvent.setup();
       const sendMessageMock = jest.fn();
-      
+
       mockUseStreamingChat.mockReturnValue({
         ...defaultMocks.useStreamingChat,
         sendMessage: sendMessageMock,
       });
 
       render(<ChatInterface />);
-      
+
       const textarea = screen.getByPlaceholderText(/Share your thoughts with the rubber ducky/i);
       const sendButton = screen.getByRole('button', { name: '' }); // Send button has empty name
-      
+
       await user.type(textarea, 'Test message');
       await user.click(sendButton);
-      
+
       expect(sendMessageMock).toHaveBeenCalledWith('Test message');
     });
 
     it('should send message when Enter key is pressed', async () => {
       const user = userEvent.setup();
       const sendMessageMock = jest.fn();
-      
+
       mockUseStreamingChat.mockReturnValue({
         ...defaultMocks.useStreamingChat,
         sendMessage: sendMessageMock,
       });
 
       render(<ChatInterface />);
-      
+
       const textarea = screen.getByPlaceholderText(/Share your thoughts with the rubber ducky/i);
-      
+
       await user.type(textarea, 'Test message{enter}');
-      
+
       expect(sendMessageMock).toHaveBeenCalledWith('Test message');
     });
 
     it('should not send empty messages', async () => {
       const user = userEvent.setup();
       const sendMessageMock = jest.fn();
-      
+
       mockUseStreamingChat.mockReturnValue({
         ...defaultMocks.useStreamingChat,
         sendMessage: sendMessageMock,
       });
 
       render(<ChatInterface />);
-      
+
       const sendButton = screen.getByRole('button', { name: '' }); // Send button has empty name
-      
+
       await user.click(sendButton);
-      
+
       expect(sendMessageMock).not.toHaveBeenCalled();
     });
 
@@ -384,20 +384,20 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       const textarea = screen.getByPlaceholderText(/Share your thoughts with the rubber ducky/i);
       const sendButton = screen.getByRole('button', { name: '' }); // Send button has empty name
-      
+
       expect(textarea).toBeDisabled();
       expect(sendButton).toBeDisabled();
     });
 
     it('should show voice input active placeholder when transcript exists', () => {
       render(<ChatInterface />);
-      
+
       // Simulate current transcript state
       const component = screen.getByPlaceholderText(/Share your thoughts with the rubber ducky/i);
-      
+
       // We'll test this through the voice input component integration
       expect(component).toBeInTheDocument();
     });
@@ -413,7 +413,7 @@ describe('ChatInterface', () => {
           timestamp: new Date(),
         },
         {
-          id: '2', 
+          id: '2',
           role: 'assistant' as const,
           content: 'Hi there!',
           timestamp: new Date(),
@@ -426,7 +426,7 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // Messages are displayed - test functionality exists even if not visible yet
       expect(testMessages.length).toBe(2);
       expect(testMessages[0].content).toBe('Hello');
@@ -439,11 +439,11 @@ describe('ChatInterface', () => {
         isStreaming: true,
         streamingMessage: 'Partial response...',
       };
-      
+
       mockUseStreamingChat.mockReturnValue(streamingState);
 
       render(<ChatInterface />);
-      
+
       // Verify that the streaming state is properly configured
       expect(streamingState.isStreaming).toBe(true);
       expect(streamingState.streamingMessage).toBe('Partial response...');
@@ -467,7 +467,7 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // Look for expand/collapse functionality
       const message = screen.getByText(/A very long message/);
       expect(message).toBeInTheDocument();
@@ -478,7 +478,7 @@ describe('ChatInterface', () => {
     it('should handle session renaming', async () => {
       const user = userEvent.setup();
       const renameSessionMock = jest.fn();
-      
+
       mockUseSession.mockReturnValue({
         ...defaultMocks.useSession,
         currentSession: {
@@ -496,13 +496,13 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // Find the session name and try to edit it
       const sessionName = screen.getByText('Test Session');
-      
+
       // Double click to edit (if implemented)
       await user.dblClick(sessionName);
-      
+
       // This test depends on the actual implementation of session name editing
     });
 
@@ -513,7 +513,7 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // Should not show the main interface when loading
       expect(screen.queryByText("Hi! I'm your Rubber Ducky")).not.toBeInTheDocument();
     });
@@ -527,7 +527,7 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // The component should render with dark theme
       expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
     });
@@ -539,7 +539,7 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // The component should render with light theme
       expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
     });
@@ -557,7 +557,7 @@ describe('ChatInterface', () => {
         {
           id: '2',
           role: 'user' as const,
-          content: 'Second message', 
+          content: 'Second message',
           timestamp: new Date(),
         },
       ];
@@ -568,7 +568,7 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // Check that user messages exist in the data (input history concept)
       const userMessages = testMessages.filter(m => m.role === 'user');
       expect(userMessages).toHaveLength(2);
@@ -593,18 +593,18 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // Input history functionality test - may need adjustment based on actual implementation
       const historyButton = screen.queryByText(/your input history/i) || screen.queryByTitle(/history/i);
       await user.click(historyButton);
-      
+
       // Should show the expanded history
       expect(screen.getByText('Test message')).toBeInTheDocument();
     });
 
     it('should not show input history when no user messages exist', () => {
       render(<ChatInterface />);
-      
+
       // Should not show input history when no user messages exist
       expect(screen.queryByText('First message')).not.toBeInTheDocument();
     });
@@ -620,7 +620,7 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // Component should still render
       expect(screen.getByTestId('agent-selector')).toBeInTheDocument();
     });
@@ -633,7 +633,7 @@ describe('ChatInterface', () => {
       });
 
       render(<ChatInterface />);
-      
+
       // Component should render normally
       expect(screen.getByPlaceholderText(/Share your thoughts with the rubber ducky/i)).toBeInTheDocument();
     });
@@ -642,10 +642,10 @@ describe('ChatInterface', () => {
   describe('Accessibility', () => {
     it('should have proper ARIA labels for interactive elements', () => {
       render(<ChatInterface />);
-      
+
       const textarea = screen.getByPlaceholderText(/Share your thoughts with the rubber ducky/i);
       const sendButton = screen.getByRole('button', { name: '' }); // Send button has empty name
-      
+
       // Textarea should be accessible
       expect(textarea).toBeInTheDocument(); // Basic accessibility check
       expect(sendButton).toBeInTheDocument();
@@ -653,11 +653,11 @@ describe('ChatInterface', () => {
 
     it('should be keyboard navigable', async () => {
       const user = userEvent.setup();
-      
+
       render(<ChatInterface />);
-      
+
       const textarea = screen.getByPlaceholderText(/Share your thoughts with the rubber ducky/i);
-      
+
       // Directly focus the textarea to test keyboard navigation
       await user.click(textarea);
       expect(textarea).toHaveFocus();
@@ -666,17 +666,17 @@ describe('ChatInterface', () => {
     it('should handle keyboard shortcuts', async () => {
       const user = userEvent.setup();
       const createSessionMock = jest.fn();
-      
+
       mockUseSession.mockReturnValue({
         ...defaultMocks.useSession,
         createSession: createSessionMock,
       });
 
       render(<ChatInterface />);
-      
+
       // Test Ctrl+N for new session (if implemented)
       await user.keyboard('{Control>}n{/Control}');
-      
+
       // This test depends on the actual keyboard shortcut implementation
     });
   });

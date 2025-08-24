@@ -77,8 +77,8 @@ export const ApiResponse = {
    * Paginated response with metadata
    */
   paginated: <T>(
-    data: T[], 
-    pagination: PaginationInfo, 
+    data: T[],
+    pagination: PaginationInfo,
     message?: string
   ): NextResponse<ApiPaginatedResponse<T>> => {
     return NextResponse.json(
@@ -96,9 +96,9 @@ export const ApiResponse = {
    * Error response
    */
   error: (
-    error: string, 
-    status: number = 500, 
-    code?: string, 
+    error: string,
+    status: number = 500,
+    code?: string,
     details?: string
   ): NextResponse<ApiErrorResponse> => {
     return NextResponse.json(
@@ -171,7 +171,7 @@ export function createPagination(
   totalCount: number
 ): PaginationInfo {
   const totalPages = Math.ceil(totalCount / limit);
-  
+
   return {
     page,
     limit,

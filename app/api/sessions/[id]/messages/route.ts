@@ -11,12 +11,12 @@ export async function POST(
 ) {
   try {
     const session = await auth();
-    
+
     // Demo mode bypass for testing
     const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
     // After migration, always use the real user ID for data consistency
     const userId = isDemoMode ? '68a33c99df2098d5e02a84e3' : session?.user?.id;
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -62,7 +62,7 @@ export async function POST(
       },
       {
         $push: { messages: newMessage },
-        $set: { 
+        $set: {
           lastAccessedAt: new Date(),
           lastAgentUsed: agentUsed || undefined
         }
@@ -99,7 +99,7 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -130,7 +130,7 @@ export async function GET(
     const totalMessages = (sessionDoc as { messages?: unknown[] })?.messages?.length || 0;
     const skip = Math.max(0, totalMessages - (page * limit));
     const take = Math.min(limit, totalMessages - skip);
-    
+
     const messages = ((sessionDoc as { messages?: unknown[] })?.messages || []).slice(skip, skip + take);
 
     return NextResponse.json({

@@ -12,9 +12,9 @@ interface ModelSelectorProps {
   className?: string;
 }
 
-export default function ModelSelector({ 
-  size = 'md', 
-  showCostInfo = true, 
+export default function ModelSelector({
+  size = 'md',
+  showCostInfo = true,
   disabled = false,
   className = ''
 }: ModelSelectorProps) {
@@ -23,13 +23,13 @@ export default function ModelSelector({
   const [showInfo, setShowInfo] = useState(false);
 
   const currentConfig = getModelConfig(currentModel);
-  
+
   const sizeClasses = {
     sm: 'text-xs px-2 py-1',
     md: 'text-sm px-3 py-2',
     lg: 'text-base px-4 py-3'
   };
-  
+
   // Fallback if model config doesn't exist (during transitions)
   if (!currentConfig) {
     return (
@@ -113,8 +113,8 @@ export default function ModelSelector({
                   onClick={() => handleModelSelect(model.model)}
                   className={`
                     w-full text-left p-3 rounded-lg transition-all duration-200
-                    ${isSelected 
-                      ? 'bg-blue-50 border-blue-200 border' 
+                    ${isSelected
+                      ? 'bg-blue-50 border-blue-200 border'
                       : 'hover:bg-gray-50 border border-transparent'
                     }
                   `}
@@ -152,7 +152,7 @@ export default function ModelSelector({
               );
             })}
           </div>
-          
+
           <div className="border-t border-gray-100 p-3 bg-gray-50 rounded-b-lg">
             <div className="text-xs text-gray-600">
               <p className="font-medium mb-1">Model Selection Tips:</p>
@@ -170,7 +170,7 @@ export default function ModelSelector({
       {/* Model Info Modal */}
       {showInfo && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 bg-black bg-opacity-50"
             onClick={() => setShowInfo(false)}
           />
@@ -184,9 +184,9 @@ export default function ModelSelector({
                     {currentConfig.costTier} cost
                   </span>
                 </div>
-                
+
                 <p className="text-gray-600 mb-4">{currentConfig.description}</p>
-                
+
                 <div className="space-y-3">
                   <div>
                     <h4 className="font-medium text-gray-900 mb-1">Strengths:</h4>
@@ -201,7 +201,7 @@ export default function ModelSelector({
                       ))}
                     </div>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium text-gray-900 mb-1">Best For:</h4>
                     <div className="flex flex-wrap gap-1">
@@ -216,7 +216,7 @@ export default function ModelSelector({
                     </div>
                   </div>
                 </div>
-                
+
                 <button
                   onClick={() => setShowInfo(false)}
                   className="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"

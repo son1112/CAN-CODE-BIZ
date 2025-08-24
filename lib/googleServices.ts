@@ -27,13 +27,13 @@ export class GoogleServicesLoader {
 
     try {
       console.log('🚀 Starting Google services load process');
-      
+
       // Load Google Identity Services (this creates window.google)
       await this.loadScript('https://accounts.google.com/gsi/client');
-      
+
       // Give the script time to initialize the global object
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Log current state for debugging
       if (typeof window !== 'undefined') {
         console.log('🔍 Google services state after script load:', {
@@ -45,10 +45,10 @@ export class GoogleServicesLoader {
           googleObject: window.google ? Object.keys(window.google) : 'no google object'
         });
       }
-      
+
       // Wait for services to be available
       await this.waitForServices();
-      
+
       this.loaded = true;
       this.notifyCallbacks(true);
       return true;
@@ -79,7 +79,7 @@ export class GoogleServicesLoader {
         console.error(`❌ Failed to load: ${src}`);
         reject(new Error(`Failed to load script: ${src}`));
       };
-      
+
       document.head.appendChild(script);
     });
   }
@@ -87,10 +87,10 @@ export class GoogleServicesLoader {
   private waitForServices(timeout = 8000): Promise<void> {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
-      
+
       const checkServices = () => {
         const elapsed = Date.now() - startTime;
-        
+
         // Log current state for debugging
         if (elapsed % 1000 < 100) { // Log every ~1 second
           console.log('🔍 Checking Google services...', {
@@ -101,7 +101,7 @@ export class GoogleServicesLoader {
             hasGapi: typeof window.gapi !== 'undefined'
           });
         }
-        
+
         // Check for Google Identity Services OAuth2
         if (window.google?.accounts?.oauth2) {
           console.log('✅ Google Identity Services ready', {
@@ -110,7 +110,7 @@ export class GoogleServicesLoader {
           resolve();
           return;
         }
-        
+
         // Alternative: Check if window.google exists but needs initialization
         if (elapsed > 2000 && window.google && !window.google.accounts?.oauth2) {
           console.log('🔧 Google object exists but OAuth2 not ready, attempting initialization');
@@ -121,7 +121,7 @@ export class GoogleServicesLoader {
             return;
           }
         }
-        
+
         if (elapsed > timeout) {
           const debugInfo = {
             elapsed: `${elapsed}ms`,
@@ -134,15 +134,15 @@ export class GoogleServicesLoader {
             googleKeys: window.google ? Object.keys(window.google) : [],
             accountsKeys: window.google?.accounts ? Object.keys(window.google.accounts) : []
           };
-          
+
           console.error('❌ Timeout waiting for Google services', debugInfo);
           reject(new Error(`Timeout waiting for Google services after ${elapsed}ms. Debug info: ${JSON.stringify(debugInfo)}`));
           return;
         }
-        
+
         setTimeout(checkServices, 100);
       };
-      
+
       checkServices();
     });
   }

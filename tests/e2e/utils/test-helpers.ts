@@ -37,7 +37,7 @@ export class TestHelpers {
   async waitForAppReady() {
     await this.page.waitForLoadState('networkidle');
     await expect(this.page.locator(selectors.chatInterface)).toBeVisible();
-    
+
     // Wait for any loading states to complete
     await this.page.waitForFunction(() => {
       const loadingElements = document.querySelectorAll('[data-testid*="loading"]');
@@ -77,17 +77,17 @@ export class TestHelpers {
     const messageInput = this.page.locator(selectors.messageInput);
     await messageInput.fill(message);
     await this.page.click(selectors.sendButton);
-    
+
     // Wait for user message to appear
     await expect(this.page.locator(selectors.userMessage).last()).toContainText(message);
-    
+
     if (waitForResponse) {
       // Wait for thinking indicator
       await expect(this.page.locator(selectors.thinkingIndicator)).toBeVisible();
-      
+
       // Wait for AI response (with longer timeout for actual API calls)
       await expect(this.page.locator(selectors.aiMessage).last()).toBeVisible({ timeout: 30000 });
-      
+
       // Wait for thinking indicator to disappear
       await expect(this.page.locator(selectors.thinkingIndicator)).not.toBeVisible();
     }
@@ -97,7 +97,7 @@ export class TestHelpers {
     const messageInput = this.page.locator(selectors.messageInput);
     await messageInput.fill(message);
     await messageInput.press('Enter');
-    
+
     if (waitForResponse) {
       await this.waitForAIResponse();
     }
@@ -113,53 +113,53 @@ export class TestHelpers {
    * Message management helpers
    */
   async starMessage(messageIndex: number = -1) {
-    const message = messageIndex === -1 
+    const message = messageIndex === -1
       ? this.page.locator(selectors.aiMessage).last()
       : this.page.locator(selectors.aiMessage).nth(messageIndex);
-    
+
     await message.hover();
     await message.locator(selectors.starButton).click();
-    
+
     // Verify message is starred
     await expect(message.locator(selectors.starredMessage)).toBeVisible();
   }
 
   async unstarMessage(messageIndex: number = -1) {
-    const message = messageIndex === -1 
+    const message = messageIndex === -1
       ? this.page.locator(selectors.aiMessage).last()
       : this.page.locator(selectors.aiMessage).nth(messageIndex);
-    
+
     await message.hover();
     await message.locator(selectors.starButton).click();
-    
+
     // Verify message is unstarred
     await expect(message.locator(selectors.starredMessage)).not.toBeVisible();
   }
 
   async tagMessage(tag: string, messageIndex: number = -1) {
-    const message = messageIndex === -1 
+    const message = messageIndex === -1
       ? this.page.locator(selectors.aiMessage).last()
       : this.page.locator(selectors.aiMessage).nth(messageIndex);
-    
+
     await message.hover();
     await message.locator(selectors.tagButton).click();
-    
+
     const tagInput = this.page.locator(selectors.tagInput);
     await tagInput.fill(tag);
     await tagInput.press('Enter');
-    
+
     // Verify tag appears
     await expect(message.locator(selectors.messageTag).filter({ hasText: tag })).toBeVisible();
   }
 
   async copyMessage(messageIndex: number = -1) {
-    const message = messageIndex === -1 
+    const message = messageIndex === -1
       ? this.page.locator(selectors.aiMessage).last()
       : this.page.locator(selectors.aiMessage).nth(messageIndex);
-    
+
     await message.hover();
     await message.locator(selectors.copyButton).click();
-    
+
     // Note: Clipboard testing requires special setup in CI
     // For now, just verify the button was clicked
     await expect(message.locator(selectors.copyButton)).toHaveAttribute('data-copied', 'true');
@@ -171,7 +171,7 @@ export class TestHelpers {
   async startVoiceRecognition() {
     // Grant microphone permissions
     await this.page.context().grantPermissions(['microphone']);
-    
+
     await this.page.click(selectors.voiceButton);
     await expect(this.page.locator(selectors.voiceStatus)).toBeVisible();
   }
@@ -217,7 +217,7 @@ export class TestHelpers {
       review: selectors.safetyModeReview,
       filter: selectors.safetyModeFilter,
     };
-    
+
     await this.page.click(modeSelectors[mode]);
   }
 
@@ -227,7 +227,7 @@ export class TestHelpers {
       medium: selectors.sensitivityMedium,
       high: selectors.sensitivityHigh,
     };
-    
+
     await this.page.click(levelSelectors[level]);
   }
 
@@ -264,19 +264,19 @@ export class TestHelpers {
   async completeOnboardingTour() {
     let step = 0;
     const maxSteps = 10; // Safety limit
-    
+
     while (step < maxSteps) {
       try {
         // Check if tour tooltip is still visible
         const tooltip = this.page.locator(selectors.onboardingTooltip);
         const isVisible = await tooltip.isVisible({ timeout: 1000 });
-        
+
         if (!isVisible) break;
-        
+
         // Try to click next, then finish, then close
         const nextButton = this.page.locator(selectors.tourNext);
         const finishButton = this.page.locator(selectors.tourFinish);
-        
+
         if (await nextButton.isVisible()) {
           await nextButton.click();
         } else if (await finishButton.isVisible()) {
@@ -287,7 +287,7 @@ export class TestHelpers {
           await this.page.locator(selectors.tourClose).click();
           break;
         }
-        
+
         step++;
         await this.page.waitForTimeout(500); // Small delay between steps
       } catch (error) {
@@ -295,7 +295,7 @@ export class TestHelpers {
         break;
       }
     }
-    
+
     // Verify tour is complete
     await expect(this.page.locator(selectors.onboardingTooltip)).not.toBeVisible();
   }
@@ -309,14 +309,14 @@ export class TestHelpers {
    * Export functionality helpers
    */
   async exportMessageToPDF(messageIndex: number = -1) {
-    const message = messageIndex === -1 
+    const message = messageIndex === -1
       ? this.page.locator(selectors.aiMessage).last()
       : this.page.locator(selectors.aiMessage).nth(messageIndex);
-    
+
     await message.hover();
     await message.locator(selectors.messageMenu).click();
     await this.page.click(selectors.exportPdf);
-    
+
     await expect(this.page.locator(selectors.exportOptions)).toBeVisible();
   }
 
@@ -355,10 +355,10 @@ export class TestHelpers {
   }
 
   async measureAPIResponseTime(apiEndpoint: string): Promise<number> {
-    const responsePromise = this.page.waitForResponse(response => 
+    const responsePromise = this.page.waitForResponse(response =>
       response.url().includes(apiEndpoint) && response.status() === 200
     );
-    
+
     const response = await responsePromise;
     return response.timing().responseEnd;
   }
@@ -369,27 +369,27 @@ export class TestHelpers {
   async checkKeyboardNavigation() {
     // Start from the first focusable element
     await this.page.keyboard.press('Tab');
-    
+
     const focusedElement = await this.page.evaluate(() => {
       return document.activeElement?.tagName || null;
     });
-    
+
     return ['BUTTON', 'TEXTAREA', 'INPUT', 'A'].includes(focusedElement || '');
   }
 
   async verifyARIALabels() {
     const buttons = await this.page.locator('button').all();
     const unlabeledButtons = [];
-    
+
     for (const button of buttons) {
       const ariaLabel = await button.getAttribute('aria-label');
       const text = await button.textContent();
-      
+
       if (!ariaLabel && !text?.trim()) {
         unlabeledButtons.push(button);
       }
     }
-    
+
     return unlabeledButtons.length === 0;
   }
 
@@ -509,7 +509,7 @@ export const testData = {
   generateMessage: () => `Test message ${Date.now()}`,
   generateTag: () => `tag-${Math.random().toString(36).substr(2, 9)}`,
   generateSessionTitle: () => `Test Session ${new Date().toISOString()}`,
-  
+
   sampleMessages: [
     'Hello, can you help me with a coding problem?',
     'What is the best way to learn TypeScript?',
@@ -517,7 +517,7 @@ export const testData = {
     'How do I implement authentication in Next.js?',
     'What are the benefits of using Playwright for testing?'
   ],
-  
+
   sampleTags: ['important', 'code', 'question', 'reference', 'todo'],
 };
 

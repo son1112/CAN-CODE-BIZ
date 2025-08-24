@@ -11,7 +11,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -33,11 +33,11 @@ export async function PUT(
 
     // Find and update the session
     const updatedSession = await Session.findOneAndUpdate(
-      { 
+      {
         sessionId: id,
         createdBy: session.user.id
       },
-      { 
+      {
         name: name.trim(),
         updatedAt: new Date()
       },
@@ -63,7 +63,7 @@ export async function PUT(
   } catch (error) {
     console.error('Session rename error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to rename session',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

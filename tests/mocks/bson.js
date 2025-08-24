@@ -5,15 +5,15 @@ class MockObjectId {
   constructor(id) {
     this._id = id || '507f1f77bcf86cd799439011';
   }
-  
+
   toString() {
     return this._id;
   }
-  
+
   toHexString() {
     return this._id;
   }
-  
+
   static isValid(id) {
     return typeof id === 'string' && id.length === 24;
   }
@@ -69,12 +69,12 @@ const mockBSON = {
   Timestamp: MockTimestamp,
   Code: MockCode,
   DBRef: MockDBRef,
-  
+
   // Utility functions
   serialize: jest.fn(() => Buffer.from('mock-serialized')),
   deserialize: jest.fn(() => ({ mocked: true })),
   calculateObjectSize: jest.fn(() => 100),
-  
+
   // Type constants
   BSONType: {
     DOUBLE: 1,

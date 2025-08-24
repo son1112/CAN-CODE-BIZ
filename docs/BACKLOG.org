@@ -5,6 +5,31 @@
 * Overview
 This file tracks future work items, feature requests, improvements, and technical debt for Rubber Ducky Live.
 
+** Current Session Backlog Documentation Summary
+This section contains comprehensive documentation for 13 backlog items identified in the current development session. Each item includes detailed problem statements, technical requirements, implementation approaches, priority levels, complexity estimates, dependencies, acceptance criteria, and related files.
+
+*** High Priority Items (4 items)
+1. **Claude Code Sub-Agent Integration**: Investigate and fix Claude Code's recognition of custom AI agents
+2. **Tour Dismissal Persistence**: Fix onboarding tour to remain dismissed once dismissed  
+3. **Feedback Recording System**: Plan and implement user feedback collection with admin access
+4. **Access Control System**: Implement user roles and permissions (Admin, User, etc.)
+
+*** Medium Priority Items (4 items)
+5. **Avatar Layout Optimization**: Move avatars inside message boxes for better space efficiency
+6. **AI-Generated Agent Avatars**: Use AI to create avatars based on agent personality information
+7. **User Feedback System**: Design comprehensive feedback collection and management system
+8. **Role-Based Access Control**: Implement comprehensive user type and permission system
+
+*** Low Priority Items (5 items)
+9. **Tour Logic Documentation**: Document conditions for tour triggering and edge cases
+10. **Test Coverage Increase**: Raise test coverage threshold to 70% and implement additional tests
+11. **Edge Case Analysis**: Comprehensive audit of test suites for missing edge case coverage
+12. **Mobile App Evaluation**: Consider React Native for enhanced mobile experience
+13. **Session Header Styling**: Continue improvements to session header design and responsiveness
+14. **Best Practices Audit**: Analyze entire codebase for comprehensive best-practices adherence
+
+Each item includes estimated timeline, complexity assessment, and specific acceptance criteria for implementation.
+
 * Priority Legend
 - 🔴 HIGH: Critical issues, security concerns, breaking bugs
 - 🟡 MEDIUM: Important features, performance improvements
@@ -254,6 +279,592 @@ This file tracks future work items, feature requests, improvements, and technica
 - STATUS: Not Started
 - ESTIMATE: 6-8 days
 
+** Current Session Backlog Items - Detailed Documentation
+
+*** 🔴 HIGH Priority - Technical Issues
+
+**** 1. Investigate Why Claude Code Not Using Defined Sub-Agents
+***** Problem Statement
+- Claude Code AI assistant may not be properly recognizing or utilizing the custom AI agents defined in the application
+- Users may be experiencing inconsistent agent behavior or default responses instead of specialized agent responses
+- Potential gap between agent definition system and Claude Code integration
+
+***** Technical Requirements
+- Verify Claude Code can access agent definitions from `/api/agents` endpoint
+- Ensure agent prompts and personalities are being properly transmitted
+- Debug agent selection and context switching mechanisms
+- Review AgentContext and useAgents integration points
+
+***** Implementation Approach
+1. Audit agent API endpoints for Claude Code accessibility
+2. Review agent prompt templates and context passing
+3. Test agent selection workflow with Claude Code
+4. Add logging/debugging for agent context switching
+5. Verify agent persistence across conversation flows
+
+***** Priority Level: 🔴 HIGH
+***** Estimated Complexity: Medium
+***** Timeline: 2-3 days
+
+***** Dependencies
+- AgentContext.tsx
+- useAgents.ts hook
+- /api/agents endpoint
+- Agent model and database queries
+
+***** Acceptance Criteria
+- [ ] Claude Code properly recognizes all defined agents
+- [ ] Agent switching works seamlessly within Claude Code
+- [ ] Agent personalities and prompts are accurately applied
+- [ ] Agent behavior is consistent across all conversation modes
+- [ ] Documentation updated with Claude Code agent integration guide
+
+***** Related Files
+- `/app/components/AgentSelector.tsx`
+- `/hooks/useAgents.ts`
+- `/contexts/AgentContext.tsx`
+- `/lib/agents.ts`
+- `/app/api/agents/route.ts`
+
+**** 2. Fix Tour - Remain Dismissed Once Dismissed
+***** Problem Statement
+- Onboarding tour reappears after being dismissed by user
+- Poor user experience with persistent tour interruptions
+- Tour dismissal state not properly persisted across sessions
+- May impact user retention and application usability
+
+***** Technical Requirements
+- Implement persistent tour dismissal storage (localStorage/user preferences)
+- Ensure tour state survives page refreshes and session changes
+- Add user preference management for tour visibility
+- Implement proper cleanup of tour-related state
+
+***** Implementation Approach
+1. Add `tourDismissed` field to user preferences or localStorage
+2. Update OnboardingTour component to check dismissal state
+3. Implement dismissal persistence logic
+4. Add tour reset functionality for testing/admin purposes
+5. Test tour behavior across different user scenarios
+
+***** Priority Level: 🔴 HIGH
+***** Estimated Complexity: Simple
+***** Timeline: 1-2 days
+
+***** Dependencies
+- OnboardingTour.tsx component
+- User preferences system
+- localStorage or user profile persistence
+
+***** Acceptance Criteria
+- [ ] Tour dismissal persists across browser sessions
+- [ ] Tour remains dismissed after page refreshes
+- [ ] Tour dismissal works for both authenticated and demo users
+- [ ] Admin/debug option to reset tour for testing
+- [ ] No unexpected tour reappearance scenarios
+
+***** Related Files
+- `/app/components/OnboardingTour.tsx`
+- User preferences management system
+- localStorage utilities
+
+*** 🟡 MEDIUM Priority - Feature Enhancements
+
+**** 3. Plan User Feedback Recording Feature with Admin Access
+***** Problem Statement
+- Need system to collect and manage user feedback for product improvement
+- Lack of admin interface for reviewing feedback and making data-driven decisions
+- No structured way to track feature requests, bugs, and user satisfaction
+- Missing feedback-to-development pipeline for continuous improvement
+
+***** Technical Requirements
+- Design feedback collection UI (modal, form, voice input)
+- Implement admin dashboard for feedback review and management
+- Create feedback database schema with categorization and priority
+- Add authentication/authorization for admin access
+- Implement feedback export and analysis tools
+
+***** Implementation Approach
+1. Design feedback collection interface (form + voice input)
+2. Create feedback database model with metadata (category, priority, status)
+3. Implement feedback submission API endpoint
+4. Build admin dashboard with filtering, search, and management tools
+5. Add admin role management and access control
+6. Integrate feedback system with existing auth framework
+7. Create feedback analytics and reporting features
+
+***** Priority Level: 🟡 MEDIUM
+***** Estimated Complexity: Complex
+***** Timeline: 5-7 days
+
+***** Dependencies
+- Authentication system (NextAuth.js)
+- User role management system
+- Database schema updates
+- Admin interface framework
+
+***** Acceptance Criteria
+- [ ] Users can submit feedback via form and voice input
+- [ ] Feedback is categorized and tagged appropriately
+- [ ] Admin interface allows feedback review and management
+- [ ] Admin can respond to feedback and update status
+- [ ] Feedback data can be exported for analysis
+- [ ] Role-based access control prevents unauthorized admin access
+- [ ] Feedback system integrates with existing user authentication
+
+***** Related Files
+- New: `/app/components/FeedbackModal.tsx`
+- New: `/app/admin/feedback/page.tsx`
+- New: `/app/api/feedback/route.ts`
+- New: `/models/Feedback.ts`
+- `/lib/middleware/auth.ts` (for admin role checking)
+
+**** 4. Implement Access Control Levels and User Types (Admin, etc)
+***** Problem Statement
+- Application lacks user role management and access control system
+- No differentiation between regular users, moderators, and administrators
+- Missing foundation for admin features, user management, and premium functionality
+- Security gap for administrative functions and sensitive operations
+
+***** Technical Requirements
+- Design user role system (User, Admin, Super Admin)
+- Implement role-based access control (RBAC) middleware
+- Update authentication system to support user roles
+- Create admin interface for user management
+- Add role-based UI component rendering
+
+***** Implementation Approach
+1. Extend User model with role field and permissions
+2. Create role-based middleware for API route protection
+3. Implement role checking utilities and hooks
+4. Update authentication flow to include role information
+5. Create admin dashboard for user management
+6. Add role-based component rendering and feature flags
+7. Implement role assignment and management tools
+
+***** Priority Level: 🟡 MEDIUM
+***** Estimated Complexity: Complex
+***** Timeline: 4-6 days
+
+***** Dependencies
+- User authentication system
+- Database User model updates
+- Admin dashboard framework
+- Security middleware system
+
+***** Acceptance Criteria
+- [ ] User roles are properly defined and enforced
+- [ ] API endpoints respect role-based access controls
+- [ ] Admin interface allows user role management
+- [ ] Role-based UI rendering works correctly
+- [ ] Security audit passes for privilege escalation
+- [ ] Role changes are logged and auditable
+- [ ] Migration strategy for existing users
+
+***** Related Files
+- `/models/User.ts` (role field addition)
+- `/lib/middleware/auth.ts` (role-based middleware)
+- New: `/app/admin/users/page.tsx`
+- New: `/hooks/useRole.ts`
+- New: `/lib/rbac.ts` (role-based access control utilities)
+
+**** 5. Move Avatars Inside Message Boxes for Better Space Efficiency
+***** Problem Statement
+- Current avatar placement consumes excessive horizontal space
+- Poor mobile user experience with avatar positioning
+- Inefficient use of screen real estate in message display
+- Avatar placement may interfere with message readability
+
+***** Technical Requirements
+- Redesign message layout to integrate avatars within message containers
+- Maintain avatar visibility and user recognition
+- Ensure responsive design works across all device sizes
+- Preserve accessibility and usability of avatar system
+
+***** Implementation Approach
+1. Redesign MessageDisplay component layout
+2. Integrate avatars into message header or corner positioning
+3. Update CSS/Tailwind classes for space optimization
+4. Test responsive behavior across device sizes
+5. Ensure avatar click functionality is preserved
+6. Update chat interface styling for consistency
+
+***** Priority Level: 🟡 MEDIUM
+***** Estimated Complexity: Medium
+***** Timeline: 2-3 days
+
+***** Dependencies
+- MessageDisplay.tsx component
+- Chat interface styling system
+- Avatar generation and display logic
+
+***** Acceptance Criteria
+- [ ] Avatars are positioned within message boundaries
+- [ ] Message readability is not compromised
+- [ ] Mobile layout shows improved space efficiency
+- [ ] Avatar click functionality is preserved
+- [ ] Responsive design works across all screen sizes
+- [ ] Consistent styling across all message types
+
+***** Related Files
+- `/app/components/MessageDisplay.tsx`
+- `/app/components/ChatInterface.tsx`
+- Avatar-related styling and utilities
+
+**** 6. Use AI to Create Avatar Based on Agent Info
+***** Problem Statement
+- Current avatar system uses generic or random avatars
+- Missed opportunity to visually represent agent personalities
+- Lack of visual consistency between agent behavior and appearance
+- User experience could be enhanced with AI-generated agent-specific avatars
+
+***** Technical Requirements
+- Integrate AI image generation service (DALL-E, Midjourney, or Stable Diffusion)
+- Create avatar generation prompts based on agent descriptions
+- Implement avatar caching and storage system
+- Add fallback system for avatar generation failures
+- Ensure generated avatars meet content and quality standards
+
+***** Implementation Approach
+1. Research and select AI avatar generation service
+2. Create avatar prompt templates based on agent metadata
+3. Implement avatar generation API integration
+4. Add avatar caching to prevent redundant generation
+5. Create fallback system for generation failures
+6. Implement avatar management and regeneration tools
+7. Add avatar quality validation and content filtering
+
+***** Priority Level: 🟡 MEDIUM
+***** Estimated Complexity: Complex
+***** Timeline: 4-5 days
+
+***** Dependencies
+- AI image generation service integration
+- Agent metadata and description system
+- Image storage and caching infrastructure
+- Avatar display and management system
+
+***** Acceptance Criteria
+- [ ] AI generates avatars that match agent personalities
+- [ ] Avatar generation is reliable with appropriate fallbacks
+- [ ] Generated avatars are cached to prevent duplicate requests
+- [ ] Avatar quality meets visual standards
+- [ ] Admin can regenerate or override AI-generated avatars
+- [ ] Avatar generation cost is within acceptable limits
+- [ ] Content filtering prevents inappropriate avatar generation
+
+***** Related Files
+- New: `/lib/avatarGeneration.ts`
+- New: `/app/api/generate-avatar/route.ts`
+- `/app/components/AgentSelector.tsx`
+- `/models/Agent.ts` (avatar field addition)
+
+*** 🟢 LOW Priority - Quality Improvements
+
+**** 7. Understand Conditions for Not Triggering App Tour
+***** Problem Statement
+- Unclear logic for when onboarding tour should or should not appear
+- Need documentation of tour triggering conditions and edge cases
+- Potential for tour to appear inappropriately for experienced users
+- Missing clear requirements for tour display logic
+
+***** Technical Requirements
+- Document all tour triggering conditions and scenarios
+- Identify edge cases where tour should not appear
+- Create comprehensive test cases for tour behavior
+- Implement clear tour display logic with proper conditions
+
+***** Implementation Approach
+1. Audit current tour triggering logic
+2. Document all conditions and edge cases
+3. Create comprehensive test scenarios
+4. Implement refined tour display logic
+5. Add configuration options for tour behavior
+6. Create developer documentation for tour system
+
+***** Priority Level: 🟢 LOW
+***** Estimated Complexity: Simple
+***** Timeline: 1-2 days
+
+***** Dependencies
+- OnboardingTour component
+- User preference system
+- Tour dismissal logic
+
+***** Acceptance Criteria
+- [ ] All tour triggering conditions are documented
+- [ ] Edge cases are identified and handled appropriately
+- [ ] Test coverage exists for all tour scenarios
+- [ ] Developer documentation explains tour logic
+- [ ] Configuration options allow tour behavior customization
+
+***** Related Files
+- `/app/components/OnboardingTour.tsx`
+- Tour logic documentation
+- Test files for tour behavior
+
+**** 8. Increase Test Coverage Threshold to 70%
+***** Problem Statement
+- Current test coverage threshold is at 50% (based on CLAUDE.md)
+- Higher coverage threshold would improve code quality and reliability
+- Need to increase coverage to 70% to meet development standards
+- Additional tests required for comprehensive application coverage
+
+***** Technical Requirements
+- Update Jest configuration to set 70% coverage threshold
+- Identify components and functions with insufficient test coverage
+- Write additional unit and integration tests to reach 70% threshold
+- Ensure new tests are meaningful and test critical functionality
+
+***** Implementation Approach
+1. Update jest.config.js coverage threshold from 80% to 70% (note: current is already 80%)
+2. Run coverage report to identify gaps
+3. Prioritize testing critical business logic and user-facing features
+4. Write additional unit tests for uncovered functions
+5. Add integration tests for complex workflows
+6. Review and improve existing test quality
+
+***** Priority Level: 🟢 LOW
+***** Estimated Complexity: Medium
+***** Timeline: 3-4 days
+
+***** Dependencies
+- Jest testing framework
+- Existing test infrastructure
+- Code coverage reporting tools
+
+***** Acceptance Criteria
+- [ ] Coverage threshold updated in configuration
+- [ ] All critical business logic has test coverage
+- [ ] Coverage reports show 70%+ across all metrics
+- [ ] New tests are meaningful and maintainable
+- [ ] CI/CD pipeline enforces coverage requirements
+- [ ] Test suite runs efficiently without excessive runtime
+
+***** Related Files
+- `/jest.config.js` (threshold update)
+- Test files across `/tests/` directory
+- Coverage reporting configuration
+
+**** 9. Analyze Test Suites for Edge Cases
+***** Problem Statement
+- Current test suites may miss critical edge cases and error conditions
+- Need comprehensive analysis of test coverage for boundary conditions
+- Risk of production bugs due to untested edge scenarios
+- Test quality assessment required for continuous improvement
+
+***** Technical Requirements
+- Audit existing test suites for edge case coverage
+- Identify missing boundary conditions and error scenarios
+- Create additional tests for identified edge cases
+- Establish edge case testing guidelines and standards
+
+***** Implementation Approach
+1. Review all existing test files for edge case patterns
+2. Identify critical functions missing boundary condition tests
+3. Document common edge case categories (null values, empty arrays, network failures, etc.)
+4. Create additional test cases for identified scenarios
+5. Establish testing guidelines for future edge case coverage
+6. Add property-based testing for complex functions where appropriate
+
+***** Priority Level: 🟢 LOW
+***** Estimated Complexity: Medium
+***** Timeline: 3-4 days
+
+***** Dependencies
+- Existing test infrastructure
+- Code coverage analysis tools
+- Testing framework capabilities
+
+***** Acceptance Criteria
+- [ ] Edge case audit completed for all test suites
+- [ ] Critical missing edge cases identified and documented
+- [ ] Additional tests written for high-priority edge cases
+- [ ] Edge case testing guidelines established
+- [ ] Test documentation updated with edge case patterns
+- [ ] Automated tools help identify future edge case gaps
+
+***** Related Files
+- All test files in `/tests/` directory
+- New: `/docs/testing-guidelines.md`
+- Testing utilities and helpers
+
+**** 10. Consider React Native for Mobile Experience
+***** Problem Statement
+- Current web application may not provide optimal mobile experience
+- Native mobile app could offer better performance and user experience
+- App store presence could increase user acquisition and retention
+- Need evaluation of React Native feasibility for current codebase
+
+***** Technical Requirements
+- Evaluate React Native compatibility with current architecture
+- Assess code reusability between web and mobile versions
+- Plan mobile-specific features and optimizations
+- Determine development and maintenance overhead
+
+***** Implementation Approach
+1. Conduct React Native feasibility study
+2. Analyze code sharing opportunities with current Next.js codebase
+3. Evaluate mobile-specific features and requirements
+4. Create mobile app architecture proposal
+5. Estimate development timeline and resource requirements
+6. Plan deployment and app store submission process
+
+***** Priority Level: 🟢 LOW
+***** Estimated Complexity: Complex
+***** Timeline: Research: 2-3 days, Implementation: 15-20 days
+
+***** Dependencies
+- React Native framework evaluation
+- Mobile development infrastructure
+- App store developer accounts
+- Mobile testing devices and tools
+
+***** Acceptance Criteria
+- [ ] Feasibility study completed with recommendations
+- [ ] Code sharing strategy defined
+- [ ] Mobile-specific feature requirements documented
+- [ ] Development timeline and resource estimates provided
+- [ ] Architecture proposal approved for mobile implementation
+- [ ] App store submission process planned
+
+***** Related Files
+- New: `/docs/mobile-app-proposal.md`
+- Shared business logic components
+- API integration layers
+
+**** 11. Continue to Improve Styling of Session Header
+***** Problem Statement
+- Session header design may need refinement for better user experience
+- Opportunity to improve visual hierarchy and information presentation
+- Mobile responsiveness of session header requires optimization
+- Consistency with overall design system needs verification
+
+***** Technical Requirements
+- Review current session header design and usability
+- Identify specific improvement opportunities
+- Implement responsive design enhancements
+- Ensure consistency with application design system
+
+***** Implementation Approach
+1. Conduct user experience review of session header
+2. Identify specific styling and layout improvements
+3. Update CSS/Tailwind classes for better presentation
+4. Test responsive behavior across device sizes
+5. Ensure accessibility standards are met
+6. Gather user feedback on header improvements
+
+***** Priority Level: 🟢 LOW
+***** Estimated Complexity: Simple
+***** Timeline: 1-2 days
+
+***** Dependencies
+- Session header components
+- Design system and styling guidelines
+- Responsive design testing tools
+
+***** Acceptance Criteria
+- [ ] Session header visual design is improved
+- [ ] Responsive behavior works across all devices
+- [ ] Information hierarchy is clear and intuitive
+- [ ] Accessibility standards are maintained
+- [ ] Design consistency with application maintained
+- [ ] User feedback on improvements is positive
+
+***** Related Files
+- Session header related components
+- CSS/Tailwind styling files
+- Responsive design utilities
+
+**** 12. Analyze Application Code for Comprehensive Best-Practices Adherence
+***** Problem Statement
+- Need comprehensive audit of codebase for adherence to development best practices
+- Opportunity to identify technical debt and improvement opportunities
+- Code quality and maintainability assessment required
+- Security, performance, and architectural best practices review needed
+
+***** Technical Requirements
+- Conduct comprehensive code audit across all application areas
+- Evaluate adherence to React, Next.js, and TypeScript best practices
+- Assess security practices and potential vulnerabilities
+- Review performance optimization opportunities
+- Analyze architectural patterns and design decisions
+
+***** Implementation Approach
+1. Create comprehensive code audit checklist
+2. Review code systematically across all components and utilities
+3. Identify best practice violations and improvement opportunities
+4. Prioritize findings by impact and effort required
+5. Create improvement roadmap with specific recommendations
+6. Implement high-priority improvements
+7. Document best practices guidelines for future development
+
+***** Priority Level: 🟢 LOW
+***** Estimated Complexity: Complex
+***** Timeline: 5-7 days
+
+***** Dependencies
+- Code analysis tools and linters
+- Best practices documentation and guidelines
+- Security analysis tools
+
+***** Acceptance Criteria
+- [ ] Comprehensive code audit completed
+- [ ] Best practice violations identified and documented
+- [ ] Improvement roadmap created with priorities
+- [ ] High-priority improvements implemented
+- [ ] Best practices guidelines documented
+- [ ] Code quality metrics improved
+- [ ] Security vulnerabilities addressed
+
+***** Related Files
+- All application source files
+- New: `/docs/code-audit-report.md`
+- New: `/docs/best-practices-guidelines.md`
+- Linting and analysis configuration files
+
+**** 13. Ensure Claude Code Documents Backlog Items When Asked
+***** Problem Statement
+- Need to ensure Claude Code AI assistant properly documents backlog items when requested
+- Documentation should be comprehensive and follow project standards
+- Consistency in backlog item documentation format and content required
+- Integration between Claude Code and project management workflows needed
+
+***** Technical Requirements
+- Define documentation standards for backlog items
+- Ensure Claude Code can access and update project documentation
+- Create templates and guidelines for backlog item documentation
+- Implement workflow for backlog item creation and maintenance
+
+***** Implementation Approach
+1. Define comprehensive backlog item documentation template
+2. Create guidelines for Claude Code backlog documentation
+3. Ensure Claude Code has access to project documentation files
+4. Test Claude Code's ability to create and update backlog items
+5. Implement quality checks for backlog documentation
+6. Create workflow integration between Claude Code and project management
+
+***** Priority Level: 🔴 HIGH (Meta-requirement)
+***** Estimated Complexity: Simple
+***** Timeline: 1-2 days
+
+***** Dependencies
+- Claude Code AI assistant capabilities
+- Project documentation system
+- Backlog management workflows
+
+***** Acceptance Criteria
+- [ ] Documentation template created and implemented
+- [ ] Claude Code can create comprehensive backlog documentation
+- [ ] Documentation follows project standards and conventions
+- [ ] Backlog items include all required fields and sections
+- [ ] Quality checks ensure documentation completeness
+- [ ] Workflow integration functions properly
+
+***** Related Files
+- `/docs/BACKLOG.org` (this file)
+- Documentation templates and guidelines
+- Claude Code configuration and instructions
+
 ** 🔵 RESEARCH Items
 
 *** Technical Investigations
@@ -321,6 +932,18 @@ This file tracks future work items, feature requests, improvements, and technica
 - Estimates are rough and may change based on implementation complexity
 - Items may be moved between priority levels based on business needs
 - Regular backlog grooming sessions should be conducted to keep this current
+
+** Documentation Standards
+The "Current Session Backlog Items - Detailed Documentation" section demonstrates comprehensive backlog item documentation that includes:
+- Clear problem statements with business context
+- Technical requirements and constraints
+- Implementation approaches with step-by-step plans
+- Priority levels (🔴 HIGH, 🟡 MEDIUM, 🟢 LOW) and complexity estimates
+- Dependencies and prerequisite work
+- Acceptance criteria with measurable outcomes
+- Related files and components affected
+
+This documentation format should be used as a template for future backlog items to ensure consistency and actionability.
 
 * Contact
 For feature requests or backlog item discussions, please create issues in the project repository.

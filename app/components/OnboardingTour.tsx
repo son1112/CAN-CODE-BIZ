@@ -79,8 +79,8 @@ export default function OnboardingTour() {
   const scrollToTarget = useCallback((targetSelector: string) => {
     const target = document.querySelector(targetSelector);
     if (target) {
-      target.scrollIntoView({ 
-        behavior: 'smooth', 
+      target.scrollIntoView({
+        behavior: 'smooth',
         block: 'center',
         inline: 'center'
       });
@@ -102,7 +102,7 @@ export default function OnboardingTour() {
 
   const updateTooltipPosition = useCallback(() => {
     if (!currentStep) return;
-    
+
     const position = calculateTooltipPosition(currentStep.target, currentStep.placement);
     setTooltipPosition(position);
     highlightTarget(currentStep.target);
@@ -170,7 +170,7 @@ export default function OnboardingTour() {
   return (
     <>
       {/* Overlay */}
-      <div 
+      <div
         className="fixed inset-0 z-40"
         style={{
           backgroundColor: 'rgba(0, 0, 0, 0.4)',
@@ -246,7 +246,7 @@ export default function OnboardingTour() {
                 <SkipForward size={14} />
                 Skip Tour
               </button>
-              
+
               <div className="text-xs text-gray-400">
                 {currentStepIndex + 1} of {steps.length}
               </div>
@@ -262,7 +262,7 @@ export default function OnboardingTour() {
                   Back
                 </button>
               )}
-              
+
               <button
                 onClick={handleNext}
                 className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center gap-1 shadow-sm"

@@ -22,7 +22,7 @@ export default function StarsBrowser({
 }: StarsBrowserProps) {
   const { isDark } = useTheme();
   const { stars, isLoading, unstarItem } = useStars(userId);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<StarableType | 'all'>('all');
   const [selectedPriority, setSelectedPriority] = useState<'low' | 'medium' | 'high' | 'all'>('all');
@@ -34,10 +34,10 @@ export default function StarsBrowser({
     .filter(star => {
       // Type filter
       if (selectedType !== 'all' && star.itemType !== selectedType) return false;
-      
+
       // Priority filter
       if (selectedPriority !== 'all' && star.priority !== selectedPriority) return false;
-      
+
       // Search filter
       if (searchQuery) {
         const searchContent = [
@@ -46,10 +46,10 @@ export default function StarsBrowser({
           star.context?.messageContent,
           star.tags?.join(' '),
         ].filter(Boolean).join(' ').toLowerCase();
-        
+
         if (!searchContent.includes(searchQuery.toLowerCase())) return false;
       }
-      
+
       return true;
     })
     .sort((a, b) => {
@@ -117,17 +117,17 @@ export default function StarsBrowser({
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 backdrop-blur-sm"
         style={{
           backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)'
         }}
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="relative flex h-full items-center justify-center p-4">
-        <div 
+        <div
           className="relative w-full max-w-4xl h-[80vh] rounded-2xl border shadow-2xl overflow-hidden flex flex-col"
           style={{
             backgroundColor: isDark ? 'var(--bg-primary)' : 'white',
@@ -135,7 +135,7 @@ export default function StarsBrowser({
           }}
         >
           {/* Header */}
-          <div 
+          <div
             className="flex items-center justify-between border-b flex-shrink-0"
             style={{
               padding: '20px 24px',
@@ -150,7 +150,7 @@ export default function StarsBrowser({
                   Starred Items
                 </h2>
               </div>
-              <span 
+              <span
                 className="px-2 py-1 rounded-full text-sm font-medium"
                 style={{
                   backgroundColor: 'var(--bg-tertiary)',
@@ -160,7 +160,7 @@ export default function StarsBrowser({
                 {filteredStars.length}
               </span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
@@ -195,7 +195,7 @@ export default function StarsBrowser({
 
           {/* Filters */}
           {showFilters && (
-            <div 
+            <div
               className="border-b p-4 flex-shrink-0"
               style={{
                 borderColor: 'var(--border-primary)',
@@ -209,7 +209,7 @@ export default function StarsBrowser({
                     Search
                   </label>
                   <div className="relative">
-                    <Search 
+                    <Search
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4"
                       style={{ color: 'var(--text-tertiary)' }}
                     />
@@ -282,7 +282,7 @@ export default function StarsBrowser({
             {isLoading ? (
               <div className="flex items-center justify-center h-32">
                 <div className="text-center">
-                  <div 
+                  <div
                     className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-2"
                     style={{ borderColor: 'var(--accent-primary)' }}
                   />
@@ -318,7 +318,7 @@ export default function StarsBrowser({
                         {/* Header */}
                         <div className="flex items-center gap-3 mb-2">
                           <span className="text-lg">{getStarIcon(star.itemType)}</span>
-                          <span 
+                          <span
                             className="text-sm font-medium px-2 py-1 rounded-full"
                             style={{
                               backgroundColor: 'var(--bg-tertiary)',
@@ -328,7 +328,7 @@ export default function StarsBrowser({
                             {getStarDisplayName(star.itemType)}
                           </span>
                           {star.priority && star.priority !== 'medium' && (
-                            <span 
+                            <span
                               className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(star.priority)}`}
                             >
                               {getPriorityIcon(star.priority)} {star.priority}
@@ -346,7 +346,7 @@ export default function StarsBrowser({
                               {star.context.title}
                             </h4>
                           )}
-                          <p 
+                          <p
                             className="text-sm line-clamp-2"
                             style={{ color: 'var(--text-secondary)' }}
                           >

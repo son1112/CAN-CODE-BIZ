@@ -12,10 +12,10 @@ interface MessageTagInterfaceProps {
   onTagsUpdate: (tags: string[]) => void;
 }
 
-export default function MessageTagInterface({ 
-  messageId, 
-  tags, 
-  onTagsUpdate 
+export default function MessageTagInterface({
+  messageId,
+  tags,
+  onTagsUpdate
 }: MessageTagInterfaceProps) {
   const [isEditingTags, setIsEditingTags] = useState(false);
   const { tags: availableTags } = useTags({ limit: 50 });
@@ -66,14 +66,16 @@ export default function MessageTagInterface({
             Tags
           </span>
         </div>
-        
+
         {!isEditingTags && (
           <button
             onClick={() => setIsEditingTags(true)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors"
-            style={{ 
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs transition-colors touch-target"
+            style={{
               color: 'var(--text-tertiary)',
-              backgroundColor: 'transparent'
+              backgroundColor: 'transparent',
+              minWidth: '44px',
+              minHeight: '44px'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
@@ -103,20 +105,24 @@ export default function MessageTagInterface({
           <div className="flex gap-2 mt-2">
             <button
               onClick={handleFinishEditing}
-              className="px-3 py-1 rounded text-xs transition-colors"
+              className="px-4 py-2 rounded text-xs transition-colors touch-target"
               style={{
                 backgroundColor: 'var(--accent-primary)',
-                color: 'white'
+                color: 'white',
+                minWidth: '44px',
+                minHeight: '44px'
               }}
             >
               Done
             </button>
             <button
               onClick={() => setIsEditingTags(false)}
-              className="px-2 py-1 rounded text-xs transition-colors"
+              className="px-4 py-2 rounded text-xs transition-colors touch-target"
               style={{
                 backgroundColor: 'var(--bg-tertiary)',
-                color: 'var(--text-secondary)'
+                color: 'var(--text-secondary)',
+                minWidth: '44px',
+                minHeight: '44px'
               }}
             >
               Cancel
@@ -133,7 +139,7 @@ export default function MessageTagInterface({
               onTagClick={() => setIsEditingTags(true)}
             />
           ) : (
-            <div 
+            <div
               className="flex items-center gap-2 py-2 px-3 rounded-lg border-2 border-dashed transition-colors text-sm opacity-0 group-hover:opacity-100"
               style={{
                 borderColor: 'var(--border-primary)',

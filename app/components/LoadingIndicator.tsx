@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 
 interface LoadingIndicatorProps {
   type?: 'spinner' | 'dots' | 'thinking';
@@ -14,20 +15,22 @@ interface LoadingIndicatorProps {
 // Cycling images configuration
 const CYCLING_IMAGES = [
   '/Gemini_Generated_Image_nqfygcnqfygcnqfy.png',
-  '/Gemini_Generated_Image_6xo6qa6xo6qa6xo6.png', 
+  '/Gemini_Generated_Image_6xo6qa6xo6qa6xo6.png',
   '/Gemini_Generated_Image_kn11nekn11nekn11.png'
 ];
 
 const IMAGE_CYCLE_INTERVAL = 2000; // 2 seconds per image
 
-export default function LoadingIndicator({ 
-  type = 'thinking', 
-  size = 'medium', 
+export default function LoadingIndicator({
+  type = 'thinking',
+  size = 'medium',
   message,
   className = '',
-  useCyclingImages = false 
+  useCyclingImages = false
 }: LoadingIndicatorProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { isMobile, isTablet } = useMobileNavigation();
+  const isMobileLayout = isMobile || isTablet;
 
   // Cycle through images when useCyclingImages is enabled
   useEffect(() => {
@@ -41,13 +44,13 @@ export default function LoadingIndicator({
   }, [useCyclingImages]);
 
   const sizeClasses = {
-    small: 'w-4 h-4',
-    medium: 'w-6 h-6', 
-    large: 'w-8 h-8'
+    small: isMobileLayout ? 'w-3 h-3' : 'w-4 h-4',
+    medium: isMobileLayout ? 'w-5 h-5' : 'w-6 h-6',
+    large: isMobileLayout ? 'w-7 h-7' : 'w-8 h-8'
   };
 
   const renderSpinner = () => (
-    <div 
+    <div
       className={`animate-spin rounded-full border-2 border-t-transparent ${sizeClasses[size]} ${className}`}
       style={{
         borderColor: 'var(--border-secondary)',
@@ -84,7 +87,7 @@ export default function LoadingIndicator({
               width={size === 'small' ? 32 : size === 'medium' ? 48 : 64}
               height={size === 'small' ? 32 : size === 'medium' ? 48 : 64}
               className="object-cover rounded-lg transition-opacity duration-300 animate-pulse"
-              style={{ 
+              style={{
                 animationDuration: '1.5s',
                 animationIterationCount: 'infinite'
               }}
@@ -111,9 +114,9 @@ export default function LoadingIndicator({
             </div>
           </div>
         ) : (
-          <div 
+          <div
             className="text-2xl animate-bounce"
-            style={{ 
+            style={{
               animationDuration: '2s',
               animationIterationCount: 'infinite'
             }}
@@ -121,7 +124,7 @@ export default function LoadingIndicator({
             🦆
           </div>
         )}
-        
+
         {/* Thinking bubbles for emoji fallback */}
         {!useCyclingImages && (
           <div className="absolute -top-1 -right-1">
@@ -141,7 +144,7 @@ export default function LoadingIndicator({
           </div>
         )}
       </div>
-      
+
       {/* Animated thinking dots */}
       <div className="flex items-center space-x-1">
         {[0, 1, 2].map((i) => (
@@ -172,11 +175,17 @@ export default function LoadingIndicator({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-2">
+    <div className={`
+      flex flex-col items-center justify-center space-y-2
+      ${isMobileLayout ? 'mobile-loading-container' : ''}
+    `}>
       {renderIndicator()}
       {message && (
-        <p 
-          className="text-sm animate-pulse"
+        <p
+          className={`
+            animate-pulse
+            ${isMobileLayout ? 'text-xs mobile-typography-sm' : 'text-sm'}
+          `}
           style={{ color: 'var(--text-secondary)' }}
         >
           {message}
@@ -188,12 +197,17 @@ export default function LoadingIndicator({
 
 // Specific loading states for different contexts
 export function SessionLoadingIndicator() {
+  const { isMobile } = useMobileNavigation();
+
   return (
-    <div className="flex items-center justify-center py-8">
-      <LoadingIndicator 
-        type="thinking" 
-        message="Loading session..." 
-        size="medium"
+    <div className={`
+      flex items-center justify-center
+      ${isMobile ? 'py-6' : 'py-8'}
+    `}>
+      <LoadingIndicator
+        type="thinking"
+        message="Loading session..."
+        size={isMobile ? "small" : "medium"}
         useCyclingImages={true}
       />
     </div>
@@ -201,19 +215,35 @@ export function SessionLoadingIndicator() {
 }
 
 export function ChatThinkingIndicator() {
+  const { isMobile } = useMobileNavigation();
+
   return (
-    <div className="flex items-start space-x-3 p-4">
+    <div className={`
+      flex items-start
+      ${isMobile ? 'space-x-2 p-3' : 'space-x-3 p-4'}
+    `}>
       <div className="flex-shrink-0">
-        <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--accent-primary)' }}>
-          <span className="text-white text-sm font-medium">🦆</span>
+        <div
+          className={`
+            rounded-full flex items-center justify-center
+            ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}
+          `}
+          style={{ backgroundColor: 'var(--accent-primary)' }}
+        >
+          <span className={`
+            text-white font-medium
+            ${isMobile ? 'text-xs' : 'text-sm'}
+          `}>
+            🦆
+          </span>
         </div>
       </div>
       <div className="flex-1 pt-1">
-        <LoadingIndicator 
-          type="thinking" 
-          message="Rubber Ducky is thinking..." 
+        <LoadingIndicator
+          type="thinking"
+          message={isMobile ? "Thinking..." : "Rubber Ducky is thinking..."}
           size="small"
-          useCyclingImages={true}
+          useCyclingImages={!isMobile} // Disable cycling images on mobile for performance
         />
       </div>
     </div>
@@ -221,13 +251,46 @@ export function ChatThinkingIndicator() {
 }
 
 export function SessionOperationIndicator({ operation }: { operation: string }) {
+  const { isMobile } = useMobileNavigation();
+
   return (
-    <div className="flex items-center justify-center py-4">
-      <LoadingIndicator 
-        type="spinner" 
-        message={operation} 
+    <div className={`
+      flex items-center justify-center
+      ${isMobile ? 'py-3' : 'py-4'}
+    `}>
+      <LoadingIndicator
+        type="spinner"
+        message={operation}
         size="small"
       />
+    </div>
+  );
+}
+
+// Mobile-specific loading overlay component
+export function MobileLoadingOverlay({
+  message = "Loading...",
+  isVisible = false,
+  type = "spinner"
+}: {
+  message?: string;
+  isVisible?: boolean;
+  type?: "spinner" | "dots" | "thinking";
+}) {
+  const { isMobile } = useMobileNavigation();
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="mobile-loading-overlay">
+      <div className="mobile-loading-card">
+        <LoadingIndicator
+          type={type}
+          message={message}
+          size={isMobile ? "medium" : "large"}
+          useCyclingImages={false} // Performance optimization for overlay
+        />
+      </div>
     </div>
   );
 }

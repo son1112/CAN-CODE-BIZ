@@ -1,15 +1,9 @@
 import { NextRequest } from 'next/server'
 import { GET, POST } from '@/app/api/stars/route'
 
-// Mock the authentication
-jest.mock('@/lib/auth', () => ({
-  auth: jest.fn(() => Promise.resolve({
-    user: {
-      id: 'test-user',
-      email: 'test@example.com',
-      name: 'Test User',
-    },
-  })),
+// Mock the authentication middleware
+jest.mock('@/lib/middleware/auth', () => ({
+  requireAuth: jest.fn(() => Promise.resolve({ userId: 'test-user' }))
 }))
 
 // Mock the MongoDB connection
@@ -18,8 +12,20 @@ jest.mock('@/lib/mongodb', () => ({
   default: jest.fn(() => Promise.resolve()),
 }))
 
-// Mock the Star model with automatic jest.fn() functions
-jest.mock('@/models/Star')
+// Mock the Star model with both constructor and static methods
+jest.mock('@/models/Star', () => {
+  const mockConstructor = jest.fn().mockImplementation((data) => ({
+    ...data,
+    save: jest.fn().mockResolvedValue(data),
+  }))
+
+  // Add static methods to the constructor
+  mockConstructor.find = jest.fn()
+  mockConstructor.countDocuments = jest.fn()
+  mockConstructor.findOne = jest.fn()
+
+  return mockConstructor
+})
 
 import Star from '@/models/Star'
 
@@ -28,6 +34,10 @@ const mockStar = Star as jest.Mocked<typeof Star>
 describe('/api/stars', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    // Re-initialize mock functions after clearing
+    mockStar.find = jest.fn()
+    mockStar.countDocuments = jest.fn()
+    mockStar.findOne = jest.fn()
   })
 
   describe('GET /api/stars', () => {
@@ -42,13 +52,17 @@ describe('/api/stars', () => {
           context: { title: 'Test Message' },
           category: 'message',
           priority: 'medium',
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
         },
       ]
 
       mockStar.find.mockReturnValue({
         sort: jest.fn().mockReturnValue({
-          limit: jest.fn().mockResolvedValue(mockStars),
+          limit: jest.fn().mockReturnValue({
+            skip: jest.fn().mockReturnValue({
+              lean: jest.fn().mockResolvedValue(mockStars),
+            }),
+          }),
         }),
       } as any)
       mockStar.countDocuments.mockResolvedValue(1)
@@ -61,12 +75,16 @@ describe('/api/stars', () => {
 
       expect(response.status).toBe(200)
       expect(data).toEqual({
-        stars: mockStars,
+        success: true,
+        message: 'Stars retrieved successfully',
+        data: mockStars,
         pagination: {
           page: 1,
           limit: 50,
-          total: 1,
-          pages: 1,
+          totalCount: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
         },
       })
     })
@@ -74,7 +92,11 @@ describe('/api/stars', () => {
     it('should handle pagination correctly', async () => {
       mockStar.find.mockReturnValue({
         sort: jest.fn().mockReturnValue({
-          limit: jest.fn().mockResolvedValue([]),
+          limit: jest.fn().mockReturnValue({
+            skip: jest.fn().mockReturnValue({
+              lean: jest.fn().mockResolvedValue([]),
+            }),
+          }),
         }),
       } as any)
       mockStar.countDocuments.mockResolvedValue(100)
@@ -89,8 +111,10 @@ describe('/api/stars', () => {
       expect(data.pagination).toEqual({
         page: 2,
         limit: 10,
-        total: 100,
-        pages: 10,
+        totalCount: 100,
+        totalPages: 10,
+        hasNextPage: true,
+        hasPreviousPage: true,
       })
     })
 
@@ -106,7 +130,7 @@ describe('/api/stars', () => {
       const data = await response.json()
 
       expect(response.status).toBe(401)
-      expect(data.error).toBe('Unauthorized')
+      expect(data.error).toBe('Authentication required')
     })
   })
 
@@ -121,10 +145,11 @@ describe('/api/stars', () => {
         context: { title: 'Test Message' },
         category: 'message',
         priority: 'medium',
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       }
 
-      mockStar.create.mockResolvedValue(mockStar)
+      // Mock findOne to return null (no duplicate found)
+      mockStar.findOne = jest.fn().mockResolvedValue(null)
 
       const requestBody = {
         userId: 'test-user',
@@ -145,9 +170,18 @@ describe('/api/stars', () => {
       const data = await response.json()
 
       expect(response.status).toBe(201)
-      expect(data.success).toBe(true)
-      expect(data.star).toEqual(mockStar)
-      expect(mockStar.create).toHaveBeenCalledWith(
+      expect(data.star).toBeDefined()
+      expect(data.star).toEqual(expect.objectContaining({
+        userId: 'test-user',
+        itemType: 'message',
+        itemId: 'msg1',
+        context: { title: 'Test Message' },
+        priority: 'medium',
+        tags: []
+      }))
+      expect(data.star.starId).toMatch(/^star_\d+_[a-z0-9]+$/)
+      // Check that the constructor was called with the correct data
+      expect(Star).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: 'test-user',
           itemType: 'message',
@@ -175,11 +209,18 @@ describe('/api/stars', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toContain('required')
+      expect(data.error).toBe('Request validation failed')
     })
 
     it('should handle database errors gracefully', async () => {
-      mockStar.create.mockRejectedValue(new Error('Database error'))
+      // Mock findOne to return null (no duplicate found)
+      mockStar.findOne = jest.fn().mockResolvedValue(null)
+
+      // Reset Star mock and make it return an object with a failing save method
+      ;(Star as jest.MockedFunction<any>).mockImplementation((data) => ({
+        ...data,
+        save: jest.fn().mockRejectedValue(new Error('Database error')),
+      }))
 
       const requestBody = {
         userId: 'test-user',
@@ -200,7 +241,7 @@ describe('/api/stars', () => {
       const data = await response.json()
 
       expect(response.status).toBe(500)
-      expect(data.error).toBe('Failed to create star')
+      expect(data.error).toBe('Internal server error')
     })
   })
 })

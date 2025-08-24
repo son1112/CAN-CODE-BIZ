@@ -36,21 +36,21 @@ export interface SessionDocument extends Document {
   // Core identification
   sessionId: string;
   name: string;
-  
+
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
   lastAccessedAt: Date;
-  
+
   // Content
   messages: SessionMessage[];
   iterations: SessionIteration[];
-  
+
   // Metadata
   tags: string[];
   isActive: boolean;
   isArchived: boolean;
-  
+
   // User context
   createdBy: string;
   lastAgentUsed?: string;
@@ -64,7 +64,7 @@ export interface SessionDocument extends Document {
     prompt: string;
     generatedAt: Date;
   };
-  
+
   // CLI compatibility
   iterationCount: number;
 }
@@ -105,19 +105,19 @@ const SessionSchema = new Schema<SessionDocument>(
   {
     sessionId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
-    
+
     // Interactive chat data
     messages: [SessionMessageSchema],
-    
+
     // CLI-style iterations
     iterations: [SessionIterationSchema],
     iterationCount: { type: Number, default: 0 },
-    
+
     // Metadata
     tags: [String],
     isActive: { type: Boolean, default: true },
     isArchived: { type: Boolean, default: false },
-    
+
     // User context
     createdBy: { type: String, required: true },
     lastAgentUsed: String,
@@ -131,7 +131,7 @@ const SessionSchema = new Schema<SessionDocument>(
       prompt: String,
       generatedAt: Date,
     },
-    
+
     // Access tracking
     lastAccessedAt: { type: Date, default: Date.now },
   },
@@ -167,5 +167,5 @@ SessionSchema.pre('save', function() {
   }
 });
 
-export default mongoose.models.Session || 
+export default mongoose.models.Session ||
   mongoose.model<SessionDocument>('Session', SessionSchema);

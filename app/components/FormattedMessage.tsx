@@ -36,12 +36,12 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       // First handle inline code (highest priority)
       const codeRegex = /(`[^`]+`)/g;
       const parts = text.split(codeRegex);
-      
+
       return parts.map((part, i) => {
         // Handle inline code
         if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
           return (
-            <code 
+            <code
               key={i}
               className="px-2 py-1 rounded text-sm font-mono"
               style={{
@@ -54,7 +54,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
             </code>
           );
         }
-        
+
         // Process bold and italic for non-code parts
         return processTextFormatting(part, i);
       });
@@ -64,7 +64,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       // Handle bold text (**text**)
       const boldRegex = /(\*\*[^*]+\*\*)/g;
       const boldParts = text.split(boldRegex);
-      
+
       return boldParts.map((boldPart, j) => {
         if (boldPart.startsWith('**') && boldPart.endsWith('**') && boldPart.length > 4) {
           const innerText = boldPart.slice(2, -2);
@@ -75,7 +75,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
             </strong>
           );
         }
-        
+
         // Process italic for non-bold parts
         return processItalicFormatting(boldPart, `${keyPrefix}-${j}`);
       });
@@ -85,7 +85,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       // Handle italic text (*text*) - but not **text**
       const italicRegex = /(\*[^*]+\*)/g;
       const italicParts = text.split(italicRegex);
-      
+
       return italicParts.map((italicPart, k) => {
         if (italicPart.startsWith('*') && italicPart.endsWith('*') && italicPart.length > 2 && !italicPart.startsWith('**')) {
           return (
@@ -94,7 +94,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
             </em>
           );
         }
-        
+
         return italicPart;
       });
     };
@@ -103,7 +103,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       if (codeBlockLines.length > 0) {
         elements.push(
           <div key={`code-${elements.length}`} className="mb-4">
-            <div 
+            <div
               className="rounded-lg overflow-hidden border"
               style={{
                 backgroundColor: expandedView ? 'var(--bg-tertiary)' : '#1f2937',
@@ -111,7 +111,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
               }}
             >
               {codeLanguage && (
-                <div 
+                <div
                   className="px-4 py-2 text-xs font-medium border-b"
                   style={{
                     backgroundColor: expandedView ? 'var(--bg-quaternary)' : '#111827',
@@ -122,7 +122,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
                   {codeLanguage}
                 </div>
               )}
-              <pre 
+              <pre
                 className="p-4 overflow-x-auto text-sm"
                 style={{
                   color: expandedView ? 'var(--text-primary)' : '#f9fafb',
@@ -141,7 +141,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
 
     lines.forEach((line, index) => {
       const trimmedLine = line.trim();
-      
+
       // Handle code block markers
       if (trimmedLine.startsWith('```')) {
         if (inCodeBlock) {
@@ -157,13 +157,13 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         }
         return;
       }
-      
+
       // If we're in a code block, collect the lines
       if (inCodeBlock) {
         codeBlockLines.push(line); // Keep original line with indentation
         return;
       }
-      
+
       // Skip empty lines (only when not in code block)
       if (!trimmedLine) {
         // Add spacing for empty lines between sections
@@ -178,10 +178,10 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       if (mainNumberMatch) {
         flushList();
         const [, number, title] = mainNumberMatch;
-        
+
         // Check if this is a simple number without much content (like just "1", "2", "3")
         const isSimpleNumber = title.length < 5;
-        
+
         if (isSimpleNumber) {
           // Handle short numbered items as list items
           currentListItems.push(
@@ -189,7 +189,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
               <span className="inline-flex items-center justify-center w-6 h-6 bg-gradient-to-br from-yellow-500 to-amber-500 text-black rounded-full text-sm font-bold flex-shrink-0 shadow-sm">
                 {number}
               </span>
-              <span 
+              <span
                 className="leading-relaxed"
                 style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
               >
@@ -201,7 +201,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
           // Handle longer numbered items as section headers
           elements.push(
             <div key={`section-${index}`} className="mb-4 mt-6">
-              <h3 
+              <h3
                 className="text-lg font-bold mb-3 flex items-start gap-3"
                 style={{ color: expandedView ? 'var(--accent-primary)' : '#fef3c7' }}
               >
@@ -223,7 +223,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         const [, letter, title] = subLetterMatch;
         elements.push(
           <div key={`subletter-${index}`} className="mb-3 ml-8">
-            <h4 
+            <h4
               className="text-base font-semibold mb-2 flex items-start gap-3"
               style={{ color: expandedView ? 'var(--accent-secondary)' : '#fcd34d' }}
             >
@@ -244,7 +244,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         currentListItems.push(
           <li key={`bullet-${index}`} className="flex items-start gap-3">
             <span className="inline-flex items-center justify-center w-2 h-2 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-full mt-2.5 flex-shrink-0"></span>
-            <span 
+            <span
               className="leading-relaxed"
               style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
             >
@@ -262,7 +262,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         currentListItems.push(
           <li key={`special-bullet-${index}`} className="flex items-start gap-3">
             <span className="text-yellow-400 mt-1 flex-shrink-0 font-bold">{bullet}</span>
-            <span 
+            <span
               className="leading-relaxed"
               style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
             >
@@ -279,11 +279,11 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         flushList();
         const [, hashes, title] = markdownHeaderMatch;
         const level = hashes.length;
-        
+
         // Choose styling based on header level
         let className: string;
         let titleSize: string;
-        
+
         switch (level) {
           case 2:
             className = "text-xl font-bold mb-4 mt-6";
@@ -297,10 +297,10 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
             className = "text-base font-bold mb-2 mt-4";
             titleSize = "text-base";
         }
-        
+
         elements.push(
           <div key={`md-header-${index}`} className={`${className} border-l-4 border-yellow-500 pl-4 bg-gradient-to-r from-yellow-500/10 to-transparent py-2 rounded-r-md`}>
-            <h2 
+            <h2
               className={titleSize}
               style={{ color: expandedView ? 'var(--accent-primary)' : '#fcd34d' }}
             >
@@ -317,8 +317,8 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         flushList();
         const [, title] = headerMatch;
         elements.push(
-          <h4 
-            key={`header-${index}`} 
+          <h4
+            key={`header-${index}`}
             className="text-base font-bold mb-2 mt-4 border-l-4 border-gradient-to-b border-yellow-500 pl-4 bg-gradient-to-r from-yellow-500/10 to-transparent py-2 rounded-r-md"
             style={{ color: expandedView ? 'var(--accent-secondary)' : '#fcd34d' }}
           >
@@ -335,13 +335,13 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         const [, keyword, description] = markdownKeywordMatch;
         elements.push(
           <div key={`md-keyword-${index}`} className="mb-3 bg-gradient-to-r from-blue-500/5 to-transparent p-3 rounded-md border-l-2 border-blue-500/30">
-            <span 
+            <span
               className="font-bold"
               style={{ color: expandedView ? 'var(--accent-primary)' : '#93c5fd' }}
             >
               {keyword}:
             </span>
-            <span 
+            <span
               className="ml-2 leading-relaxed"
               style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
             >
@@ -359,13 +359,13 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
         const [, keyword, description] = boldKeywordMatch;
         elements.push(
           <div key={`keyword-${index}`} className="mb-3 bg-gradient-to-r from-yellow-500/5 to-transparent p-3 rounded-md border-l-2 border-yellow-500/30">
-            <span 
+            <span
               className="font-bold"
               style={{ color: expandedView ? 'var(--accent-primary)' : '#fcd34d' }}
             >
               {processInlineFormatting(keyword)}:
             </span>
-            <span 
+            <span
               className="ml-2 leading-relaxed"
               style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
             >
@@ -380,8 +380,8 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
       if (line.startsWith('  ') || line.startsWith('\t')) {
         flushList();
         elements.push(
-          <div 
-            key={`indent-${index}`} 
+          <div
+            key={`indent-${index}`}
             className="ml-8 mb-2 bg-gray-800/30 p-2 rounded border-l-2 border-gray-600"
             style={{ color: expandedView ? 'var(--text-secondary)' : '#e5e7eb' }}
           >
@@ -393,13 +393,13 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
 
       // Regular paragraph text
       flushList();
-      
+
       const isShortLine = trimmedLine.length < 200;
       const startsWithCapital = /^[A-Z]/.test(trimmedLine);
-      
+
       elements.push(
-        <p 
-          key={`para-${index}`} 
+        <p
+          key={`para-${index}`}
           className={`mb-3 leading-relaxed ${isShortLine && startsWithCapital ? 'font-medium' : ''}`}
           style={{ color: expandedView ? 'var(--text-primary)' : '#f3f4f6' }}
         >
@@ -414,14 +414,14 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, textSizeCl
 
       return <div className="space-y-1">{elements}</div>;
     };
-    
+
     return formatMessage(content);
   }, [content, expandedView]);
 
   return (
-    <div 
+    <div
       className={`${textSizeClass} leading-relaxed font-medium formatted-message`}
-      style={{ 
+      style={{
         color: expandedView ? 'var(--text-primary)' : 'white'
       }}
     >

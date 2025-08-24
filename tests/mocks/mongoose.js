@@ -11,33 +11,33 @@ class MockSchema {
     this.statics = {};
     this.virtuals = {};
   }
-  
+
   index(fields, options = {}) {
     this.indexes.push({ fields, options });
     return this;
   }
-  
+
   method(name, fn) {
     this.methods[name] = fn;
     return this;
   }
-  
+
   static(name, fn) {
     this.statics[name] = fn;
     return this;
   }
-  
+
   virtual(name) {
     return {
       get: jest.fn(),
       set: jest.fn()
     };
   }
-  
+
   pre(hook, fn) {
     return this;
   }
-  
+
   post(hook, fn) {
     return this;
   }
@@ -50,7 +50,7 @@ class MockDocument {
     this._id = this._id || new ObjectId();
     this.isNew = true;
   }
-  
+
   save = jest.fn(() => Promise.resolve(this));
   remove = jest.fn(() => Promise.resolve(this));
   deleteOne = jest.fn(() => Promise.resolve({ deletedCount: 1 }));
@@ -66,7 +66,7 @@ class MockModel extends MockDocument {
   constructor(data) {
     super(data);
   }
-  
+
   static find = jest.fn(() => ({
     exec: () => Promise.resolve([]),
     sort: jest.fn().mockReturnThis(),
@@ -77,7 +77,7 @@ class MockModel extends MockDocument {
     lean: jest.fn().mockReturnThis(),
     then: (resolve) => resolve([])
   }));
-  
+
   static findOne = jest.fn(() => ({
     exec: () => Promise.resolve(null),
     populate: jest.fn().mockReturnThis(),
@@ -85,24 +85,24 @@ class MockModel extends MockDocument {
     lean: jest.fn().mockReturnThis(),
     then: (resolve) => resolve(null)
   }));
-  
+
   static findById = jest.fn(() => ({
     exec: () => Promise.resolve(null),
     populate: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
     then: (resolve) => resolve(null)
   }));
-  
+
   static findOneAndUpdate = jest.fn(() => ({
     exec: () => Promise.resolve(null),
     then: (resolve) => resolve(null)
   }));
-  
+
   static findOneAndDelete = jest.fn(() => ({
     exec: () => Promise.resolve(null),
     then: (resolve) => resolve(null)
   }));
-  
+
   static create = jest.fn(() => Promise.resolve(new MockModel()));
   static insertMany = jest.fn(() => Promise.resolve([]));
   static updateOne = jest.fn(() => Promise.resolve({ modifiedCount: 1 }));
@@ -133,36 +133,36 @@ const mockMongoose = {
   Document: MockDocument,
   Model: MockModel,
   connection: mockConnection,
-  
+
   // Models registry
   models: {},
-  
+
   // Connection methods
   connect: jest.fn(() => Promise.resolve(mockConnection)),
   disconnect: jest.fn(() => Promise.resolve()),
-  
+
   // Model creation
   model: jest.fn((name, schema) => {
     if (!schema) {
       // If no schema provided, return existing model
       return mockMongoose.models[name];
     }
-    
+
     const ModelClass = class extends MockModel {};
     ModelClass.modelName = name;
     ModelClass.schema = schema;
-    
+
     // Register the model
     mockMongoose.models[name] = ModelClass;
-    
+
     return ModelClass;
   }),
-  
+
   // Types
   Types: {
     ObjectId: ObjectId
   },
-  
+
   // Schema types
   SchemaTypes: {
     String: String,

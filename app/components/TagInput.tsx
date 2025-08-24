@@ -37,7 +37,7 @@ export default function TagInput({
   // Filter suggestions based on input
   useEffect(() => {
     if (inputValue.trim()) {
-      const filtered = availableTags.filter(tag => 
+      const filtered = availableTags.filter(tag =>
         tag.name.toLowerCase().includes(inputValue.toLowerCase()) &&
         !tags.includes(tag.name)
       ).slice(0, 5);
@@ -120,12 +120,12 @@ export default function TagInput({
         {/* Input */}
         {tags.length < maxTags && (
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Plus 
-              style={{ 
-                width: '14px', 
+            <Plus
+              style={{
+                width: '14px',
                 height: '14px',
-                color: 'var(--text-tertiary)' 
-              }} 
+                color: 'var(--text-tertiary)'
+              }}
             />
             <input
               ref={inputRef}

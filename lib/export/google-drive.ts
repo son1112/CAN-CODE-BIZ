@@ -28,7 +28,7 @@ export class GoogleDriveService {
   constructor(accessToken: string) {
     const auth = new google.auth.OAuth2();
     auth.setCredentials({ access_token: accessToken });
-    
+
     this.drive = google.drive({ version: 'v3', auth });
   }
 
@@ -97,7 +97,7 @@ export class GoogleDriveService {
   async getOrCreateExportsFolder(): Promise<string> {
     try {
       const folderName = 'Rubber Ducky Exports';
-      
+
       // Search for existing folder
       const searchResponse = await this.drive.files.list({
         q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
@@ -181,6 +181,6 @@ export function generateExportFileName(
   const timeStr = timestamp.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
   const sanitizedSessionName = sessionName.replace(/[^a-zA-Z0-9-_]/g, '_');
   const shortMessageId = messageId.slice(-8);
-  
+
   return `RubberDucky_${sanitizedSessionName}_${shortMessageId}_${dateStr}_${timeStr}.${format}`;
 }

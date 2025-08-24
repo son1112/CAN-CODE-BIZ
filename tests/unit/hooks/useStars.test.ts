@@ -12,7 +12,7 @@ const mockStarData = {
   userId: 'test-user',
   itemType: 'message' as const,
   itemId: 'msg1',
-  context: { 
+  context: {
     title: 'Test Message',
     description: 'A test message for starring',
     messageContent: 'Hello world'

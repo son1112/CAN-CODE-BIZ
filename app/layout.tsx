@@ -12,6 +12,7 @@ import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { ContentSafetyProvider } from "@/contexts/ContentSafetyContext";
 import { SessionAgentSync } from "@/components/SessionAgentSync";
 import "./globals.css";
+import "./styles/mobile-touch.css";
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -39,35 +40,35 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
-        
+
         {/* Preload critical resources for better LCP */}
         <link rel="preload" href="/rubber-duck-avatar.png" as="image" type="image/png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        
+
         {/* DNS prefetch for external services */}
         <link rel="dns-prefetch" href="//api.anthropic.com" />
         <link rel="dns-prefetch" href="//api.assemblyai.com" />
         <link rel="dns-prefetch" href="//apis.google.com" />
-        
+
         <style dangerouslySetInnerHTML={{
           __html: `
             :root {
               --ui-font-size: 14px;
               --ui-line-height: 1.2;
             }
-            html { 
-              font-size: var(--ui-font-size) !important; 
-              -webkit-text-size-adjust: none !important; 
-              -moz-text-size-adjust: none !important; 
+            html {
+              font-size: var(--ui-font-size) !important;
+              -webkit-text-size-adjust: none !important;
+              -moz-text-size-adjust: none !important;
               text-size-adjust: none !important;
               zoom: 1 !important;
               transform: none !important;
             }
-            body { 
-              font-size: var(--ui-font-size) !important; 
-              -webkit-text-size-adjust: none !important; 
-              -moz-text-size-adjust: none !important; 
+            body {
+              font-size: var(--ui-font-size) !important;
+              -webkit-text-size-adjust: none !important;
+              -moz-text-size-adjust: none !important;
               text-size-adjust: none !important;
               zoom: 1 !important;
               transform: none !important;

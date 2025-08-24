@@ -10,7 +10,7 @@ export function useAuth() {
   // After migration, always use the real user ID for data consistency
   // Demo mode still works but accesses the same data
   const userId = isDemoMode ? '68a33c99df2098d5e02a84e3' : session?.user?.id || null;
-  
+
   return {
     userId,
     isAuthenticated: !!userId,

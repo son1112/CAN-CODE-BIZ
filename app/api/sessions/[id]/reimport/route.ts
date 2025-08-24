@@ -41,12 +41,12 @@ function extractTextFromParsedObject(obj: unknown): string {
 
   // Try to extract meaningful text from any string field longer than 10 chars
   const keys = Object.keys(objectData);
-  const meaningfulKeys = keys.filter(key => 
-    typeof objectData[key] === 'string' && 
-    (objectData[key] as string).length > 10 && 
+  const meaningfulKeys = keys.filter(key =>
+    typeof objectData[key] === 'string' &&
+    (objectData[key] as string).length > 10 &&
     !['id', 'timestamp', 'type', 'status', 'success', 'metadata', 'modelName', 'modelKey', 'prompt'].includes(key)
   );
-  
+
   if (meaningfulKeys.length > 0) {
     return objectData[meaningfulKeys[0]] as string;
   }
@@ -82,7 +82,7 @@ export async function POST(
   try {
     const { id } = await params;
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -116,17 +116,17 @@ export async function POST(
     }
 
     const client = new MongoClient(MONGODB_URI);
-    
+
     try {
       await client.connect();
-      
+
       // Access the CLI database and sessions collection
       const cliDb = client.db('rubber-ducky');
       const cliSessionsCollection = cliDb.collection('sessions');
-      
+
       // Find the original CLI session by name
-      const originalCliSession = await cliSessionsCollection.findOne({ 
-        name: existingSession.name 
+      const originalCliSession = await cliSessionsCollection.findOne({
+        name: existingSession.name
       });
 
       if (!originalCliSession) {
@@ -172,7 +172,7 @@ export async function POST(
         // Add assistant messages for each agent output with enhanced parsing
         for (const [agentName, output] of Object.entries(iteration.agentOutputs || {})) {
           let outputStr = '';
-          
+
           if (typeof output === 'string') {
             // Handle string output - check if it's JSON
             if (output.trim().startsWith('{') && output.trim().endsWith('}')) {
@@ -190,7 +190,7 @@ export async function POST(
           } else {
             outputStr = String(output || '');
           }
-          
+
           // Clean up the output string
           if (outputStr && outputStr.trim()) {
             // Remove excessive newlines and clean up formatting
@@ -198,14 +198,14 @@ export async function POST(
               .replace(/\n{3,}/g, '\n\n') // Replace 3+ newlines with 2
               .replace(/^\s*\n+/, '') // Remove leading newlines
               .replace(/\n+\s*$/, ''); // Remove trailing newlines
-            
+
             // Final cleanup for any remaining JSON artifacts
             cleanOutput = cleanOutput
               .replace(/^["']|["']$/g, '') // Remove surrounding quotes
               .replace(/\\n/g, '\n') // Convert escaped newlines
               .replace(/\\"/g, '"') // Convert escaped quotes
               .replace(/\\\\/g, '\\'); // Convert escaped backslashes
-            
+
             enhancedMessages.push({
               id: uuidv4(),
               role: 'assistant',
@@ -262,7 +262,7 @@ export async function POST(
   } catch (error) {
     console.error('Session re-import error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to re-import session',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

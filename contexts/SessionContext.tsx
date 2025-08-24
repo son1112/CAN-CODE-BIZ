@@ -7,7 +7,7 @@ export interface SessionContextType {
   // Current session state
   currentSession: SessionDocument | null;
   currentSessionId: string | null;
-  
+
   // Session management
   createSession: (name?: string, tags?: string[]) => Promise<SessionDocument>;
   loadSession: (sessionId: string) => Promise<SessionDocument | null>;
@@ -17,29 +17,29 @@ export interface SessionContextType {
   deleteSession: (sessionId: string, permanent?: boolean) => Promise<boolean>;
   reimportSession: (sessionId: string) => Promise<boolean>;
   clearCurrentSession: () => void;
-  
+
   // Message management
   addMessage: (message: Omit<SessionMessage, 'id' | 'timestamp'>) => Promise<boolean>;
   updateMessageTags: (messageId: string, tags: string[]) => Promise<boolean>;
   pinMessage: (messageId: string, isPinned: boolean) => Promise<boolean>;
   getPinnedMessages: (sessionId: string) => Promise<SessionMessage[]>;
   messages: SessionMessage[];
-  
+
   // Session list management
   sessions: SessionDocument[];
   loadSessions: (page?: number, search?: string, tags?: string[]) => Promise<void>;
   refreshSessions: () => Promise<void>;
-  
+
   // UI state
   isLoading: boolean;
   isLoadingSession: boolean;
   isProcessingMessage: boolean;
   error: string | null;
-  
+
   // Auto-session management
   autoCreateSession: boolean;
   setAutoCreateSession: (enabled: boolean) => void;
-  
+
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -58,9 +58,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // Auto-create session when first message is sent if none exists
   const ensureSession = async (): Promise<string | null> => {
     if (currentSessionId) return currentSessionId;
-    
+
     if (!autoCreateSession) return null;
-    
+
     try {
       const session = await createSession();
       return session.sessionId;
@@ -73,7 +73,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const createSession = async (name?: string, tags: string[] = []): Promise<SessionDocument> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch('/api/sessions', {
         method: 'POST',
@@ -89,7 +89,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { session } = await response.json();
-      
+
       // Load the full session data
       const fullSession = await loadSession(session.sessionId);
       if (fullSession) {
@@ -99,7 +99,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         await refreshSessions();
         return fullSession;
       }
-      
+
       throw new Error('Failed to load created session');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create session';
@@ -113,10 +113,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const loadSession = async (sessionId: string): Promise<SessionDocument | null> => {
     setIsLoadingSession(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/sessions/${sessionId}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           setError('Session not found');
@@ -129,8 +129,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setCurrentSession(session);
       setCurrentSessionId(session.sessionId);
       setMessages(session.messages || []);
-      
-      
+
+
       return session;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load session';
@@ -144,7 +144,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const updateSession = async (sessionId: string, updates: Partial<SessionDocument>): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/sessions/${sessionId}`, {
         method: 'PUT',
@@ -160,12 +160,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { session } = await response.json();
-      
+
       // Update current session if it's the one being updated
       if (currentSessionId === sessionId) {
         setCurrentSession(session);
       }
-      
+
       await refreshSessions();
       return true;
     } catch (err) {
@@ -180,7 +180,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const renameSession = async (sessionId: string, name: string): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/sessions/${sessionId}`, {
         method: 'PUT',
@@ -196,7 +196,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { session: updatedSession } = await response.json();
-      
+
       // Update current session if it's the one being renamed
       if (currentSessionId === sessionId && currentSession) {
         setCurrentSession({
@@ -205,7 +205,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           updatedAt: updatedSession.updatedAt
         } as SessionDocument);
       }
-      
+
       await refreshSessions();
       return true;
     } catch (err) {
@@ -220,7 +220,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const setPrimaryAgent = async (sessionId: string, agentId: string | null): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/sessions/${sessionId}/primary-agent`, {
         method: 'PUT',
@@ -236,14 +236,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { session } = await response.json();
-      
+
       // Update current session if it's the one being updated
       if (currentSessionId === sessionId) {
         setCurrentSession(session);
         // Also update messages to ensure consistency
         setMessages(session.messages || []);
       }
-      
+
       await refreshSessions();
       return true;
     } catch (err) {
@@ -258,7 +258,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const deleteSession = async (sessionId: string, permanent = false): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/sessions/${sessionId}?permanent=${permanent}`, {
         method: 'DELETE',
@@ -275,7 +275,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setCurrentSessionId(null);
         setMessages([]);
       }
-      
+
       await refreshSessions();
       return true;
     } catch (err) {
@@ -290,7 +290,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const reimportSession = async (sessionId: string): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/sessions/${sessionId}/reimport`, {
         method: 'POST',
@@ -305,13 +305,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
 
       await response.json();
-      
+
       // Update current session if it's the one being re-imported
       if (currentSessionId === sessionId && currentSession) {
         // Reload the session to get the updated messages
         await loadSession(sessionId);
       }
-      
+
       await refreshSessions();
       return true;
     } catch (err) {
@@ -340,7 +340,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
     setIsProcessingMessage(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/sessions/${sessionId}/messages`, {
         method: 'POST',
@@ -356,10 +356,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { message: newMessage } = await response.json();
-      
+
       // Update local messages array
       setMessages(prev => [...prev, newMessage]);
-      
+
       // Update current session's last accessed time
       if (currentSession) {
         setCurrentSession({
@@ -368,7 +368,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           messages: [...messages, newMessage]
         } as SessionDocument);
       }
-      
+
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add message';
@@ -381,7 +381,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const updateMessageTags = async (messageId: string, tags: string[]): Promise<boolean> => {
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/sessions/messages/${messageId}/tags`, {
         method: 'PUT',
@@ -390,20 +390,20 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         },
         body: JSON.stringify({ tags }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to update message tags');
       }
-      
+
       // Update local messages array
-      setMessages(prev => prev.map(msg => 
+      setMessages(prev => prev.map(msg =>
         msg.id === messageId ? { ...msg, tags } : msg
       ));
-      
+
       // Update current session messages if available
       if (currentSession) {
-        const updatedMessages = currentSession.messages.map(msg => 
+        const updatedMessages = currentSession.messages.map(msg =>
           msg.id === messageId ? { ...msg, tags } : msg
         );
         setCurrentSession({
@@ -411,7 +411,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           messages: updatedMessages
         } as SessionDocument);
       }
-      
+
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update message tags';
@@ -422,7 +422,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const pinMessage = async (messageId: string, isPinned: boolean): Promise<boolean> => {
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/sessions/messages/${messageId}/pin`, {
         method: 'PUT',
@@ -431,22 +431,22 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         },
         body: JSON.stringify({ isPinned }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to update message pin status');
       }
-      
+
       const { message: updatedMessage } = await response.json();
-      
+
       // Update local messages array
-      setMessages(prev => prev.map(msg => 
+      setMessages(prev => prev.map(msg =>
         msg.id === messageId ? updatedMessage : msg
       ));
-      
+
       // Update current session messages if available
       if (currentSession) {
-        const updatedMessages = currentSession.messages.map(msg => 
+        const updatedMessages = currentSession.messages.map(msg =>
           msg.id === messageId ? updatedMessage : msg
         );
         setCurrentSession({
@@ -454,7 +454,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           messages: updatedMessages
         } as SessionDocument);
       }
-      
+
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update message pin status';
@@ -465,15 +465,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const getPinnedMessages = async (sessionId: string): Promise<SessionMessage[]> => {
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/sessions/${sessionId}/pinned-messages`);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch pinned messages');
       }
-      
+
       const { pinnedMessages } = await response.json();
       return pinnedMessages || [];
     } catch (err) {
@@ -486,7 +486,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const loadSessions = useCallback(async (page = 1, search = '', tags: string[] = []): Promise<void> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const searchParams = new URLSearchParams({
         page: page.toString(),
@@ -496,7 +496,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       });
 
       const response = await fetch(`/api/sessions?${searchParams}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to load sessions');
       }
@@ -520,13 +520,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     // Check URL parameters first
     const urlParams = new URLSearchParams(window.location.search);
     const urlSessionId = urlParams.get('session');
-    
+
     const sessionIdToLoad = urlSessionId || localStorage.getItem('rubber-ducky-current-session');
-    
+
     if (sessionIdToLoad) {
       const source = urlSessionId ? 'URL parameter' : 'localStorage';
       console.log(`Restoring session from ${source}:`, sessionIdToLoad);
-      
+
       loadSession(sessionIdToLoad).then((session) => {
         if (session) {
           console.log('Successfully restored session:', session.name);
@@ -569,7 +569,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     // Current session state
     currentSession,
     currentSessionId,
-    
+
     // Session management
     createSession,
     loadSession,
@@ -579,25 +579,25 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     deleteSession,
     reimportSession,
     clearCurrentSession,
-    
+
     // Message management
     addMessage,
     updateMessageTags,
     pinMessage,
     getPinnedMessages,
     messages,
-    
+
     // Session list management
     sessions,
     loadSessions,
     refreshSessions,
-    
+
     // UI state
     isLoading,
     isLoadingSession,
     isProcessingMessage,
     error,
-    
+
     // Auto-session management
     autoCreateSession,
     setAutoCreateSession,

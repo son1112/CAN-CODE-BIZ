@@ -94,21 +94,21 @@ global.TextDecoder = class {
   }
 }
 
-// Mock TextEncoder for Node.js environment  
+// Mock TextEncoder for Node.js environment
 global.TextEncoder = class {
   encode(input) {
     return new Uint8Array(input.split('').map(char => char.charCodeAt(0)))
   }
 }
 
-// Mock Web APIs for Next.js API routes  
+// Mock Web APIs for Next.js API routes
 global.Request = class Request {
   constructor(input, init = {}) {
     const url = typeof input === 'string' ? input : input.url
     this.method = init.method || 'GET'
     this.headers = new Map(Object.entries(init.headers || {}))
     this.body = init.body || null
-    
+
     // Define url as a getter to match Web API spec
     Object.defineProperty(this, 'url', {
       get: () => url,
@@ -116,7 +116,7 @@ global.Request = class Request {
       configurable: false
     })
   }
-  
+
   async json() {
     return JSON.parse(this.body || '{}')
   }
@@ -129,7 +129,7 @@ global.Response = class Response {
     this.statusText = init.statusText || 'OK'
     this.headers = new Map(Object.entries(init.headers || {}))
   }
-  
+
   static json(data, init = {}) {
     return new Response(JSON.stringify(data), {
       ...init,
@@ -139,7 +139,7 @@ global.Response = class Response {
       }
     })
   }
-  
+
   async json() {
     return JSON.parse(this.body)
   }
@@ -160,7 +160,7 @@ beforeAll(() => {
     }
     originalError.call(console, ...args)
   }
-  
+
   console.warn = (...args) => {
     if (
       typeof args[0] === 'string' &&

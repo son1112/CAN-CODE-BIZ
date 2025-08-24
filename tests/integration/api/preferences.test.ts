@@ -18,10 +18,10 @@ jest.mock('@/models/UserPreferences', () => {
     ...data,
     save: jest.fn().mockResolvedValue(data),
   }));
-  
+
   mockConstructor.findOne = jest.fn();
   mockConstructor.findOneAndUpdate = jest.fn();
-  
+
   return mockConstructor;
 });
 
@@ -31,7 +31,7 @@ import { requireAuth } from '@/lib/middleware/auth';
 describe('/api/preferences', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Re-initialize mock functions
     (UserPreferences as any).findOne = jest.fn();
     (UserPreferences as any).findOneAndUpdate = jest.fn();
@@ -67,7 +67,7 @@ describe('/api/preferences', () => {
       (UserPreferences as any).findOne.mockResolvedValue(mockPreferences);
 
       const request = new NextRequest('http://localhost:3000/api/preferences');
-      
+
       const response = await GET(request);
       const data = await response.json();
 
@@ -105,7 +105,7 @@ describe('/api/preferences', () => {
       };
 
       const request = new NextRequest('http://localhost:3000/api/preferences');
-      
+
       const response = await GET(request);
       const data = await response.json();
 
@@ -120,7 +120,7 @@ describe('/api/preferences', () => {
       mockRequireAuth.mockRejectedValueOnce(new Error('Authentication required'));
 
       const request = new NextRequest('http://localhost:3000/api/preferences');
-      
+
       const response = await GET(request);
       const data = await response.json();
 
@@ -132,7 +132,7 @@ describe('/api/preferences', () => {
       (UserPreferences as any).findOne.mockRejectedValue(new Error('Database connection failed'));
 
       const request = new NextRequest('http://localhost:3000/api/preferences');
-      
+
       const response = await GET(request);
       const data = await response.json();
 

@@ -168,7 +168,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     // Check if user has completed onboarding
     const completed = localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true';
     setHasCompletedOnboarding(completed);
-    
+
     // Auto-start onboarding for new users
     if (!completed) {
       // Small delay to ensure DOM is ready

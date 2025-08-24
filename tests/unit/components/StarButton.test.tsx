@@ -28,7 +28,7 @@ describe('StarButton', () => {
 
   it('renders correctly with default props', () => {
     render(<StarButton {...defaultProps} />)
-    
+
     const button = screen.getByRole('button')
     expect(button).toBeInTheDocument()
     expect(button).toHaveAttribute('title', 'Star this message')
@@ -44,7 +44,7 @@ describe('StarButton', () => {
     })
 
     render(<StarButton {...defaultProps} />)
-    
+
     const button = screen.getByRole('button')
     expect(button).toHaveAttribute('title', 'Unstar this message')
   })
@@ -60,7 +60,7 @@ describe('StarButton', () => {
     })
 
     render(<StarButton {...defaultProps} />)
-    
+
     const button = screen.getByRole('button')
     fireEvent.click(button)
 
@@ -87,7 +87,7 @@ describe('StarButton', () => {
     })
 
     render(<StarButton {...defaultProps} />)
-    
+
     const button = screen.getByRole('button')
     fireEvent.click(button)
 
@@ -106,7 +106,7 @@ describe('StarButton', () => {
     })
 
     render(<StarButton {...defaultProps} />)
-    
+
     const button = screen.getByRole('button')
     expect(button).toBeDisabled()
     expect(button).toHaveClass('opacity-50', 'cursor-not-allowed')
@@ -117,7 +117,7 @@ describe('StarButton', () => {
     const mockPreventDefault = jest.fn()
 
     render(<StarButton {...defaultProps} />)
-    
+
     const button = screen.getByRole('button')
     fireEvent.click(button, {
       stopPropagation: mockStopPropagation,
@@ -132,14 +132,14 @@ describe('StarButton', () => {
 
   it('renders with custom size', () => {
     render(<StarButton {...defaultProps} size="lg" />)
-    
+
     const button = screen.getByRole('button')
     expect(button).toBeInTheDocument()
   })
 
   it('shows label when requested', () => {
     render(<StarButton {...defaultProps} showLabel={true} />)
-    
+
     expect(screen.getByText('Star')).toBeInTheDocument()
   })
 
@@ -157,7 +157,7 @@ describe('StarButton', () => {
     render(
       <StarButton {...defaultProps} onStarChange={mockOnStarChange} />
     )
-    
+
     const button = screen.getByRole('button')
     fireEvent.click(button)
 

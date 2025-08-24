@@ -57,7 +57,7 @@ export function useStreamingChat(): StreamingChatHook {
       }
 
       // Find the user message that was just added
-      const recentUserMessages = messages.filter(msg => 
+      const recentUserMessages = messages.filter(msg =>
         msg.role === 'user' && msg.content === content.trim()
       );
       if (recentUserMessages.length > 0) {
@@ -68,11 +68,11 @@ export function useStreamingChat(): StreamingChatHook {
       addContext(`User: ${content.trim()}`);
 
       abortControllerRef.current = new AbortController();
-      
+
       // Smart context management - select optimal messages for better performance
       const adaptiveConfig = getAdaptiveConfig(messages);
       const contextResult = selectOptimalContext(messages, adaptiveConfig);
-      
+
       // Add the current user message to the optimized context
       const messagesForAPI = [
         ...contextResult.messages,
@@ -81,7 +81,7 @@ export function useStreamingChat(): StreamingChatHook {
           content: content.trim()
         }
       ];
-      
+
       // Log context optimization stats for monitoring
       if (contextResult.truncated) {
         console.log('Context optimized:', {
@@ -122,7 +122,7 @@ export function useStreamingChat(): StreamingChatHook {
 
       while (true) {
         const { done, value } = await reader.read();
-        
+
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
@@ -132,7 +132,7 @@ export function useStreamingChat(): StreamingChatHook {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6));
-              
+
               if (data.content) {
                 accumulatedContent += data.content;
               }
@@ -146,7 +146,7 @@ export function useStreamingChat(): StreamingChatHook {
 
               if (data.isComplete) {
                 setIsStreaming(false);
-                
+
                 // Add assistant response to session
                 if (accumulatedContent.trim()) {
                   const agentId = currentPowerAgent ? `power-agent:${currentPowerAgent.name}` : currentAgent.id;
@@ -155,7 +155,7 @@ export function useStreamingChat(): StreamingChatHook {
                     content: accumulatedContent.trim(),
                     agentUsed: agentId
                   });
-                  
+
                   // Add assistant response to conversation context
                   addContext(`Assistant: ${accumulatedContent.trim()}`);
                 }
@@ -174,7 +174,7 @@ export function useStreamingChat(): StreamingChatHook {
       if (err.name !== 'AbortError') {
         console.error('Streaming error:', err);
         setError(err.message || 'Failed to send message');
-        
+
         // Mark the most recent user message as failed
         const recentUserMessages = messages.filter(msg => msg.role === 'user');
         if (recentUserMessages.length > 0) {

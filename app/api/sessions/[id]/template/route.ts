@@ -42,9 +42,9 @@ export async function POST(
     }
 
     const session = await Session.findOneAndUpdate(
-      { 
-        sessionId, 
-        createdBy: userId 
+      {
+        sessionId,
+        createdBy: userId
       },
       updateData,
       { new: true }
@@ -74,14 +74,14 @@ export async function POST(
 
   } catch (error) {
     const { id: sessionId } = await params.catch(() => ({ id: 'unknown' }));
-    
+
     if (error instanceof Error && error.message.includes('Authentication')) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
-    
+
     logger.error('Failed to toggle session template', {
       component: 'SessionTemplateAPI',
       sessionId

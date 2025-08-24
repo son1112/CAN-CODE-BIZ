@@ -13,24 +13,24 @@ async function findMigratedData() {
   try {
     console.log('🔄 Connecting to MongoDB...');
     await client.connect();
-    
+
     // List all databases
     console.log('\n📊 Available databases:');
     const databases = await client.db().admin().listDatabases();
     databases.databases.forEach(db => {
       console.log(`  - ${db.name} (${db.sizeOnDisk} bytes)`);
     });
-    
+
     // Check the main database
     const db = client.db(process.env.MONGODB_DB || 'rubber-ducky');
     console.log(`\n🔍 Checking main database: ${db.databaseName}`);
-    
+
     const collections = await db.listCollections().toArray();
     console.log('Available collections:');
     collections.forEach(coll => {
       console.log(`  - ${coll.name}`);
     });
-    
+
     // Check for conversations collection (might be named differently)
     for (const collName of ['conversations', 'chats', 'sessions']) {
       try {
@@ -38,7 +38,7 @@ async function findMigratedData() {
         const count = await coll.countDocuments();
         if (count > 0) {
           console.log(`\n📋 Found ${count} documents in ${collName} collection`);
-          
+
           // Sample a few documents
           const samples = await coll.find({}).limit(3).toArray();
           samples.forEach((doc, i) => {
@@ -53,7 +53,7 @@ async function findMigratedData() {
         // Collection doesn't exist, continue
       }
     }
-    
+
     // Check for different database names
     for (const dbName of ['rubber-ducky-live', 'rubberducky', 'chat']) {
       try {
@@ -69,7 +69,7 @@ async function findMigratedData() {
         // Database doesn't exist, continue
       }
     }
-    
+
   } catch (error) {
     console.error('❌ Error:', error);
   } finally {

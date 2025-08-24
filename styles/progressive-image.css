@@ -1,0 +1,229 @@
+/* Progressive Image Loading Styles */
+
+.progressive-image-container {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(243, 244, 246);
+}
+
+.dark .progressive-image-container {
+  background-color: rgb(55, 65, 81);
+}
+
+.progressive-image {
+  transition: opacity 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity;
+}
+
+/* Shimmer loading animation */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Gallery grid layouts */
+.progressive-image-gallery {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.progressive-image-gallery.grid-1 {
+  grid-template-columns: 1fr;
+}
+
+.progressive-image-gallery.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.progressive-image-gallery.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.progressive-image-gallery.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Mobile responsive grids */
+@media (max-width: 640px) {
+  .progressive-image-gallery.grid-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .progressive-image-gallery.grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .progressive-image-gallery.grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .progressive-image-gallery.grid-3,
+  .progressive-image-gallery.grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Gallery item styles */
+.progressive-image-gallery-item {
+  aspect-ratio: 16 / 9;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: rgb(243, 244, 246);
+}
+
+.dark .progressive-image-gallery-item {
+  background-color: rgb(55, 65, 81);
+}
+
+/* Skeleton loading states for different aspect ratios */
+.progressive-image-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgb(243, 244, 246) 25%,
+    rgb(229, 231, 235) 50%,
+    rgb(243, 244, 246) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.dark .progressive-image-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgb(55, 65, 81) 25%,
+    rgb(75, 85, 99) 50%,
+    rgb(55, 65, 81) 75%
+  );
+}
+
+/* Aspect ratio utilities for progressive images */
+.progressive-image-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.progressive-image-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.progressive-image-1-1 {
+  aspect-ratio: 1 / 1;
+}
+
+.progressive-image-3-2 {
+  aspect-ratio: 3 / 2;
+}
+
+/* Performance optimizations */
+.progressive-image-container img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* High DPI screen optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .progressive-image-container img {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* Loading spinner styles */
+.progressive-image-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid rgb(229, 231, 235);
+  border-top: 2px solid rgb(59, 130, 246);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.dark .progressive-image-spinner {
+  border: 2px solid rgb(75, 85, 99);
+  border-top: 2px solid rgb(59, 130, 246);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error state styles */
+.progressive-image-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgb(107, 114, 128);
+  background-color: rgb(243, 244, 246);
+  min-height: 8rem;
+}
+
+.dark .progressive-image-error {
+  color: rgb(156, 163, 175);
+  background-color: rgb(55, 65, 81);
+}
+
+/* Blur effect for placeholder images */
+.progressive-image-blur {
+  filter: blur(10px);
+  transform: scale(1.1);
+  transition: all 0.3s ease;
+}
+
+.progressive-image-loaded .progressive-image-blur {
+  filter: blur(0);
+  transform: scale(1);
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  .progressive-image-container {
+    /* Reduce repaints on mobile */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  .progressive-image {
+    /* Hardware acceleration for smoother transitions on mobile */
+    will-change: opacity, transform;
+    transform: translateZ(0);
+  }
+}
+
+/* Touch-friendly interactive states */
+@media (hover: none) and (pointer: coarse) {
+  .progressive-image-gallery-item {
+    /* Remove hover effects on touch devices */
+    transition: transform 0.2s ease;
+  }
+  
+  .progressive-image-gallery-item:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .progressive-image,
+  .progressive-image-blur,
+  .animate-shimmer,
+  .progressive-image-spinner {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .progressive-image-container {
+    will-change: auto;
+  }
+}

@@ -38,28 +38,28 @@ export function useTags(options: UseTagsOptions = {}) {
   const fetchTags = useCallback(async () => {
     // Prevent multiple concurrent requests
     if (loadingRef.current) return;
-    
+
     const cacheKey = JSON.stringify(options);
     const cached = tagsCache.get(cacheKey);
     const now = Date.now();
-    
+
     // Use cache if valid and recent
     if (cached && (now - cached.timestamp < CACHE_DURATION)) {
       setTags(cached.data);
       setLoading(cached.loading);
       return;
     }
-    
+
     // If already loading for this cache key, don't start another request
     if (cached?.loading) {
       setLoading(true);
       return;
     }
-    
+
     loadingRef.current = true;
     setLoading(true);
     setError(null);
-    
+
     // Mark as loading in cache
     tagsCache.set(cacheKey, { data: tags, timestamp: now, loading: true });
 
@@ -71,7 +71,7 @@ export function useTags(options: UseTagsOptions = {}) {
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await fetch(`/api/tags?${params.toString()}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch tags');
       }
@@ -79,17 +79,17 @@ export function useTags(options: UseTagsOptions = {}) {
       const responseData = await response.json();
       const fetchedTags = responseData.data || responseData; // Handle both new and old response formats
       setTags(Array.isArray(fetchedTags) ? fetchedTags : []);
-      
+
       // Update cache with fresh data
       const tagsArray = Array.isArray(fetchedTags) ? fetchedTags : [];
-      tagsCache.set(cacheKey, { 
-        data: tagsArray, 
-        timestamp: now, 
-        loading: false 
+      tagsCache.set(cacheKey, {
+        data: tagsArray,
+        timestamp: now,
+        loading: false
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-      
+
       // Remove loading flag from cache on error
       if (cached) {
         tagsCache.set(cacheKey, { ...cached, loading: false });
@@ -131,10 +131,10 @@ export function useTags(options: UseTagsOptions = {}) {
       const responseData = await response.json();
       const newTag = responseData.data || responseData; // Handle both new and old response formats
       setTags(prev => [newTag, ...prev]);
-      
+
       // Invalidate cache after successful tag creation
       tagsCache.clear();
-      
+
       return newTag;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create tag');
@@ -162,13 +162,13 @@ export function useTags(options: UseTagsOptions = {}) {
 
       const responseData = await response.json();
       const updatedTag = responseData.data || responseData; // Handle both new and old response formats
-      setTags(prev => 
+      setTags(prev =>
         prev.map(tag => tag._id === tagId ? updatedTag : tag)
       );
-      
+
       // Invalidate cache after successful tag update
       tagsCache.clear();
-      
+
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update tag');
@@ -188,10 +188,10 @@ export function useTags(options: UseTagsOptions = {}) {
       }
 
       setTags(prev => prev.filter(tag => tag._id !== tagId));
-      
+
       // Invalidate cache after successful tag deletion
       tagsCache.clear();
-      
+
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete tag');
@@ -209,7 +209,7 @@ export function useTags(options: UseTagsOptions = {}) {
 
   const searchTags = useCallback((query: string): Tag[] => {
     const lowercaseQuery = query.toLowerCase();
-    return tags.filter(tag => 
+    return tags.filter(tag =>
       tag.name.includes(lowercaseQuery) ||
       tag.category?.includes(lowercaseQuery) ||
       tag.description?.includes(lowercaseQuery)

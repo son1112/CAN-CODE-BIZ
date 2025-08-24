@@ -40,6 +40,10 @@ describe('useAgents', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockFetch.mockClear()
+
+    // Clear any global cache that might interfere with tests
+    jest.resetModules()
+
     mockUseSession.mockReturnValue({
       data: mockSession,
       status: 'authenticated'
@@ -418,7 +422,7 @@ describe('useAgents', () => {
     it('should reload agents when manually called', async () => {
       // Reset and set up specific mocks for this test
       mockFetch.mockReset()
-      
+
       // Set up all expected fetch calls in sequence
       mockFetch
         .mockResolvedValueOnce({

@@ -33,5 +33,5 @@ ConversationSchema.index({ createdAt: -1 });
 ConversationSchema.index({ 'metadata.tags': 1 });
 ConversationSchema.index({ 'messages.tags': 1 });
 
-export default mongoose.models.Conversation || 
+export default mongoose.models.Conversation ||
   mongoose.model<ConversationDocument>('Conversation', ConversationSchema);

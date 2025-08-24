@@ -124,7 +124,7 @@ export async function generateMessageWord(
     }
 
     // Add message content header
-    const roleLabel = messageData.role === 'user' ? 'Your Message' : 
+    const roleLabel = messageData.role === 'user' ? 'Your Message' :
                      messageData.role === 'assistant' ? 'AI Response' : 'System Message';
 
     children.push(
@@ -232,7 +232,7 @@ export async function generateMessageWord(
 export function formatMessageForWord(content: string): string {
   // Remove HTML tags if present
   let formatted = content.replace(/<[^>]*>/g, '');
-  
+
   // Handle markdown-style formatting
   formatted = formatted
     .replace(/\*\*(.*?)\*\*/g, '$1') // Bold (Word will handle via TextRun formatting)

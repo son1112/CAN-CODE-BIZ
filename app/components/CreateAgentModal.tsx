@@ -18,7 +18,7 @@ export default function CreateAgentModal({ isOpen, onClose, onAgentCreated }: Cr
   const [isCreating, setIsCreating] = useState(false);
   const [createdAgent, setCreatedAgent] = useState<{ name: string; description: string; prompt: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Text input fields
   const [agentName, setAgentName] = useState('');
   const [agentPurpose, setAgentPurpose] = useState('');
@@ -26,7 +26,7 @@ export default function CreateAgentModal({ isOpen, onClose, onAgentCreated }: Cr
   const [agentTasks, setAgentTasks] = useState('');
   const [agentContext, setAgentContext] = useState('');
   const [outputFormat, setOutputFormat] = useState('');
-  
+
   // Individual field recording states
   const [recordingField, setRecordingField] = useState<string | null>(null);
   const [fieldTranscripts, setFieldTranscripts] = useState<{[key: string]: string}>({});
@@ -132,7 +132,7 @@ export default function CreateAgentModal({ isOpen, onClose, onAgentCreated }: Cr
 
   const handleCreateAgent = async () => {
     let description = '';
-    
+
     if (inputMode === 'voice') {
       if (!transcript.trim()) {
         setError('Please record a description for your agent first');
@@ -145,7 +145,7 @@ export default function CreateAgentModal({ isOpen, onClose, onAgentCreated }: Cr
         setError('Please describe what your agent does');
         return;
       }
-      
+
       // Construct a comprehensive description from text inputs
       description = `Agent Name: ${agentName || 'Custom Agent'}
 
@@ -242,7 +242,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
             <Mic className="w-4 h-4" />
           )}
         </button>
-        
+
         {hasTranscript && (
           <button
             type="button"
@@ -268,7 +268,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
         style={{ zIndex: 999997 }}
         onClick={handleClose}
       />
-      
+
       {/* Modal */}
       <div
         className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col"
@@ -392,7 +392,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                                 </>
                               )}
                             </div>
-                            
+
                             {isListening && (
                               <div className="absolute inset-0 bg-gradient-to-r from-red-400/30 to-transparent rounded-2xl animate-pulse"></div>
                             )}
@@ -407,7 +407,7 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                             <h4 className="font-semibold text-gray-900 mb-2">Your Description:</h4>
                             <p className="text-gray-700 leading-relaxed">{transcript}</p>
                           </div>
-                          
+
                           <div className="flex gap-3">
                             <button
                               onClick={() => setTranscript('')}
@@ -606,18 +606,18 @@ ${outputFormat ? `Output Format: ${outputFormat}` : ''}`.trim();
                 <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
-                
+
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">Agent Created Successfully!</h3>
                   <p className="text-gray-600">Your new AI agent &quot;<strong>{createdAgent.name}</strong>&quot; is ready to use.</p>
                 </div>
-                
+
                 <div className="p-6 bg-gray-50 rounded-xl border border-gray-200 text-left">
                   <h4 className="font-semibold text-gray-900 mb-2">Agent Details:</h4>
                   <p className="text-sm text-gray-700 mb-2"><strong>Name:</strong> {createdAgent.name}</p>
                   <p className="text-sm text-gray-700"><strong>Description:</strong> {createdAgent.description}</p>
                 </div>
-                
+
                 <button
                   onClick={handleClose}
                   className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105"

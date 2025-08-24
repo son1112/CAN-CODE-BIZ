@@ -10,7 +10,7 @@ export async function PUT(
   try {
     await connectDB();
     const { id } = await params;
-    
+
     // Get user
     const { userId } = await requireAuth(request);
     const body = await request.json();
@@ -31,7 +31,7 @@ export async function PUT(
     } else {
       updateData.$unset = { primaryAgent: "" };
     }
-    
+
     const updatedSession = await Session.findOneAndUpdate(
       { sessionId: id, createdBy: userId },
       primaryAgent ? { $set: updateData } : updateData,
@@ -45,7 +45,7 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       session: updatedSession.toObject(),
       message: 'Primary agent updated successfully'
     });

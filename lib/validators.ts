@@ -275,7 +275,7 @@ export const validators = {
    */
   createSession: (data: unknown) => {
     const validator = createValidator();
-    
+
     if (typeof data !== 'object' || data === null) {
       validator.addError('body', 'must be an object');
       return validator.getResult();
@@ -323,10 +323,10 @@ export const validators = {
       });
 
       // Check total content length (increased limit for chat conversations)
-      const totalLength = messages.reduce((total, msg) => 
+      const totalLength = messages.reduce((total, msg) =>
         total + (typeof msg.content === 'string' ? msg.content.length : 0), 0
       );
-      
+
       if (totalLength > 500000) { // 500KB for longer conversations
         validator.addError('messages', 'total content length exceeds maximum (500KB)');
       }

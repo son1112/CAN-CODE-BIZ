@@ -82,12 +82,12 @@ export async function getCurrentProjectUsage(): Promise<{
       fetchCCUsageData(),
       fetchDailyCCUsageData()
     ]);
-    
+
     if (!sessionData) return null;
 
     // Find sessions related to the current project (rubber-ducky-live)
-    const currentProjectSessions = sessionData.sessions.filter(session => 
-      session.sessionId.includes('rubber-ducky-live') || 
+    const currentProjectSessions = sessionData.sessions.filter(session =>
+      session.sessionId.includes('rubber-ducky-live') ||
       session.projectPath.includes('rubber-ducky-live')
     );
 
@@ -104,7 +104,7 @@ export async function getCurrentProjectUsage(): Promise<{
     let dailyOutputTokens = 0;
     let dailyTotalTokens = 0;
     let dailyModels: string[] = [];
-    
+
     if (dailyData && dailyData.daily) {
       const todayData = dailyData.daily.find(day => day.date === today);
       if (todayData) {
@@ -120,7 +120,7 @@ export async function getCurrentProjectUsage(): Promise<{
     weekAgo.setDate(weekAgo.getDate() - 7);
     const weekAgoStr = weekAgo.toISOString().split('T')[0];
 
-    const recentSessions = sessionData.sessions.filter(session => 
+    const recentSessions = sessionData.sessions.filter(session =>
       session.lastActivity >= weekAgoStr
     ).length;
 

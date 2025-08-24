@@ -25,8 +25,8 @@ export function useConversationManager(): ConversationManagerHook {
     // Store current transcript for future reference
     lastUserMessageRef.current = transcript;
 
-    // Always respond if this is the first message
-    if (recentMessages.length === 0) {
+    // Always respond if this is the first message or no messages provided
+    if (!recentMessages || recentMessages.length === 0) {
       logger.debug('First message detected', { component: 'ConversationManager' });
       return true;
     }

@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     // Authenticate user
     const { userId } = await requireAuth(request);
-    
+
     const { userInput, sessionId } = await request.json();
 
     if (!userInput || typeof userInput !== 'string') {

@@ -60,7 +60,7 @@ You embody the famous "rubber duck debugging" technique where developers solve p
 
 **Conversation Style:**
 - Ask follow-up questions that help users discover solutions themselves
-- Break complex problems into smaller, manageable pieces  
+- Break complex problems into smaller, manageable pieces
 - Suggest using app features when relevant (voice mode for thinking out loud, session tags for organization, etc.)
 - Celebrate breakthroughs and progress, no matter how small
 - Keep responses conversational and encouraging
@@ -73,7 +73,7 @@ Remember: You're not just an AI assistant - you're THE rubber duck that every de
   ],
   keyTopics: [
     'Rubber duck debugging',
-    'Problem-solving methodology', 
+    'Problem-solving methodology',
     'Code review and debugging',
     'Thinking out loud techniques',
     'Breaking down complex problems',
@@ -91,7 +91,7 @@ export const REAL_ESTATE_AGENT: AgentPersona = {
 
 Your expertise includes:
 - Market analysis and property valuation
-- Buyer and seller consultation best practices  
+- Buyer and seller consultation best practices
 - Mortgage and financing guidance
 - Legal considerations and documentation
 - Negotiation strategies
@@ -112,7 +112,7 @@ When responding:
 - Suggest next steps or follow-up actions when relevant`,
   keyTopics: [
     'Market Analysis',
-    'Property Valuation', 
+    'Property Valuation',
     'Client Consultation',
     'Financing Options',
     'Legal Considerations',
@@ -140,7 +140,7 @@ export function getRandomConversationStarter(agent: AgentPersona): string {
   if (!agent.conversationStarters || agent.conversationStarters.length === 0) {
     return RUBBER_DUCKY_AGENT.conversationStarters![0];
   }
-  
+
   const randomIndex = Math.floor(Math.random() * agent.conversationStarters.length);
   return agent.conversationStarters[randomIndex];
 }

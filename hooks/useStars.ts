@@ -18,23 +18,23 @@ interface UseStarsReturn {
   stars: StarDocument[];
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   starItem: (options: Omit<CreateStarOptions, 'userId'>) => Promise<boolean>;
   unstarItem: (itemType: StarableType, itemId: string) => Promise<boolean>;
   isStarred: (itemType: StarableType, itemId: string) => boolean;
   updateStar: (starId: string, updates: Partial<StarDocument>) => Promise<boolean>;
-  
+
   // Queries
   getStarsByType: (itemType: StarableType) => StarDocument[];
   getStarsByTag: (tag: string) => StarDocument[];
   getStarsByPriority: (priority: 'low' | 'medium' | 'high') => StarDocument[];
   searchStars: (query: string) => StarDocument[];
-  
+
   // Management
   loadStars: (filters?: Omit<StarFilterOptions, 'userId'>) => Promise<void>;
   refreshStars: () => Promise<void>;
-  
+
   // Stats
   getTotalStars: () => number;
   getStarCountByType: (itemType: StarableType) => number;
@@ -49,7 +49,7 @@ export function useStars(userId: string): UseStarsReturn {
   const starItem = useCallback(async (options: Omit<CreateStarOptions, 'userId'>): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch('/api/stars', {
         method: 'POST',
@@ -74,11 +74,11 @@ export function useStars(userId: string): UseStarsReturn {
 
       const { star } = await response.json();
       setStars(prev => [star, ...prev]);
-      
+
       // Invalidate cache after successful star creation
       const cacheKey = `${userId}:{}`;
       starsCache.delete(cacheKey);
-      
+
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to star item';
@@ -92,7 +92,7 @@ export function useStars(userId: string): UseStarsReturn {
   const unstarItem = useCallback(async (itemType: StarableType, itemId: string): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/stars/item/${itemType}/${itemId}`, {
         method: 'DELETE',
@@ -108,11 +108,11 @@ export function useStars(userId: string): UseStarsReturn {
       }
 
       setStars(prev => prev.filter(star => !(star.itemType === itemType && star.itemId === itemId)));
-      
+
       // Invalidate cache after successful unstar
       const cacheKey = `${userId}:{}`;
       starsCache.delete(cacheKey);
-      
+
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to unstar item';
@@ -130,7 +130,7 @@ export function useStars(userId: string): UseStarsReturn {
   const updateStar = useCallback(async (starId: string, updates: Partial<StarDocument>): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/stars/${starId}`, {
         method: 'PUT',
@@ -178,7 +178,7 @@ export function useStars(userId: string): UseStarsReturn {
         star.context?.messageContent,
         star.tags?.join(' '),
       ].filter(Boolean).join(' ').toLowerCase();
-      
+
       return searchContent.includes(lowerQuery);
     });
   }, [stars]);
@@ -186,31 +186,31 @@ export function useStars(userId: string): UseStarsReturn {
   const loadStars = useCallback(async (filters?: Omit<StarFilterOptions, 'userId'>): Promise<void> => {
     // Prevent multiple concurrent requests
     if (loadingRef.current) return;
-    
+
     const cacheKey = `${userId}:${JSON.stringify(filters || {})}`;
     const cached = starsCache.get(cacheKey);
     const now = Date.now();
-    
+
     // Use cache if valid and recent
     if (cached && (now - cached.timestamp < CACHE_DURATION)) {
       setStars(cached.data);
       setIsLoading(cached.loading);
       return;
     }
-    
+
     // If already loading for this cache key, don't start another request
     if (cached?.loading) {
       setIsLoading(true);
       return;
     }
-    
+
     loadingRef.current = true;
     setIsLoading(true);
     setError(null);
-    
+
     // Mark as loading in cache
     starsCache.set(cacheKey, { data: stars, timestamp: now, loading: true });
-    
+
     try {
       const searchParams = new URLSearchParams({
         userId,
@@ -223,7 +223,7 @@ export function useStars(userId: string): UseStarsReturn {
       });
 
       const response = await fetch(`/api/stars?${searchParams}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to load stars');
       }
@@ -231,17 +231,17 @@ export function useStars(userId: string): UseStarsReturn {
       const { stars: starList } = await response.json();
       const validStarList = Array.isArray(starList) ? starList : [];
       setStars(validStarList);
-      
+
       // Update cache with fresh data
-      starsCache.set(cacheKey, { 
-        data: validStarList, 
-        timestamp: now, 
-        loading: false 
+      starsCache.set(cacheKey, {
+        data: validStarList,
+        timestamp: now,
+        loading: false
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load stars';
       setError(errorMessage);
-      
+
       // Remove loading flag from cache on error
       if (cached) {
         starsCache.set(cacheKey, { ...cached, loading: false });
@@ -276,23 +276,23 @@ export function useStars(userId: string): UseStarsReturn {
     stars,
     isLoading,
     error,
-    
+
     // Actions
     starItem,
     unstarItem,
     isStarred,
     updateStar,
-    
+
     // Queries
     getStarsByType,
     getStarsByTag,
     getStarsByPriority,
     searchStars,
-    
+
     // Management
     loadStars,
     refreshStars,
-    
+
     // Stats
     getTotalStars,
     getStarCountByType,

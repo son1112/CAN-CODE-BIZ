@@ -10,7 +10,7 @@ export async function GET(
   try {
     await connectDB();
     const { id } = await params;
-    
+
     // Get user
     const { userId } = await requireAuth(request);
 
@@ -36,7 +36,7 @@ export async function GET(
         return new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime();
       });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       sessionId: session.sessionId,
       sessionName: session.name,
       pinnedMessages,

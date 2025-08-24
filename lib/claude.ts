@@ -31,7 +31,7 @@ export async function* streamClaudeResponse(
   while (attempt <= fallbackConfig.maxRetries) {
     try {
       const modelConfig = getModelConfig(currentModel);
-      
+
       // Create stream with timeout wrapper
       const streamPromise = anthropic.messages.create({
         model: currentModel,
@@ -65,31 +65,31 @@ export async function* streamClaudeResponse(
           yield { content: chunk.delta.text, isComplete: false };
         }
       }
-      
+
       yield { content: '', isComplete: true };
       return; // Success - exit retry loop
 
     } catch (error) {
-      logger.error('Claude API streaming error', { 
-        component: 'claude', 
-        model: currentModel, 
+      logger.error('Claude API streaming error', {
+        component: 'claude',
+        model: currentModel,
         attempt,
-        originalModel 
+        originalModel
       }, error);
 
       // Determine if we should try fallback
       const shouldFallback = (
-        isOverloadError(error) || 
+        isOverloadError(error) ||
         isTimeoutError(error)
       ) && attempt < fallbackConfig.maxRetries;
 
       if (shouldFallback) {
         const nextModel = getNextFallbackModel(currentModel, fallbackConfig);
-        
+
         if (nextModel) {
-          const fallbackReason = isOverloadError(error) ? 'overloaded' : 
+          const fallbackReason = isOverloadError(error) ? 'overloaded' :
                                  isTimeoutError(error) ? 'timeout' : 'error';
-          
+
           fallbackResult = {
             model: nextModel,
             attempt: attempt + 1,
@@ -105,9 +105,9 @@ export async function* streamClaudeResponse(
       }
 
       // No fallback available or non-recoverable error
-      yield { 
-        content: '', 
-        isComplete: true, 
+      yield {
+        content: '',
+        isComplete: true,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         fallback: fallbackResult
       };
@@ -130,7 +130,7 @@ export async function getClaudeResponse(
   while (attempt <= fallbackConfig.maxRetries) {
     try {
       const modelConfig = getModelConfig(currentModel);
-      
+
       const responsePromise = anthropic.messages.create({
         model: currentModel,
         messages: messages.map(msg => ({
@@ -148,33 +148,33 @@ export async function getClaudeResponse(
       );
 
       const text = response.content[0].type === 'text' ? response.content[0].text : '';
-      
+
       return {
         text,
         fallback: fallbackResult || undefined
       };
 
     } catch (error) {
-      logger.error('Claude API error', { 
-        component: 'claude', 
-        model: currentModel, 
+      logger.error('Claude API error', {
+        component: 'claude',
+        model: currentModel,
         attempt,
-        originalModel 
+        originalModel
       }, error);
 
       // Determine if we should try fallback
       const shouldFallback = (
-        isOverloadError(error) || 
+        isOverloadError(error) ||
         isTimeoutError(error)
       ) && attempt < fallbackConfig.maxRetries;
 
       if (shouldFallback) {
         const nextModel = getNextFallbackModel(currentModel, fallbackConfig);
-        
+
         if (nextModel) {
-          const fallbackReason = isOverloadError(error) ? 'overloaded' : 
+          const fallbackReason = isOverloadError(error) ? 'overloaded' :
                                  isTimeoutError(error) ? 'timeout' : 'error';
-          
+
           fallbackResult = {
             model: nextModel,
             attempt: attempt + 1,

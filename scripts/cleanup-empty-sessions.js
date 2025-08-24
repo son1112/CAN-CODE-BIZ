@@ -47,7 +47,7 @@ async function cleanupEmptySessions() {
     // Verify cleanup
     const remainingEmptyCount = await sessionsCollection.countDocuments(emptySessionsQuery);
     const totalSessionsCount = await sessionsCollection.countDocuments();
-    
+
     console.log(`📈 Remaining sessions: ${totalSessionsCount}`);
     console.log(`🧹 Cleanup complete: ${remainingEmptyCount} empty sessions remaining`);
 

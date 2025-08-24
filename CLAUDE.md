@@ -429,6 +429,32 @@ See [docs/VERSIONING.md](docs/VERSIONING.md) for detailed versioning guidelines.
 - **Export Generation**: 500ms-2s for document creation and upload
 - **Bundle Size**: Optimized for fast loading with code splitting
 
+## Comprehensive Backlog Documentation 📋
+
+The project maintains detailed backlog documentation in `/docs/BACKLOG.org` with comprehensive documentation for all work items. A new "Current Session Backlog Items - Detailed Documentation" section contains 13 fully documented backlog items with:
+
+- **Complete Problem Statements**: Clear description of issues and business context
+- **Technical Requirements**: Detailed specifications and constraints
+- **Implementation Approaches**: Step-by-step development plans
+- **Priority Levels**: 🔴 HIGH, 🟡 MEDIUM, 🟢 LOW classifications
+- **Complexity Estimates**: Simple/Medium/Complex with timeline estimates
+- **Dependencies**: Prerequisites and related work items
+- **Acceptance Criteria**: Measurable outcomes and completion requirements
+- **Related Files**: Specific components and files that will be affected
+
+### Key Documented Items Include:
+1. **Claude Code Sub-Agent Integration**: Investigate why Claude Code isn't using defined agents
+2. **Tour Dismissal Persistence**: Fix onboarding tour to remain dismissed
+3. **User Feedback System**: Plan comprehensive feedback recording with admin access
+4. **Access Control Implementation**: User roles and permissions (Admin, etc.)
+5. **Avatar Optimization**: Move avatars inside message boxes for space efficiency
+6. **AI-Generated Avatars**: Use AI to create agent-specific avatars
+7. **Test Coverage Increase**: Raise threshold to 70% with comprehensive edge case analysis
+8. **Mobile Experience**: Consider React Native for enhanced mobile apps
+9. **Best Practices Audit**: Comprehensive codebase analysis for standards adherence
+
+This documentation format serves as the standard template for future backlog items to ensure consistency and actionability.
+
 ## User Preferences
 
 - Use README.org instead of README.md for documentation

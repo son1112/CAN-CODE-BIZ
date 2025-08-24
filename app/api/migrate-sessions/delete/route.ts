@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger';
 export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -32,24 +32,24 @@ export async function DELETE(request: NextRequest) {
     }
 
     const client = new MongoClient(MONGODB_URI);
-    
+
     try {
       await client.connect();
-      
+
       const cliDb = client.db('rubber-ducky');
       const cliSessionsCollection = cliDb.collection('sessions');
-      
+
       let deleteResult;
       let deletedCount = 0;
-      
+
       if (sessionName) {
         // Delete single session
         deleteResult = await cliSessionsCollection.deleteOne({ name: sessionName });
         deletedCount = deleteResult.deletedCount;
       } else if (sessionNames?.length) {
         // Delete multiple sessions
-        deleteResult = await cliSessionsCollection.deleteMany({ 
-          name: { $in: sessionNames } 
+        deleteResult = await cliSessionsCollection.deleteMany({
+          name: { $in: sessionNames }
         });
         deletedCount = deleteResult.deletedCount;
       }
@@ -74,8 +74,8 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     logger.error('Session deletion failed', { component: 'migration' }, error);
     return NextResponse.json(
-      { 
-        error: 'Failed to delete session(s)', 
+      {
+        error: 'Failed to delete session(s)',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

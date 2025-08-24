@@ -10,10 +10,10 @@ export async function PUT(
   try {
     await connectDB();
     const { messageId } = await params;
-    
+
     // Get user
     const { userId } = await requireAuth(request);
-    
+
     const body = await request.json();
     const { isPinned } = body;
 
@@ -26,14 +26,14 @@ export async function PUT(
     }
 
     // Find the session containing this message and update it
-    const updateField = isPinned 
+    const updateField = isPinned
       ? { 'messages.$.isPinned': true, 'messages.$.pinnedAt': new Date() }
       : { 'messages.$.isPinned': false, 'messages.$.pinnedAt': null };
 
     const updatedSession = await Session.findOneAndUpdate(
-      { 
+      {
         'messages.id': messageId,
-        createdBy: userId 
+        createdBy: userId
       },
       { $set: updateField },
       { new: true }
@@ -49,7 +49,7 @@ export async function PUT(
     // Find the updated message
     const updatedMessage = updatedSession.messages.find((msg: any) => msg.id === messageId);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: updatedMessage,
       success: true,
       action: isPinned ? 'pinned' : 'unpinned'

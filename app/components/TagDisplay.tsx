@@ -39,24 +39,36 @@ export default function TagDisplay({
   const getSizeClasses = () => {
     switch (size) {
       case 'sm':
-        return 'px-2 py-0.5 text-xs';
+        return 'px-3 py-1 text-xs';
       case 'lg':
         return 'px-4 py-2 text-base';
       case 'md':
       default:
-        return 'px-3 py-1 text-sm';
+        return 'px-3 py-2 text-sm';
     }
   };
 
   const getIconSize = () => {
     switch (size) {
       case 'sm':
-        return '10px';
+        return '12px';
       case 'lg':
-        return '16px';
+        return '18px';
       case 'md':
       default:
-        return '12px';
+        return '14px';
+    }
+  };
+
+  const getRemoveButtonSize = () => {
+    switch (size) {
+      case 'sm':
+        return { minWidth: '24px', minHeight: '24px', padding: '4px' };
+      case 'lg':
+        return { minWidth: '28px', minHeight: '28px', padding: '6px' };
+      case 'md':
+      default:
+        return { minWidth: '26px', minHeight: '26px', padding: '5px' };
     }
   };
 
@@ -66,12 +78,13 @@ export default function TagDisplay({
         <div
           key={tag}
           className={`inline-flex items-center gap-1 rounded-full font-medium transition-all duration-200 ${
-            onTagClick ? 'cursor-pointer hover:scale-105' : ''
+            onTagClick ? 'cursor-pointer hover:scale-105 touch-target' : ''
           } ${getSizeClasses()}`}
           style={{
             backgroundColor: getTagColor(tag) + '20',
             color: getTagColor(tag),
-            border: `1px solid ${getTagColor(tag)}40`
+            border: `1px solid ${getTagColor(tag)}40`,
+            minHeight: onTagClick ? '44px' : 'auto'
           }}
           onClick={() => onTagClick?.(tag)}
           title={`Tag: ${tag}`}
@@ -84,7 +97,8 @@ export default function TagDisplay({
                 e.stopPropagation();
                 onTagRemove(tag);
               }}
-              className="ml-1 p-0.5 rounded-full hover:bg-current hover:bg-opacity-20 transition-colors"
+              className="ml-1 rounded-full hover:bg-current hover:bg-opacity-20 transition-colors touch-target flex items-center justify-center"
+              style={getRemoveButtonSize()}
               title={`Remove ${tag} tag`}
             >
               <X style={{ width: getIconSize(), height: getIconSize() }} />

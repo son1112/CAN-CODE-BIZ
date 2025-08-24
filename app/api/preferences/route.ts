@@ -8,9 +8,9 @@ export async function GET(req: NextRequest) {
     const { userId } = await requireAuth(req);
 
     await connectDB();
-    
+
     let preferences = await UserPreferences.findOne({ userId });
-    
+
     // If no preferences exist, create default ones
     if (!preferences) {
       const defaultPreferences = {
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
           showOnlineStatus: true,
         },
       };
-      
+
       preferences = new UserPreferences(defaultPreferences);
       await preferences.save();
     }
@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest) {
     const { userId } = await requireAuth(request);
 
     await connectDB();
-    
+
     const body = await request.json();
     const { preferences } = body;
 
@@ -76,12 +76,12 @@ export async function PUT(request: NextRequest) {
     // Update or create preferences for the authenticated user
     const updatedPreferences = await UserPreferences.findOneAndUpdate(
       { userId },
-      { 
+      {
         ...preferences,
         userId,
         updatedAt: new Date(),
       },
-      { 
+      {
         new: true,
         upsert: true,
         runValidators: true

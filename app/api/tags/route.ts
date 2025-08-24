@@ -22,15 +22,15 @@ export async function GET(request: NextRequest) {
 
     // Build query
     const query: Record<string, unknown> = { userId };
-    
+
     // Validate and sanitize search parameters
     const searchTerm = search?.trim().slice(0, 100);
     const categoryTerm = category?.trim().slice(0, 50);
-    
+
     if (categoryTerm && categoryTerm !== 'all') {
       query.category = categoryTerm;
     }
-    
+
     if (searchTerm) {
       query.name = { $regex: searchTerm, $options: 'i' };
     }
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const validatedData = validateRequest(body, validators.createTag, 'tags-api');
-    
+
     const { name, color, category, description } = validatedData as { name: string; color?: string; category?: string; description?: string };
 
     // Check if tag already exists for this user

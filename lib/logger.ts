@@ -19,14 +19,14 @@ class Logger {
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] ${level.toUpperCase()}`;
-    
+
     if (context) {
       const contextStr = Object.entries(context)
         .map(([key, value]) => `${key}=${value}`)
         .join(' ');
       return `${prefix} [${contextStr}] ${message}`;
     }
-    
+
     return `${prefix} ${message}`;
   }
 
@@ -94,26 +94,26 @@ class Logger {
   }
 
   agentOperation(operation: string, agentName?: string, context?: LogContext): void {
-    this.info(`Agent operation: ${operation}`, { 
-      component: 'agent', 
-      agent: agentName, 
-      ...context 
+    this.info(`Agent operation: ${operation}`, {
+      component: 'agent',
+      agent: agentName,
+      ...context
     });
   }
 
   sessionOperation(operation: string, sessionId: string, context?: LogContext): void {
-    this.info(`Session operation: ${operation}`, { 
-      component: 'session', 
-      sessionId, 
-      ...context 
+    this.info(`Session operation: ${operation}`, {
+      component: 'session',
+      sessionId,
+      ...context
     });
   }
 
   databaseOperation(operation: string, collection: string, context?: LogContext): void {
-    this.debug(`Database ${operation}`, { 
-      component: 'database', 
-      collection, 
-      ...context 
+    this.debug(`Database ${operation}`, {
+      component: 'database',
+      collection,
+      ...context
     });
   }
 }

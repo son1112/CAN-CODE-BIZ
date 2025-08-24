@@ -14,14 +14,14 @@ interface DuckAvatarProps {
 
 const sizeClasses = {
   sm: 'w-12 h-12',
-  md: 'w-16 h-16', 
+  md: 'w-16 h-16',
   lg: 'w-24 h-24',
   xl: 'w-32 h-32'
 };
 
-export default function DuckAvatar({ 
-  imageUrl, 
-  prompt, 
+export default function DuckAvatar({
+  imageUrl,
+  prompt,
   isGenerating = false,
   className = '',
   size = 'lg',
@@ -82,7 +82,7 @@ export default function DuckAvatar({
           </div>
         )}
       </div>
-      
+
       {/* Hover effect - show prompt tooltip */}
       {showPrompt && prompt && (
         <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">

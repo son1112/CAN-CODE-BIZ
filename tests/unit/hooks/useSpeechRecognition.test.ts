@@ -39,15 +39,15 @@ const mockMediaRecorder = {
 class MockWebSocket {
   static OPEN = 1
   static CLOSED = 3
-  
+
   readyState = MockWebSocket.OPEN
   onopen: ((event: Event) => void) | null = null
   onmessage: ((event: MessageEvent) => void) | null = null
   onerror: ((event: Event) => void) | null = null
   onclose: ((event: CloseEvent) => void) | null = null
-  
+
   constructor(public url: string) {}
-  
+
   send = jest.fn()
   close = jest.fn(() => {
     this.readyState = MockWebSocket.CLOSED
@@ -55,22 +55,22 @@ class MockWebSocket {
       this.onclose({ code: 1000, reason: 'Normal closure' } as CloseEvent)
     }
   })
-  
+
   // Helper methods for testing
   simulateOpen() {
     if (this.onopen) this.onopen({} as Event)
   }
-  
+
   simulateMessage(data: any) {
     if (this.onmessage) {
       this.onmessage({ data: JSON.stringify(data) } as MessageEvent)
     }
   }
-  
+
   simulateError() {
     if (this.onerror) this.onerror({} as Event)
   }
-  
+
   simulateClose(code = 1000, reason = 'Normal closure') {
     this.readyState = MockWebSocket.CLOSED
     if (this.onclose) {
@@ -88,39 +88,39 @@ describe('useSpeechRecognition', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    
+
     // Setup browser API mocks
     Object.defineProperty(global.navigator, 'mediaDevices', {
       value: mockMediaDevices,
       writable: true
     })
-    
+
     mockMediaDevices.getUserMedia.mockResolvedValue(mockMediaStream)
-    
+
     // Mock AudioContext
     global.AudioContext = jest.fn().mockImplementation(() => mockAudioContext)
     mockAudioContext.createMediaStreamSource.mockReturnValue(mockSource)
     mockAudioContext.createScriptProcessor.mockReturnValue(mockProcessor)
-    
+
     // Mock MediaRecorder
     global.MediaRecorder = jest.fn().mockImplementation(() => mockMediaRecorder)
-    
+
     // Mock WebSocket
     global.WebSocket = jest.fn().mockImplementation((url) => {
       mockWs = new MockWebSocket(url)
       return mockWs
     })
-    
+
     // Mock window APIs
     Object.defineProperty(window, 'MediaRecorder', { value: global.MediaRecorder })
     Object.defineProperty(window, 'WebSocket', { value: global.WebSocket })
-    
+
     // Mock API response
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ apiKey: 'test-api-key-123' })
     })
-    
+
     // Clear timers
     jest.clearAllTimers()
     jest.useFakeTimers()
@@ -154,7 +154,7 @@ describe('useSpeechRecognition', () => {
       // Remove required APIs
       delete (window as any).MediaRecorder
       delete (window as any).WebSocket
-      
+
       const { result } = renderHook(() => useSpeechRecognition())
       expect(result.current.isSupported).toBe(false)
     })
@@ -253,7 +253,7 @@ describe('useSpeechRecognition', () => {
       })
 
       expect(result.current.isListening).toBe(true)
-      
+
       const firstCallCount = mockMediaDevices.getUserMedia.mock.calls.length
 
       // Try to start again
@@ -272,7 +272,7 @@ describe('useSpeechRecognition', () => {
     beforeEach(async () => {
       const { result } = renderHook(() => useSpeechRecognition())
       hookResult = result
-      
+
       await act(async () => {
         await result.current.startListening()
       })

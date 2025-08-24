@@ -48,7 +48,7 @@ describe('/api/usage', () => {
       (getCurrentProjectUsage as jest.Mock).mockResolvedValue(mockUsageData);
 
       const request = new NextRequest('http://localhost:3000/api/usage');
-      
+
       const response = await GET(request);
       const data = await response.json();
 
@@ -65,7 +65,7 @@ describe('/api/usage', () => {
       (getCurrentProjectUsage as jest.Mock).mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/usage');
-      
+
       const response = await GET(request);
       const data = await response.json();
 
@@ -81,7 +81,7 @@ describe('/api/usage', () => {
       mockRequireAuth.mockRejectedValueOnce(new Error('Unauthorized'));
 
       const request = new NextRequest('http://localhost:3000/api/usage');
-      
+
       const response = await GET(request);
       const data = await response.json();
 
@@ -95,7 +95,7 @@ describe('/api/usage', () => {
       (getCurrentProjectUsage as jest.Mock).mockRejectedValue(new Error('Service unavailable'));
 
       const request = new NextRequest('http://localhost:3000/api/usage');
-      
+
       const response = await GET(request);
       const data = await response.json();
 

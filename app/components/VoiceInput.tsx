@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Mic, MicOff, AlertCircle, RotateCcw, Send, VolumeX, Volume2, MessageCircle, X } from 'lucide-react';
+import { Mic, MicOff, AlertCircle, RotateCcw, Send, VolumeX, Volume2, MessageCircle, X, MoreHorizontal, ChevronUp, ChevronDown } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useContentSafety } from '@/contexts/ContentSafetyContext';
+import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { logger } from '@/lib/logger';
 
 interface VoiceInputProps {
@@ -16,7 +17,12 @@ interface VoiceInputProps {
 
 export default function VoiceInput({ onTranscript, isDisabled = false, enableContinuousMode = false, onContinuousModeToggle, isContinuousMode = false }: VoiceInputProps) {
   const { settings: safetySettings } = useContentSafety();
-  
+  const { isMobile, isTablet } = useMobileNavigation();
+  const [showAdvancedControls, setShowAdvancedControls] = useState(false);
+
+  // Mobile-first: Show mobile layout for mobile and tablet
+  const isMobileLayout = isMobile || isTablet;
+
   const {
     transcript,
     interimTranscript,
@@ -60,16 +66,16 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
   const getSentimentDisplay = (sentiment: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE', confidence: number) => {
     const icons = {
       POSITIVE: '😊',
-      NEUTRAL: '😐', 
+      NEUTRAL: '😐',
       NEGATIVE: '😞'
     };
-    
+
     const colors = {
       POSITIVE: 'text-green-700 bg-green-50 border-green-200',
       NEUTRAL: 'text-gray-700 bg-gray-50 border-gray-200',
       NEGATIVE: 'text-red-700 bg-red-50 border-red-200'
     };
-    
+
     return {
       icon: icons[sentiment],
       color: colors[sentiment],
@@ -84,13 +90,13 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
       medium: 'text-orange-700 bg-orange-50 border-orange-200',
       high: 'text-red-700 bg-red-50 border-red-200'
     };
-    
+
     const riskIcons = {
       low: '⚠️',
       medium: '🚨',
       high: '🛑'
     };
-    
+
     return {
       color: riskColors[safety.summary.riskLevel as keyof typeof riskColors] || riskColors.medium,
       icon: riskIcons[safety.summary.riskLevel as keyof typeof riskIcons] || riskIcons.medium,
@@ -102,17 +108,17 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
   const getSpeakerDisplay = (speaker: string) => {
     const colors = [
       'text-blue-700 bg-blue-50 border-blue-200',
-      'text-purple-700 bg-purple-50 border-purple-200', 
+      'text-purple-700 bg-purple-50 border-purple-200',
       'text-green-700 bg-green-50 border-green-200',
       'text-orange-700 bg-orange-50 border-orange-200',
       'text-pink-700 bg-pink-50 border-pink-200',
       'text-teal-700 bg-teal-50 border-teal-200'
     ];
-    
+
     // Hash speaker name to get consistent color
     const hash = speaker.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colorIndex = hash % colors.length;
-    
+
     return {
       color: colors[colorIndex],
       icon: '🎤',
@@ -127,14 +133,14 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
       fair: 'text-yellow-700 bg-yellow-50 border-yellow-200',
       poor: 'text-red-700 bg-red-50 border-red-200'
     };
-    
+
     const qualityIcons = {
       excellent: '🎯',
       good: '✅',
       fair: '⚠️',
       poor: '🔴'
     };
-    
+
     return {
       color: qualityColors[quality.audioQuality as keyof typeof qualityColors] || qualityColors.fair,
       icon: qualityIcons[quality.audioQuality as keyof typeof qualityIcons] || qualityIcons.fair,
@@ -146,7 +152,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
 
   const handleSendTranscript = () => {
     const currentTranscript = transcript.trim();
-    logger.debug('Manual send triggered', { 
+    logger.debug('Manual send triggered', {
       component: 'VoiceInput',
       transcriptLength: currentTranscript.length,
       hasTranscript: !!currentTranscript
@@ -204,131 +210,288 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
 
   return (
     <div className="voice-input-container no-text-scale">
-      {/* Stable Control Panel - always in the same position */}
-      <div className="voice-controls-panel flex flex-wrap items-center" style={{ gap: '8px', minHeight: '48px' }}>
-        {/* Microphone Button */}
-        <button
-          onClick={handleMicToggle}
-          disabled={isDisabled}
-          className={`
-            relative rounded-2xl transition-all duration-300 shadow-lg transform hover:scale-105
-            ${(isListening || isInContinuousMode)
-              ? 'bg-gradient-to-br from-red-500 to-pink-600 text-white scale-110 shadow-red-500/25' 
-              : 'bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 text-white shadow-yellow-500/25 hover:shadow-xl'
-            }
-            ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}
-          `}
-          style={{ padding: '12px', minHeight: '44px', minWidth: '44px' }}
-          title={
-            enableContinuousMode 
-              ? (isInContinuousMode ? '🛑 Stop chat' : 'Start chat!')
-              : (isListening ? '⏹️ Stop recording' : 'Start recording')
-          }
-        >
-          {(isListening || isInContinuousMode) ? (
-            <MicOff style={{ width: '20px', height: '20px' }} className="text-white" />
-          ) : (
-            <Mic style={{ width: '20px', height: '20px' }} className="text-white" />
-          )}
-          
-          {(isListening || isInContinuousMode) && (
-            <>
-              <span className="absolute inset-0 rounded-2xl animate-ping bg-red-400/50" />
-              <span className="absolute inset-1 rounded-2xl animate-pulse bg-red-400/30" />
-            </>
-          )}
-        </button>
-
-        {/* Continuous Mode Toggle */}
-        {onContinuousModeToggle && (
-          <button
-            data-onboarding="continuous-mode"
-            onClick={onContinuousModeToggle}
-            disabled={isDisabled}
-            className={`rounded-xl transition-all duration-300 shadow-lg transform hover:scale-105 ${
-              isContinuousMode 
-                ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25' 
-                : 'bg-gradient-to-br from-gray-400 to-gray-500 text-white shadow-gray-500/25 hover:shadow-xl'
-            }`}
-            style={{ padding: '10px', minHeight: '38px', minWidth: '38px' }}
-            title={isContinuousMode ? 'Disable continuous conversation' : 'Enable continuous conversation'}
-          >
-            <MessageCircle style={{ width: '18px', height: '18px' }} />
-          </button>
-        )}
-
-        {/* Mute Button - show in continuous mode when listening */}
-        {enableContinuousMode && (isListening || isInContinuousMode) && (
-          <button
-            onClick={toggleMute}
-            disabled={isDisabled}
-            className={`rounded-xl transition-all duration-300 shadow-lg transform hover:scale-105 ${
-              isMuted 
-                ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-red-500/25' 
-                : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25 hover:shadow-xl'
-            }`}
-            style={{ padding: '8px', minHeight: '34px', minWidth: '34px' }}
-            title={isMuted ? '🔊 Unmute to continue conversation' : '🔇 Mute and send current message'}
-          >
-            {isMuted ? <VolumeX style={{ width: '16px', height: '16px' }} /> : <Volume2 style={{ width: '16px', height: '16px' }} />}
-          </button>
-        )}
-
-        {/* Send Button - only show in manual mode */}
-        {!enableContinuousMode && transcript.trim() && (
-          <button
-            onClick={handleSendTranscript}
-            disabled={isDisabled}
-            className="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 text-white rounded-xl transition-all duration-300 disabled:opacity-50 shadow-lg shadow-yellow-500/25 hover:shadow-xl transform hover:scale-105"
-            style={{ padding: '8px', minHeight: '32px', minWidth: '32px' }}
-            title="Send message"
-          >
-            <Send style={{ width: '16px', height: '16px' }} className="filter drop-shadow-sm" />
-          </button>
-        )}
-
-        {/* Cancel Button - show when recording or has transcript */}
-        {(isListening || isInContinuousMode || transcript.trim()) && (
-          <button
-            onClick={cancelRecording}
-            disabled={isDisabled}
-            className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-xl transition-all duration-300 disabled:opacity-50 shadow-lg shadow-red-500/25 hover:shadow-xl transform hover:scale-105"
-            style={{ padding: '8px', minHeight: '32px', minWidth: '32px' }}
-            title="Cancel recording and discard transcript"
-          >
-            <X style={{ width: '16px', height: '16px' }} className="filter drop-shadow-sm" />
-          </button>
-        )}
-
-        {/* Status Indicator - always visible in a stable position */}
-        <div className="voice-status flex items-center" style={{ gap: '8px', minHeight: '24px' }}>
-          {(isListening || isInContinuousMode) && (
-            <>
-              <span className="font-semibold text-gray-700" style={{ fontSize: '12px' }}>
-                {isInContinuousMode 
-                  ? (isMuted ? '🔇 Muted' : 'Listening...')
-                  : '🔴 Recording...'
+      {isMobileLayout ? (
+        /* Mobile-Optimized Control Panel */
+        <div className="voice-controls-mobile">
+          {/* Primary Controls Row */}
+          <div className="flex items-center justify-center gap-3 mb-3">
+            {/* Main Action Button - Context Aware */}
+            <button
+              onClick={handleMicToggle}
+              disabled={isDisabled}
+              className={`
+                relative rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95
+                ${(isListening || isInContinuousMode)
+                  ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-red-500/25'
+                  : 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-green-500/25'
                 }
-              </span>
-              <div className="flex" style={{ gap: '2px' }}>
-                <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '300ms' }} />
-              </div>
-            </>
-          )}
-          
-          {/* Instructions when idle */}
-          {!isListening && !isInContinuousMode && !transcript.trim() && (
-            <div className="text-gray-600 leading-relaxed font-medium" style={{ fontSize: '10px' }}>
-              {enableContinuousMode 
-                ? 'Click to start chat mode'
-                : 'Click to talk'
+                ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}
+              `}
+              style={{ padding: '16px', minHeight: '56px', minWidth: '56px' }}
+              title={
+                enableContinuousMode
+                  ? (isInContinuousMode ? '🛑 Stop chat' : 'Start chat!')
+                  : (isListening ? '⏹️ Stop recording' : 'Start recording')
               }
+            >
+              {(isListening || isInContinuousMode) ? (
+                <MicOff style={{ width: '24px', height: '24px' }} className="text-white" />
+              ) : (
+                <Mic style={{ width: '24px', height: '24px' }} className="text-white" />
+              )}
+              {(isListening || isInContinuousMode) && (
+                <>
+                  <span className="absolute inset-0 rounded-2xl animate-ping bg-red-400/50" />
+                  <span className="absolute inset-1 rounded-2xl animate-pulse bg-red-400/30" />
+                </>
+              )}
+            </button>
+
+            {/* Send Button - show when transcript available */}
+            {!enableContinuousMode && transcript.trim() && (
+              <button
+                onClick={handleSendTranscript}
+                disabled={isDisabled}
+                className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95"
+                style={{ padding: '12px', minHeight: '48px', minWidth: '48px' }}
+                title="Send message"
+              >
+                <Send style={{ width: '20px', height: '20px' }} />
+              </button>
+            )}
+
+            {/* Cancel Button - show when active */}
+            {(isListening || isInContinuousMode || transcript.trim()) && (
+              <button
+                onClick={cancelRecording}
+                disabled={isDisabled}
+                className="bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95"
+                style={{ padding: '12px', minHeight: '48px', minWidth: '48px' }}
+                title="Cancel"
+              >
+                <X style={{ width: '20px', height: '20px' }} />
+              </button>
+            )}
+
+            {/* Advanced Controls Toggle */}
+            <button
+              onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+              disabled={isDisabled}
+              className={`bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95 ${
+                showAdvancedControls ? 'ring-2 ring-purple-300' : ''
+              }`}
+              style={{ padding: '12px', minHeight: '48px', minWidth: '48px' }}
+              title="More options"
+            >
+              {showAdvancedControls ?
+                <ChevronUp style={{ width: '20px', height: '20px' }} /> :
+                <MoreHorizontal style={{ width: '20px', height: '20px' }} />
+              }
+            </button>
+          </div>
+
+          {/* Status Display */}
+          <div className="text-center mb-2">
+            {(isListening || isInContinuousMode) ? (
+              <div className="flex items-center justify-center gap-2">
+                <span className="font-semibold text-gray-700 text-sm">
+                  {isInContinuousMode
+                    ? (isMuted ? '🔇 Muted' : 'Listening...')
+                    : '🔴 Recording...'
+                  }
+                </span>
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            ) : (
+              <span className="text-gray-600 text-sm font-medium">
+                {enableContinuousMode ? 'Click to start chat mode' : 'Click to talk'}
+              </span>
+            )}
+          </div>
+
+          {/* Advanced Controls - Collapsible */}
+          {showAdvancedControls && (
+            <div className="advanced-controls bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-200 shadow-inner">
+              {/* Continuous Mode Toggle */}
+              {onContinuousModeToggle && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">Continuous Chat</span>
+                  </div>
+                  <button
+                    data-onboarding="continuous-mode"
+                    onClick={onContinuousModeToggle}
+                    disabled={isDisabled}
+                    className={`rounded-xl transition-all duration-300 ${
+                      isContinuousMode
+                        ? 'bg-blue-500 text-white shadow-lg'
+                        : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
+                    }`}
+                    style={{ padding: '8px', minHeight: '36px', minWidth: '36px' }}
+                  >
+                    <MessageCircle style={{ width: '16px', height: '16px' }} />
+                  </button>
+                </div>
+              )}
+
+              {/* Mute Control - show when in continuous mode */}
+              {enableContinuousMode && (isListening || isInContinuousMode) && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {isMuted ? <VolumeX className="w-4 h-4 text-gray-600" /> : <Volume2 className="w-4 h-4 text-gray-600" />}
+                    <span className="text-sm font-medium text-gray-700">
+                      {isMuted ? 'Unmute' : 'Mute'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={toggleMute}
+                    disabled={isDisabled}
+                    className={`rounded-xl transition-all duration-300 ${
+                      isMuted
+                        ? 'bg-orange-500 text-white shadow-lg'
+                        : 'bg-purple-500 text-white shadow-lg'
+                    }`}
+                    style={{ padding: '8px', minHeight: '36px', minWidth: '36px' }}
+                  >
+                    {isMuted ? <VolumeX style={{ width: '16px', height: '16px' }} /> : <Volume2 style={{ width: '16px', height: '16px' }} />}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
-      </div>
+      ) : (
+        /* Desktop Control Panel - Original Layout */
+        <div className="voice-controls-panel flex flex-wrap items-center" style={{ gap: '8px', minHeight: '48px' }}>
+          {/* Microphone Button */}
+          <button
+            onClick={handleMicToggle}
+            disabled={isDisabled}
+            className={`
+              relative rounded-2xl transition-all duration-300 shadow-lg transform hover:scale-105
+              ${(isListening || isInContinuousMode)
+                ? 'bg-gradient-to-br from-red-500 to-pink-600 text-white scale-110 shadow-red-500/25'
+                : 'bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 text-white shadow-yellow-500/25 hover:shadow-xl'
+              }
+              ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}
+            `}
+            style={{ padding: '12px', minHeight: '44px', minWidth: '44px' }}
+            title={
+              enableContinuousMode
+                ? (isInContinuousMode ? '🛑 Stop chat' : 'Start chat!')
+                : (isListening ? '⏹️ Stop recording' : 'Start recording')
+            }
+          >
+            {(isListening || isInContinuousMode) ? (
+              <MicOff style={{ width: '20px', height: '20px' }} className="text-white" />
+            ) : (
+              <Mic style={{ width: '20px', height: '20px' }} className="text-white" />
+            )}
+
+            {(isListening || isInContinuousMode) && (
+              <>
+                <span className="absolute inset-0 rounded-2xl animate-ping bg-red-400/50" />
+                <span className="absolute inset-1 rounded-2xl animate-pulse bg-red-400/30" />
+              </>
+            )}
+          </button>
+
+          {/* Continuous Mode Toggle */}
+          {onContinuousModeToggle && (
+            <button
+              data-onboarding="continuous-mode"
+              onClick={onContinuousModeToggle}
+              disabled={isDisabled}
+              className={`rounded-xl transition-all duration-300 shadow-lg transform hover:scale-105 ${
+                isContinuousMode
+                  ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25'
+                  : 'bg-gradient-to-br from-gray-400 to-gray-500 text-white shadow-gray-500/25 hover:shadow-xl'
+              }`}
+              style={{ padding: '10px', minHeight: '38px', minWidth: '38px' }}
+              title={isContinuousMode ? 'Disable continuous conversation' : 'Enable continuous conversation'}
+            >
+              <MessageCircle style={{ width: '18px', height: '18px' }} />
+            </button>
+          )}
+
+          {/* Mute Button - show in continuous mode when listening */}
+          {enableContinuousMode && (isListening || isInContinuousMode) && (
+            <button
+              onClick={toggleMute}
+              disabled={isDisabled}
+              className={`rounded-xl transition-all duration-300 shadow-lg transform hover:scale-105 ${
+                isMuted
+                  ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-red-500/25'
+                  : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25 hover:shadow-xl'
+              }`}
+              style={{ padding: '8px', minHeight: '34px', minWidth: '34px' }}
+              title={isMuted ? '🔊 Unmute to continue conversation' : '🔇 Mute and send current message'}
+            >
+              {isMuted ? <VolumeX style={{ width: '16px', height: '16px' }} /> : <Volume2 style={{ width: '16px', height: '16px' }} />}
+            </button>
+          )}
+
+          {/* Send Button - only show in manual mode */}
+          {!enableContinuousMode && transcript.trim() && (
+            <button
+              onClick={handleSendTranscript}
+              disabled={isDisabled}
+              className="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 text-white rounded-xl transition-all duration-300 disabled:opacity-50 shadow-lg shadow-yellow-500/25 hover:shadow-xl transform hover:scale-105"
+              style={{ padding: '8px', minHeight: '32px', minWidth: '32px' }}
+              title="Send message"
+            >
+              <Send style={{ width: '16px', height: '16px' }} className="filter drop-shadow-sm" />
+            </button>
+          )}
+
+          {/* Cancel Button - show when recording or has transcript */}
+          {(isListening || isInContinuousMode || transcript.trim()) && (
+            <button
+              onClick={cancelRecording}
+              disabled={isDisabled}
+              className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-xl transition-all duration-300 disabled:opacity-50 shadow-lg shadow-red-500/25 hover:shadow-xl transform hover:scale-105"
+              style={{ padding: '8px', minHeight: '32px', minWidth: '32px' }}
+              title="Cancel recording and discard transcript"
+            >
+              <X style={{ width: '16px', height: '16px' }} className="filter drop-shadow-sm" />
+            </button>
+          )}
+
+          {/* Status Indicator - always visible in a stable position */}
+          <div className="voice-status flex items-center" style={{ gap: '8px', minHeight: '24px' }}>
+            {(isListening || isInContinuousMode) && (
+              <>
+                <span className="font-semibold text-gray-700" style={{ fontSize: '12px' }}>
+                  {isInContinuousMode
+                    ? (isMuted ? '🔇 Muted' : 'Listening...')
+                    : '🔴 Recording...'
+                  }
+                </span>
+                <div className="flex" style={{ gap: '2px' }}>
+                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '300ms' }} />
+                </div>
+              </>
+            )}
+
+            {/* Instructions when idle */}
+            {!isListening && !isInContinuousMode && !transcript.trim() && (
+              <div className="text-gray-600 leading-relaxed font-medium" style={{ fontSize: '10px' }}>
+                {enableContinuousMode
+                  ? 'Click to start chat mode'
+                  : 'Click to talk'
+                }
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Expandable Transcript Area - positioned below controls */}
       <div className="voice-transcript-area" style={{ marginTop: '8px' }}>
@@ -340,7 +503,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
               What you said:
             </div>
             <div className="text-yellow-900 leading-relaxed font-medium overflow-y-auto scrollbar-thin scrollbar-thumb-yellow-300 scrollbar-track-transparent" style={{ fontSize: '11px', marginBottom: '4px', maxHeight: '60px' }}>{transcript.trim()}</div>
-            
+
             {/* Speaker Diarization Display */}
             {currentSpeaker && (
               <div className={`inline-flex items-center rounded-lg border shadow-sm ${getSpeakerDisplay(currentSpeaker).color}`} style={{ gap: '4px', padding: '3px 6px', marginBottom: '4px', fontSize: '10px' }}>
@@ -375,7 +538,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
                 <span className="opacity-75">({getQualityDisplay(transcriptionQuality).confidenceText})</span>
               </div>
             )}
-            
+
             {/* Auto-send countdown */}
             {autoSendCountdown !== null && autoSendReason && (
               <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm" style={{ gap: '6px', padding: '6px' }}>
@@ -401,7 +564,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
             )}
           </div>
         )}
-        
+
         {/* Speaker History - show if multiple speakers detected */}
         {Object.keys(speakerHistory).length > 1 && (
           <div className="bg-gradient-to-br from-slate-50 to-gray-50 border border-gray-200/50 rounded-lg shadow-sm backdrop-blur-sm" style={{ padding: '6px', marginBottom: '6px' }}>
@@ -449,7 +612,7 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
             )}
           </div>
         )}
-        
+
         {/* Interim Transcript */}
         {interimTranscript && (
           <div className="bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-200/50 rounded-lg shadow-sm backdrop-blur-sm" style={{ padding: '6px' }}>

@@ -6,10 +6,10 @@ export async function GET(request: NextRequest) {
   try {
     // Basic health check
     const timestamp = new Date().toISOString();
-    
+
     // Check database connection
     await connectDB();
-    
+
     logger.info('Health check successful', {
       component: 'health-api',
       timestamp,

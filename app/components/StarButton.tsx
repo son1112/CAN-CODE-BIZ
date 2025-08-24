@@ -36,9 +36,9 @@ export default function StarButton({
 }: StarButtonProps) {
   const { isStarred, starItem, unstarItem, isLoading } = useStars(userId);
   const [isHovered, setIsHovered] = useState(false);
-  
+
   const starred = isStarred(itemType, itemId);
-  
+
   const getSizeClasses = () => {
     switch (size) {
       case 'sm': return 'w-4 h-4';
@@ -47,7 +47,7 @@ export default function StarButton({
       default: return 'w-5 h-5';
     }
   };
-  
+
   const getPaddingClasses = () => {
     switch (size) {
       case 'sm': return 'p-1';
@@ -60,9 +60,9 @@ export default function StarButton({
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     if (isLoading) return;
-    
+
     try {
       if (starred) {
         const success = await unstarItem(itemType, itemId);
@@ -104,24 +104,24 @@ export default function StarButton({
       title={starred ? `Unstar this ${itemType}` : `Star this ${itemType}`}
     >
       {starred ? (
-        <Star 
+        <Star
           className={`${getSizeClasses()} transition-colors duration-200`}
           fill="currentColor"
         />
       ) : (
-        <Star 
+        <Star
           className={`${getSizeClasses()} transition-colors duration-200`}
         />
       )}
-      
+
       {showLabel && (
         <span className="text-sm font-medium">
           {starred ? 'Starred' : 'Star'}
         </span>
       )}
-      
+
       {isLoading && (
-        <div 
+        <div
           className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"
           style={{ borderColor: 'var(--text-tertiary)' }}
         />

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = request.nextUrl;
-    
+
     // Use standardized pagination validation
     const { page, limit, skip } = sanitizePagination(
       searchParams.get('page'),
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       20, // default limit
       100  // max limit
     );
-    
+
     // Validate and sanitize search parameters
     const search = searchParams.get('search')?.trim().slice(0, 200) || '';
     const tags = searchParams.get('tags')?.split(',').filter(Boolean).slice(0, 10) || [];
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     const { name, tags = [], conversationStarter } = validatedData as { name?: string; tags?: string[]; conversationStarter?: string };
     const sessionId = uuidv4();
-    
+
     // Auto-generate unique name if not provided
     const sessionName = name || `Chat ${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}-${sessionId.slice(-6)}`;
 

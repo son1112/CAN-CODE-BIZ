@@ -28,9 +28,9 @@ export interface UserPreferencesDocument extends Document {
 
 const UserPreferencesSchema = new Schema<UserPreferencesDocument>(
   {
-    userId: { 
-      type: String, 
-      required: true, 
+    userId: {
+      type: String,
+      required: true,
       unique: true
     },
     notifications: {
@@ -40,26 +40,26 @@ const UserPreferencesSchema = new Schema<UserPreferencesDocument>(
     },
     voice: {
       autoSend: { type: Boolean, default: true },
-      silenceThreshold: { 
-        type: Number, 
-        default: 2, 
-        min: 1, 
-        max: 10 
+      silenceThreshold: {
+        type: Number,
+        default: 2,
+        min: 1,
+        max: 10
       },
-      voiceQuality: { 
-        type: String, 
-        enum: ['low', 'medium', 'high'], 
-        default: 'high' 
+      voiceQuality: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+        default: 'high'
       },
     },
     display: {
-      theme: { 
-        type: String, 
-        enum: ['light', 'dark', 'system'], 
-        default: 'light' 
+      theme: {
+        type: String,
+        enum: ['light', 'dark', 'system'],
+        default: 'light'
       },
-      language: { 
-        type: String, 
+      language: {
+        type: String,
         default: 'en',
         minlength: 2,
         maxlength: 5
@@ -80,5 +80,5 @@ const UserPreferencesSchema = new Schema<UserPreferencesDocument>(
 // Create indexes
 UserPreferencesSchema.index({ updatedAt: -1 });
 
-export default mongoose.models.UserPreferences || 
+export default mongoose.models.UserPreferences ||
   mongoose.model<UserPreferencesDocument>('UserPreferences', UserPreferencesSchema);

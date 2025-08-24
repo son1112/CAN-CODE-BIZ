@@ -75,12 +75,12 @@ function extractTextFromParsedObject(obj: unknown): string {
 
   // Try to extract meaningful text from any string field longer than 10 chars
   const keys = Object.keys(objectData);
-  const meaningfulKeys = keys.filter(key => 
-    typeof objectData[key] === 'string' && 
-    (objectData[key] as string).length > 10 && 
+  const meaningfulKeys = keys.filter(key =>
+    typeof objectData[key] === 'string' &&
+    (objectData[key] as string).length > 10 &&
     !['id', 'timestamp', 'type', 'status', 'success', 'metadata', 'modelName', 'modelKey', 'prompt'].includes(key)
   );
-  
+
   if (meaningfulKeys.length > 0) {
     return objectData[meaningfulKeys[0]] as string;
   }
@@ -112,7 +112,7 @@ function extractTextFromParsedObject(obj: unknown): string {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -142,20 +142,20 @@ export async function POST(request: NextRequest) {
     }
 
     const client = new MongoClient(MONGODB_URI);
-    
+
     try {
       await client.connect();
-      
+
       // Access the CLI database and sessions collection
       const cliDb = client.db('rubber-ducky');
       const cliSessionsCollection = cliDb.collection('sessions');
-      
+
       // Get all CLI sessions
       const cliSessions = await cliSessionsCollection.find().toArray() as unknown as CLISession[];
-      
-      logger.info('Found CLI sessions to process', { 
-        component: 'migration', 
-        sessionCount: cliSessions.length 
+
+      logger.info('Found CLI sessions to process', {
+        component: 'migration',
+        sessionCount: cliSessions.length
       });
       result.sessionsProcessed = cliSessions.length;
 
@@ -165,11 +165,11 @@ export async function POST(request: NextRequest) {
           if (selectedSessions.length > 0 && !selectedSessions.includes(cliSession.name)) {
             continue;
           }
-          
+
           // Check if this session already exists in the web UI
-          const existingSession = await Session.findOne({ 
+          const existingSession = await Session.findOne({
             name: cliSession.name,
-            createdBy: DEFAULT_CLI_USER_ID 
+            createdBy: DEFAULT_CLI_USER_ID
           });
 
           if (existingSession) {
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
             for (const [agentName, output] of Object.entries(iteration.agentOutputs || {})) {
               // Enhanced output parsing for better display
               let outputStr = '';
-              
+
               if (typeof output === 'string') {
                 // Handle string output - check if it's JSON
                 if (output.trim().startsWith('{') && output.trim().endsWith('}')) {
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
               } else {
                 outputStr = String(output || '');
               }
-              
+
               // Clean up the output string
               if (outputStr && outputStr.trim()) {
                 // Remove excessive newlines and clean up formatting
@@ -250,14 +250,14 @@ export async function POST(request: NextRequest) {
                   .replace(/\n{3,}/g, '\n\n') // Replace 3+ newlines with 2
                   .replace(/^\s*\n+/, '') // Remove leading newlines
                   .replace(/\n+\s*$/, ''); // Remove trailing newlines
-                
+
                 // Final cleanup for any remaining JSON artifacts
                 cleanOutput = cleanOutput
                   .replace(/^["']|["']$/g, '') // Remove surrounding quotes
                   .replace(/\\n/g, '\n') // Convert escaped newlines
                   .replace(/\\"/g, '"') // Convert escaped quotes
                   .replace(/\\\\/g, '\\'); // Convert escaped backslashes
-                
+
                 messages.push({
                   id: uuidv4(),
                   role: 'assistant',
@@ -275,21 +275,21 @@ export async function POST(request: NextRequest) {
 
           // Improve session naming for better UI display
           let displayName = cliSession.name;
-          
+
           // Clean up technical session names
           if (displayName && typeof displayName === 'string') {
             // Remove UUID-like patterns
             displayName = displayName.replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, '');
-            
+
             // Remove excessive timestamps
             displayName = displayName.replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.?\d*Z?/g, '');
-            
+
             // Clean up underscores and dashes
             displayName = displayName.replace(/[_-]+/g, ' ').trim();
-            
+
             // Capitalize first letter
             displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
-            
+
             // If it's still empty or too short, generate a better name
             if (!displayName || displayName.length < 3) {
               const firstMessage = firstIteration?.transcript || '';
@@ -321,10 +321,10 @@ export async function POST(request: NextRequest) {
             createdAt,
             updatedAt: cliSession.updatedAt || createdAt,
             lastAccessedAt: cliSession.updatedAt || createdAt,
-            
+
             // Interactive chat data (converted from iterations)
             messages,
-            
+
             // CLI-style iterations (preserved for compatibility)
             iterations: (cliSession.iterations || []).map((iteration, index) => ({
               iteration: index + 1,
@@ -339,7 +339,7 @@ export async function POST(request: NextRequest) {
               }
             })),
             iterationCount: cliSession.iterations?.length || 0,
-            
+
             // Metadata
             tags: [...new Set([
               ...(cliSession.agentNames || []),
@@ -366,18 +366,18 @@ export async function POST(request: NextRequest) {
             iterationCount: cliSession.iterations?.length || 0
           });
 
-          logger.info('Session migrated', { 
-            component: 'migration', 
+          logger.info('Session migrated', {
+            component: 'migration',
             sessionName: cliSession.name,
             messageCount: messages.length,
             iterationCount: cliSession.iterations?.length || 0,
-            isDryRun: dryRun 
+            isDryRun: dryRun
           });
 
         } catch (sessionError) {
-          logger.error('Error processing session', { 
-            component: 'migration', 
-            sessionName: cliSession.name 
+          logger.error('Error processing session', {
+            component: 'migration',
+            sessionName: cliSession.name
           }, sessionError);
           const errorMessage = sessionError instanceof Error ? sessionError.message : 'Unknown error';
           result.errors.push(`${cliSession.name}: ${errorMessage}`);
@@ -411,8 +411,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('Migration failed', { component: 'migration' }, error);
     return NextResponse.json(
-      { 
-        error: 'Migration failed', 
+      {
+        error: 'Migration failed',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
@@ -424,7 +424,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -441,13 +441,13 @@ export async function GET() {
     }
 
     const client = new MongoClient(MONGODB_URI);
-    
+
     try {
       await client.connect();
-      
+
       const cliDb = client.db('rubber-ducky');
       const cliSessionsCollection = cliDb.collection('sessions');
-      
+
       const totalCliSessions = await cliSessionsCollection.countDocuments();
       const cliSessions = await cliSessionsCollection
         .find({}, { projection: { name: 1, agentNames: 1, updatedAt: 1, iterations: 1 } })
@@ -460,7 +460,7 @@ export async function GET() {
       }).select('name').lean();
 
       const existingNames = new Set(existingWebSessions.map(s => s.name));
-      
+
       const preview = cliSessions.map(session => ({
         name: session.name,
         agentNames: session.agentNames || [],
@@ -488,7 +488,7 @@ export async function GET() {
   } catch (error) {
     logger.error('Migration preview failed', { component: 'migration' }, error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to get migration status',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

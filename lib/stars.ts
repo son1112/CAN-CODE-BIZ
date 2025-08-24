@@ -42,11 +42,11 @@ export interface CodeSnippetStar {
   sessionId?: string;
 }
 
-export type StarItem = 
-  | MessageStar 
-  | SessionStar 
-  | AgentStar 
-  | ConversationStarterStar 
+export type StarItem =
+  | MessageStar
+  | SessionStar
+  | AgentStar
+  | ConversationStarterStar
   | CodeSnippetStar;
 
 // Star creation helpers

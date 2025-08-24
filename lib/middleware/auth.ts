@@ -21,8 +21,8 @@ export async function requireAuth(request?: NextRequest): Promise<AuthResult> {
   try {
     const session = await auth();
     const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-    
-    logger.debug('Authentication check', { 
+
+    logger.debug('Authentication check', {
       component: 'auth-middleware',
       isDemoMode,
       hasSession: !!session?.user?.id,
@@ -30,9 +30,9 @@ export async function requireAuth(request?: NextRequest): Promise<AuthResult> {
     });
 
     if (isDemoMode) {
-      logger.info('Demo mode - bypassing authentication', { 
+      logger.info('Demo mode - bypassing authentication', {
         component: 'auth-middleware',
-        path: request?.nextUrl?.pathname 
+        path: request?.nextUrl?.pathname
       });
       // Use real user ID in demo mode for data consistency after migration
       return {
@@ -43,14 +43,14 @@ export async function requireAuth(request?: NextRequest): Promise<AuthResult> {
 
     const userId = session?.user?.id;
     if (!userId) {
-      logger.warn('Authentication failed - no user ID', { 
+      logger.warn('Authentication failed - no user ID', {
         component: 'auth-middleware',
         path: request?.nextUrl?.pathname
       });
       throw new UnauthorizedError('Authentication required');
     }
 
-    logger.debug('Authentication successful', { 
+    logger.debug('Authentication successful', {
       component: 'auth-middleware',
       userId,
       path: request?.nextUrl?.pathname
@@ -61,15 +61,15 @@ export async function requireAuth(request?: NextRequest): Promise<AuthResult> {
       isDemo: false
     };
   } catch (error) {
-    logger.error('Authentication error', { 
+    logger.error('Authentication error', {
       component: 'auth-middleware',
-      path: request?.nextUrl?.pathname 
+      path: request?.nextUrl?.pathname
     }, error);
-    
+
     if (error instanceof UnauthorizedError) {
       throw error;
     }
-    
+
     throw new UnauthorizedError('Authentication failed');
   }
 }
@@ -82,9 +82,9 @@ export async function optionalAuth(request?: NextRequest): Promise<AuthResult | 
   try {
     return await requireAuth(request);
   } catch (error) {
-    logger.debug('Optional auth failed - proceeding without authentication', { 
+    logger.debug('Optional auth failed - proceeding without authentication', {
       component: 'auth-middleware',
-      path: request?.nextUrl?.pathname 
+      path: request?.nextUrl?.pathname
     });
     return null;
   }
@@ -107,7 +107,7 @@ export function withAuth<T extends unknown[]>(
           { status: error.statusCode }
         );
       }
-      
+
       logger.error('Auth middleware error', { component: 'auth-middleware' }, error);
       return NextResponse.json(
         { error: 'Internal server error', code: 'INTERNAL_ERROR' },

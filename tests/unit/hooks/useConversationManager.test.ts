@@ -232,7 +232,7 @@ describe('useConversationManager', () => {
       'Hi there',
       'Hey',
       'Good morning',
-      'Good afternoon', 
+      'Good afternoon',
       'Good evening',
       'Let\'s start',
       'Let\'s begin'
@@ -325,7 +325,7 @@ describe('useConversationManager', () => {
 
       const recentMessages = [{ role: 'user', content: 'Previous message' }];
       const shouldRespond = result.current.shouldAIRespond(
-        'This is a longer message that contains more than three words', 
+        'This is a longer message that contains more than three words',
         recentMessages
       );
       expect(shouldRespond).toBe(true);

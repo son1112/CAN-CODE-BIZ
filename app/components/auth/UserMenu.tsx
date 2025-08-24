@@ -57,10 +57,10 @@ export default function UserMenu() {
             </p>
           </div>
         </div>
-        <ChevronDown 
+        <ChevronDown
           className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
-          }`} 
+          }`}
         />
       </button>
 
@@ -74,7 +74,7 @@ export default function UserMenu() {
               {session.user?.email}
             </p>
           </div>
-          
+
           <div className="py-2">
             <Link href="/profile" className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200">
               <User className="w-4 h-4" />
@@ -85,7 +85,7 @@ export default function UserMenu() {
               Settings
             </Link>
           </div>
-          
+
           <div className="border-t border-blue-100 pt-2">
             <button
               onClick={() => signOut({ callbackUrl: '/' })}

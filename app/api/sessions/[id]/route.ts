@@ -10,12 +10,12 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-    
+
     // Demo mode bypass for testing
     const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
     // After migration, always use the real user ID for data consistency
     const userId = isDemoMode ? '68a33c99df2098d5e02a84e3' : session?.user?.id;
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -64,12 +64,12 @@ export async function PUT(
 ) {
   try {
     const session = await auth();
-    
+
     // Demo mode bypass for testing
     const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
     // After migration, always use the real user ID for data consistency
     const userId = isDemoMode ? '68a33c99df2098d5e02a84e3' : session?.user?.id;
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -142,12 +142,12 @@ export async function DELETE(
 ) {
   try {
     const session = await auth();
-    
+
     // Demo mode bypass for testing
     const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
     // After migration, always use the real user ID for data consistency
     const userId = isDemoMode ? '68a33c99df2098d5e02a84e3' : session?.user?.id;
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },

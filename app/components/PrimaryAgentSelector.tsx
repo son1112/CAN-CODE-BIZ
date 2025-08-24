@@ -33,13 +33,13 @@ export default function PrimaryAgentSelector({ sessionId, currentPrimaryAgent }:
   // Get display name for an agent ID
   const getAgentDisplayName = (agentId: string | null | undefined) => {
     if (!agentId) return 'None';
-    
+
     if (agentId.startsWith('power-agent:')) {
       const powerAgentName = agentId.replace('power-agent:', '');
       const powerAgent = powerAgents.find(a => a.name === powerAgentName);
       return powerAgent?.name || powerAgentName;
     }
-    
+
     return getAgentById(agentId).name;
   };
 
@@ -65,7 +65,7 @@ export default function PrimaryAgentSelector({ sessionId, currentPrimaryAgent }:
 
   const handleSavePrimaryAgent = async () => {
     if (!sessionId) return;
-    
+
     setIsLoading(true);
     try {
       await setPrimaryAgent(sessionId, pendingAgent);
@@ -85,7 +85,7 @@ export default function PrimaryAgentSelector({ sessionId, currentPrimaryAgent }:
 
   const handleSetToCurrent = async () => {
     if (!sessionId) return;
-    
+
     setIsLoading(true);
     try {
       await setPrimaryAgent(sessionId, currentEffectiveAgentId);
@@ -144,7 +144,7 @@ export default function PrimaryAgentSelector({ sessionId, currentPrimaryAgent }:
           Primary: <span className="font-medium">{getAgentDisplayName(currentPrimaryAgent)}</span>
         </span>
       </div>
-      
+
       <div className="flex items-center gap-1">
         {!currentPrimaryAgent && (
           <button
@@ -156,7 +156,7 @@ export default function PrimaryAgentSelector({ sessionId, currentPrimaryAgent }:
             Pin Current
           </button>
         )}
-        
+
         <button
           onClick={() => {
             setPendingAgent(currentPrimaryAgent || null);

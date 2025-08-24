@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the specific message
-    const message = session.messages.find((msg: { _id?: { toString(): string }; id?: string }) => 
+    const message = session.messages.find((msg: { _id?: { toString(): string }; id?: string }) =>
       msg._id?.toString() === messageId || msg.id === messageId
     );
     if (!message) {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // Generate text content
     let textContent = '';
-    
+
     // Add header with metadata
     if (includeMetadata) {
       textContent += `RUBBER DUCKY LIVE - MESSAGE EXPORT\n`;
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     // Add message role indicator
     const roleIndicator = message.role === 'user' ? 'USER' : 'ASSISTANT';
     textContent += `[${roleIndicator}]\n`;
-    
+
     // Add message content
     textContent += message.content;
 
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     // Return text as download
     const fileName = `${session.name.replace(/[^a-zA-Z0-9]/g, '_')}_${messageId.slice(-8)}_${Date.now()}.txt`;
-    
+
     return new Response(textContent, {
       status: 200,
       headers: {

@@ -12,10 +12,10 @@ import { NotoSansRegularFont } from './NotoSansRegular.js';
 export function addUnicodeFont(doc: jsPDF): void {
   // Add font to VFS
   doc.addFileToVFS('NotoSansRegular.ttf', NotoSansRegularFont);
-  
+
   // Register font
   doc.addFont('NotoSansRegular.ttf', 'NotoSansRegular', 'normal');
-  
+
   // Set as default font for Unicode support
   doc.setFont('NotoSansRegular');
 }

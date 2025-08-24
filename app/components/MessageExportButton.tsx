@@ -36,7 +36,7 @@ export default function MessageExportButton({
   useEffect(() => {
     const initializeGoogleServices = async () => {
       // Check if already ready
-      if (isGoogleServicesReady() && 
+      if (isGoogleServicesReady() &&
           !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID &&
           process.env.NEXT_PUBLIC_DEMO_MODE !== 'true') {
         logger.info('Google services already ready', { component: 'MessageExportButton' });
@@ -55,13 +55,13 @@ export default function MessageExportButton({
       }
 
       try {
-        logger.info('Starting Google services dynamic load', { 
+        logger.info('Starting Google services dynamic load', {
           component: 'MessageExportButton',
-          clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID 
+          clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
         });
 
         const loaded = await loadGoogleServices();
-        
+
         logger.info('Google services load result', {
           component: 'MessageExportButton',
           loaded,
@@ -76,10 +76,10 @@ export default function MessageExportButton({
           component: 'MessageExportButton',
           error: error instanceof Error ? error.message : String(error)
         }, error);
-        
+
         // Gracefully degrade to local download mode
         setGoogleServicesReady(false);
-        
+
         console.log('📥 Google Drive integration disabled - using local download mode');
       }
     };
@@ -176,8 +176,8 @@ export default function MessageExportButton({
         });
 
         // Call local export API (without Google Drive upload)
-        const endpoint = type === 'pdf' ? '/api/export/pdf-local' : 
-                        type === 'word' ? '/api/export/word-local' : 
+        const endpoint = type === 'pdf' ? '/api/export/pdf-local' :
+                        type === 'word' ? '/api/export/word-local' :
                         '/api/export/text-local';
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -246,8 +246,8 @@ export default function MessageExportButton({
       }
 
       // Call export API
-      const endpoint = type === 'pdf' ? '/api/export/pdf' : 
-                      type === 'word' ? '/api/export/word' : 
+      const endpoint = type === 'pdf' ? '/api/export/pdf' :
+                      type === 'word' ? '/api/export/word' :
                       '/api/export/text';
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -276,7 +276,7 @@ export default function MessageExportButton({
       }
 
       const result = await response.json();
-      
+
       setExportState({
         isExporting: false,
         exportType: null,
@@ -340,7 +340,7 @@ export default function MessageExportButton({
 
       {/* Dropdown Menu */}
       {showDropdown && !exportState.isExporting && (
-        <div 
+        <div
           data-testid="export-menu"
           className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-800 rounded-xl shadow-2xl shadow-blue-500/20 z-[60] min-w-52 animate-in slide-in-from-top-2 duration-200 backdrop-blur-sm"
           onClick={(e) => e.stopPropagation()}
@@ -350,7 +350,7 @@ export default function MessageExportButton({
               <Download className="w-3 h-3" />
               {googleServicesReady ? 'Export to Google Drive' : 'Export & Download'}
             </div>
-            
+
             <button
               data-testid="export-pdf"
               onClick={() => handleExport('pdf')}
@@ -362,7 +362,7 @@ export default function MessageExportButton({
                 <div className="text-xs text-red-500/70">Portable document format</div>
               </div>
             </button>
-            
+
             <button
               data-testid="export-word"
               onClick={() => handleExport('word')}
@@ -374,7 +374,7 @@ export default function MessageExportButton({
                 <div className="text-xs text-blue-500/70">Microsoft Word document</div>
               </div>
             </button>
-            
+
             <button
               data-testid="export-text"
               onClick={() => handleExport('text')}

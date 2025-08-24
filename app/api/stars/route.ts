@@ -13,10 +13,10 @@ export async function POST(request: NextRequest) {
   try {
     const { userId } = await requireAuth(request);
     await connectDB();
-    
+
     const body = await request.json();
     const validatedData = validateRequest(body, validators.createStar, 'stars-api');
-    
+
     const validatedStarData = validatedData as { itemType: 'message' | 'session' | 'agent' | 'conversation-starter'; itemId: string; context?: Record<string, unknown>; tags?: string[]; priority?: 'low' | 'medium' | 'high' };
     const options: CreateStarOptions = {
       ...validatedStarData,
@@ -68,21 +68,21 @@ export async function GET(request: NextRequest) {
   try {
     const { userId } = await requireAuth(request);
     await connectDB();
-    
+
     const { searchParams } = request.nextUrl;
 
     // Build filter object
     const filters: Record<string, unknown> = { userId };
-    
+
     const itemType = searchParams.get('itemType');
     if (itemType) filters.itemType = itemType;
-    
+
     const priority = searchParams.get('priority');
     if (priority) filters.priority = priority;
-    
+
     const category = searchParams.get('category');
     if (category) filters.category = category;
-    
+
     const tags = searchParams.get('tags');
     if (tags) filters.tags = { $in: tags.split(',') };
 
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
       100  // max limit
     );
     const offset = skip;
-    
+
     // Validate and sanitize parameters
     const sortBy = ['starredAt', 'priority', 'category'].includes(searchParams.get('sortBy') || '') ? searchParams.get('sortBy')! : 'starredAt';
     const sortOrder = searchParams.get('sortOrder') === 'asc' ? 1 : -1;

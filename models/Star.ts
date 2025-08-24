@@ -1,9 +1,9 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export type StarableType = 
-  | 'message' 
-  | 'session' 
-  | 'agent' 
+export type StarableType =
+  | 'message'
+  | 'session'
+  | 'agent'
   | 'conversation-starter'
   | 'code-snippet';
 
@@ -11,11 +11,11 @@ export interface StarDocument extends Document {
   // Core identification
   starId: string;
   userId: string; // Who starred it
-  
+
   // What is starred
   itemType: StarableType;
   itemId: string; // ID of the starred item
-  
+
   // Context (depends on item type)
   context?: {
     sessionId?: string; // For messages
@@ -25,15 +25,15 @@ export interface StarDocument extends Document {
     title?: string; // Display name
     description?: string; // User notes about why they starred it
   };
-  
+
   // Organization
   tags?: string[]; // User-defined tags for organization
   category?: string; // Auto-derived category (optional)
-  
+
   // Timestamps
   starredAt: Date;
   lastAccessedAt: Date;
-  
+
   // User metadata
   isPrivate: boolean; // Future: sharing starred items
   priority?: 'low' | 'medium' | 'high'; // User-defined importance
@@ -43,15 +43,15 @@ const StarSchema = new Schema<StarDocument>(
   {
     starId: { type: String, required: true, unique: true },
     userId: { type: String, required: true },
-    
+
     // What is starred
-    itemType: { 
-      type: String, 
+    itemType: {
+      type: String,
       enum: ['message', 'session', 'agent', 'conversation-starter', 'code-snippet'],
       required: true
     },
     itemId: { type: String, required: true },
-    
+
     // Context object for different item types
     context: {
       sessionId: String,
@@ -61,19 +61,19 @@ const StarSchema = new Schema<StarDocument>(
       title: String,
       description: String,
     },
-    
+
     // Organization
     tags: [String],
     category: String,
-    
+
     // User metadata
     isPrivate: { type: Boolean, default: true },
-    priority: { 
-      type: String, 
+    priority: {
+      type: String,
       enum: ['low', 'medium', 'high'],
       default: 'medium'
     },
-    
+
     // Access tracking
     lastAccessedAt: { type: Date, default: Date.now },
     starredAt: { type: Date, default: Date.now },
@@ -104,5 +104,5 @@ StarSchema.pre('save', function(next) {
   next();
 });
 
-export default mongoose.models.Star || 
+export default mongoose.models.Star ||
   mongoose.model<StarDocument>('Star', StarSchema);

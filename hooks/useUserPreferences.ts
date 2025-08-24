@@ -81,7 +81,7 @@ export function useUserPreferences(): UseUserPreferencesReturn {
       setError(null);
 
       const response = await fetch('/api/preferences');
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           // User is not authenticated, use defaults
@@ -160,10 +160,10 @@ export function useUserPreferences(): UseUserPreferencesReturn {
       }
 
       const savedPreferences = await response.json();
-      
+
       // Update the original preferences to reflect the saved state
       setOriginalPreferences(JSON.parse(JSON.stringify(preferences)));
-      
+
       logger.info('Preferences saved successfully', { component: 'UserPreferences' });
     } catch (err: any) {
       logger.error('Error saving preferences', { component: 'UserPreferences' }, err);
@@ -173,7 +173,7 @@ export function useUserPreferences(): UseUserPreferencesReturn {
   }, [preferences]);
 
   // Check if preferences have been modified
-  const isModified = preferences && originalPreferences 
+  const isModified = preferences && originalPreferences
     ? JSON.stringify(preferences) !== JSON.stringify(originalPreferences)
     : false;
 

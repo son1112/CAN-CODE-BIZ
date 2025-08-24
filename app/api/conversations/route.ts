@@ -6,7 +6,7 @@ import { auth } from '@/lib/auth';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -15,14 +15,14 @@ export async function GET(request: NextRequest) {
     }
 
     await connectDB();
-    
+
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = parseInt(searchParams.get('skip') || '0');
 
     // Always use the authenticated user's ID
     const query = { userId: session.user.id };
-    
+
     const conversations = await Conversation
       .find(query)
       .sort({ createdAt: -1 })
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     await connectDB();
-    
+
     const body = await request.json();
     const { messages, metadata } = body;
 
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -100,7 +100,7 @@ export async function PUT(request: NextRequest) {
     }
 
     await connectDB();
-    
+
     const body = await request.json();
     const { conversationId, messages } = body;
 
@@ -113,11 +113,11 @@ export async function PUT(request: NextRequest) {
 
     // Ensure the conversation belongs to the authenticated user
     const conversation = await Conversation.findOneAndUpdate(
-      { 
+      {
         _id: conversationId,
         userId: session.user.id
       },
-      { 
+      {
         messages,
         updatedAt: new Date(),
       },

@@ -30,10 +30,10 @@ export const DEFAULT_FALLBACK_CONFIG: ModelFallbackConfig = {
 // Detect if error is overload/rate limit related
 export function isOverloadError(error: any): boolean {
   if (!error) return false;
-  
+
   const errorMessage = error.message?.toLowerCase() || '';
   const errorType = error.type?.toLowerCase() || '';
-  
+
   return (
     errorType === 'overloaded_error' ||
     errorType === 'rate_limit_error' ||
@@ -48,9 +48,9 @@ export function isOverloadError(error: any): boolean {
 // Detect if error is timeout related
 export function isTimeoutError(error: any): boolean {
   if (!error) return false;
-  
+
   const errorMessage = error.message?.toLowerCase() || '';
-  
+
   return (
     error.name === 'TimeoutError' ||
     errorMessage.includes('timeout') ||
@@ -65,11 +65,11 @@ export function getNextFallbackModel(
   config: ModelFallbackConfig = DEFAULT_FALLBACK_CONFIG
 ): ClaudeModel | null {
   const currentIndex = config.models.indexOf(currentModel);
-  
+
   if (currentIndex === -1 || currentIndex >= config.models.length - 1) {
     return null; // No fallback available
   }
-  
+
   return config.models[currentIndex + 1];
 }
 
@@ -104,7 +104,7 @@ export function logModelFallback(result: FallbackResult): void {
 export function getFallbackExplanation(result: FallbackResult): string {
   const originalConfig = MODEL_CONFIGS[result.originalModel];
   const fallbackConfig = MODEL_CONFIGS[result.model];
-  
+
   let reason = '';
   switch (result.fallbackReason) {
     case 'overloaded':
@@ -119,7 +119,7 @@ export function getFallbackExplanation(result: FallbackResult): string {
     default:
       reason = 'due to an error';
   }
-  
+
   return `Switched from ${originalConfig.displayName} to ${fallbackConfig.displayName} ${reason}`;
 }
 

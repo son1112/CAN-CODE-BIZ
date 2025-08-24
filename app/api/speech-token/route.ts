@@ -11,14 +11,14 @@ export async function POST(request: NextRequest) {
 
     // Check if API key is configured
     if (!process.env.ASSEMBLYAI_API_KEY) {
-      logger.error('AssemblyAI API key not configured', { 
+      logger.error('AssemblyAI API key not configured', {
         component: 'speech-token-api',
-        userId 
+        userId
       });
       return ApiResponse.internalError('Speech recognition service not configured');
     }
 
-    logger.info('Speech token requested', { 
+    logger.info('Speech token requested', {
       component: 'speech-token-api',
       userId
     });

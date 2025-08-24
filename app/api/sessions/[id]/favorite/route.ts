@@ -21,11 +21,11 @@ export async function POST(
     });
 
     const session = await Session.findOneAndUpdate(
-      { 
-        sessionId, 
-        createdBy: userId 
+      {
+        sessionId,
+        createdBy: userId
       },
-      { 
+      {
         isFavorite: Boolean(isFavorite),
         updatedAt: new Date()
       },
@@ -54,14 +54,14 @@ export async function POST(
 
   } catch (error) {
     const { id: sessionId } = await context.params.catch(() => ({ id: 'unknown' }));
-    
+
     if (error instanceof Error && error.message.includes('Authentication')) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
-    
+
     logger.error('Failed to toggle session favorite', {
       component: 'SessionFavoriteAPI',
       sessionId

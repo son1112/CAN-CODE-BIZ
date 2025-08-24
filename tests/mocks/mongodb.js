@@ -5,17 +5,17 @@ class MockMongoClient {
   constructor() {
     this.isConnected = false;
   }
-  
+
   connect() {
     this.isConnected = true;
     return Promise.resolve(this);
   }
-  
+
   close() {
     this.isConnected = false;
     return Promise.resolve();
   }
-  
+
   db(name) {
     return new MockDb(name);
   }
@@ -25,7 +25,7 @@ class MockDb {
   constructor(name) {
     this.name = name;
   }
-  
+
   collection(name) {
     return new MockCollection(name);
   }
@@ -35,7 +35,7 @@ class MockCollection {
   constructor(name) {
     this.name = name;
   }
-  
+
   findOne = jest.fn(() => Promise.resolve(null));
   find = jest.fn(() => ({
     toArray: () => Promise.resolve([]),
@@ -56,7 +56,7 @@ class MockCollection {
 const mockMongoDB = {
   MongoClient: MockMongoClient,
   ObjectId,
-  
+
   // Connection states
   ReadPreference: {
     PRIMARY: 'primary',

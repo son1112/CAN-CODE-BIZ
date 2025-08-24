@@ -24,7 +24,7 @@ jest.mock('@/lib/mongodb', () => ({
 // Mock error handlers and API response
 jest.mock('@/lib/error-handler', () => ({
   handleApiError: jest.fn((error, component) => {
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { 
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -34,14 +34,14 @@ jest.mock('@/lib/error-handler', () => ({
 
 jest.mock('@/lib/api-response', () => ({
   ApiResponse: {
-    success: jest.fn((data, message) => 
-      new Response(JSON.stringify({ success: true, data, message }), { 
+    success: jest.fn((data, message) =>
+      new Response(JSON.stringify({ success: true, data, message }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
     ),
-    conflict: jest.fn((message) => 
-      new Response(JSON.stringify({ error: message }), { 
+    conflict: jest.fn((message) =>
+      new Response(JSON.stringify({ error: message }), {
         status: 409,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -55,10 +55,10 @@ jest.mock('@/models/Tag', () => {
     ...data,
     save: jest.fn().mockResolvedValue(data),
   }));
-  
+
   mockConstructor.find = jest.fn();
   mockConstructor.findOne = jest.fn();
-  
+
   return mockConstructor;
 });
 
@@ -68,7 +68,7 @@ import { requireAuth } from '@/lib/middleware/auth';
 describe('/api/tags', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Re-initialize mock functions
     (Tag as any).find = jest.fn();
     (Tag as any).findOne = jest.fn();
@@ -86,7 +86,7 @@ describe('/api/tags', () => {
           usageCount: 5
         },
         {
-          _id: 'tag2', 
+          _id: 'tag2',
           name: 'work',
           color: '#00FF00',
           category: 'context',
@@ -104,7 +104,7 @@ describe('/api/tags', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/tags');
-      
+
       const response = await GET(request);
       const data = await response.json();
 
@@ -129,7 +129,7 @@ describe('/api/tags', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/tags?category=priority');
-      
+
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -151,7 +151,7 @@ describe('/api/tags', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/tags?search=import');
-      
+
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -171,7 +171,7 @@ describe('/api/tags', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/tags?limit=25');
-      
+
       await GET(request);
 
       expect((Tag as any).find().sort().limit).toHaveBeenCalledWith(25);
@@ -187,7 +187,7 @@ describe('/api/tags', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/tags?limit=200');
-      
+
       await GET(request);
 
       expect((Tag as any).find().sort().limit).toHaveBeenCalledWith(100);
@@ -203,7 +203,7 @@ describe('/api/tags', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/tags?sortBy=name');
-      
+
       await GET(request);
 
       expect((Tag as any).find().sort).toHaveBeenCalledWith({ name: 1 });

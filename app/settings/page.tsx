@@ -3,15 +3,15 @@
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useUserPreferences, UserPreferences } from '@/hooks/useUserPreferences';
-import { 
-  ArrowLeft, 
-  User, 
-  Bell, 
-  Shield, 
-  Mic, 
-  Moon, 
-  Sun, 
-  Globe, 
+import {
+  ArrowLeft,
+  User,
+  Bell,
+  Shield,
+  Mic,
+  Moon,
+  Sun,
+  Globe,
   Save,
   Settings as SettingsIcon
 } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function SettingsPage() {
     savePreferences,
     isModified
   } = useUserPreferences();
-  
+
   const [isSaving, setIsSaving] = useState(false);
 
   if (status === 'loading' || preferencesLoading) {
@@ -83,11 +83,11 @@ export default function SettingsPage() {
         {/* Background Elements */}
         <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-200/20 to-sky-300/15 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-indigo-200/20 to-blue-100/25 rounded-full blur-3xl"></div>
-        
+
         {/* Header */}
         <div className="relative flex items-center justify-between px-8 py-6 bg-white/95 backdrop-blur-xl border-b border-blue-200/50 shadow-lg shadow-blue-900/5">
           <div className="flex items-center gap-6">
-            <Link 
+            <Link
               href="/"
               className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200"
             >
@@ -361,8 +361,8 @@ export default function SettingsPage() {
               onClick={handleSave}
               disabled={isSaving || !isModified}
               className={`inline-flex items-center gap-3 px-8 py-4 text-white rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl font-medium text-lg ${
-                isModified 
-                  ? 'bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-blue-600/25' 
+                isModified
+                  ? 'bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-blue-600/25'
                   : 'bg-gradient-to-br from-gray-400 to-gray-500'
               }`}
             >

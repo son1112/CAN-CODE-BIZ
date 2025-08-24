@@ -39,7 +39,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       const interval = setInterval(() => {
         setLoadingDuration(Date.now() - loadingStartTime);
       }, 100);
-      
+
       return () => clearInterval(interval);
     }
   }, [status, loadingStartTime]);
@@ -61,7 +61,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         {/* Background Elements */}
         <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-200/20 to-sky-300/15 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-indigo-200/20 to-blue-100/25 rounded-full blur-3xl"></div>
-        
+
         <div className="relative text-center space-y-8">
           <div className="flex justify-center">
             <Logo size="xl" variant="minimal" showText={false} />

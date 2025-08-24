@@ -56,19 +56,19 @@ export async function GET(request: NextRequest) {
       console.log('🔄 Connecting to MongoDB for agents...');
       const db = await getMongoDb();
       const collection = db.collection('agents');
-      
+
       console.log('📊 Querying agents collection...');
       // Query active agents efficiently with optimized indexes
       const agents = await collection
         .find(
           { isActive: { $ne: false } }, // Include agents without isActive field (legacy) and those marked as active
-          { 
-            projection: { 
-              name: 1, 
-              description: 1, 
+          {
+            projection: {
+              name: 1,
+              description: 1,
               prompt: 1,
               _id: 0 // Exclude _id to reduce payload
-            } 
+            }
           }
         )
         .sort({ createdAt: -1 }) // Show newest agents first
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     }
   } catch (error: unknown) {
     console.error('List agents error:', error instanceof Error ? error.message : 'Unknown error');
-    
+
     // Provide specific error messages based on error type
     let errorMessage = 'Failed to fetch agents';
     if ((error instanceof Error && error.message?.includes('MongoDB')) || (error instanceof Error && error.message?.includes('connection'))) {
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
     } else if (error instanceof Error && error.message?.includes('authentication')) {
       errorMessage = 'Database authentication failed.';
     }
-    
+
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
@@ -116,10 +116,10 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'process':
         return await processWithAgent(agentName, transcript);
-      
+
       case 'create':
         return await createAgent(voiceDescription || agentDefinition);
-      
+
       default:
         return NextResponse.json(
           { error: 'Invalid action. Supported actions: process, create' },
@@ -143,7 +143,7 @@ async function processWithAgent(agentName: string, transcript: string) {
     const os = await import('os');
     const tempDir = os.tmpdir();
     const tempFile = path.join(tempDir, `transcript-${Date.now()}.txt`);
-    
+
     await fs.writeFile(tempFile, transcript, 'utf-8');
 
     try {
@@ -235,25 +235,25 @@ Respond with valid JSON only:`;
     });
 
     const responseText = response.content[0].type === 'text' ? response.content[0].text : '';
-    
+
     // Parse the Claude response to get the agent structure
     let newAgent;
     try {
       // Clean the response text by removing any markdown code blocks
       let cleanedResponse = responseText.trim();
-      
+
       // Remove markdown code block markers if present
       if (cleanedResponse.startsWith('```json')) {
         cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/```\s*$/, '');
       } else if (cleanedResponse.startsWith('```')) {
         cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/```\s*$/, '');
       }
-      
+
       newAgent = JSON.parse(cleanedResponse);
     } catch (parseError) {
       console.error('Failed to parse Claude response:', parseError);
       console.error('Raw response:', responseText);
-      
+
       // Try to fix common JSON issues and parse again
       try {
         let fixedResponse = responseText.trim()
@@ -261,7 +261,7 @@ Respond with valid JSON only:`;
           .replace(/```\s*$/, '')
           .replace(/^```\s*/, '')
           .replace(/```\s*$/, '');
-        
+
         // Fix common JSON issues - escape unescaped quotes and newlines in string values
         fixedResponse = fixedResponse.replace(
           /"prompt":\s*"([^"]*(?:\\.[^"]*)*)"/g,
@@ -276,7 +276,7 @@ Respond with valid JSON only:`;
             return `"prompt": "${escapedContent}"`;
           }
         );
-        
+
         newAgent = JSON.parse(fixedResponse);
       } catch (secondParseError) {
         console.error('Failed to parse Claude response after cleanup:', secondParseError);
@@ -299,7 +299,7 @@ Respond with valid JSON only:`;
     try {
       const db = await getMongoDb();
       const collection = db.collection('agents');
-      
+
       // Check if agent with this name already exists
       const existingAgent = await collection.findOne({ name: newAgent.name });
       if (existingAgent) {
@@ -308,7 +308,7 @@ Respond with valid JSON only:`;
           { status: 409 }
         );
       }
-      
+
       // Add metadata for web-created agents
       const agentDocument = {
         ...newAgent,
@@ -317,9 +317,9 @@ Respond with valid JSON only:`;
         source: 'web',
         isActive: true
       };
-      
+
       const insertResult = await collection.insertOne(agentDocument);
-      
+
       return NextResponse.json({
         success: true,
         agent: newAgent,
@@ -328,7 +328,7 @@ Respond with valid JSON only:`;
       });
     } catch (error: unknown) {
       console.error('Agent creation error:', error);
-      
+
       // Handle specific MongoDB error cases
       if (error instanceof Error && 'code' in error && error.code === 11000) { // Duplicate key error
         return NextResponse.json(
@@ -341,11 +341,11 @@ Respond with valid JSON only:`;
 
   } catch (error: unknown) {
     console.error('Create agent error:', error);
-    
+
     // Provide specific error messages based on error type
     let errorMessage = 'Failed to create agent';
     let statusCode = 500;
-    
+
     if (error instanceof Error) {
       if (error.message?.includes('MongoDB') || error.message?.includes('connection')) {
         errorMessage = 'Database connection error. Unable to create agent.';
@@ -361,7 +361,7 @@ Respond with valid JSON only:`;
         statusCode = 409;
       }
     }
-    
+
     return NextResponse.json(
       { error: errorMessage },
       { status: statusCode }
@@ -380,13 +380,13 @@ function parseAgentListOutput(output: string): Array<{
     const agents: Array<{ name: string; description: string; prompt: string }> = [];
     let currentAgent: { name?: string; description?: string; prompt?: string } = {};
     let collectingDescription = false;
-    
+
     for (const line of lines) {
       const trimmed = line.trim();
-      
+
       // Skip empty lines and system messages
-      if (!trimmed || 
-          trimmed.includes('──────') || 
+      if (!trimmed ||
+          trimmed.includes('──────') ||
           trimmed.includes('Available Agents') ||
           trimmed.includes('MongoDB connection') ||
           trimmed.includes('Pool config') ||
@@ -398,17 +398,17 @@ function parseAgentListOutput(output: string): Array<{
           trimmed.startsWith('🔴')) {
         continue;
       }
-      
+
       // Check for "No agents found" message
       if (trimmed.includes('No agents found')) {
         return []; // Return empty array if no agents
       }
-      
+
       // End parsing when we hit the total line
       if (trimmed.startsWith('✨ Total:')) {
         break;
       }
-      
+
       // Look for agent entries starting with 📌
       if (trimmed.startsWith('📌 ')) {
         // Save previous agent if exists
@@ -419,10 +419,10 @@ function parseAgentListOutput(output: string): Array<{
             prompt: currentAgent.description.trim() // Using description as prompt since CLI doesn't expose prompt separately
           });
         }
-        
+
         // Start new agent - extract name after the 📌 emoji
         const agentName = trimmed.substring(2).trim(); // Remove "📌 " prefix
-        currentAgent = { 
+        currentAgent = {
           name: agentName,
           description: '',
           prompt: ''
@@ -437,7 +437,7 @@ function parseAgentListOutput(output: string): Array<{
         }
       }
     }
-    
+
     // Add the last agent if exists
     if (currentAgent.name && currentAgent.description) {
       agents.push({
@@ -446,7 +446,7 @@ function parseAgentListOutput(output: string): Array<{
         prompt: currentAgent.description.trim() // Using description as prompt since CLI doesn't expose prompt separately
       });
     }
-    
+
     return agents;
   } catch (error) {
     console.error('Error parsing agent list output:', error);

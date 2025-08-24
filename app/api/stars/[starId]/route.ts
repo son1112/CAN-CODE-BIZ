@@ -9,18 +9,18 @@ export async function PUT(
 ) {
   try {
     await connectDB();
-    
+
     const { starId } = await params;
     const updates = await request.json();
-    
+
     // Remove fields that shouldn't be updated directly
     const { starId: _starIdUpdate, userId: _userIdUpdate, itemType: _itemTypeUpdate, itemId: _itemIdUpdate, ...allowedUpdates } = updates;
     // These fields are ignored for security
     void _starIdUpdate; void _userIdUpdate; void _itemTypeUpdate; void _itemIdUpdate;
-    
+
     const star = await Star.findOneAndUpdate(
       { starId },
-      { 
+      {
         ...allowedUpdates,
         lastAccessedAt: new Date(),
       },
@@ -51,9 +51,9 @@ export async function DELETE(
 ) {
   try {
     await connectDB();
-    
+
     const { starId } = await params;
-    
+
     const star = await Star.findOneAndDelete({ starId });
 
     if (!star) {

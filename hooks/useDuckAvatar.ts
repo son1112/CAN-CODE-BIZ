@@ -46,7 +46,7 @@ export function useDuckAvatar(): UseDuckAvatarReturn {
       }
 
       const data = await response.json();
-      
+
       return {
         imageUrl: data.imageUrl,
         prompt: data.prompt,

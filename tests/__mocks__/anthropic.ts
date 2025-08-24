@@ -29,7 +29,7 @@ export const mockAnthropicStreamResponse = function* () {
     'Claude ',
     'AI.',
   ]
-  
+
   for (const chunk of chunks) {
     yield {
       type: 'content_block_delta',

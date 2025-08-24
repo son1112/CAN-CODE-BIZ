@@ -96,7 +96,7 @@ function SignInForm() {
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-200/20 to-sky-300/15 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-indigo-200/20 to-blue-100/25 rounded-full blur-3xl"></div>
-      
+
       <div className="relative w-full max-w-md">
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-blue-900/10 border border-blue-200/50 p-8">
           {/* Header */}
@@ -119,7 +119,7 @@ function SignInForm() {
               </div>
             </div>
           )}
-          
+
           {/* Timeout Message */}
           {timeout && (
             <div className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200/50 rounded-2xl text-amber-800 text-sm">
@@ -146,7 +146,7 @@ function SignInForm() {
                 </span>
               </button>
             ))}
-            
+
             {/* Fallback Google Button if providers not loading */}
             {!providers && (
               <button

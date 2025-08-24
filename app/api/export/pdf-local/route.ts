@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the specific message (check both _id and id fields)
-    const message = session.messages.find((msg: { _id?: { toString(): string }; id?: string }) => 
+    const message = session.messages.find((msg: { _id?: { toString(): string }; id?: string }) =>
       msg._id?.toString() === messageId || msg.id === messageId
     );
     if (!message) {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Return PDF as download
     const fileName = `${session.name.replace(/[^a-zA-Z0-9]/g, '_')}_${messageId.slice(-8)}_${Date.now()}.pdf`;
-    
+
     return new Response(pdfBuffer as BodyInit, {
       status: 200,
       headers: {

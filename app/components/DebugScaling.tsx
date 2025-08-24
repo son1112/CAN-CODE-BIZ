@@ -24,7 +24,7 @@ export default function DebugScaling() {
 
       const htmlFontSize = info.documentElementStyle.fontSize;
       const bodyFontSize = info.bodyStyle.fontSize;
-      const textSizeAdjust = info.bodyStyle.getPropertyValue('-webkit-text-size-adjust') || 
+      const textSizeAdjust = info.bodyStyle.getPropertyValue('-webkit-text-size-adjust') ||
                            info.bodyStyle.getPropertyValue('text-size-adjust');
 
       setDebugInfo(JSON.stringify({
@@ -33,20 +33,20 @@ export default function DebugScaling() {
         textSizeAdjust,
         devicePixelRatio: info.devicePixelRatio,
         zoom: info.outerWidth / info.innerWidth,
-        browser: info.userAgent.includes('Chrome') ? 'Chrome' : 
-                info.userAgent.includes('Safari') ? 'Safari' : 
+        browser: info.userAgent.includes('Chrome') ? 'Chrome' :
+                info.userAgent.includes('Safari') ? 'Safari' :
                 info.userAgent.includes('Firefox') ? 'Firefox' : 'Other'
       }, null, 2));
     };
 
     getScalingInfo();
     window.addEventListener('resize', getScalingInfo);
-    
+
     return () => window.removeEventListener('resize', getScalingInfo);
   }, []);
 
   return (
-    <div 
+    <div
       style={{
         position: 'fixed',
         top: '10px',

@@ -16,7 +16,7 @@ interface ContextResult {
 
 const DEFAULT_CONFIG: ContextConfig = {
   maxRecentMessages: 12, // Keep last 12 messages for immediate context
-  maxTotalTokens: 8000, // Conservative token limit for good performance 
+  maxTotalTokens: 8000, // Conservative token limit for good performance
   keepFirstMessages: 2, // Keep first 2 messages for context setup
   keepImportantMessages: true
 };
@@ -36,17 +36,17 @@ function estimateTokens(content: string): number {
  */
 function isImportantMessage(message: Message, index: number, totalMessages: number): boolean {
   const content = message.content.toLowerCase();
-  
+
   // First few messages often contain important context
   if (index < 3) return true;
-  
+
   // Messages with specific keywords that indicate importance
   const importantKeywords = [
     'remember', 'important', 'context', 'background',
     'my name is', 'i am', 'project', 'working on',
     'objective', 'goal', 'requirement', 'specification'
   ];
-  
+
   return importantKeywords.some(keyword => content.includes(keyword));
 }
 
@@ -54,7 +54,7 @@ function isImportantMessage(message: Message, index: number, totalMessages: numb
  * Smart context selection that optimizes for performance while maintaining quality
  */
 export function selectOptimalContext(
-  messages: Message[], 
+  messages: Message[],
   config: ContextConfig = DEFAULT_CONFIG
 ): ContextResult {
   if (messages.length === 0) {
@@ -75,7 +75,7 @@ export function selectOptimalContext(
   // If we have few messages, send all
   if (messages.length <= config.maxRecentMessages) {
     const totalTokens = apiMessages.reduce((sum, msg) => sum + estimateTokens(msg.content), 0);
-    
+
     if (totalTokens <= config.maxTotalTokens) {
       return {
         messages: apiMessages,
@@ -89,7 +89,7 @@ export function selectOptimalContext(
   // Strategy 1: Recent messages only (most common case)
   const recentMessages = apiMessages.slice(-config.maxRecentMessages);
   const recentTokens = recentMessages.reduce((sum, msg) => sum + estimateTokens(msg.content), 0);
-  
+
   if (recentTokens <= config.maxTotalTokens) {
     return {
       messages: recentMessages,
@@ -103,7 +103,7 @@ export function selectOptimalContext(
   if (config.keepImportantMessages && messages.length > config.maxRecentMessages) {
     const importantMessages: Array<{ msg: typeof apiMessages[0], index: number }> = [];
     const recentStartIndex = messages.length - config.maxRecentMessages;
-    
+
     // Collect important messages from early conversation
     messages.slice(0, recentStartIndex).forEach((msg, index) => {
       if (isImportantMessage(msg, index, messages.length)) {
@@ -116,11 +116,11 @@ export function selectOptimalContext(
 
     // Keep first few messages as context anchors
     const contextAnchors = apiMessages.slice(0, Math.min(config.keepFirstMessages, recentStartIndex));
-    
+
     // Build optimized message list
     let selectedMessages = [...contextAnchors];
     let currentTokens = contextAnchors.reduce((sum, msg) => sum + estimateTokens(msg.content), 0);
-    
+
     // Add important messages if they fit
     for (const { msg } of importantMessages.slice(0, 3)) { // Limit important messages
       const tokens = estimateTokens(msg.content);
@@ -129,12 +129,12 @@ export function selectOptimalContext(
         currentTokens += tokens;
       }
     }
-    
+
     // Add recent messages with remaining token budget
     const remainingBudget = config.maxTotalTokens - currentTokens;
     let recentTokenCount = 0;
     const recentMessagesReversed = apiMessages.slice(-config.maxRecentMessages).reverse();
-    
+
     for (const msg of recentMessagesReversed) {
       const tokens = estimateTokens(msg.content);
       if (recentTokenCount + tokens <= remainingBudget) {
@@ -143,19 +143,19 @@ export function selectOptimalContext(
         break;
       }
     }
-    
+
     // Take as many recent messages as fit in budget
     const recentMessageCount = recentMessagesReversed.findIndex((msg, i) => {
       const tokens = recentMessagesReversed.slice(0, i + 1).reduce((sum, m) => sum + estimateTokens(m.content), 0);
       return tokens > remainingBudget;
     });
-    
-    const recentMessagesToInclude = recentMessageCount === -1 
+
+    const recentMessagesToInclude = recentMessageCount === -1
       ? apiMessages.slice(-config.maxRecentMessages)
       : apiMessages.slice(-(recentMessageCount === 0 ? 1 : recentMessageCount));
-    
+
     selectedMessages = selectedMessages.concat(recentMessagesToInclude);
-    
+
     return {
       messages: selectedMessages,
       totalTokens: selectedMessages.reduce((sum, msg) => sum + estimateTokens(msg.content), 0),
@@ -167,7 +167,7 @@ export function selectOptimalContext(
   // Strategy 3: Aggressive truncation - keep only essential recent messages
   let budgetRemaining = config.maxTotalTokens;
   const essentialMessages: typeof apiMessages = [];
-  
+
   for (const msg of apiMessages.reverse()) {
     const tokens = estimateTokens(msg.content);
     if (tokens <= budgetRemaining) {
@@ -195,7 +195,7 @@ export function getContextStats(messages: Message[]): {
   averageTokensPerMessage: number;
 } {
   const totalTokens = messages.reduce((sum, msg) => sum + estimateTokens(msg.content), 0);
-  
+
   return {
     totalMessages: messages.length,
     totalTokens,
@@ -208,7 +208,7 @@ export function getContextStats(messages: Message[]): {
  */
 export function getAdaptiveConfig(messages: Message[]): ContextConfig {
   const stats = getContextStats(messages);
-  
+
   // For conversations with very long messages, be more aggressive
   if (stats.averageTokensPerMessage > 200) {
     return {
@@ -217,7 +217,7 @@ export function getAdaptiveConfig(messages: Message[]): ContextConfig {
       maxTotalTokens: 6000
     };
   }
-  
+
   // For conversations with many short messages, can include more
   if (stats.averageTokensPerMessage < 50) {
     return {
@@ -226,6 +226,6 @@ export function getAdaptiveConfig(messages: Message[]): ContextConfig {
       maxTotalTokens: 10000
     };
   }
-  
+
   return DEFAULT_CONFIG;
 }

@@ -126,28 +126,28 @@ export function handleApiError(
         { status: 409 }
       );
     }
-    
+
     if (error.message.includes('validation')) {
       return NextResponse.json(
         { error: 'Invalid data provided', code: 'VALIDATION_ERROR' },
         { status: 400 }
       );
     }
-    
+
     if (error.message.includes('timeout')) {
       return NextResponse.json(
         { error: 'Request timeout', code: 'TIMEOUT' },
         { status: 504 }
       );
     }
-    
+
     if (error.message.includes('connection')) {
       return NextResponse.json(
         { error: 'Service unavailable', code: 'SERVICE_UNAVAILABLE' },
         { status: 503 }
       );
     }
-    
+
     if (error.message.includes('not found')) {
       return NextResponse.json(
         { error: 'Resource not found', code: 'NOT_FOUND' },
@@ -158,8 +158,8 @@ export function handleApiError(
 
   // Default internal server error
   return NextResponse.json(
-    { 
-      error: 'Internal server error', 
+    {
+      error: 'Internal server error',
       code: 'INTERNAL_ERROR',
       details: error instanceof Error ? error.message : 'Unknown error'
     },
@@ -176,13 +176,13 @@ export function validateRequest<T>(
   component: string
 ): T {
   const { isValid, errors } = validator(data);
-  
+
   if (!isValid) {
     const errorMessages = errors.map(e => `${e.field}: ${e.message}`).join(', ');
     logger.warn('Request validation failed', { component, errorCount: errors.length });
     throw new ValidationRequestError('Request validation failed', errorMessages);
   }
-  
+
   return data as T;
 }
 
@@ -193,43 +193,43 @@ export function validateQueryParams(searchParams: URLSearchParams) {
   const getIntParam = (name: string, defaultValue: number, min?: number, max?: number): number => {
     const value = searchParams.get(name);
     if (!value) return defaultValue;
-    
+
     const parsed = parseInt(value);
     if (isNaN(parsed)) {
       throw new ValidationRequestError(`Invalid ${name} parameter: must be a number`);
     }
-    
+
     if (min !== undefined && parsed < min) {
       throw new ValidationRequestError(`Invalid ${name} parameter: must be at least ${min}`);
     }
-    
+
     if (max !== undefined && parsed > max) {
       throw new ValidationRequestError(`Invalid ${name} parameter: must be at most ${max}`);
     }
-    
+
     return parsed;
   };
 
   const getStringParam = (name: string, defaultValue: string = '', maxLength?: number): string => {
     const value = searchParams.get(name)?.trim() || defaultValue;
-    
+
     if (maxLength && value.length > maxLength) {
       throw new ValidationRequestError(`Invalid ${name} parameter: must be less than ${maxLength} characters`);
     }
-    
+
     return value;
   };
 
   const getArrayParam = (name: string, maxItems?: number): string[] => {
     const value = searchParams.get(name);
     if (!value) return [];
-    
+
     const array = value.split(',').filter(Boolean);
-    
+
     if (maxItems && array.length > maxItems) {
       throw new ValidationRequestError(`Invalid ${name} parameter: maximum ${maxItems} items allowed`);
     }
-    
+
     return array;
   };
 
@@ -255,7 +255,7 @@ export function asyncErrorHandler<T extends unknown[], R>(
       if (error instanceof AppError) {
         throw error;
       }
-      
+
       // Wrap other errors
       logger.error(`Unexpected error in ${component}`, { component }, error);
       throw new AppError('Internal server error', 500, 'INTERNAL_ERROR');
