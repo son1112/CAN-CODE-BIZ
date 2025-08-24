@@ -6,7 +6,7 @@
 This file tracks future work items, feature requests, improvements, and technical debt for Rubber Ducky Live.
 
 ** Current Session Backlog Documentation Summary
-This section contains comprehensive documentation for 13 backlog items identified in the current development session. Each item includes detailed problem statements, technical requirements, implementation approaches, priority levels, complexity estimates, dependencies, acceptance criteria, and related files.
+This section contains comprehensive documentation for backlog items identified during development sessions. Each item includes detailed problem statements, technical requirements, implementation approaches, priority levels, complexity estimates, dependencies, acceptance criteria, and related files.
 
 *** High Priority Items (4 items)
 1. **Claude Code Sub-Agent Integration**: Investigate and fix Claude Code's recognition of custom AI agents
@@ -1020,6 +1020,96 @@ The "Current Session Backlog Items - Detailed Documentation" section demonstrate
 - Related files and components affected
 
 This documentation format should be used as a template for future backlog items to ensure consistency and actionability.
+
+** Recent Session Additions (2025-08-24)
+
+*** 🔴 HIGH PRIORITY: Chat Session Header Mobile Optimization
+**** Problem Statement
+- Individual chat session header (containing session name, agent selector, etc.) occupies ~50% of mobile viewport
+- Severely limits conversation content visibility on mobile devices
+- Current desktop-optimized layout doesn't scale well for mobile usage patterns
+
+**** Technical Requirements
+- Reduce chat session header height on mobile viewports to ≤25% of screen height
+- Maintain access to session name, agent selection, and other controls
+- Implement hamburger menu pattern consistent with main app navigation
+- Preserve full desktop functionality without regression
+
+**** Implementation Approach
+1. Implement collapsible/hamburger menu for session controls on mobile
+2. Stack or hide secondary elements behind menu on smaller screens  
+3. Optimize session title display (truncate, smaller font, responsive sizing)
+4. Apply responsive breakpoints consistent with main app design patterns
+5. Test across multiple mobile screen sizes and orientations
+
+**** Acceptance Criteria
+- Session header takes up ≤25% of mobile viewport height
+- All session controls accessible via hamburger menu or similar mobile pattern
+- Session name remains visible but optimized for mobile display
+- Consistent UX with main app's mobile navigation patterns
+- No functionality loss on desktop views
+
+**** Priority: 🔴 HIGH (impacts core chat usability on mobile)
+**** Complexity: Medium (responsive design + mobile UX patterns)
+**** Related Files: Session header components, mobile navigation components
+
+*** 🟡 MEDIUM PRIORITY: Fix Copy Button on Messages
+**** Problem Statement
+- Copy button functionality on individual messages needs attention
+- May have UX, functionality, or accessibility issues
+
+**** Technical Requirements  
+- Ensure copy button works reliably across all browsers
+- Verify clipboard API compatibility and fallbacks
+- Check button positioning and accessibility
+
+**** Implementation Approach
+1. Audit current copy button implementation
+2. Test clipboard API functionality across browsers
+3. Implement fallback mechanisms for older browsers
+4. Verify accessibility compliance (keyboard access, screen readers)
+5. Optimize button positioning and visual feedback
+
+**** Priority: 🟡 MEDIUM 
+**** Complexity: Simple (focused bug fix/enhancement)
+
+*** 🟡 MEDIUM PRIORITY: Address Stars API Issues
+**** Problem Statement
+- Stars API returning 409 Conflict responses (noted in session notes)
+- Functionality works but generates error logs
+- May indicate race conditions or state management issues
+
+**** Technical Requirements
+- Investigate 409 conflict responses in stars API
+- Ensure optimistic updates work correctly
+- Minimize unnecessary API calls and conflicts
+
+**** Implementation Approach
+1. Analyze stars API endpoint and conflict scenarios
+2. Review optimistic update implementation
+3. Add proper conflict resolution handling
+4. Implement request deduplication if needed
+5. Add proper error tracking and monitoring
+
+**** Priority: 🟡 MEDIUM
+**** Complexity: Medium (API debugging + state management)
+
+*** 🟢 LOW PRIORITY: Export Tooltip Z-Index Fix  
+**** Problem Statement
+- Export functionality tooltip has z-index layering issues
+- May appear behind other UI elements
+
+**** Technical Requirements
+- Fix tooltip z-index to appear above all other elements
+- Ensure consistent layering across all modals and overlays
+
+**** Implementation Approach
+1. Audit current z-index hierarchy
+2. Update export tooltip z-index values
+3. Test with various UI states and overlays
+
+**** Priority: 🟢 LOW (cosmetic UI fix)
+**** Complexity: Simple (CSS z-index adjustment)
 
 * Contact
 For feature requests or backlog item discussions, please create issues in the project repository.
