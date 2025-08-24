@@ -11,6 +11,9 @@ const agentsCache = new Map<string, {
 
 const CACHE_DURATION = 300000; // 5 minutes for agents (they change less frequently than other data)
 
+// Export cache for testing
+export const clearAgentsCache = () => agentsCache.clear();
+
 export interface Agent {
   name: string;
   description: string;
