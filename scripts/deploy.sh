@@ -128,13 +128,28 @@ deploy_to_vercel() {
     
     if [[ "$DRY_RUN" == "true" ]]; then
         echo -e "${YELLOW}[DRY RUN] Would execute:${NC}"
-        echo "vercel --prod --yes --scope can-code-alpha-projects --project-name ${project}"
+        echo "vercel link --project ${project} --yes --scope can-code-alpha-projects"
+        echo "vercel --prod --yes"
         return 0
     fi
     
     # Execute deployment
     echo -e "${BLUE}Executing deployment...${NC}"
-    if vercel --prod --yes --scope can-code-alpha-projects --project-name "$project"; then
+    
+    # Backup current project configuration
+    if [[ -f .vercel/project.json ]]; then
+        cp .vercel/project.json .vercel/project.json.backup
+    fi
+    
+    # Link to target project temporarily
+    echo -e "${BLUE}Linking to project: ${project}${NC}"
+    if ! vercel link --project "$project" --yes --scope can-code-alpha-projects; then
+        echo -e "${RED}Failed to link to project ${project}${NC}"
+        return 1
+    fi
+    
+    # Deploy
+    if vercel --prod --yes; then
         echo -e "${GREEN}✅ Deployment successful!${NC}"
         echo -e "🌐 URL: ${url}"
         
@@ -150,8 +165,21 @@ deploy_to_vercel() {
             echo -e "${YELLOW}⚠️ Health check failed (this might be normal during startup)${NC}"
         fi
         
+        # Restore original project configuration
+        if [[ -f .vercel/project.json.backup ]]; then
+            mv .vercel/project.json.backup .vercel/project.json
+            echo -e "${BLUE}Restored original project configuration${NC}"
+        fi
+        
     else
         echo -e "${RED}❌ Deployment failed${NC}"
+        
+        # Restore original project configuration on failure
+        if [[ -f .vercel/project.json.backup ]]; then
+            mv .vercel/project.json.backup .vercel/project.json
+            echo -e "${BLUE}Restored original project configuration${NC}"
+        fi
+        
         return 1
     fi
 }
