@@ -10,18 +10,21 @@ This document outlines the recommended deployment strategy for Rubber Ducky Live
 - **`rubber-ducky-live`** (Main Production)
   - URL: https://rubber-ducky-live.vercel.app
   - Production Branch: `main`
-  - Preview Branches: `develop`, feature branches
+  - Preview Branches: feature branches (not `develop`)
 
-- **`rubber-ducky-live-alpha`** (Available for staging)
+- **`rubber-ducky-live-alpha`** (Staging - **ACTIVE**)
   - URL: https://rubber-ducky-live-alpha-can-code-alpha-projects.vercel.app
+  - **Currently linked to `develop` branch**
+  - Automatic deployments on push to `develop`
 
 - **`rubber-ducky-live-test`** (Available for testing)
   - URL: https://rubber-ducky-live-test-can-code-alpha-projects.vercel.app
+  - Available for experimental/testing branches
 
-### Current Deployment Behavior
+### Current Deployment Behavior ✅ **RESOLVED**
 - ✅ `main` → Production deployment (rubber-ducky-live)
-- ⚠️ `develop` → Preview deployment (same project as production)
-- ⚠️ Feature branches → Preview deployments (same project as production)
+- ✅ `develop` → Staging deployment (rubber-ducky-live-alpha) **ACTIVE**
+- ⚠️ Feature branches → Could create dedicated test branch deployments (future consideration)
 
 ## Recommended Strategy
 
@@ -169,11 +172,14 @@ vercel --prod --yes --scope can-code-alpha-projects --project-name rubber-ducky-
 
 ## Implementation Priority
 
-### Phase 1: Critical Setup (Immediate)
-1. Configure production project to only deploy from `main`
-2. Set up staging project for `develop` branch
-3. Configure environment-specific variables
-4. Test deployment pipeline
+### Phase 1: Critical Setup ✅ **COMPLETED**
+1. ✅ Configure production project to only deploy from `main`
+2. ✅ Set up staging project for `develop` branch (**Currently Active**)
+3. ✅ Configure environment-specific variables
+4. ✅ Test deployment pipeline
+
+### Phase 1.5: Future Consideration (Optional)
+**Note**: The `develop` branch is currently working well with the staging environment. We may revisit creating dedicated testing branches later if needed, but the current setup provides good separation between staging and production.
 
 ### Phase 2: Enhancement (Next Sprint)
 1. Set up separate MongoDB databases
