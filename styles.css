@@ -1,3 +1,15 @@
+/* Terminal Theme CSS Variables */
+:root {
+    --crt-green: #39ff14;
+    --terminal-purple: #a855f7;
+    --bg-primary: #0f0f23;
+    --bg-secondary: #1a1a2e;
+    --text-primary: #cccccc;
+    --text-secondary: #888888;
+    --accent-blue: #16213e;
+    --terminal-amber: #ffb000;
+}
+
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -10,10 +22,14 @@ html {
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Courier New', Monaco, 'Lucida Console', monospace;
     line-height: 1.6;
-    color: #333;
-    background-color: #fff;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    background-image: 
+        linear-gradient(90deg, rgba(57, 255, 20, 0.03) 50%, transparent 50%),
+        linear-gradient(rgba(57, 255, 20, 0.03) 50%, transparent 50%);
+    background-size: 2px 2px;
 }
 
 /* Container */
@@ -26,7 +42,9 @@ body {
 /* Typography */
 h1, h2, h3, h4 {
     margin-bottom: 1rem;
-    color: #2c3e50;
+    color: var(--crt-green);
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 10px var(--crt-green);
 }
 
 h1 {
@@ -46,13 +64,13 @@ h3 {
 
 p {
     margin-bottom: 1rem;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .lead {
     font-size: 1.25rem;
     font-weight: 400;
-    color: #555;
+    color: var(--text-secondary);
     margin-bottom: 2rem;
 }
 
@@ -71,30 +89,43 @@ p {
 }
 
 .btn-primary {
-    background-color: #3498db;
-    color: white;
+    background-color: var(--crt-green);
+    color: var(--bg-primary);
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .btn-primary:hover {
-    background-color: #2980b9;
+    background-color: transparent;
+    color: var(--crt-green);
+    border: 2px solid var(--crt-green);
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
     transform: translateY(-2px);
 }
 
 .btn-secondary {
     background-color: transparent;
-    color: #3498db;
-    border: 2px solid #3498db;
+    color: var(--terminal-purple);
+    border: 2px solid var(--terminal-purple);
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .btn-secondary:hover {
-    background-color: #3498db;
-    color: white;
+    background-color: var(--terminal-purple);
+    color: var(--bg-primary);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
 }
 
 /* Header */
 .header {
-    background-color: #fff;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    background-color: var(--bg-secondary);
+    border-bottom: 2px solid var(--crt-green);
+    box-shadow: 0 2px 20px rgba(57, 255, 20, 0.1);
     position: fixed;
     top: 0;
     left: 0;
@@ -113,9 +144,11 @@ p {
 }
 
 .nav-brand h1 {
-    color: #3498db;
+    color: var(--crt-green);
     font-size: 1.8rem;
     margin: 0;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 10px var(--crt-green);
 }
 
 .nav-menu {
@@ -126,21 +159,48 @@ p {
 
 .nav-menu a {
     text-decoration: none;
-    color: #333;
+    color: var(--text-primary);
     font-weight: 500;
-    transition: color 0.3s ease;
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border: 1px solid transparent;
 }
 
 .nav-menu a:hover {
-    color: #3498db;
+    color: var(--terminal-purple);
+    border-color: var(--terminal-purple);
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
 }
 
 /* Hero Section */
 .hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    border-bottom: 3px solid var(--crt-green);
+    color: var(--text-primary);
     padding: 120px 0 80px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(57, 255, 20, 0.03) 2px,
+        rgba(57, 255, 20, 0.03) 4px
+    );
+    pointer-events: none;
 }
 
 .hero-container {
@@ -152,16 +212,25 @@ p {
 .hero-title {
     font-size: 3.5rem;
     margin-bottom: 1.5rem;
-    color: white;
+    color: var(--crt-green);
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 20px var(--crt-green);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 1;
 }
 
 .hero-subtitle {
     font-size: 1.5rem;
     margin-bottom: 2.5rem;
-    color: rgba(255,255,255,0.9);
+    color: var(--text-secondary);
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+    font-family: 'Courier New', monospace;
+    position: relative;
+    z-index: 1;
 }
 
 .hero-cta {
@@ -169,12 +238,15 @@ p {
     gap: 1rem;
     justify-content: center;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
 }
 
 /* About Section */
 .about {
     padding: 80px 0;
-    background-color: #f8f9fa;
+    background-color: var(--bg-secondary);
+    border-top: 2px solid var(--terminal-purple);
 }
 
 .about h2 {
@@ -196,26 +268,37 @@ p {
 }
 
 .about-card {
-    background: white;
+    background: var(--bg-primary);
+    border: 1px solid var(--accent-blue);
     padding: 2rem;
     border-radius: 10px;
     text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
+    box-shadow: 0 5px 20px rgba(57, 255, 20, 0.1);
+    transition: all 0.3s ease;
 }
 
 .about-card:hover {
+    border-color: var(--crt-green);
+    box-shadow: 0 0 30px rgba(57, 255, 20, 0.2);
     transform: translateY(-5px);
 }
 
 .about-card h3 {
-    color: #3498db;
+    color: var(--crt-green);
     margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 10px var(--crt-green);
+}
+
+.about-card p {
+    color: var(--text-secondary);
 }
 
 /* Platform Section */
 .platform {
     padding: 80px 0;
+    background-color: var(--bg-primary);
+    border-top: 2px solid var(--crt-green);
 }
 
 .platform h2 {
@@ -237,21 +320,27 @@ p {
 }
 
 .feature-card {
-    background: #fff;
-    border: 1px solid #e0e0e0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent-blue);
     border-radius: 10px;
     padding: 2rem;
     transition: all 0.3s ease;
 }
 
 .feature-card:hover {
-    border-color: #3498db;
-    box-shadow: 0 10px 30px rgba(52, 152, 219, 0.1);
+    border-color: var(--crt-green);
+    box-shadow: 0 0 30px rgba(57, 255, 20, 0.1);
+    transform: translateY(-2px);
 }
 
 .feature-card h3 {
-    color: #2c3e50;
+    color: var(--crt-green);
     margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
+}
+
+.feature-card p {
+    color: var(--text-secondary);
 }
 
 .feature-card ul {
@@ -261,7 +350,7 @@ p {
 
 .feature-card li {
     margin-bottom: 0.5rem;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 /* Live Demo Section */
@@ -766,7 +855,8 @@ p {
 /* Services Section */
 .services {
     padding: 80px 0;
-    background-color: #f8f9fa;
+    background-color: var(--bg-secondary);
+    border-top: 2px solid var(--terminal-purple);
 }
 
 .services h2 {
@@ -781,26 +871,36 @@ p {
 }
 
 .service-item {
-    background: white;
+    background: var(--bg-primary);
+    border: 1px solid var(--accent-blue);
     padding: 2rem;
     border-radius: 10px;
     text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
+    box-shadow: 0 5px 20px rgba(57, 255, 20, 0.1);
+    transition: all 0.3s ease;
 }
 
 .service-item:hover {
+    border-color: var(--terminal-purple);
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
     transform: translateY(-5px);
 }
 
 .service-item h3 {
-    color: #3498db;
+    color: var(--terminal-purple);
     margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
+}
+
+.service-item p {
+    color: var(--text-secondary);
 }
 
 /* Contact Section */
 .contact {
     padding: 80px 0;
+    background-color: var(--bg-primary);
+    border-top: 2px solid var(--crt-green);
 }
 
 .contact h2 {
@@ -824,16 +924,18 @@ p {
 .contact-info h3,
 .contact-form h3 {
     margin-bottom: 1.5rem;
-    color: #2c3e50;
+    color: var(--crt-green);
+    font-family: 'Courier New', monospace;
 }
 
 .contact-methods p {
     margin-bottom: 1rem;
-    color: #666;
+    color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
 }
 
 .contact-methods strong {
-    color: #3498db;
+    color: var(--crt-green);
 }
 
 .form-group {
@@ -844,22 +946,34 @@ p {
 .form-group textarea {
     width: 100%;
     padding: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--accent-blue);
     border-radius: 6px;
     font-size: 1rem;
-    transition: border-color 0.3s ease;
+    font-family: 'Courier New', monospace;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #3498db;
+    border-color: var(--crt-green);
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
+    background-color: var(--bg-primary);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
 }
 
 /* Footer */
 .footer {
-    background-color: #2c3e50;
-    color: white;
+    background-color: var(--bg-secondary);
+    border-top: 3px solid var(--crt-green);
+    color: var(--text-primary);
     padding: 50px 0 20px;
 }
 
@@ -871,17 +985,20 @@ p {
 }
 
 .footer-brand h3 {
-    color: #3498db;
+    color: var(--crt-green);
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 10px var(--crt-green);
     margin-bottom: 1rem;
 }
 
 .footer-brand p {
-    color: #bdc3c7;
+    color: var(--text-secondary);
 }
 
 .footer-links h4,
 .footer-contact h4 {
-    color: white;
+    color: var(--terminal-purple);
+    font-family: 'Courier New', monospace;
     margin-bottom: 1rem;
 }
 
@@ -897,21 +1014,24 @@ p {
 
 .footer-links a,
 .footer-contact a {
-    color: #bdc3c7;
+    color: var(--text-secondary);
     text-decoration: none;
-    transition: color 0.3s ease;
+    font-family: 'Courier New', monospace;
+    transition: all 0.3s ease;
 }
 
 .footer-links a:hover,
 .footer-contact a:hover {
-    color: #3498db;
+    color: var(--crt-green);
+    text-shadow: 0 0 5px var(--crt-green);
 }
 
 .footer-bottom {
     text-align: center;
     padding-top: 2rem;
-    border-top: 1px solid #34495e;
-    color: #bdc3c7;
+    border-top: 1px solid var(--accent-blue);
+    color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
 }
 
 /* Mobile Styles */
