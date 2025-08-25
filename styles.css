@@ -619,46 +619,33 @@ p {
 }
 
 .contact-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
+    display: flex;
+    justify-content: center;
     margin-top: 3rem;
 }
 
-.contact-info h3,
-.contact-form h3 {
+.contact-info {
+    max-width: 600px;
+    text-align: center;
+}
+
+.contact-info h3 {
     margin-bottom: 1.5rem;
-    color: #2c3e50;
+    color: var(--matrix-cyan);
+    font-family: 'Fira Code', monospace;
+    text-transform: uppercase;
 }
 
 .contact-methods p {
     margin-bottom: 1rem;
-    color: #666;
+    color: var(--text-dim);
+    font-family: 'Fira Code', monospace;
 }
 
 .contact-methods strong {
-    color: #3498db;
+    color: var(--crt-green);
 }
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group input,
-.form-group textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
-    transition: border-color 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: #3498db;
-}
 
 /* Terminal Footer */
 .footer {
@@ -773,10 +760,6 @@ p {
         max-width: 280px;
     }
     
-    .contact-content {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
     
     .about-grid,
     .platform-features,
