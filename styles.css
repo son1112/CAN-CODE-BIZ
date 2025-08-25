@@ -5,6 +5,30 @@
     box-sizing: border-box;
 }
 
+/* Performance Optimizations */
+* {
+    /* GPU acceleration for better performance */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Reduce paint complexity */
+img, video {
+    will-change: auto;
+}
+
+/* Optimize animations */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 :root {
     --primary-blue: #6366f1;
     --secondary-blue: #4f46e5;
@@ -83,11 +107,14 @@ p {
     border-radius: var(--border-radius);
     font-weight: 600;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
     border: none;
     font-size: 1rem;
     box-shadow: var(--shadow-light);
+    /* Performance optimization */
+    contain: layout style paint;
+    will-change: transform;
 }
 
 .btn-primary {
@@ -156,9 +183,11 @@ p {
     text-decoration: none;
     color: var(--text-dark);
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
     padding: 8px 16px;
     border-radius: var(--border-radius);
+    /* Performance optimization */
+    contain: layout paint;
 }
 
 .nav-menu a:hover {
@@ -230,22 +259,22 @@ p {
     flex-wrap: wrap;
 }
 
-/* Animations */
+/* Optimized Animations - Reduced complexity for better INP */
 @keyframes float {
     0%, 100% {
-        transform: translateY(0px);
+        transform: translate3d(0, 0, 0);
     }
     50% {
-        transform: translateY(-20px);
+        transform: translate3d(0, -15px, 0);
     }
 }
 
 @keyframes pulse-glow {
     0%, 100% {
-        box-shadow: var(--shadow-light);
+        opacity: 0.8;
     }
     50% {
-        box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        opacity: 1;
     }
 }
 
@@ -253,6 +282,8 @@ p {
 .about {
     padding: 80px 0;
     background-color: var(--bg-light);
+    /* Layout containment for performance */
+    contain: layout paint;
 }
 
 .about h2 {
@@ -279,12 +310,15 @@ p {
     border-radius: var(--border-radius-large);
     text-align: center;
     box-shadow: var(--shadow-light);
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid var(--border-light);
+    /* Performance optimization */
+    contain: layout style paint;
+    will-change: transform;
 }
 
 .about-card:hover {
-    transform: translateY(-8px);
+    transform: translate3d(0, -5px, 0);
     box-shadow: var(--shadow-large);
     border-color: var(--light-orange);
 }
@@ -297,6 +331,8 @@ p {
 /* Platform Section */
 .platform {
     padding: 80px 0;
+    /* Layout containment for performance */
+    contain: layout paint;
 }
 
 .platform h2 {
@@ -322,9 +358,12 @@ p {
     border: 1px solid var(--border-light);
     border-radius: var(--border-radius-large);
     padding: 2rem;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     position: relative;
     overflow: hidden;
+    /* Performance optimization */
+    contain: layout style paint;
+    will-change: transform;
 }
 
 .feature-card::before {
@@ -336,13 +375,13 @@ p {
     height: 4px;
     background: linear-gradient(90deg, var(--accent-orange) 0%, var(--warm-yellow) 100%);
     transform: scaleX(0);
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
 }
 
 .feature-card:hover {
     border-color: var(--accent-orange);
     box-shadow: var(--shadow-large);
-    transform: translateY(-5px);
+    transform: translate3d(0, -3px, 0);
 }
 
 .feature-card:hover::before {
@@ -376,6 +415,8 @@ p {
 .services {
     padding: 80px 0;
     background-color: var(--bg-light);
+    /* Layout containment for performance */
+    contain: layout paint;
 }
 
 .services h2 {
@@ -390,20 +431,23 @@ p {
 }
 
 .service-item {
-    background: white;
+    background: var(--bg-white);
     padding: 2rem;
-    border-radius: 10px;
+    border-radius: var(--border-radius-large);
     text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
+    box-shadow: var(--shadow-light);
+    transition: transform 0.2s ease;
+    /* Performance optimization */
+    contain: layout style paint;
+    will-change: transform;
 }
 
 .service-item:hover {
-    transform: translateY(-5px);
+    transform: translate3d(0, -3px, 0);
 }
 
 .service-item h3 {
-    color: #3498db;
+    color: var(--accent-orange);
     margin-bottom: 1rem;
 }
 
