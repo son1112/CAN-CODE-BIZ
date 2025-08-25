@@ -445,6 +445,123 @@ p {
     margin-top: 0.5rem;
 }
 
+.api-showcase {
+    margin: 3rem 0;
+    padding: 2rem;
+    background: rgba(57, 255, 20, 0.05);
+    border: 1px solid var(--crt-green);
+    border-radius: 8px;
+}
+
+.api-showcase h4 {
+    color: var(--crt-green);
+    text-align: center;
+    margin-bottom: 2rem;
+    font-family: 'Courier New', monospace;
+}
+
+.api-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.api-category {
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent-blue);
+    border-radius: 6px;
+    padding: 1.5rem;
+}
+
+.api-category h5 {
+    color: var(--terminal-purple);
+    margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+}
+
+.api-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.api-list li {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    background: rgba(168, 85, 247, 0.05);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.api-list li:hover {
+    background: rgba(168, 85, 247, 0.1);
+}
+
+.api-list code {
+    background: var(--bg-primary);
+    color: var(--crt-green);
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.api-list li {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.project-structure {
+    margin: 3rem 0;
+    padding: 2rem;
+    background: rgba(168, 85, 247, 0.05);
+    border: 1px solid var(--terminal-purple);
+    border-radius: 8px;
+}
+
+.project-structure h4 {
+    color: var(--terminal-purple);
+    text-align: center;
+    margin-bottom: 2rem;
+    font-family: 'Courier New', monospace;
+}
+
+.structure-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.structure-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent-blue);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.structure-item:hover {
+    border-color: var(--terminal-purple);
+    background: rgba(168, 85, 247, 0.05);
+}
+
+.structure-item strong {
+    color: var(--crt-green);
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+}
+
+.structure-item span {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
 /* Agents Section */
 .agents {
     padding: 80px 0;
@@ -832,7 +949,9 @@ p {
     .agent-grid,
     .architecture-grid,
     .demo-features-grid,
-    .arch-highlights {
+    .arch-highlights,
+    .api-categories,
+    .structure-grid {
         grid-template-columns: 1fr;
     }
     
@@ -884,7 +1003,11 @@ p {
     .agent-card,
     .arch-item,
     .feature-highlight,
-    .demo-architecture {
+    .demo-architecture,
+    .api-showcase,
+    .project-structure,
+    .api-category,
+    .structure-item {
         padding: 1.5rem;
     }
     

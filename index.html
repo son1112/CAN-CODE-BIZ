@@ -170,6 +170,59 @@
                         </div>
                     </div>
 
+                    <div class="api-showcase">
+                        <h4>REST API Endpoints</h4>
+                        <div class="api-categories">
+                            <div class="api-category">
+                                <h5>Chat & Sessions</h5>
+                                <ul class="api-list">
+                                    <li><code>POST /api/chat</code> - Stream responses with model selection</li>
+                                    <li><code>GET /api/sessions</code> - Session history with filtering</li>
+                                    <li><code>POST /api/sessions</code> - Create new chat session</li>
+                                    <li><code>PUT /api/sessions/[id]</code> - Update session details</li>
+                                </ul>
+                            </div>
+                            <div class="api-category">
+                                <h5>Message Management</h5>
+                                <ul class="api-list">
+                                    <li><code>POST /api/stars</code> - Star/unstar messages</li>
+                                    <li><code>PUT /api/sessions/messages/[messageId]/tags</code> - Update tags</li>
+                                    <li><code>GET /api/tags</code> - Fetch tags with statistics</li>
+                                </ul>
+                            </div>
+                            <div class="api-category">
+                                <h5>Export & Integration</h5>
+                                <ul class="api-list">
+                                    <li><code>POST /api/export/pdf</code> - Generate PDF exports</li>
+                                    <li><code>POST /api/export/word</code> - Create Word documents</li>
+                                    <li><code>GET /api/agents</code> - Fetch AI agent catalog</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-structure">
+                        <h4>Modern Project Architecture</h4>
+                        <div class="structure-grid">
+                            <div class="structure-item">
+                                <strong>app/</strong>
+                                <span>Next.js 15 App Router with API routes, components, and layouts</span>
+                            </div>
+                            <div class="structure-item">
+                                <strong>hooks/</strong>
+                                <span>Custom React hooks: useSpeechRecognition, useStreamingChat, useTags</span>
+                            </div>
+                            <div class="structure-item">
+                                <strong>lib/</strong>
+                                <span>Utilities: MongoDB connection, Claude integration, authentication config</span>
+                            </div>
+                            <div class="structure-item">
+                                <strong>models/</strong>
+                                <span>MongoDB schemas: Session, Message, User with TypeScript definitions</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="demo-stats">
                         <div class="stat-card">
                             <span class="demo-stat-number">15+</span>
