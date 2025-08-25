@@ -538,11 +538,118 @@ p {
     color: var(--text-medium);
 }
 
-/* Services Section */
-.services {
+/* Agents Section */
+.agents {
     padding: 80px 0;
     background: var(--bg-console);
     border-top: 2px solid var(--terminal-border);
+    border-bottom: 2px solid var(--terminal-border);
+    /* Layout containment for performance */
+    contain: layout paint;
+}
+
+.agent-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+}
+
+.category-card {
+    background: var(--bg-darker);
+    border: 2px solid var(--terminal-border);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.category-card::before {
+    content: '[category] ';
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    color: var(--crt-green);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.category-card:hover {
+    border-color: var(--crt-green);
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.1);
+}
+
+.category-card h3 {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    color: var(--matrix-cyan);
+    font-family: 'Fira Code', monospace;
+    font-size: 1.1rem;
+}
+
+.agent-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.agent-tag {
+    background: var(--bg-dark);
+    color: var(--crt-green);
+    padding: 4px 8px;
+    border-radius: var(--border-radius);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    border: 1px solid var(--terminal-border);
+    transition: all 0.2s ease;
+}
+
+.agent-tag:hover {
+    background: var(--crt-green);
+    color: var(--bg-dark);
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+}
+
+.system-status {
+    background: var(--bg-darker);
+    border: 2px solid var(--terminal-border);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+
+.status-indicator:last-child {
+    margin-bottom: 0;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+}
+
+.status-dot.active {
+    background: var(--crt-green);
+    box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+}
+
+/* Services Section */
+.services {
+    padding: 80px 0;
+    background: var(--bg-dark);
     /* Layout containment for performance */
     contain: layout paint;
 }
