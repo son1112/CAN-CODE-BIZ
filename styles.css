@@ -264,6 +264,187 @@ p {
     color: #666;
 }
 
+/* Live Demo Section */
+.live-demo {
+    padding: 80px 0;
+    background-color: var(--bg-secondary);
+    border-top: 2px solid var(--terminal-purple);
+}
+
+.live-demo h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: var(--terminal-purple);
+    text-shadow: 0 0 10px var(--terminal-purple);
+}
+
+.live-demo .lead {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+    color: var(--text-secondary);
+}
+
+.demo-showcase {
+    background: var(--bg-primary);
+    border: 2px solid var(--accent-blue);
+    border-radius: 12px;
+    padding: 3rem;
+    margin-top: 2rem;
+    transition: all 0.3s ease;
+}
+
+.demo-showcase:hover {
+    border-color: var(--terminal-purple);
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.1);
+}
+
+.demo-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.demo-header h3 {
+    color: var(--crt-green);
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
+}
+
+.demo-header p {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.demo-badges {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.tech-badge {
+    background: rgba(168, 85, 247, 0.1);
+    color: var(--terminal-purple);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    border: 1px solid var(--terminal-purple);
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+}
+
+.demo-features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.feature-highlight {
+    background: rgba(57, 255, 20, 0.05);
+    border: 1px solid var(--accent-blue);
+    border-radius: 8px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+.feature-highlight:hover {
+    border-color: var(--crt-green);
+    background: rgba(57, 255, 20, 0.1);
+    transform: translateY(-2px);
+}
+
+.feature-highlight h4 {
+    color: var(--crt-green);
+    margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
+}
+
+.feature-highlight p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.demo-architecture {
+    margin: 3rem 0;
+    padding: 2rem;
+    background: rgba(168, 85, 247, 0.05);
+    border: 1px solid var(--terminal-purple);
+    border-radius: 8px;
+}
+
+.demo-architecture h4 {
+    color: var(--terminal-purple);
+    text-align: center;
+    margin-bottom: 2rem;
+    font-family: 'Courier New', monospace;
+}
+
+.arch-highlights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.arch-point {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.arch-point strong {
+    color: var(--terminal-purple);
+    font-family: 'Courier New', monospace;
+}
+
+.arch-point span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.demo-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 1.5rem;
+    background: rgba(57, 255, 20, 0.05);
+    border: 1px solid var(--crt-green);
+    border-radius: 8px;
+    min-width: 120px;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    background: rgba(57, 255, 20, 0.1);
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
+    transform: translateY(-2px);
+}
+
+.demo-stat-number {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--crt-green);
+    font-family: 'Courier New', monospace;
+}
+
+.demo-stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 0.5rem;
+}
+
 /* Agents Section */
 .agents {
     padding: 80px 0;
@@ -649,7 +830,9 @@ p {
     .platform-features,
     .services-grid,
     .agent-grid,
-    .architecture-grid {
+    .architecture-grid,
+    .demo-features-grid,
+    .arch-highlights {
         grid-template-columns: 1fr;
     }
     
@@ -659,6 +842,18 @@ p {
     
     .stat-item {
         min-width: 100px;
+    }
+    
+    .demo-stats {
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        min-width: 100px;
+    }
+    
+    .demo-showcase {
+        padding: 2rem;
     }
     
     h1 {
@@ -687,7 +882,9 @@ p {
     .feature-card,
     .service-item,
     .agent-card,
-    .arch-item {
+    .arch-item,
+    .feature-highlight,
+    .demo-architecture {
         padding: 1.5rem;
     }
     
