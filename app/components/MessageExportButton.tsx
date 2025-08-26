@@ -18,6 +18,11 @@ interface ExportState {
   success: { type: 'pdf' | 'word' | 'text'; link: string } | null;
 }
 
+// Helper function to validate export props
+const isValidForExport = (messageId?: string, sessionId?: string): boolean => {
+  return !!(messageId && sessionId && messageId.trim() && sessionId.trim());
+};
+
 export default function MessageExportButton({
   messageId,
   sessionId,
@@ -31,6 +36,15 @@ export default function MessageExportButton({
     success: null
   });
   const [googleServicesReady, setGoogleServicesReady] = useState(false);
+
+  // Log prop values for debugging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('MessageExportButton props:', { 
+      messageId: messageId ? `${messageId.substring(0, 8)}...` : 'EMPTY',
+      sessionId: sessionId ? `${sessionId.substring(0, 8)}...` : 'EMPTY',
+      isValid: isValidForExport(messageId, sessionId)
+    });
+  }
 
   // Load Google services dynamically
   useEffect(() => {
@@ -146,12 +160,14 @@ export default function MessageExportButton({
 
   const handleExport = async (type: 'pdf' | 'word' | 'text') => {
     // CRITICAL FIX: Validate props before attempting export
-    if (!messageId || !sessionId) {
-      console.error('🚨 Export failed - missing required props:', {
-        messageId,
-        sessionId,
-        hasMessageId: !!messageId,
-        hasSessionId: !!sessionId
+    if (!isValidForExport(messageId, sessionId)) {
+      console.error('🚨 Export failed - invalid props:', {
+        messageId: messageId || 'MISSING',
+        sessionId: sessionId || 'MISSING',
+        messageIdLength: messageId?.length || 0,
+        sessionIdLength: sessionId?.length || 0,
+        messageIdTrimmed: messageId?.trim() || 'EMPTY',
+        sessionIdTrimmed: sessionId?.trim() || 'EMPTY'
       });
       
       setExportState({
@@ -356,9 +372,9 @@ export default function MessageExportButton({
       <button
         data-testid="export-button"
         onClick={() => setShowDropdown(!showDropdown)}
-        disabled={exportState.isExporting || !messageId || !sessionId}
+        disabled={exportState.isExporting || !isValidForExport(messageId, sessionId)}
         className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-        title={!messageId || !sessionId ? "Export unavailable - session loading" : "Export message to Google Drive"}
+        title={!isValidForExport(messageId, sessionId) ? "Export unavailable - session loading" : "Export message to Google Drive"}
       >
         {exportState.isExporting ? (
           <Loader className="w-4 h-4 animate-spin" />
