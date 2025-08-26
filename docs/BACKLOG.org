@@ -15,7 +15,96 @@ This file tracks **active** future work items, feature requests, improvements, a
 
 ** 🔴 HIGH Priority
 
-*** Mobile Navigation Optimization Initiative
+*** Chat Message Rendering Bug - Messages Hidden/Not Displayed  
+**** Problem Statement
+**CRITICAL**: Chat messages completely disappear or fail to render in sessions with many messages, leaving blank/empty chat interface despite messages existing.
+
+**** Specific Issues Identified
+- **Session with 38+ messages**: "Rivo AI Rails Eng" session shows message count and metadata but zero visible messages
+- **Blank Chat Area**: Main message display area is completely empty despite active session
+- **Mobile Impact**: Issue discovered on mobile, may affect mobile users disproportionately
+- **Long Session Duration**: Issue appears in sessions with significant duration (144h 48m in example)
+
+**** Technical Details
+- Message virtualization system may be failing
+- VirtualizedMessageList component potentially not rendering messages
+- Could be related to scroll position, viewport calculations, or message loading logic
+- Session metadata loads correctly (count: 38, duration: 144h 48m) but content doesn't display
+- Affects user's ability to see conversation history entirely
+
+**** Suspected Root Causes
+1. **Message Virtualization Issue**: VirtualizedMessageList not calculating or rendering message items
+2. **Scroll Position Bug**: Messages rendered outside visible viewport
+3. **State Management**: Message loading/display state not updating properly
+4. **Mobile Viewport**: Responsive design issues affecting message container dimensions
+
+**** Implementation Approach
+**IMMEDIATE INVESTIGATION REQUIRED:**
+1. **Debug VirtualizedMessageList Component**
+   - Check message array population and rendering logic
+   - Verify scroll position and viewport calculations
+   - Test with sessions of varying message counts
+
+2. **Message Loading Pipeline**
+   - Verify API responses contain message data
+   - Check state management between hooks and components
+   - Ensure useStreamingChat properly loads historical messages
+
+3. **Mobile/Responsive Testing** 
+   - Test across different device sizes and orientations
+   - Verify CSS container dimensions and overflow handling
+   - Check touch scrolling and viewport interactions
+
+**** Priority Level: 🔴 HIGH (CRITICAL - Complete message display failure)
+**** Complexity Estimate: Medium (1-2 weeks) - Requires deep debugging of virtualization system
+**** Dependencies: VirtualizedMessageList, useStreamingChat, message loading system
+**** Acceptance Criteria
+- [ ] All messages display correctly in sessions regardless of message count
+- [ ] Message virtualization works properly on mobile and desktop
+- [ ] Scroll behavior maintains message visibility
+- [ ] Long-running sessions display complete message history
+- [ ] No blank/empty chat interfaces in active sessions
+**** Related Files
+- app/components/VirtualizedMessageList.tsx (message virtualization)
+- app/components/ChatInterface.tsx (main chat container)
+- hooks/useStreamingChat.ts (message loading/state management)
+- hooks/useMessageVirtualization.ts (virtualization logic)
+
+*** Session Header State Persistence Bug
+**** Problem Statement
+**CRITICAL**: When starting a new conversation, session header retains name and details from previously rendered session chat instead of showing current/new session information.
+
+**** Technical Details
+- Session header shows stale data from previous session
+- Affects new conversation creation user experience
+- May indicate state management issues in session context or header component
+- Could confuse users about which session they're actually in
+
+**** Implementation Approach
+**IMMEDIATE INVESTIGATION REQUIRED:**
+1. **Debug Session Header Component**
+   - Check state management and prop updates
+   - Verify session context is properly updated on route/session changes
+   - Ensure header re-renders when new session is created
+
+2. **Session Context Management**
+   - Review session switching logic
+   - Check for stale state persistence between session changes
+   - Verify cleanup when creating new sessions
+
+**** Priority Level: 🔴 HIGH (CRITICAL - State management failure)
+**** Complexity Estimate: Simple to Medium (3-5 days)
+**** Dependencies: Session context, Header component, Session routing
+**** Acceptance Criteria
+- [ ] New conversation shows correct session header immediately
+- [ ] No stale data from previous sessions persists
+- [ ] Session header updates properly on all session changes
+**** Related Files
+- app/components/SessionHeader.tsx (or similar header component)
+- contexts/SessionContext.tsx (session state management)
+- Session routing and navigation logic
+
+*** Mobile Navigation Optimization Initiative  
 **** Problem Statement
 Multiple mobile navigation issues identified that impact user experience:
 - Hamburger menu scroll optimization needed
@@ -27,6 +116,107 @@ Multiple mobile navigation issues identified that impact user experience:
 Comprehensive mobile navigation overhaul to address all related issues in one cohesive effort.
 
 ** 🟡 MEDIUM Priority
+
+*** Agent System Feature Updates & Enhancements
+**** Problem Statement
+Current agent system requires enhancements to improve user experience and functionality:
+- Agent selector UI could be more intuitive and responsive
+- Need better agent performance monitoring and metrics
+- Missing agent creation/editing workflow improvements  
+- Agent processing feedback could be enhanced
+- Integration with Claude Code sub-agents needs investigation
+
+**** Technical Requirements
+- Improve AgentSelector component UX with better loading states
+- Add agent performance metrics tracking
+- Enhance agent creation modal with better validation
+- Implement agent usage analytics and success tracking
+- Investigate Claude Code sub-agent integration issues
+- Add agent favorites/starred system integration
+- Improve agent processing error handling and user feedback
+
+**** Implementation Approaches
+1. **UI/UX Enhancements**
+   - Redesign AgentSelector with improved visual hierarchy
+   - Add loading states and skeleton screens during agent operations
+   - Implement better responsive design for mobile agent selection
+   
+2. **Performance & Monitoring**  
+   - Integrate usePerformanceMonitor hook for agent operations
+   - Add agent processing time metrics
+   - Track agent success/failure rates
+   
+3. **Feature Improvements**
+   - Enhanced agent creation workflow with better validation
+   - Agent templates or presets for common use cases
+   - Integration with existing stars system for agent favorites
+   
+4. **Integration Investigation**
+   - Research why Claude Code isn't using defined sub-agents properly
+   - Improve agent processing feedback and error messages
+   - Better integration between custom agents and system agents
+
+**** Priority Level: 🟡 MEDIUM
+**** Complexity Estimate: Medium to Complex (2-4 weeks)
+**** Dependencies: Performance monitoring system, Stars system
+**** Acceptance Criteria
+- [ ] Agent selector UI is more responsive and intuitive
+- [ ] Agent performance metrics are tracked and displayed  
+- [ ] Agent creation workflow is streamlined
+- [ ] Error handling and feedback is improved
+- [ ] Claude Code sub-agent integration issues are resolved
+- [ ] Agent favorites system is integrated with stars
+**** Related Files
+- hooks/useAgents.ts (main agent management hook)
+- app/components/AgentSelector.tsx (agent selection UI)
+- app/api/agents/route.ts (agent API endpoints)
+- hooks/usePerformanceMonitor.ts (performance tracking)
+
+*** UI Low Contrast Text/Background Issues
+**** Problem Statement
+Critical accessibility and readability issues due to severely low contrast between text and background colors, making content nearly unreadable.
+
+**** Specific Issues Identified
+- **Dark Mode "Let's chat about:" Dialogue**: Light gray text on gray background in welcome dialogue bubble
+- **Message Content**: "Quack quack! Ready for some classic rubber duck debugging?" text is barely visible in dark mode
+- **System Messages**: Welcome/intro messages have insufficient contrast ratios specifically in dark theme
+
+**** Technical Details
+- Text is extremely difficult to read in dark mode theme
+- Does NOT meet WCAG 2.1 contrast ratio requirements (4.5:1 for normal text, 3:1 for large text)
+- Severely impacts users with visual impairments or color vision deficiencies
+- Dark theme implementation needs contrast ratio improvements
+- Issue appears to be specific to theme-aware styling in welcome dialogue components
+
+**** Implementation Approach
+1. **Accessibility Audit**
+   - Run automated contrast checking tools
+   - Test with WCAG contrast ratio guidelines
+   - Identify specific components with contrast issues
+
+2. **Design System Update**
+   - Review and update color palette for better contrast
+   - Ensure dark mode and light mode both meet accessibility standards
+   - Create contrast-compliant color variables
+
+3. **Component Updates**
+   - Update affected components with improved color schemes
+   - Test across different devices and screen settings
+   - Ensure consistent contrast across the entire application
+
+**** Priority Level: 🟡 MEDIUM (upgraded due to severe accessibility impact)  
+**** Complexity Estimate: Simple to Medium (1-2 weeks)
+**** Dependencies: Design system, Theme system
+**** Acceptance Criteria
+- [ ] All UI components meet WCAG 2.1 contrast requirements
+- [ ] Text is clearly readable in both light and dark modes
+- [ ] Automated contrast checking passes for all components
+- [ ] Manual testing confirms improved readability
+**** Related Files
+- app/globals.css (global color definitions)
+- contexts/ThemeContext.tsx (theme management)
+- tailwind.config.js (color system configuration)
+- All component files with text/background styling
 
 *** Google OAuth Mobile Configuration Error
 **** Problem Statement

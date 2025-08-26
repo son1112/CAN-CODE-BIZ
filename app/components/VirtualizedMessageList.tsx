@@ -52,7 +52,21 @@ export default function VirtualizedMessageList({
     if (messages.length === 0) return { totalHeight: 0, virtualItems: [], startIndex: 0, endIndex: 0 };
 
     const height = containerHeight || containerSize.height;
-    if (height === 0) return { totalHeight: 0, virtualItems: [], startIndex: 0, endIndex: 0 };
+    // CRITICAL FIX: Don't return empty when height is 0 - use fallback rendering
+    // This prevents messages from disappearing during initial render or mobile viewport changes
+    const useHeightFallback = height === 0;
+    const fallbackHeight = isMobileLayout ? 600 : 800; // Reasonable fallback for mobile/desktop
+
+    // Debug logging for troubleshooting
+    if (process.env.NODE_ENV === 'development' && useHeightFallback) {
+      console.warn('VirtualizedMessageList: Using height fallback', {
+        messageCount: messages.length,
+        containerHeight,
+        containerSizeHeight: containerSize.height,
+        isMobileLayout,
+        fallbackHeight
+      });
+    }
 
     // Calculate total height using cached measurements or estimates
     let totalHeight = 0;
@@ -64,15 +78,18 @@ export default function VirtualizedMessageList({
       totalHeight += cachedHeight || adaptiveItemHeight;
     }
 
-    // Calculate visible range
+    // Calculate visible range with fallback handling
+    const effectiveHeight = useHeightFallback ? fallbackHeight : height;
     const startIndex = Math.max(0,
       Math.floor(scrollTop / adaptiveItemHeight) - overscan
     );
-    const visibleCount = Math.ceil(height / adaptiveItemHeight);
-    const endIndex = Math.min(
-      messages.length - 1,
-      startIndex + visibleCount + overscan * 2
-    );
+    const visibleCount = Math.ceil(effectiveHeight / adaptiveItemHeight);
+    
+    // CRITICAL FIX: When using height fallback, show all messages to prevent disappearing
+    // This ensures messages are always visible even during container size calculations
+    const endIndex = useHeightFallback 
+      ? messages.length - 1  // Show all messages when height is unknown
+      : Math.min(messages.length - 1, startIndex + visibleCount + overscan * 2);
 
     // Create virtual items
     const virtualItems: VirtualItem[] = [];
@@ -88,7 +105,7 @@ export default function VirtualizedMessageList({
     }
 
     return { totalHeight, virtualItems, startIndex, endIndex };
-  }, [messages.length, scrollTop, containerSize.height, containerHeight, adaptiveItemHeight, overscan, measurementCache]);
+  }, [messages.length, scrollTop, containerSize.height, containerHeight, adaptiveItemHeight, overscan, measurementCache, isMobileLayout]);
 
   // Handle scroll events
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
@@ -97,18 +114,34 @@ export default function VirtualizedMessageList({
     onScroll?.(scrollTop);
   }, [onScroll]);
 
-  // Measure container size
+  // Measure container size with immediate size detection
   useEffect(() => {
     const element = scrollElementRef.current;
     if (!element) return;
 
+    // CRITICAL FIX: Get initial size immediately to prevent zero height issues
+    const initialSize = {
+      width: element.clientWidth,
+      height: element.clientHeight
+    };
+    
+    // Set initial size if we have valid dimensions
+    if (initialSize.height > 0) {
+      setContainerSize(initialSize);
+    }
+
     const resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry) {
-        setContainerSize({
+        const newSize = {
           width: entry.contentRect.width,
           height: entry.contentRect.height
-        });
+        };
+        
+        // Only update if we have valid dimensions
+        if (newSize.height > 0) {
+          setContainerSize(newSize);
+        }
       }
     });
 

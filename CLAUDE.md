@@ -124,6 +124,9 @@ git pull origin develop
 
 # Check git status
 git status
+
+# Clear browser conflicts for Playwright MCP (if using browser tools)
+pkill -f chrome || true
 ```
 
 #### Deployment Safety
@@ -438,6 +441,7 @@ See [docs/VERSIONING.md](docs/VERSIONING.md) for detailed versioning guidelines.
 - **Google Services**: Graceful degradation when Google APIs are unavailable
 - **Memory Management**: Long conversations may require periodic cleanup
 - **Mobile Safari**: Minor voice recognition quirks on iOS devices
+- **Playwright MCP**: Browser sharing conflicts across sessions - requires browser restart between sessions
 
 ### Planned Enhancements 🚀
 - **File Attachments**: Document upload and analysis system
