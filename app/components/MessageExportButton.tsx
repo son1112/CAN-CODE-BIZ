@@ -145,6 +145,25 @@ export default function MessageExportButton({
   };
 
   const handleExport = async (type: 'pdf' | 'word' | 'text') => {
+    // CRITICAL FIX: Validate props before attempting export
+    if (!messageId || !sessionId) {
+      console.error('🚨 Export failed - missing required props:', {
+        messageId,
+        sessionId,
+        hasMessageId: !!messageId,
+        hasSessionId: !!sessionId
+      });
+      
+      setExportState({
+        isExporting: false,
+        exportType: null,
+        error: 'Cannot export: session data not available. Please wait for the page to fully load.',
+        success: null
+      });
+      
+      return;
+    }
+
     setExportState({
       isExporting: true,
       exportType: type,
@@ -154,6 +173,17 @@ export default function MessageExportButton({
     setShowDropdown(false);
 
     try {
+      // CRITICAL DEBUG: Log the exact values being sent
+      console.log('🔍 MessageExportButton Debug:', {
+        messageId,
+        sessionId,
+        messageIdType: typeof messageId,
+        sessionIdType: typeof sessionId,
+        messageIdTruthy: !!messageId,
+        sessionIdTruthy: !!sessionId,
+        exportType: type
+      });
+
       logger.info('Starting export process', {
         component: 'MessageExportButton',
         messageId,
@@ -326,9 +356,9 @@ export default function MessageExportButton({
       <button
         data-testid="export-button"
         onClick={() => setShowDropdown(!showDropdown)}
-        disabled={exportState.isExporting}
+        disabled={exportState.isExporting || !messageId || !sessionId}
         className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-        title="Export message to Google Drive"
+        title={!messageId || !sessionId ? "Export unavailable - session loading" : "Export message to Google Drive"}
       >
         {exportState.isExporting ? (
           <Loader className="w-4 h-4 animate-spin" />

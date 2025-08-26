@@ -25,7 +25,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as LocalExportRequest;
     const { messageId, sessionId, includeMetadata = true, includeTimestamp = true, includeBranding = true } = body;
 
+    // Debug logging to identify the exact issue
+    logger.debug('PDF export request validation', {
+      component: 'export-pdf-local-api',
+      messageId,
+      sessionId,
+      messageIdType: typeof messageId,
+      sessionIdType: typeof sessionId,
+      messageIdTruthy: !!messageId,
+      sessionIdTruthy: !!sessionId,
+      bodyKeys: Object.keys(body)
+    });
+
     if (!messageId || !sessionId) {
+      logger.error('Validation failed - missing required fields', {
+        component: 'export-pdf-local-api',
+        messageId: messageId || 'MISSING',
+        sessionId: sessionId || 'MISSING',
+        body
+      });
       throw new ValidationRequestError('Missing required fields: messageId or sessionId');
     }
 
