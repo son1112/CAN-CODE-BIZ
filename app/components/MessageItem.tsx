@@ -192,7 +192,7 @@ const MessageItem = memo(function MessageItem({
         </div>
 
         {/* Assistant Message Content */}
-        <div className={`flex-1 relative shadow-xl transition-all duration-300 group-hover:shadow-2xl rounded-lg border-l-4 w-full max-w-full overflow-hidden ${
+        <div className={`flex-1 relative shadow-xl transition-all duration-300 group-hover:shadow-2xl rounded-lg border-l-4 w-full max-w-full overflow-visible ${
           isCollapsed ? mobileResponsiveClasses.container : mobileResponsiveClasses.padding
         }`}
         style={{

@@ -45,7 +45,7 @@ export default function SessionHeader({
   if (!currentSession) {
     return (
       <div
-        className="sticky top-0 z-10 border-b backdrop-blur-md px-4 sm:px-6 py-4"
+        className="sticky top-0 z-40 border-b backdrop-blur-md px-4 sm:px-6 py-4"
         style={{
           backgroundColor: isDark ? 'rgba(13, 13, 13, 0.98)' : 'rgba(255, 255, 255, 0.98)',
           borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
@@ -68,7 +68,7 @@ export default function SessionHeader({
 
   return (
     <div
-      className="sticky top-0 z-10 border-b backdrop-blur-md px-4 sm:px-6 py-4"
+      className="sticky top-0 z-40 border-b backdrop-blur-md px-4 sm:px-6 py-4"
       style={{
         backgroundColor: isDark ? 'rgba(13, 13, 13, 0.98)' : 'rgba(255, 255, 255, 0.98)',
         borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
@@ -96,7 +96,18 @@ export default function SessionHeader({
                       color: 'var(--text-primary)'
                     }}
                     autoFocus
-                    onBlur={() => setIsEditingSessionName(false)}
+                    onBlur={(e) => {
+                      // Prevent onBlur when clicking save/cancel buttons to avoid race conditions
+                      const clickedElement = e.relatedTarget as HTMLElement;
+                      if (clickedElement && (
+                        clickedElement.closest('[data-save-button]') || 
+                        clickedElement.closest('[data-cancel-button]')
+                      )) {
+                        return;
+                      }
+                      setIsEditingSessionName(false);
+                      setEditingSessionName('');
+                    }}
                     onKeyDown={async (e) => {
                       if (e.key === 'Enter') {
                         if (editingSessionName.trim()) {
@@ -115,6 +126,8 @@ export default function SessionHeader({
                   />
                   <div className="flex gap-1 flex-shrink-0">
                     <button
+                      data-save-button
+                      onMouseDown={(e) => e.preventDefault()} // Prevent blur from firing
                       onClick={async () => {
                         if (editingSessionName.trim()) {
                           const success = await renameSession(currentSession.sessionId, editingSessionName.trim());
@@ -130,6 +143,8 @@ export default function SessionHeader({
                       <Check className="w-4 h-4 text-green-600" />
                     </button>
                     <button
+                      data-cancel-button
+                      onMouseDown={(e) => e.preventDefault()} // Prevent blur from firing
                       onClick={() => {
                         setIsEditingSessionName(false);
                         setEditingSessionName('');

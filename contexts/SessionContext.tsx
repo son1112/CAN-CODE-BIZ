@@ -123,8 +123,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setCurrentSessionId(null);
     setMessages([]);
 
+    // 🔍 DEBUG: Track loadSession call
+    console.log('🔍 SessionContext loadSession called:', { sessionId });
+
     try {
       const response = await fetch(`/api/sessions/${sessionId}`);
+      console.log('🔍 SessionContext fetch response:', { ok: response.ok, status: response.status });
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -134,10 +138,54 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Failed to load session');
       }
 
-      const { session } = await response.json();
-      setCurrentSession(session);
-      setCurrentSessionId(session.sessionId);
-      setMessages(session.messages || []);
+      const responseData = await response.json();
+      console.log('🔍 SessionContext response.json() result:', { 
+        hasSession: !!responseData.session,
+        sessionKeys: responseData.session ? Object.keys(responseData.session) : 'none',
+        sessionId: responseData.session?.sessionId 
+      });
+      
+      const { session } = responseData;
+      
+      // 🔍 DEBUG: Log what we received from API
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 SessionContext received from API:', {
+          sessionId: session.sessionId,
+          sessionIdType: typeof session.sessionId,
+          sessionIdLength: session.sessionId?.length,
+          sessionIdEqualsEmpty: session.sessionId === '',
+          sessionKeys: Object.keys(session),
+          sessionStringified: JSON.stringify({ sessionId: session.sessionId }, null, 2)
+        });
+      }
+      
+      // 🔍 CRITICAL FIX: Ensure sessionId is properly set
+      // There might be a type issue where sessionId is getting lost
+      const sessionWithCorrectId = {
+        ...session,
+        sessionId: session.sessionId || sessionId, // Fallback to the function parameter
+      };
+      
+      console.log('🔍 SessionContext setting state with:', {
+        originalSessionId: session.sessionId,
+        fallbackSessionId: sessionId,
+        finalSessionId: sessionWithCorrectId.sessionId
+      });
+
+      setCurrentSession(sessionWithCorrectId);
+      setCurrentSessionId(sessionWithCorrectId.sessionId);
+      setMessages(sessionWithCorrectId.messages || []);
+      
+      // 🔍 DEBUG: Verify what was actually set in state
+      if (process.env.NODE_ENV === 'development') {
+        setTimeout(() => {
+          console.log('🔍 SessionContext state after setting:', {
+            currentSessionIdSet: sessionWithCorrectId.sessionId,
+            setCurrentSessionArgument: sessionWithCorrectId,
+            afterSetSessionId: sessionWithCorrectId.sessionId
+          });
+        }, 100);
+      }
 
       return session;
     } catch (err) {

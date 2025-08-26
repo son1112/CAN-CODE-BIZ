@@ -48,7 +48,7 @@ export default function MobileOptimizedHeader({
       <div
         className="sticky top-0 px-6 py-4 backdrop-blur-md border-b-2 border-transparent z-50"
         style={{
-          zIndex: 100,
+          zIndex: 50,
           width: '100%',
           backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
           borderColor: 'var(--border-primary)',
@@ -117,7 +117,7 @@ export default function MobileOptimizedHeader({
         <div
           className="sticky top-0 px-4 py-3 backdrop-blur-md border-b-2 border-transparent z-50"
           style={{
-            zIndex: 100,
+            zIndex: 50,
             width: '100%',
             backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
             borderColor: 'var(--border-primary)',
@@ -238,7 +238,7 @@ export default function MobileOptimizedHeader({
         <div
           className="sticky top-0 px-6 py-4 backdrop-blur-md border-b-2 border-transparent z-50"
           style={{
-            zIndex: 100,
+            zIndex: 50,
             width: '100%',
             backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
             borderColor: 'var(--border-primary)',

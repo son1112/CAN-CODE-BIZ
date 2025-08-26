@@ -44,6 +44,16 @@ export async function GET(
       { lastAccessedAt: new Date() }
     );
 
+    // 🔍 DEBUG: Log exactly what we're returning to client
+    console.log('🔍 API Response Debug:', {
+      sessionId: sessionDoc.sessionId,
+      sessionIdType: typeof sessionDoc.sessionId,
+      sessionIdLength: sessionDoc.sessionId?.length,
+      sessionIdEqualsEmpty: sessionDoc.sessionId === '',
+      sessionDocKeys: Object.keys(sessionDoc),
+      apiResponseSessionId: sessionDoc.sessionId
+    });
+
     return NextResponse.json({
       session: sessionDoc
     });

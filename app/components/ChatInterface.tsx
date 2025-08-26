@@ -241,11 +241,22 @@ export default function ChatInterface() {
 
   const { startOnboarding } = useOnboarding();
   const { generateAvatar, isGenerating: isGeneratingAvatar, error: avatarError } = useDuckAvatar();
-  const { currentSession, createSession, loadSession, renameSession, isLoadingSession, isProcessingMessage, clearCurrentSession, updateMessageTags, addMessage } = useSession();
+  const { currentSession, currentSessionId, createSession, loadSession, renameSession, isLoadingSession, isProcessingMessage, clearCurrentSession, updateMessageTags, addMessage } = useSession();
   const { currentAgent, clearContext } = useAgent();
   const { isDropdownOpen } = useDropdown();
   const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
   const { isDark } = useTheme();
+  
+  // 🔍 DEBUG: Log currentSession state on every render
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 ChatInterface render - currentSession state:', {
+      hasCurrentSession: !!currentSession,
+      currentSessionId,
+      sessionIdFromCurrentSession: currentSession?.sessionId,
+      currentSessionKeys: currentSession ? Object.keys(currentSession) : 'null',
+      messagesLength: messages.length
+    });
+  }
   const { data: authSession } = useAuthSession();
   const router = useRouter();
 
@@ -783,6 +794,18 @@ export default function ChatInterface() {
   const renderMessage = useCallback((message: Message, index: number) => {
     const reversedIndex = filteredMessages.length - 1 - index;
     const isCurrentlyStreaming = isStreaming && message.role === 'assistant' && reversedIndex === 0;
+
+    // 🔍 CRITICAL DEBUG: Log what we're actually passing to MessageItem
+    if (process.env.NODE_ENV === 'development' && message.id === 'f99bdbf4-cb66-4201-93ca-9306e8708274') {
+      console.log('🔍 ChatInterface passing to MessageItem:', {
+        messageId: message.id,
+        currentSession: currentSession,
+        currentSessionId: currentSessionId,
+        sessionIdFromCurrentSession: currentSession?.sessionId,
+        currentSessionKeys: currentSession ? Object.keys(currentSession) : 'null',
+        currentSessionStringified: currentSession ? JSON.stringify(currentSession, null, 2) : 'null'
+      });
+    }
 
     return (
       <MessageItem

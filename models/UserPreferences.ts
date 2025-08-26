@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { ExportCustomizationSettings } from '@/types/export';
 
 export interface UserPreferencesDocument extends Document {
   userId: string;
@@ -22,6 +23,7 @@ export interface UserPreferencesDocument extends Document {
     shareUsageData: boolean;
     showOnlineStatus: boolean;
   };
+  export: ExportCustomizationSettings;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -70,6 +72,46 @@ const UserPreferencesSchema = new Schema<UserPreferencesDocument>(
       saveConversations: { type: Boolean, default: true },
       shareUsageData: { type: Boolean, default: false },
       showOnlineStatus: { type: Boolean, default: true },
+    },
+    export: {
+      // Header & Branding
+      includeBranding: { type: Boolean, default: false },
+      includeAppSubtitle: { type: Boolean, default: false },
+      customTitle: { type: String, default: '' },
+      
+      // Message Metadata
+      includeMessageRole: { type: Boolean, default: false },
+      includeTimestamp: { type: Boolean, default: false },
+      includeMessageId: { type: Boolean, default: false },
+      includeAgentInfo: { type: Boolean, default: false },
+      includeTags: { type: Boolean, default: false },
+      
+      // Session Metadata
+      includeSessionInfo: { type: Boolean, default: false },
+      includeSessionName: { type: Boolean, default: false },
+      includeExportTimestamp: { type: Boolean, default: false },
+      
+      // Document Structure
+      includeFooter: { type: Boolean, default: true },
+      includeGeneratedBy: { type: Boolean, default: false },
+      includeSeparators: { type: Boolean, default: false },
+      
+      // Content Formatting
+      fontSize: { type: Number, default: 11, min: 8, max: 16 },
+      margin: { type: Number, default: 20, min: 10, max: 30 },
+      includeMarkdownStyling: { type: Boolean, default: true },
+      codeBlockStyling: { type: Boolean, default: true },
+      
+      // Export Format Preferences
+      defaultFormat: { 
+        type: String, 
+        enum: ['pdf', 'word', 'text'], 
+        default: 'pdf' 
+      },
+      fileNameTemplate: { 
+        type: String, 
+        default: '{sessionName}_{messageId}_{timestamp}' 
+      }
     },
   },
   {

@@ -28,6 +28,28 @@ export default function MessageExportButton({
   sessionId,
   className = ''
 }: MessageExportButtonProps) {
+  
+  // 🔍 EMERGENCY FIX: Extract sessionId from URL if not provided via props
+  // This handles the case where SessionContext state is not properly set
+  const urlSessionId = (() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('session');
+    }
+    return null;
+  })();
+  
+  // Use sessionId from props first, fallback to URL, fallback to localStorage
+  const effectiveSessionId = sessionId || 
+    urlSessionId || 
+    (typeof window !== 'undefined' ? localStorage.getItem('rubber-ducky-current-session') : null);
+    
+  console.log('🔍 MessageExportButton sessionId resolution:', {
+    propsSessionId: sessionId,
+    urlSessionId,
+    effectiveSessionId,
+    messageId
+  });
   const [showDropdown, setShowDropdown] = useState(false);
   const [exportState, setExportState] = useState<ExportState>({
     isExporting: false,
@@ -42,7 +64,8 @@ export default function MessageExportButton({
     console.log('MessageExportButton props:', { 
       messageId: messageId ? `${messageId.substring(0, 8)}...` : 'EMPTY',
       sessionId: sessionId ? `${sessionId.substring(0, 8)}...` : 'EMPTY',
-      isValid: isValidForExport(messageId, sessionId)
+      effectiveSessionId: effectiveSessionId ? `${effectiveSessionId.substring(0, 8)}...` : 'EMPTY',
+      isValid: isValidForExport(messageId, effectiveSessionId)
     });
   }
 
@@ -160,12 +183,14 @@ export default function MessageExportButton({
 
   const handleExport = async (type: 'pdf' | 'word' | 'text') => {
     // CRITICAL FIX: Validate props before attempting export
-    if (!isValidForExport(messageId, sessionId)) {
+    if (!isValidForExport(messageId, effectiveSessionId)) {
       console.error('🚨 Export failed - invalid props:', {
         messageId: messageId || 'MISSING',
         sessionId: sessionId || 'MISSING',
+        effectiveSessionId: effectiveSessionId || 'MISSING',
         messageIdLength: messageId?.length || 0,
         sessionIdLength: sessionId?.length || 0,
+        effectiveSessionIdLength: effectiveSessionId?.length || 0,
         messageIdTrimmed: messageId?.trim() || 'EMPTY',
         sessionIdTrimmed: sessionId?.trim() || 'EMPTY'
       });
@@ -232,7 +257,7 @@ export default function MessageExportButton({
           },
           body: JSON.stringify({
             messageId,
-            sessionId,
+            sessionId: effectiveSessionId,
             includeMetadata: true,
             includeTimestamp: true,
             includeBranding: true
@@ -302,7 +327,7 @@ export default function MessageExportButton({
         },
         body: JSON.stringify({
           messageId,
-          sessionId,
+          sessionId: effectiveSessionId,
           googleAccessToken: accessToken,
           includeMetadata: true,
           includeTimestamp: true,
@@ -372,9 +397,9 @@ export default function MessageExportButton({
       <button
         data-testid="export-button"
         onClick={() => setShowDropdown(!showDropdown)}
-        disabled={exportState.isExporting || !isValidForExport(messageId, sessionId)}
+        disabled={exportState.isExporting || !isValidForExport(messageId, effectiveSessionId)}
         className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-        title={!isValidForExport(messageId, sessionId) ? "Export unavailable - session loading" : "Export message to Google Drive"}
+        title={!isValidForExport(messageId, effectiveSessionId) ? "Export unavailable - session loading" : "Export message to Google Drive"}
       >
         {exportState.isExporting ? (
           <Loader className="w-4 h-4 animate-spin" />
