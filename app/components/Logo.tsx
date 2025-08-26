@@ -50,8 +50,9 @@ export default function Logo({
           className={cn(
             'relative rounded-full overflow-hidden flex items-center justify-center',
             'bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50',
+            'dark:bg-gradient-to-br dark:from-yellow-800/30 dark:via-orange-800/30 dark:to-amber-800/30',
             'shadow-lg transform hover:scale-105 transition-transform duration-300',
-            'border-2 border-yellow-200/40',
+            'border-2 border-yellow-200/40 dark:border-yellow-600/60',
             onClick ? 'cursor-pointer hover:shadow-xl' : '',
             config.container
           )}
@@ -85,8 +86,9 @@ export default function Logo({
         className={cn(
           'relative rounded-full overflow-hidden flex items-center justify-center',
           'bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50',
-          'shadow-2xl shadow-yellow-500/20 transform hover:scale-105 transition-transform duration-300',
-          'border-2 border-yellow-200/40',
+          'dark:bg-gradient-to-br dark:from-yellow-800/30 dark:via-orange-800/30 dark:to-amber-800/30',
+          'shadow-2xl shadow-yellow-500/20 dark:shadow-yellow-400/40 transform hover:scale-105 transition-transform duration-300',
+          'border-2 border-yellow-200/40 dark:border-yellow-600/60',
           config.container
         )}
       >
@@ -109,13 +111,13 @@ export default function Logo({
       {showText && (
         <div>
           <h1 className={cn(
-            'font-bold text-gray-900 leading-tight',
+            'font-bold text-gray-900 dark:text-gray-100 leading-tight',
             config.text
           )}>
             Rubber Ducky Live
           </h1>
           {size === 'lg' || size === 'xl' ? (
-            <p className="text-sm text-gray-600 font-medium">
+            <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">
 Your premium AI thinking companion
             </p>
           ) : null}

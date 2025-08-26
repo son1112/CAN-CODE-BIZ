@@ -40,32 +40,36 @@
   --background: #0a0a0a;
   --foreground: #ededed;
   
-  /* Linear.app inspired dark palette */
-  --bg-primary: #0d0d0d;
-  --bg-secondary: #161616;
-  --bg-tertiary: #1f1f1f;
-  --bg-quaternary: #2a2a2a;
+  /* Enhanced dark palette with much better contrast */
+  --bg-primary: #111111;
+  --bg-secondary: #1f1f1f;
+  --bg-tertiary: #2d2d2d;
+  --bg-quaternary: #404040;
   
-  --border-primary: #2a2a2a;
-  --border-secondary: #404040;
+  /* Improved borders for better separation */
+  --border-primary: #404040;
+  --border-secondary: #525252;
   
-  --text-primary: #f5f5f5;
-  --text-secondary: #d4d4d4;
-  --text-tertiary: #a3a3a3;
-  --text-quaternary: #737373;
+  /* Much better text contrast ratios */
+  --text-primary: #ffffff;
+  --text-secondary: #e5e5e5;
+  --text-tertiary: #b8b8b8;
+  --text-quaternary: #8a8a8a;
   
+  /* Improved accent colors for better visibility */
   --accent-primary: #8b5cf6;
   --accent-secondary: #a855f7;
-  --accent-tertiary: #06b6d4;
+  --accent-tertiary: #22d3ee;
   
-  --status-success: #10b981;
+  --status-success: #22c55e;
   --status-warning: #f59e0b;
   --status-error: #f87171;
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  /* Enhanced shadows for dark mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
 }
 
 body {
@@ -73,6 +77,18 @@ body {
   color: var(--text-primary);
   font-family: var(--font-roboto), system-ui, -apple-system, sans-serif;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Dark mode overrides for better contrast */
+.dark {
+  /* Override common gray patterns with better contrast */
+  --tw-bg-gray-800: #2d2d2d;
+  --tw-bg-gray-900: #1f1f1f;
+  --tw-bg-gray-700: #404040;
+  --tw-text-gray-100: #ffffff;
+  --tw-text-gray-200: #e5e5e5;
+  --tw-text-gray-300: #b8b8b8;
+  --tw-text-gray-400: #8a8a8a;
 }
 
 /* Theme utility classes */
@@ -110,9 +126,155 @@ body {
 .shadow-theme-lg { box-shadow: var(--shadow-lg); }
 .shadow-theme-xl { box-shadow: var(--shadow-xl); }
 
-/* Smooth transitions for theme changes */
-* {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+/* Dark mode utility classes for consistent styling */
+.theme-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+.theme-button {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+.theme-button:hover {
+  background: var(--bg-quaternary);
+  border-color: var(--border-secondary);
+}
+
+.theme-input {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+.theme-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-primary)20;
+}
+
+/* Enhanced message styling for better contrast */
+.theme-message {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+.theme-message-user {
+  background: var(--bg-quaternary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+}
+
+.theme-message-assistant {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+/* Better contrast for code blocks */
+.theme-code {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+}
+
+/* Aggressive dark mode contrast improvements with high specificity */
+html.dark body .bg-gray-800,
+html.dark .bg-gray-800,
+.dark .bg-gray-800 { 
+  background-color: #2d2d2d !important; 
+}
+
+html.dark body .bg-gray-900,
+html.dark .bg-gray-900,
+.dark .bg-gray-900 { 
+  background-color: #1f1f1f !important; 
+}
+
+html.dark body .bg-gray-700,
+html.dark .bg-gray-700,
+.dark .bg-gray-700 { 
+  background-color: #404040 !important; 
+}
+
+html.dark body .text-gray-100,
+html.dark .text-gray-100,
+.dark .text-gray-100 { 
+  color: #ffffff !important; 
+}
+
+html.dark body .text-gray-200,
+html.dark .text-gray-200,
+.dark .text-gray-200 { 
+  color: #e5e5e5 !important; 
+}
+
+html.dark body .text-gray-300,
+html.dark .text-gray-300,
+.dark .text-gray-300 { 
+  color: #b8b8b8 !important; 
+}
+
+html.dark body .text-gray-400,
+html.dark .text-gray-400,
+.dark .text-gray-400 { 
+  color: #8a8a8a !important; 
+}
+
+/* Force white text for any gray text in dark mode */
+html.dark body *[class*="text-gray"],
+body.dark *[class*="text-gray"],
+.dark *[class*="text-gray"] {
+  color: #e5e5e5 !important;
+}
+
+/* Force better background for any gray bg in dark mode */
+html.dark body *[class*="bg-gray"],
+body.dark *[class*="bg-gray"],
+.dark *[class*="bg-gray"] {
+  background-color: #2d2d2d !important;
+}
+
+/* Optimized dark mode body styling */
+html.dark body,
+body.dark {
+  background-color: #111111 !important;
+  color: #ffffff !important;
+}
+
+/* Optimized transitions for theme changes - targeting specific elements */
+.theme-transition,
+[class*="theme-"],
+[class*="bg-"],
+[class*="text-"],
+[class*="border-"] {
+  transition: 
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* SVG elements for icon theme transitions */
+svg, svg * {
+  transition: 
+    fill 0.3s ease,
+    stroke 0.3s ease;
+}
+
+/* Interactive elements with faster, optimized transitions */
+button, a, input, textarea, select,
+[role="button"], [tabindex]:not([tabindex="-1"]) {
+  transition: 
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.1s ease,
+    opacity 0.2s ease;
 }
 
 * {

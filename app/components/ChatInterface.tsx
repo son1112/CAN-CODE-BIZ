@@ -1,30 +1,35 @@
 'use client';
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { Send, MessageCircle, Type, History, Edit3, Check, X, Minimize2, Maximize2, Star, Plus, MoreHorizontal, Hash, RefreshCw, User, LogOut, Archive, ArchiveRestore, RotateCcw, Copy, Clock, Zap, TrendingUp, Activity } from 'lucide-react';
+import { Send, X, MoreHorizontal, RefreshCw, User, LogOut, Settings, Hash, Star, Archive, ArchiveRestore, History } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import VoiceInput from './VoiceInput';
-import AgentSelector from './AgentSelector';
 import Logo from './Logo';
 import FormattedMessage from './FormattedMessage';
-import ThemeToggle from './ThemeToggle';
-import ChatMessageModal from './ChatMessageModal';
-import ModelSelector from './ModelSelector';
-import ScrollNavigation from './ScrollNavigation';
-import StarButton from './StarButton';
-import StarsBrowser from './StarsBrowser';
-import TagBrowser from './TagBrowser';
-import MessageTagInterface from './MessageTagInterface';
-import MessageExportButton from './MessageExportButton';
-import InstallPrompt, { InstallButton } from './InstallPrompt';
-import PrimaryAgentSelector from './PrimaryAgentSelector';
-import SessionHeader from './SessionHeader';
 import { SessionLoadingIndicator } from './LoadingIndicator';
-import MobileOptimizedHeader from './MobileOptimizedHeader';
-import VirtualizedMessageList from './VirtualizedMessageList';
-import MessageItem from './MessageItem';
+import dynamic from 'next/dynamic';
+
+// Lazy load non-critical components
+const AgentSelector = dynamic(() => import('./AgentSelector'), { ssr: false });
+const ThemeToggle = dynamic(() => import('./ThemeToggle'), { ssr: false });
+const ChatMessageModal = dynamic(() => import('./ChatMessageModal'), { ssr: false });
+const ModelSelector = dynamic(() => import('./ModelSelector'), { ssr: false });
+const ScrollNavigation = dynamic(() => import('./ScrollNavigation'), { ssr: false });
+const StarButton = dynamic(() => import('./StarButton'), { ssr: false });
+const StarsBrowser = dynamic(() => import('./StarsBrowser'), { ssr: false });
+const TagBrowser = dynamic(() => import('./TagBrowser'), { ssr: false });
+const MessageTagInterface = dynamic(() => import('./MessageTagInterface'), { ssr: false });
+const MessageExportButton = dynamic(() => import('./MessageExportButton'), { ssr: false });
+const InstallPrompt = dynamic(() => import('./InstallPrompt').then(mod => ({ default: mod.default })), { ssr: false });
+const InstallButton = dynamic(() => import('./InstallPrompt').then(mod => ({ default: mod.InstallButton })), { ssr: false });
+// Lazy load more components for better performance
+const PrimaryAgentSelector = dynamic(() => import('./PrimaryAgentSelector'), { ssr: false });
+const SessionHeader = dynamic(() => import('./SessionHeader'), { ssr: false });
+const MobileOptimizedHeader = dynamic(() => import('./MobileOptimizedHeader'), { ssr: false });
+const VirtualizedMessageList = dynamic(() => import('./VirtualizedMessageList'), { ssr: false });
+const MessageItem = dynamic(() => import('./MessageItem'), { ssr: false });
 import { useMessageVirtualization } from '@/hooks/useMessageVirtualization';
 import { useDuckAvatar } from '@/hooks/useDuckAvatar';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -35,10 +40,9 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useConversationManager } from '@/hooks/useConversationManager';
 import { useAuth } from '@/hooks/useAuth';
 import { useSession } from '@/contexts/SessionContext';
-import SessionBrowser from './SessionBrowser';
+const SessionBrowser = dynamic(() => import('./SessionBrowser'), { ssr: false });
 import { useSession as useAuthSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
-import { Settings } from 'lucide-react';
 import { getAgentById, getRandomConversationStarter } from '@/lib/agents';
 import { useAgents } from '@/hooks/useAgents';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
@@ -102,6 +106,7 @@ function HeroSection() {
           src={heroImage}
           alt="Rubber Ducky Hero"
           fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1024px"
           className="object-cover"
           priority // Load immediately for welcome view
         />
@@ -784,6 +789,7 @@ export default function ChatInterface() {
         key={message.id}
         message={message}
         index={reversedIndex}
+        sessionId={currentSession?.sessionId}
         isCurrentlyStreaming={isCurrentlyStreaming}
         collapsedMessages={collapsedMessages}
         expandMessage={(messageId) => {

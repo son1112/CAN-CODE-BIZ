@@ -65,7 +65,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       const session = await createSession();
       return session.sessionId;
     } catch (err) {
-      console.error('Failed to auto-create session:', err);
+      setError('Failed to auto-create session');
       return null;
     }
   };
@@ -73,6 +73,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const createSession = async (name?: string, tags: string[] = []): Promise<SessionDocument> => {
     setIsLoading(true);
     setError(null);
+    
+    // CRITICAL FIX: Clear current session state immediately when creating new session
+    // This prevents showing stale data from previous session during creation
+    setCurrentSession(null);
+    setCurrentSessionId(null);
+    setMessages([]);
 
     try {
       const response = await fetch('/api/sessions', {
@@ -90,12 +96,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       const { session } = await response.json();
 
-      // Load the full session data
+      // Load the full session data (loadSession already clears state)
       const fullSession = await loadSession(session.sessionId);
       if (fullSession) {
-        setCurrentSession(fullSession);
-        setCurrentSessionId(fullSession.sessionId);
-        setMessages(fullSession.messages || []);
         await refreshSessions();
         return fullSession;
       }
@@ -113,6 +116,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const loadSession = async (sessionId: string): Promise<SessionDocument | null> => {
     setIsLoadingSession(true);
     setError(null);
+    
+    // CRITICAL FIX: Clear current session state immediately to prevent stale data
+    // This ensures SessionHeader shows loading state instead of previous session data
+    setCurrentSession(null);
+    setCurrentSessionId(null);
+    setMessages([]);
 
     try {
       const response = await fetch(`/api/sessions/${sessionId}`);
@@ -129,7 +138,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setCurrentSession(session);
       setCurrentSessionId(session.sessionId);
       setMessages(session.messages || []);
-
 
       return session;
     } catch (err) {
@@ -524,14 +532,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const sessionIdToLoad = urlSessionId || localStorage.getItem('rubber-ducky-current-session');
 
     if (sessionIdToLoad) {
-      const source = urlSessionId ? 'URL parameter' : 'localStorage';
-      console.log(`Restoring session from ${source}:`, sessionIdToLoad);
-
       loadSession(sessionIdToLoad).then((session) => {
         if (session) {
-          console.log('Successfully restored session:', session.name);
+          // Session restored successfully
         } else {
-          console.log('Failed to restore session, clearing localStorage');
           localStorage.removeItem('rubber-ducky-current-session');
           // If URL parameter failed, clean up URL
           if (urlSessionId) {
@@ -540,8 +544,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
             window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search);
           }
         }
-      }).catch((error) => {
-        console.error('Error restoring session:', error);
+      }).catch(() => {
         localStorage.removeItem('rubber-ducky-current-session');
         // If URL parameter failed, clean up URL
         if (urlSessionId) {
@@ -558,10 +561,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (currentSessionId) {
       localStorage.setItem('rubber-ducky-current-session', currentSessionId);
-      console.log('Saved current session to localStorage:', currentSessionId);
     } else {
       localStorage.removeItem('rubber-ducky-current-session');
-      console.log('Removed current session from localStorage');
     }
   }, [currentSessionId]);
 

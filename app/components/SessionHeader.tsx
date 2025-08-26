@@ -40,7 +40,29 @@ export default function SessionHeader({
   renameSession,
   loadSession
 }: SessionHeaderProps) {
-  if (!currentSession || filteredMessages.length === 0) {
+  // CRITICAL FIX: Show loading state when session is null or being loaded
+  // This prevents showing stale data from previous session
+  if (!currentSession) {
+    return (
+      <div
+        className="sticky top-0 z-10 border-b backdrop-blur-md px-4 sm:px-6 py-4"
+        style={{
+          backgroundColor: isDark ? 'rgba(13, 13, 13, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center">
+            <div className="animate-pulse text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Loading session...
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (filteredMessages.length === 0) {
     return null;
   }
 

@@ -37,10 +37,52 @@ export default function MobileOptimizedHeader({
 }: MobileOptimizedHeaderProps) {
   const { isDark } = useTheme();
   const { currentSession } = useSession();
-  const { isMenuOpen, isMobile, isTablet, toggleMenu, closeMenu } = useMobileNavigation();
+  const { isMenuOpen, isMobile, isTablet, isHydrated, toggleMenu, closeMenu } = useMobileNavigation();
 
-  // Determine if we should show mobile layout
-  const showMobileLayout = isMobile || isTablet;
+  // Determine if we should show mobile layout - only after hydration
+  const showMobileLayout = isHydrated && (isMobile || isTablet);
+
+  // Show loading state until hydrated to prevent mismatch
+  if (!isHydrated) {
+    return (
+      <div
+        className="sticky top-0 px-6 py-4 backdrop-blur-md border-b-2 border-transparent z-50"
+        style={{
+          zIndex: 100,
+          width: '100%',
+          backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          borderColor: 'var(--border-primary)',
+          boxShadow: 'var(--shadow-lg)',
+        }}
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <Logo
+              size="lg"
+              showText={false}
+              onClick={onNavigateToHome}
+              className="cursor-pointer"
+            />
+            <div className="flex items-center gap-2">
+              <MessageCircle
+                className="w-5 h-5 flex-shrink-0"
+                style={{ color: 'var(--text-secondary)' }}
+              />
+              <span
+                className="text-lg font-medium"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Loading...
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Generate breadcrumb items based on current view
   const getBreadcrumbItems = () => {

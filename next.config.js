@@ -122,10 +122,23 @@ const nextConfig = {
     ]
   },
 
+  // Server external packages  
+  serverExternalPackages: ['mongoose'],
+
   // Experimental features for performance
   experimental: {
-    optimizePackageImports: ['lucide-react'],
-    webVitalsAttribution: ['CLS', 'LCP'],
+    optimizePackageImports: ['lucide-react', '@anthropic-ai/sdk', 'react-markdown'],
+    webVitalsAttribution: ['CLS', 'LCP', 'INP'],
+  },
+
+  // Turbopack configuration (stable)
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
   },
 }
 

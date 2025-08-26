@@ -9,13 +9,14 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="relative p-2 rounded-xl transition-all duration-200 group"
+      className="relative p-2 rounded-xl transition-all duration-300 group hover:scale-105 active:scale-95"
       style={{
         backgroundColor: isDark ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
         borderColor: 'var(--border-primary)',
         border: '1px solid'
       }}
       title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
     >
       <div className="relative w-5 h-5">
         {/* Sun icon */}
@@ -45,8 +46,10 @@ export default function ThemeToggle() {
 
       {/* Hover effect */}
       <div
-        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-        style={{ backgroundColor: 'var(--accent-primary)', opacity: '0.1' }}
+        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-20 transition-all duration-300"
+        style={{ 
+          backgroundColor: isDark ? 'var(--accent-secondary)' : 'var(--accent-primary)',
+        }}
       />
     </button>
   );

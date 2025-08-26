@@ -1,0 +1,11 @@
+{
+  "playwright": {
+    "browser_args": ["--isolated"],
+    "headless": false,
+    "timeout": 30000,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    }
+  }
+}

@@ -14,6 +14,7 @@ import type { Message } from '@/types';
 interface MessageItemProps {
   message: Message;
   index: number;
+  sessionId?: string;
   isCurrentlyStreaming?: boolean;
   collapsedMessages?: Set<string>;
   expandMessage?: (messageId: string) => void;
@@ -34,6 +35,7 @@ interface MessageItemProps {
 const MessageItem = memo(function MessageItem({
   message,
   index,
+  sessionId,
   isCurrentlyStreaming = false,
   collapsedMessages = new Set(),
   expandMessage,
@@ -79,15 +81,17 @@ const MessageItem = memo(function MessageItem({
             <div
               className={`relative shadow-xl rounded-lg border-l-4 ${mobileResponsiveClasses.padding}`}
               style={{
-                backgroundColor: isDark ? '#ffffff' : '#ffffff',
-                color: isDark ? '#1f2937' : '#1f2937',
+                backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
+                color: isDark ? '#e5e5e5' : '#1f2937',
                 borderLeftColor: '#3b82f6',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
-                border: '1px solid #e5e7eb',
+                boxShadow: isDark 
+                  ? '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
+                  : '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
+                border: isDark ? '1px solid #404040' : '1px solid #e5e7eb',
               }}
             >
               {/* User Message Title & Header */}
-              <div className="mb-3 border-b pb-2" style={{ borderColor: '#e5e7eb' }}>
+              <div className="mb-3 border-b pb-2" style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
                 <h3 className={`font-bold mb-1 ${mobileResponsiveClasses.titleSize}`} style={{
                   color: '#1e40af',
                   backgroundImage: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
@@ -100,7 +104,7 @@ const MessageItem = memo(function MessageItem({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className={`font-semibold px-2 py-1 rounded ${isMobileLayout ? 'text-xs' : 'text-xs'}`} style={{
-                      backgroundColor: '#f3f4f6',
+                      backgroundColor: isDark ? '#404040' : '#f3f4f6',
                       color: '#3b82f6'
                     }}>
                       You
@@ -130,7 +134,7 @@ const MessageItem = memo(function MessageItem({
 
               {/* User Message Actions */}
               <div className={`flex items-center justify-between gap-2 mt-4 pt-3 border-t ${isMobileLayout ? 'flex-wrap' : ''}`}
-                   style={{ borderColor: '#e5e7eb' }}>
+                   style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
                 <div className="flex items-center gap-1">
                   <StarButton
                     itemType="message"
@@ -152,8 +156,8 @@ const MessageItem = memo(function MessageItem({
                       onClick={() => handleCopyMessage(message.id, message.content)}
                       className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
                       style={{
-                        backgroundColor: '#f9fafb',
-                        color: '#6b7280'
+                        backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
+                        color: isDark ? '#b8b8b8' : '#6b7280'
                       }}
                       title="Copy message"
                     >
@@ -163,7 +167,7 @@ const MessageItem = memo(function MessageItem({
                 </div>
                 <MessageExportButton
                   messageId={message.id}
-                  sessionId=""
+                  sessionId={sessionId || ""}
                   className={`touch-target ${mobileResponsiveClasses.actionButtonSize}`}
                 />
               </div>
@@ -193,14 +197,16 @@ const MessageItem = memo(function MessageItem({
         }`}
         style={{
           borderLeftColor: '#eab308',
-          backgroundColor: isDark ? '#ffffff' : '#ffffff',
-          color: isDark ? '#1f2937' : '#1f2937',
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
-          border: '1px solid #e5e7eb',
+          backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
+          color: isDark ? '#e5e5e5' : '#1f2937',
+          boxShadow: isDark 
+            ? '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
+            : '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
+          border: isDark ? '1px solid #404040' : '1px solid #e5e7eb',
           borderLeft: '4px solid #eab308'
         }}>
           {/* Assistant Message Header */}
-          <div className="mb-3 border-b pb-2" style={{ borderColor: '#e5e7eb' }}>
+          <div className="mb-3 border-b pb-2" style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <h3 className={`font-bold mb-2 ${mobileResponsiveClasses.titleSize}`} style={{
@@ -214,14 +220,14 @@ const MessageItem = memo(function MessageItem({
                 </h3>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`font-semibold px-2 py-1 rounded ${isMobileLayout ? 'text-xs' : 'text-xs'}`} style={{
-                    backgroundColor: '#fef3c7',
+                    backgroundColor: isDark ? '#404040' : '#fef3c7',
                     color: '#d97706'
                   }}>
                     🦆 Assistant
                   </span>
                   {message.agentUsed && (
                     <span className={`px-2 py-1 rounded ${isMobileLayout ? 'text-xs' : 'text-xs'}`} style={{
-                      backgroundColor: '#f0f9ff',
+                      backgroundColor: isDark ? '#404040' : '#f0f9ff',
                       color: '#0369a1'
                     }}>
                       {formatModel ? formatModel(message.agentUsed) : message.agentUsed}
@@ -239,8 +245,8 @@ const MessageItem = memo(function MessageItem({
                   onClick={() => isCollapsed ? expandMessage(message.id) : collapseMessage(message.id)}
                   className={`flex-shrink-0 rounded-lg transition-colors ml-2 touch-target ${mobileResponsiveClasses.actionButtonSize}`}
                   style={{
-                    backgroundColor: '#f9fafb',
-                    color: '#6b7280'
+                    backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
+                    color: isDark ? '#b8b8b8' : '#6b7280'
                   }}
                   title={isCollapsed ? 'Expand message' : 'Collapse message'}
                 >
@@ -271,7 +277,7 @@ const MessageItem = memo(function MessageItem({
 
           {/* Assistant Message Actions */}
           <div className={`flex items-center justify-between gap-2 mt-4 pt-3 border-t ${isMobileLayout ? 'flex-wrap' : ''}`}
-               style={{ borderColor: '#e5e7eb' }}>
+               style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
             <div className="flex items-center gap-1">
               <StarButton
                 itemType="message"
@@ -293,8 +299,8 @@ const MessageItem = memo(function MessageItem({
                   onClick={() => handleCopyMessage(message.id, message.content)}
                   className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
                   style={{
-                    backgroundColor: '#f9fafb',
-                    color: '#6b7280'
+                    backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
+                    color: isDark ? '#b8b8b8' : '#6b7280'
                   }}
                   title="Copy message"
                 >
@@ -306,8 +312,8 @@ const MessageItem = memo(function MessageItem({
                   onClick={() => handleRetryMessage(message.id)}
                   className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
                   style={{
-                    backgroundColor: '#f9fafb',
-                    color: '#6b7280'
+                    backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
+                    color: isDark ? '#b8b8b8' : '#6b7280'
                   }}
                   title="Retry message"
                 >
@@ -318,7 +324,7 @@ const MessageItem = memo(function MessageItem({
             <div className="flex items-center gap-1">
               <MessageExportButton
                 messageId={message.id}
-                sessionId=""
+                sessionId={sessionId || ""}
                 className={`touch-target ${mobileResponsiveClasses.actionButtonSize}`}
               />
               {onOpenModal && (
@@ -326,8 +332,8 @@ const MessageItem = memo(function MessageItem({
                   onClick={() => onOpenModal(message)}
                   className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
                   style={{
-                    backgroundColor: '#f9fafb',
-                    color: '#6b7280'
+                    backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
+                    color: isDark ? '#b8b8b8' : '#6b7280'
                   }}
                   title="View in modal"
                 >

@@ -30,10 +30,7 @@ export function useStreamingChat(): StreamingChatHook {
   const { getEffectiveModel: getSessionModel } = useModel();
 
   const sendMessage = useCallback(async (content: string) => {
-    console.log('useStreamingChat: sendMessage called with:', content);
-    console.log('useStreamingChat: isStreaming:', isStreaming);
     if (!content.trim() || isStreaming) {
-      console.log('useStreamingChat: Early return - empty content or streaming');
       return;
     }
 
@@ -82,17 +79,6 @@ export function useStreamingChat(): StreamingChatHook {
         }
       ];
 
-      // Log context optimization stats for monitoring
-      if (contextResult.truncated) {
-        console.log('Context optimized:', {
-          strategy: contextResult.strategy,
-          originalMessages: messages.length,
-          selectedMessages: contextResult.messages.length,
-          finalMessageCount: messagesForAPI.length,
-          estimatedTokens: contextResult.totalTokens,
-          truncated: contextResult.truncated
-        });
-      }
 
       const response = await fetch('/api/chat', {
         method: 'POST',

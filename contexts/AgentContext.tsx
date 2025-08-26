@@ -42,11 +42,9 @@ export function AgentProvider({ children }: AgentProviderProps) {
   useEffect(() => {
     const savedAgentId = localStorage.getItem('rubber-ducky-current-agent');
     if (savedAgentId) {
-      console.log('Restoring agent from localStorage:', savedAgentId);
       const agent = getAgentById(savedAgentId);
       if (agent.id !== DEFAULT_AGENT.id) {
         setCurrentAgent(agent);
-        console.log('Successfully restored agent:', agent.name);
       }
     }
   }, []);
@@ -55,10 +53,8 @@ export function AgentProvider({ children }: AgentProviderProps) {
   useEffect(() => {
     if (currentAgent.id !== DEFAULT_AGENT.id) {
       localStorage.setItem('rubber-ducky-current-agent', currentAgent.id);
-      console.log('Saved current agent to localStorage:', currentAgent.id);
     } else {
       localStorage.removeItem('rubber-ducky-current-agent');
-      console.log('Removed current agent from localStorage (using default)');
     }
   }, [currentAgent]);
 
@@ -74,7 +70,6 @@ export function AgentProvider({ children }: AgentProviderProps) {
   }, []);
 
   const setPowerAgent = useCallback((agent: Agent | null) => {
-    console.log('[DEBUG] AgentContext.setPowerAgent called with:', agent?.name || 'null');
     setCurrentPowerAgent(agent);
     // Clear context when switching agents
     setConversationContext([]);
@@ -144,13 +139,6 @@ export function AgentProvider({ children }: AgentProviderProps) {
 
   const isUsingPowerAgent = Boolean(currentPowerAgent);
 
-  // Debug logging for power agent state
-  useEffect(() => {
-    console.log('[DEBUG] AgentContext state update:', {
-      currentPowerAgent: currentPowerAgent?.name || 'null',
-      isUsingPowerAgent
-    });
-  }, [currentPowerAgent, isUsingPowerAgent]);
 
   return (
     <AgentContext.Provider

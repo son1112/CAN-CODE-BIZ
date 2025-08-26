@@ -138,9 +138,13 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
 
-        {/* Preload critical resources for better LCP - rubber-duck-avatar only used during streaming */}
+        {/* Optimized font loading - only preload essential fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        
+        {/* Preload critical font files with proper 'as' attribute */}
+        <link rel="preload" href="https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxKKTU1Kg.woff2" as="font" type="font/woff2" crossOrigin="" />
+        <link rel="preload" href="https://fonts.gstatic.com/s/robotomono/v23/L0xuDF4xlVMF-BfR8bXMIhJHg45mwgGEFl0_3vq_ROW4AJi8SJQt.woff2" as="font" type="font/woff2" crossOrigin="" />
 
         {/* PWA Configuration */}
         <link rel="manifest" href="/manifest.json" />
