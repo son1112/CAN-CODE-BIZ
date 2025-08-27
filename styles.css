@@ -1,14 +1,26 @@
-/* Terminal Theme CSS Variables */
+/* Modern Awwwards-Style Variables */
 :root {
-    --crt-green: #39ff14;
-    --sky-blue: #00bfff;
-    --terminal-purple: #a855f7;
-    --bg-primary: #0f0f23;
-    --bg-secondary: #1a1a2e;
-    --text-primary: #cccccc;
-    --text-secondary: #888888;
-    --accent-blue: #16213e;
-    --terminal-amber: #ffb000;
+    --primary-white: #ffffff;
+    --light-gray: #f8f9fa;
+    --medium-gray: #e9ecef;
+    --dark-gray: #495057;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --accent-orange: #ff6b35;
+    --accent-purple: #6f42c1;
+    --accent-green: #20c997;
+    --border-light: #dee2e6;
+    --shadow-light: rgba(0, 0, 0, 0.04);
+    --shadow-medium: rgba(0, 0, 0, 0.12);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+    --spacing-2xl: 4rem;
 }
 
 /* Reset and Base Styles */
@@ -23,167 +35,216 @@ html {
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    line-height: 1.6;
+    font-family: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    line-height: 1.5;
     color: var(--text-primary);
-    background-color: var(--bg-primary);
-    background-image: 
-        linear-gradient(90deg, rgba(57, 255, 20, 0.03) 50%, transparent 50%),
-        linear-gradient(rgba(57, 255, 20, 0.03) 50%, transparent 50%);
-    background-size: 2px 2px;
+    background-color: var(--primary-white);
+    font-size: clamp(16px, 1.125rem, 18px);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Container */
+/* Modern Container System */
 .container {
-    max-width: 1200px;
+    max-width: min(1200px, 100vw - 2rem);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 var(--spacing-sm);
+}
+
+.container-wide {
+    max-width: min(1400px, 100vw - 2rem);
+    margin: 0 auto;
+    padding: 0 var(--spacing-sm);
+}
+
+.container-narrow {
+    max-width: min(800px, 100vw - 2rem);
+    margin: 0 auto;
+    padding: 0 var(--spacing-sm);
 }
 
 /* Typography */
 h1, h2, h3, h4 {
-    margin-bottom: 1rem;
-    color: var(--sky-blue);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    text-shadow: 0 0 3px rgba(0, 191, 255, 0.4);
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+    font-family: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
 }
 
 h1 {
-    font-size: 2.5rem;
+    font-size: clamp(2.5rem, 5vw, 4rem);
     font-weight: 700;
+    letter-spacing: -0.04em;
 }
 
 h2 {
-    font-size: 2rem;
+    font-size: clamp(2rem, 4vw, 3rem);
     font-weight: 600;
+    letter-spacing: -0.03em;
 }
 
 h3 {
-    font-size: 1.5rem;
+    font-size: clamp(1.25rem, 3vw, 1.875rem);
     font-weight: 600;
+    letter-spacing: -0.02em;
 }
 
 p {
-    margin-bottom: 1rem;
+    margin-bottom: var(--spacing-sm);
     color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.text-large {
+    font-size: clamp(1.125rem, 2.5vw, 1.25rem);
+    line-height: 1.5;
+}
+
+.text-small {
+    font-size: 0.875rem;
+    line-height: 1.4;
 }
 
 .lead {
-    font-size: 1.25rem;
+    font-size: clamp(1.125rem, 2.5vw, 1.375rem);
     font-weight: 400;
     color: var(--text-secondary);
-    margin-bottom: 2rem;
+    margin-bottom: var(--spacing-xl);
+    line-height: 1.5;
+    max-width: 60ch;
 }
 
-/* Buttons */
+/* Modern Button System */
 .btn {
-    display: inline-block;
-    padding: 12px 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-lg);
     text-decoration: none;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     font-weight: 500;
+    font-size: 0.95rem;
+    line-height: 1;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    border: none;
-    font-size: 1rem;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+    min-height: 48px;
 }
 
 .btn-primary {
-    background-color: var(--sky-blue);
-    color: var(--bg-primary);
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    background-color: var(--text-primary);
+    color: var(--primary-white);
+    font-weight: 500;
+    box-shadow: 0 1px 3px var(--shadow-light);
 }
 
 .btn-primary:hover {
-    background-color: transparent;
-    color: var(--sky-blue);
-    border: 2px solid var(--sky-blue);
-    box-shadow: 0 0 20px rgba(0, 191, 255, 0.4);
-    transform: translateY(-2px);
+    background-color: var(--dark-gray);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--shadow-medium);
 }
 
 .btn-secondary {
     background-color: transparent;
-    color: var(--terminal-purple);
-    border: 2px solid var(--terminal-purple);
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+    font-weight: 500;
 }
 
 .btn-secondary:hover {
-    background-color: var(--terminal-purple);
-    color: var(--bg-primary);
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    background-color: var(--light-gray);
+    border-color: var(--medium-gray);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px var(--shadow-light);
 }
 
-/* Header */
+.btn-accent {
+    background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-purple) 100%);
+    color: var(--primary-white);
+    font-weight: 500;
+    border: none;
+}
+
+.btn-accent:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
+    filter: brightness(1.05);
+}
+
+/* Modern Header */
 .header {
-    background-color: var(--bg-secondary);
-    border-bottom: 2px solid var(--sky-blue);
-    box-shadow: 0 2px 20px rgba(0, 191, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-light);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
+    transition: all 0.2s ease;
 }
 
 .nav-container {
-    max-width: 1200px;
+    max-width: min(1200px, 100vw - 2rem);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 var(--spacing-sm);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 70px;
+    height: 72px;
 }
 
 .nav-brand h1 {
-    color: var(--sky-blue);
-    font-size: 1.8rem;
+    color: var(--text-primary);
+    font-size: 1.5rem;
     margin: 0;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Inter Tight', 'Inter', sans-serif;
     font-weight: 700;
-    text-shadow: 0 0 4px rgba(0, 191, 255, 0.4);
+    letter-spacing: -0.02em;
 }
 
 .nav-menu {
     display: flex;
     list-style: none;
-    gap: 2rem;
+    gap: var(--spacing-lg);
+    margin: 0;
+    padding: 0;
 }
 
 .nav-menu a {
     text-decoration: none;
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-weight: 500;
-    font-family: 'Courier New', monospace;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    transition: all 0.3s ease;
-    padding: 0.5rem 1rem;
-    border: 1px solid transparent;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    position: relative;
 }
 
 .nav-menu a:hover {
-    color: var(--terminal-purple);
-    border-color: var(--terminal-purple);
-    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+    color: var(--text-primary);
+    background-color: var(--light-gray);
 }
 
-/* Hero Section */
+.nav-menu a:active {
+    transform: translateY(1px);
+}
+
+/* Modern Hero Section */
 .hero {
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-    border-bottom: 3px solid var(--sky-blue);
-    color: var(--text-primary);
-    padding: 120px 0 80px;
-    text-align: center;
+    background: var(--primary-white);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
     position: relative;
     overflow: hidden;
 }
@@ -191,58 +252,75 @@ p {
 .hero::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(57, 255, 20, 0.03) 2px,
-        rgba(57, 255, 20, 0.03) 4px
-    );
+    top: 20%;
+    right: 5%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, var(--accent-orange) 0%, transparent 70%);
+    border-radius: 50%;
+    opacity: 0.1;
+    filter: blur(60px);
     pointer-events: none;
+    z-index: 0;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: 10%;
+    left: 10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%);
+    border-radius: 50%;
+    opacity: 0.08;
+    filter: blur(40px);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .hero-container {
-    max-width: 1200px;
+    max-width: min(1000px, 100vw - 2rem);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: var(--spacing-2xl) var(--spacing-sm);
+    text-align: center;
+    position: relative;
+    z-index: 1;
 }
 
 .hero-title {
-    font-size: 3.5rem;
-    margin-bottom: 1.5rem;
-    color: var(--sky-blue);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    text-shadow: 0 0 8px rgba(0, 191, 255, 0.5);
-    font-weight: 600;
-    letter-spacing: 1px;
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+    font-family: 'Inter Tight', 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
     position: relative;
-    z-index: 1;
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--dark-gray) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .hero-subtitle {
-    font-size: 1.5rem;
-    margin-bottom: 2.5rem;
+    font-size: clamp(1.125rem, 3vw, 1.5rem);
+    margin: 0 auto var(--spacing-2xl);
     color: var(--text-secondary);
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: 50ch;
+    font-family: 'Inter Tight', 'Inter', sans-serif;
     font-weight: 400;
+    line-height: 1.5;
     position: relative;
-    z-index: 1;
 }
 
 .hero-cta {
     display: flex;
-    gap: 1rem;
+    gap: var(--spacing-sm);
     justify-content: center;
     flex-wrap: wrap;
     position: relative;
-    z-index: 1;
+    margin-top: var(--spacing-xl);
 }
 
 /* About Section */
@@ -1010,32 +1088,38 @@ p {
     font-family: 'Courier New', monospace;
 }
 
-/* Mobile Styles */
+/* Modern Responsive Design */
 @media (max-width: 768px) {
     .nav-menu {
         display: none;
     }
     
-    .hero-title {
-        font-size: 2.5rem;
+    .hero {
+        min-height: 80vh;
     }
     
-    .hero-subtitle {
-        font-size: 1.25rem;
+    .hero-container {
+        padding: var(--spacing-xl) var(--spacing-sm);
     }
     
     .hero-cta {
         flex-direction: column;
         align-items: center;
+        gap: var(--spacing-sm);
     }
     
     .btn {
         width: 100%;
         max-width: 280px;
+        min-height: 52px;
+    }
+    
+    .container {
+        padding: 0 var(--spacing-sm);
     }
     
     .contact-content-centered {
-        margin-top: 2rem;
+        margin-top: var(--spacing-lg);
     }
     
     .about-grid,
@@ -1084,12 +1168,8 @@ p {
 }
 
 @media (max-width: 480px) {
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .hero-subtitle {
-        font-size: 1.1rem;
+    .hero-container {
+        padding: var(--spacing-lg) var(--spacing-sm);
     }
     
     .about-card,
@@ -1111,6 +1191,11 @@ p {
     }
     
     .nav-brand h1 {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+    }
+    
+    .nav-container {
+        height: 64px;
+        padding: 0 var(--spacing-sm);
     }
 }
