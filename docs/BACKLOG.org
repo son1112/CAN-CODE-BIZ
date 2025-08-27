@@ -15,39 +15,121 @@ This file tracks **active** future work items, feature requests, improvements, a
 
 ** 🔴 HIGH Priority
 
-*** Chat Message Rendering Bug - Messages Hidden/Not Displayed  
+*** Session Chat Message Order - Change Message Display Order
 **** Problem Statement
-**CRITICAL**: Chat messages completely disappear or fail to render in sessions with many messages, leaving blank/empty chat interface despite messages existing.
+**UX FEATURE**: Users need the ability to change the order in which messages are displayed within a chat session for better conversation flow and usability.
 
 **** Specific Issues Identified
-- **Session with 38+ messages**: "Rivo AI Rails Eng" session shows message count and metadata but zero visible messages
-- **Blank Chat Area**: Main message display area is completely empty despite active session
-- **Mobile Impact**: Issue discovered on mobile, may affect mobile users disproportionately
-- **Long Session Duration**: Issue appears in sessions with significant duration (144h 48m in example)
+- **Fixed Message Order**: Messages currently display in a fixed chronological order
+- **User Preference**: Different users may prefer different message ordering (newest first vs oldest first)
+- **Conversation Flow**: Some debugging/analysis workflows benefit from reverse chronological order
+- **Usability**: No option to customize message display to user preference
 
 **** Technical Details
-- Message virtualization system may be failing
-- VirtualizedMessageList component potentially not rendering messages
-- Could be related to scroll position, viewport calculations, or message loading logic
-- Session metadata loads correctly (count: 38, duration: 144h 48m) but content doesn't display
-- Affects user's ability to see conversation history entirely
+- Messages are currently rendered in chronological order (oldest to newest)
+- No UI controls to toggle message order
+- Message virtualization may need updates to handle order changes
+- Scroll position management needed when order changes
 
 **** Suspected Root Causes
-1. **Message Virtualization Issue**: VirtualizedMessageList not calculating or rendering message items
-2. **Scroll Position Bug**: Messages rendered outside visible viewport
-3. **State Management**: Message loading/display state not updating properly
-4. **Mobile Viewport**: Responsive design issues affecting message container dimensions
+1. **Hard-coded Message Order**: Message rendering assumes chronological order
+2. **Missing UI Controls**: No toggle/button to change message order
+3. **State Management**: No preference storage for message order setting
+4. **Virtualization**: VirtualizedMessageList may need order-aware updates
 
 **** Implementation Approach
-**IMMEDIATE INVESTIGATION REQUIRED:**
-1. **Debug VirtualizedMessageList Component**
-   - Check message array population and rendering logic
-   - Verify scroll position and viewport calculations
-   - Test with sessions of varying message counts
+**FEATURE DEVELOPMENT REQUIRED:**
+1. **UI Controls Implementation**
+   - Add message order toggle button to chat interface
+   - Design intuitive toggle (newest first ↔ oldest first)
+   - Position in session header or chat controls area
 
-2. **Message Loading Pipeline**
-   - Verify API responses contain message data
-   - Check state management between hooks and components
+2. **State Management**
+   - Add messageOrder preference to user settings
+   - Store preference in localStorage and user preferences API
+   - Update ChatInterface to respect order preference
+
+3. **Message Rendering Updates**
+   - Update filteredMessages logic to respect order preference
+   - Modify VirtualizedMessageList for reverse order support
+   - Maintain scroll position during order changes
+
+4. **Preference Persistence**
+   - Store message order preference per user
+   - Apply preference across all sessions
+   - Sync with user preferences API
+
+**** Priority: 🔴 HIGH
+**** Complexity: Medium
+**** Estimated Time: 3-4 hours
+**** Dependencies: None
+**** Related Files:
+- `app/components/ChatInterface.tsx` - Main message display logic
+- `app/components/VirtualizedMessageList.tsx` - Message virtualization
+- `contexts/PreferencesContext.tsx` - User preference management
+- `app/api/preferences/route.ts` - Preference storage API
+
+**** Acceptance Criteria:
+- [ ] Toggle button to switch between newest first / oldest first
+- [ ] Message order preference persists across sessions
+- [ ] Smooth transition when changing order (no jarring jumps)
+- [ ] Scroll position maintained appropriately during order changes
+- [ ] Works with message virtualization system
+- [ ] Preference stored in user settings
+
+*** Session History Loading Performance - Slow Session List
+**** Problem Statement
+**PERFORMANCE**: Session history list is slow to load session items, causing poor user experience when navigating between conversations.
+
+**** Specific Issues Identified
+- **Slow Session Loading**: Session list takes too long to populate
+- **User Experience**: Delay impacts navigation between conversations
+- **Performance Impact**: May affect user retention and workflow efficiency
+
+**** Technical Details
+- loadSessions API call may be inefficient
+- Large session data may be loaded unnecessarily
+- Database queries might not be optimized
+- React rendering performance could be improved
+
+**** Suspected Root Causes
+1. **Database Query Optimization**: Inefficient MongoDB queries loading full session data
+2. **API Response Size**: Loading full message content when only metadata needed
+3. **React Rendering**: Inefficient list rendering without virtualization
+4. **Caching**: No proper caching strategy for session metadata
+
+**** Implementation Approach
+**OPTIMIZATION REQUIRED:**
+1. **Database Query Optimization**
+   - Use projection to load only metadata (name, date, message count)
+   - Add proper indexes on userId, createdAt, updatedAt fields
+   - Implement pagination for large session lists
+
+2. **API Response Optimization**
+   - Create lightweight session metadata API endpoint
+   - Separate full session loading from list loading
+   - Add caching headers for session lists
+
+3. **Frontend Performance**
+   - Implement virtual scrolling for session list
+   - Add proper loading states and skeleton screens
+   - Cache session metadata in React state/local storage
+
+**** Priority: 🔴 HIGH
+**** Complexity: Medium
+**** Estimated Time: 4-6 hours
+**** Dependencies: None
+**** Related Files:
+- `/api/sessions/route.ts` - Session list API
+- `/contexts/SessionContext.tsx` - Session state management
+- `/components/SessionList.tsx` - Session list UI component
+
+**** Acceptance Criteria:
+- [ ] Session list loads in <500ms
+- [ ] Smooth scrolling with large session lists
+- [ ] Proper loading states during fetch
+- [ ] Cache session metadata locally
+- [ ] Maintain current functionality
    - Ensure useStreamingChat properly loads historical messages
 
 3. **Mobile/Responsive Testing** 

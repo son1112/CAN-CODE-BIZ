@@ -180,11 +180,11 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
               '[data-onboarding="logo"]',
               '[data-onboarding="message-input"]'
             ];
-            
-            const allTargetsExist = essentialTargets.every(selector => 
+
+            const allTargetsExist = essentialTargets.every(selector =>
               document.querySelector(selector)
             );
-            
+
             if (allTargetsExist) {
               setIsOnboardingActive(true);
             } else {
@@ -192,7 +192,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
               setTimeout(startOnboardingWhenReady, 500);
             }
           };
-          
+
           // Initial delay to let the page settle, then check readiness
           const timer = setTimeout(startOnboardingWhenReady, 1500);
           return () => clearTimeout(timer);
@@ -203,7 +203,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         setHasCompletedOnboarding(true);
       }
     };
-    
+
     checkOnboardingStatus();
   }, []);
 

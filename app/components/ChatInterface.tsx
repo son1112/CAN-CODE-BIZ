@@ -166,6 +166,15 @@ function getFirstSentencePreview(content: string, maxLength: number = 80): strin
 
 
 export default function ChatInterface() {
+  // Force client-side hydration
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Critical: Set mounted state on client-side to ensure proper hydration
+  useEffect(() => {
+    console.log('🚀 CLIENT-SIDE MOUNT: Setting isMounted to true');
+    setIsMounted(true);
+  }, []);
+  
   const { agents } = useAgents();
   const { userId } = useAuth();
   const { isMobile, isTablet } = useMobileNavigation();
@@ -249,6 +258,13 @@ export default function ChatInterface() {
   const { data: authSession } = useAuthSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  // Debug: Check if we have search params
+  console.log('🔍 SEARCH PARAMS:', {
+    searchParams: searchParams ? 'exists' : 'null',
+    sessionParam: searchParams?.get('session'),
+    url: typeof window !== 'undefined' ? window.location.href : 'server-side'
+  });
 
   // Helper function to format session names into readable titles
   const formatSessionTitle = (sessionName: string) => {
@@ -349,15 +365,27 @@ export default function ChatInterface() {
 
   // Debug logging removed - session loading issue resolved
 
-  // Auto-load session from URL parameter
+  // Force client-side session loading with aggressive hydration fix
   useEffect(() => {
-    const sessionParam = searchParams?.get('session');
+    // Only run on client side after mount
+    if (typeof window === 'undefined') return;
     
-    // Only load if we have a session parameter and no current session
+    const sessionParam = new URLSearchParams(window.location.search).get('session');
+    
+    console.log('🚨 FORCE CLIENT-SIDE SESSION LOAD:', {
+      sessionParam,
+      hasCurrentSession: !!currentSession,
+      isLoadingSession,
+      shouldLoad: sessionParam && !currentSession && !isLoadingSession,
+      windowLocation: window.location.href
+    });
+    
+    // Force load session if URL has session parameter and we don't have one loaded
     if (sessionParam && !currentSession && !isLoadingSession) {
+      console.log('🚨 FORCE LOADING SESSION NOW:', sessionParam);
       loadSession(sessionParam);
     }
-  }, [searchParams, currentSession, isLoadingSession, loadSession]);
+  }, [currentSession, isLoadingSession, loadSession]);
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {

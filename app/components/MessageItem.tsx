@@ -56,38 +56,7 @@ const MessageItem = memo(function MessageItem({
   const { isMobile, isTablet } = useMobileNavigation();
   const isMobileLayout = isMobile || isTablet;
 
-  // 🔍 CRITICAL DEBUG: Add lifecycle logging to track message mounting/unmounting
-  useEffect(() => {
-    console.log('💬 MessageItem MOUNTED:', {
-      messageId: message.id,
-      role: message.role,
-      contentLength: message.content?.length || 0,
-      contentPreview: message.content?.substring(0, 50),
-      sessionId,
-      timestamp: new Date().toISOString()
-    });
-
-    return () => {
-      console.log('💬 MessageItem UNMOUNTING:', {
-        messageId: message.id,
-        role: message.role,
-        sessionId,
-        timestamp: new Date().toISOString()
-      });
-    };
-  }, [message.id, message.role, message.content, sessionId]);
-
-  // 🔍 CRITICAL DEBUG: Log when MessageItem props change
-  useEffect(() => {
-    console.log('💬 MessageItem PROPS CHANGED:', {
-      messageId: message.id,
-      role: message.role,
-      isCollapsed: collapsedMessages.has(message.id),
-      sessionId,
-      hasSessionId: !!sessionId,
-      timestamp: new Date().toISOString()
-    });
-  }, [message.id, message.role, collapsedMessages, sessionId]);
+  // Debug logging removed - message visibility issue resolved
 
   // Memoize expensive calculations
   const isCollapsed = useMemo(() => collapsedMessages.has(message.id), [collapsedMessages, message.id]);
@@ -195,6 +164,23 @@ const MessageItem = memo(function MessageItem({
                       title="Copy message"
                     >
                       <Copy className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                    </button>
+                  )}
+                  {handleToggleArchive && (
+                    <button
+                      onClick={() => handleToggleArchive(message.id, !!(message as any).isArchived)}
+                      className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                      style={{
+                        backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
+                        color: isDark ? '#b8b8b8' : '#6b7280'
+                      }}
+                      title={(message as any).isArchived ? "Restore message" : "Archive message"}
+                    >
+                      {(message as any).isArchived ? (
+                        <ArchiveRestore className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                      ) : (
+                        <Archive className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                      )}
                     </button>
                   )}
                 </div>
@@ -351,6 +337,23 @@ const MessageItem = memo(function MessageItem({
                   title="Retry message"
                 >
                   <RotateCcw className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                </button>
+              )}
+              {handleToggleArchive && (
+                <button
+                  onClick={() => handleToggleArchive(message.id, !!(message as any).isArchived)}
+                  className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                  style={{
+                    backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
+                    color: isDark ? '#b8b8b8' : '#6b7280'
+                  }}
+                  title={(message as any).isArchived ? "Restore message" : "Archive message"}
+                >
+                  {(message as any).isArchived ? (
+                    <ArchiveRestore className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                  ) : (
+                    <Archive className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                  )}
                 </button>
               )}
             </div>

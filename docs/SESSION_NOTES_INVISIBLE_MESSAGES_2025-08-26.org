@@ -1,0 +1,152 @@
+#+TITLE: Session Notes - Invisible Messages Bug Investigation
+#+AUTHOR: Claude Code Session
+#+DATE: 2025-08-26T21:45:00Z
+
+* Current Status - PARTIALLY RESOLVED
+
+** What We've Accomplished ✅
+- **Fixed React Hydration**: Client-side useEffect hooks now execute properly
+- **Fixed JavaScript Errors**: Resolved `setAutoCreateSession is not defined` error
+- **Fixed Component Naming**: Resolved conflicts between NextAuth SessionProvider and ChatSessionProvider
+- **Messages Show Longer**: User reports messages now appear "for a little bit longer than before"
+- **MessageExportButton Evidence**: Console shows hundreds of component logs with real message IDs
+
+** Current Problem ❌
+- **Messages Still Disappear**: Despite progress, messages still vanish after appearing briefly
+- **User Confirmation**: "the messages appear for a little bit longer than before, but they still disappear"
+- **False Positive**: MessageExportButton logs only prove component instantiation, not DOM persistence
+
+** Key Realization 🔍
+The MessageExportButton logs were misleading - they show components being created but don't guarantee the message components stay mounted in the DOM. The issue is likely:
+1. **React component unmounting** after initial render
+2. **Conditional rendering logic** hiding messages
+3. **State changes** causing re-renders that remove message content
+4. **CSS/DOM issues** hiding visible elements
+
+* Technical Progress Made
+
+** Files Modified
+- `contexts/SessionContext.tsx` - Fixed hydration and state management issues
+- `docs/POST_MORTEM_INVISIBLE_MESSAGES_BUG.org` - Comprehensive debugging documentation
+
+** Key Technical Fixes
+1. **React Hydration Restoration**:
+   ```typescript
+   // Fixed useState initialization
+   const [autoCreateSession, setAutoCreateSession] = useState(true);
+   // Instead of undefined reference
+   ```
+
+2. **Component Export Resolution**:
+   ```typescript
+   // Added proper export alias
+   export const SessionProvider = ChatSessionProvider;
+   ```
+
+3. **State Updates Restoration**:
+   ```typescript
+   // Restored state setters in loadSession
+   setCurrentSession(sessionWithCorrectId);
+   setCurrentSessionId(sessionWithCorrectId.sessionId);
+   setMessages(sessionWithCorrectId.messages || []);
+   ```
+
+** Evidence Collected
+- **Server logs**: API calls successful, 39 messages returned
+- **Browser logs**: MessageExportButton components instantiated with real message IDs
+- **User feedback**: Messages appear longer but still disappear
+
+* Next Session Investigation Plan
+
+** Immediate Priority 🚨
+1. **Component Lifecycle Investigation**
+   - Add logging to actual message components (not just MessageExportButton)
+   - Track component mount/unmount cycles
+   - Identify what triggers message removal
+
+2. **React State Consistency Check**
+   - Verify `currentSession` and `messages` state persistence
+   - Check for state resets or overwrites
+   - Monitor context value changes over time
+
+3. **Conditional Rendering Analysis**
+   - Examine message display logic in ChatInterface
+   - Look for conditions that might hide messages
+   - Check loading states that could cause flickering
+
+4. **DOM Investigation**
+   - Use React DevTools to inspect component tree
+   - Check CSS styles that might hide elements
+   - Verify actual DOM elements persist
+
+** Code Areas to Investigate
+1. **Message Rendering Logic**:
+   - `app/components/ChatInterface.tsx` - Main message display component
+   - Look for conditional rendering based on loading states
+   - Check message mapping and filtering logic
+
+2. **Context State Management**:
+   - Monitor `useSession()` hook values over time
+   - Check for state resets or context re-initialization
+   - Verify context provider stability
+
+3. **Component Lifecycle**:
+   - Add useEffect logging to message components
+   - Track mount/unmount sequences
+   - Identify re-render triggers
+
+** Debugging Strategy
+1. **Add Targeted Logging**:
+   ```typescript
+   // In message components
+   useEffect(() => {
+     console.log('💬 Message component mounted:', messageId);
+     return () => console.log('💬 Message component unmounting:', messageId);
+   }, [messageId]);
+   ```
+
+2. **State Monitoring**:
+   ```typescript
+   // In ChatInterface
+   useEffect(() => {
+     console.log('🔄 Messages state changed:', messages.length);
+   }, [messages]);
+   ```
+
+3. **DOM Verification**:
+   - Use browser dev tools to watch DOM changes
+   - Check element visibility and CSS properties
+   - Monitor for JavaScript-triggered DOM manipulation
+
+* Session Environment State
+
+** Dev Server Status**: Running (npm run dev)
+** Current Branch**: develop  
+** URL Being Tested**: http://localhost:3000/?session=1ed3ba01-9ac0-4595-9862-8e4d151d9bc5
+** Session ID**: "Rivo Ai Rails Eng" with 39 messages
+** Browser State**: Messages appearing briefly then disappearing
+
+* Key Learnings So Far
+
+1. **MessageExportButton logs are misleading** - they only prove component creation, not persistence
+2. **React hydration was the first barrier** - now resolved
+3. **User feedback is critical** - prevented false positive celebration
+4. **Progressive debugging works** - we made the messages appear longer
+5. **The issue has layers** - fixing hydration revealed the next problem
+
+* Files to Review Next Session
+
+- `app/components/ChatInterface.tsx` - Main message rendering logic
+- `app/components/Message.tsx` or similar - Individual message components  
+- `contexts/SessionContext.tsx` - Verify our fixes didn't introduce new issues
+- Browser DevTools React tab - Component tree inspection
+
+* Commit Status
+
+**Recommendation**: Do not commit current changes yet - we have partial progress but core issue remains unresolved. Wait until messages actually stay visible before committing.
+
+Current working files have debugging code that should be cleaned up once fully resolved.
+
+---
+
+**Next Session TODO**: Start with targeted investigation of actual message component lifecycle and rendering conditions, moving beyond the MessageExportButton evidence to understand what's causing the disappearing behavior.

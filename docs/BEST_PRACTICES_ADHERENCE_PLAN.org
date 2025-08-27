@@ -1,0 +1,330 @@
+#+TITLE: React/Next.js Best Practices Adherence Plan 2025
+#+DATE: 2025-08-27
+#+AUTHOR: Development Team
+
+* Executive Summary
+
+This document outlines a comprehensive plan to modernize Rubber Ducky Live's codebase according to 2025 React and Next.js best practices. Based on recent debugging sessions and research into Next.js 15 App Router patterns, this plan addresses hydration issues, state management optimization, performance improvements, and streaming SSR implementation.
+
+** Key Issues Identified
+- Hydration mismatches causing message visibility bugs
+- Inefficient state management across multiple contexts
+- Suboptimal loading patterns affecting UX
+- Missing selective hydration and streaming optimizations
+- Bundle size and performance optimization opportunities
+
+* Core Best Practices Analysis
+
+** Current State vs 2025 Standards
+
+*** ✅ GOOD - Already Following
+- Next.js 15.4.6 with App Router
+- TypeScript with strict configuration
+- Server-side rendering with SSR compatibility
+- Component-based architecture
+- Proper 'use client' directive usage
+
+*** 🔧 NEEDS IMPROVEMENT - Action Required
+- Hydration error handling and prevention
+- State management consolidation and optimization
+- Loading state management patterns
+- Streaming and selective hydration
+- Bundle optimization and caching strategies
+
+*** ❌ CRITICAL - Major Refactoring Needed
+- Multiple context providers creating hydration complexity
+- Inconsistent loading state patterns across components
+- Manual memoization instead of React Compiler utilization
+- Missing progressive hydration for large message lists
+
+* Detailed Improvement Plan
+
+** Phase 1: Hydration Stabilization (Week 1-2)
+*** Priority: 🔴 CRITICAL
+
+**** 1.1 Hydration Mismatch Prevention
+**Problem**: Recent session message visibility bug caused by hydration mismatches
+**Solution**: Implement 2025 hydration best practices
+
+**Implementation:**
+- [ ] Move all dynamic logic (Date, Math.random, localStorage) to useEffect
+- [ ] Implement consistent server/client rendering patterns
+- [ ] Add suppressHydrationWarning only where absolutely necessary
+- [ ] Create reusable hydration-safe components for common patterns
+
+**Files Affected:**
+- `contexts/SessionContext.tsx` - Already partially fixed
+- `app/components/ChatInterface.tsx` - Apply hydration patterns
+- `app/components/MessageItem.tsx` - Ensure consistent rendering
+
+**Expected Outcome:** Zero hydration warnings, stable message visibility
+
+**** 1.2 Client-Side State Initialization
+**Problem**: State initialized differently on server vs client
+**Solution**: Implement client-ready pattern consistently
+
+**Implementation:**
+- [ ] Standardize client-ready checks across all contexts
+- [ ] Implement loading skeletons for hydration delays
+- [ ] Add proper error boundaries for hydration failures
+
+**** 1.3 Enhanced Error Handling
+**Problem**: Hydration errors are hard to debug
+**Solution**: Leverage Next.js 15 improved hydration error view
+
+**Implementation:**
+- [ ] Add detailed error logging for hydration mismatches
+- [ ] Implement error recovery patterns
+- [ ] Create development-mode hydration debugging tools
+
+** Phase 2: State Management Optimization (Week 3-4)
+*** Priority: 🟡 HIGH
+
+**** 2.1 Context Consolidation
+**Problem**: Multiple contexts (Session, Agent, Theme, Onboarding) creating complexity
+**Solution**: Follow "useState first" principle from 2025 best practices
+
+**Current Context Analysis:**
+```typescript
+// Too many contexts:
+- SessionContext (large, complex)
+- AgentContext (performance optimized)  
+- ThemeContext (simple)
+- OnboardingContext (simple)
+- ModelContext (medium complexity)
+```
+
+**Implementation Strategy:**
+- [ ] **Keep SessionContext**: Too complex to consolidate, already optimized
+- [ ] **Keep AgentContext**: Performance-critical, well-optimized
+- [ ] **Merge Simple Contexts**: Combine Theme + Onboarding + Model into AppPreferencesContext
+- [ ] **Reduce Context Providers**: Use compound provider pattern
+
+**Expected Outcome:** 3 contexts instead of 5, reduced hydration complexity
+
+**** 2.2 Built-in State Management First
+**Problem**: Over-reliance on contexts for simple state
+**Solution**: Use useState, useReducer for component-local state
+
+**Implementation:**
+- [ ] Audit all contexts for state that could be component-local
+- [ ] Move UI state (dropdowns, modals) to component useState
+- [ ] Keep only shared business logic in contexts
+
+**** 2.3 State Management Library Evaluation
+**Problem**: Bundle size impact from multiple context providers
+**Solution**: Evaluate lightweight alternatives for non-critical state
+
+**Options Analysis:**
+- **Jotai**: For complex shared state (if needed)
+- **TanStack Query**: For server state caching
+- **Zustand**: Minimal bundle size alternative
+
+**Implementation:**
+- [ ] Profile current bundle size impact
+- [ ] Identify candidates for external state management
+- [ ] Implement if bundle savings > 10KB
+
+** Phase 3: Loading State Modernization (Week 5-6)
+*** Priority: 🟡 HIGH
+
+**** 3.1 Streaming and Suspense Implementation
+**Problem**: All-or-nothing loading patterns
+**Solution**: Implement Next.js 15 streaming with React Suspense
+
+**Current Loading Patterns:**
+```typescript
+// Current: Blocks entire interface
+if (isLoadingSession) return <LoadingSpinner />
+
+// Target: Stream components as they load
+<Suspense fallback={<MessageListSkeleton />}>
+  <MessageList />
+</Suspense>
+```
+
+**Implementation:**
+- [ ] Implement Suspense boundaries around heavy components
+- [ ] Add loading skeletons for each component type
+- [ ] Enable streaming for session loading
+- [ ] Implement progressive message loading
+
+**** 3.2 Selective Hydration
+**Problem**: All components hydrate at once
+**Solution**: Prioritize above-the-fold content
+
+**Implementation:**
+- [ ] Wrap non-critical components in Suspense
+- [ ] Defer hydration of message virtualization
+- [ ] Prioritize chat input and session header hydration
+- [ ] Lazy load export functionality
+
+**** 3.3 Loading State Consistency
+**Problem**: Inconsistent loading patterns across components
+**Solution**: Create standardized loading components
+
+**Implementation:**
+- [ ] Create reusable skeleton components
+- [ ] Implement loading state hook (useLoadingState)
+- [ ] Standardize error state handling
+- [ ] Add loading indicators for all async operations
+
+** Phase 4: Performance Optimization (Week 7-8)
+*** Priority: 🟡 MEDIUM
+
+**** 4.1 React Compiler Integration
+**Problem**: Manual memoization with useMemo/useCallback
+**Solution**: Enable React Compiler in Next.js 15
+
+**Implementation:**
+- [ ] Enable React Compiler in next.config.js
+- [ ] Remove manual memoization where compiler handles it
+- [ ] Profile performance improvements
+- [ ] Update component patterns for compiler optimization
+
+**** 4.2 Bundle Optimization
+**Problem**: Suboptimal external package bundling
+**Solution**: Use Next.js 15 stable bundling configuration
+
+**Implementation:**
+- [ ] Configure external package optimization
+- [ ] Implement dynamic imports for heavy components
+- [ ] Analyze and optimize bundle splitting
+- [ ] Add bundle analyzer to development workflow
+
+**** 4.3 Caching Strategy Update
+**Problem**: Using outdated caching patterns
+**Solution**: Implement Next.js 15 fresh-by-default caching
+
+**Implementation:**
+- [ ] Review current fetch caching strategies
+- [ ] Implement selective caching where appropriate
+- [ ] Add cache invalidation patterns
+- [ ] Optimize database query caching
+
+**** 4.4 Database Query Optimization
+**Problem**: Session list loading performance (user reported)
+**Solution**: Implement efficient querying patterns
+
+**Implementation:**
+- [ ] Use MongoDB projections for list views
+- [ ] Add proper database indexes
+- [ ] Implement pagination for large datasets
+- [ ] Cache session metadata on client
+
+** Phase 5: Advanced Features (Week 9-10)
+*** Priority: 🟢 LOW
+
+**** 5.1 Progressive Web App Enhancement
+**Problem**: Missing PWA optimization
+**Solution**: Enhance PWA capabilities with streaming
+
+**Implementation:**
+- [ ] Implement service worker with streaming support
+- [ ] Add offline message queuing
+- [ ] Cache critical resources with streaming awareness
+- [ ] Implement background sync for messages
+
+**** 5.2 Advanced Streaming Patterns
+**Problem**: Basic streaming implementation
+**Solution**: Implement advanced streaming with prioritization
+
+**Implementation:**
+- [ ] Implement message streaming with priority
+- [ ] Add intelligent prefetching
+- [ ] Implement streaming search results
+- [ ] Add real-time streaming for collaborative features
+
+**** 5.3 Accessibility and SEO
+**Problem**: Missing accessibility optimization
+**Solution**: Implement streaming-aware accessibility
+
+**Implementation:**
+- [ ] Add ARIA live regions for streaming content
+- [ ] Implement keyboard navigation for virtualized lists
+- [ ] Add screen reader support for loading states
+- [ ] Optimize SEO with streaming SSR
+
+* Implementation Timeline
+
+** Week 1-2: Hydration Stabilization
+- Fix remaining hydration issues
+- Implement consistent client-ready patterns
+- Add error recovery mechanisms
+
+** Week 3-4: State Management
+- Consolidate contexts where appropriate
+- Move to built-in React hooks where possible
+- Evaluate external state management needs
+
+** Week 5-6: Loading States
+- Implement Suspense and streaming
+- Add selective hydration
+- Create consistent loading patterns
+
+** Week 7-8: Performance
+- Enable React Compiler
+- Optimize bundles and caching
+- Fix session list loading performance
+
+** Week 9-10: Advanced Features
+- PWA enhancements
+- Advanced streaming patterns
+- Accessibility improvements
+
+* Success Metrics
+
+** Performance Targets
+- [ ] Hydration errors: 0 (currently resolved)
+- [ ] Bundle size: <500KB (current: unknown, measure baseline)
+- [ ] Session list loading: <500ms (currently slow)
+- [ ] Message rendering: <100ms per message
+- [ ] Time to interactive: <2s on 3G
+
+** Code Quality Targets
+- [ ] TypeScript strict mode: 100% coverage
+- [ ] Test coverage: >70% (current: ~50%)
+- [ ] ESLint warnings: <10 (current: many)
+- [ ] Bundle analyzer: Monthly reviews
+- [ ] Performance monitoring: Continuous
+
+** User Experience Targets
+- [ ] Loading state coverage: 100% of async operations
+- [ ] Error recovery: All critical paths
+- [ ] Accessibility score: WCAG 2.1 AA compliance
+- [ ] Mobile performance: Lighthouse score >90
+
+* Monitoring and Maintenance
+
+** Continuous Monitoring
+- [ ] Add React DevTools Profiler to development workflow
+- [ ] Implement performance monitoring in production
+- [ ] Set up bundle size monitoring in CI/CD
+- [ ] Add hydration error tracking
+
+** Regular Review Schedule
+- [ ] Weekly: Performance metrics review
+- [ ] Monthly: Bundle size analysis
+- [ ] Quarterly: Best practices audit
+- [ ] Annually: Major framework migration planning
+
+* Risk Mitigation
+
+** Technical Risks
+- **Hydration Breaking Changes**: Implement behind feature flags
+- **Performance Regression**: Maintain benchmark suite
+- **State Management Migration**: Gradual migration with rollback plan
+- **Bundle Size Increases**: Monitor and alert on size increases
+
+** User Impact Risks
+- **Loading State Changes**: A/B test new loading patterns
+- **Performance Changes**: Gradual rollout with monitoring
+- **Feature Disruption**: Maintain backward compatibility during transitions
+
+* Conclusion
+
+This plan provides a structured approach to modernizing Rubber Ducky Live according to 2025 React and Next.js best practices. The focus on hydration stability, efficient state management, and streaming performance aligns with both current user needs and future scalability requirements.
+
+The recent session visibility bug fix demonstrates the importance of proper hydration handling. By following this plan, we can prevent similar issues while improving overall application performance and user experience.
+
+Implementation should be gradual and measured, with continuous monitoring to ensure improvements don't introduce regressions. The timeline allows for thorough testing and validation at each phase.

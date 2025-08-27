@@ -43,7 +43,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(theme);
-    
+
     // Force body class as well for higher specificity
     document.body.classList.remove('light', 'dark');
     document.body.classList.add(theme);
