@@ -878,6 +878,28 @@ export default function ChatInterface() {
     filteredMessages
   ]);
 
+  // Show loading screen until client-side mount completes
+  if (!isMounted) {
+    return (
+      <div
+        data-testid="chat-interface"
+        className="flex flex-col h-screen relative overflow-hidden bg-primary"
+        style={{
+          background: isDark
+            ? 'linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)'
+            : 'linear-gradient(135deg, #fafafa 0%, #f0f9ff 50%, #e0f2fe 100%)'
+        }}
+      >
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p style={{ color: isDark ? '#e5e7eb' : '#374151' }}>Loading session...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       data-testid="chat-interface"
