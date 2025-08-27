@@ -1,7 +1,7 @@
 'use client';
 
-import { memo, useMemo, useEffect } from 'react';
-import { Star, MoreHorizontal, Hash, Copy, RotateCcw, Archive, ArchiveRestore } from 'lucide-react';
+import { memo, useMemo, useEffect, useState, useRef } from 'react';
+import { Star, MoreHorizontal, Hash, Copy, RotateCcw, Archive, ArchiveRestore, X } from 'lucide-react';
 import Image from 'next/image';
 import FormattedMessage from './FormattedMessage';
 import StarButton from './StarButton';
@@ -55,6 +55,29 @@ const MessageItem = memo(function MessageItem({
   const { isDark } = useTheme();
   const { isMobile, isTablet } = useMobileNavigation();
   const isMobileLayout = isMobile || isTablet;
+  
+  // Dropdown menu state - separate for user and assistant messages
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isAssistantDropdownOpen, setIsAssistantDropdownOpen] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+  const assistantDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+      if (assistantDropdownRef.current && !assistantDropdownRef.current.contains(event.target as Node)) {
+        setIsAssistantDropdownOpen(false);
+      }
+    };
+
+    if (isUserDropdownOpen || isAssistantDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isUserDropdownOpen, isAssistantDropdownOpen]);
 
   // Debug logging removed - message visibility issue resolved
 
@@ -153,42 +176,131 @@ const MessageItem = memo(function MessageItem({
                     tags={message.tags || []}
                     onTagsUpdate={(tags) => onTagsChange?.(message.id, tags)}
                   />
-                  {handleCopyMessage && (
-                    <button
-                      onClick={() => handleCopyMessage(message.id, message.content)}
-                      className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
-                      style={{
-                        backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
-                        color: isDark ? '#b8b8b8' : '#6b7280'
-                      }}
-                      title="Copy message"
-                    >
-                      <Copy className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
-                    </button>
-                  )}
-                  {handleToggleArchive && (
-                    <button
-                      onClick={() => handleToggleArchive(message.id, !!(message as any).isArchived)}
-                      className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
-                      style={{
-                        backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
-                        color: isDark ? '#b8b8b8' : '#6b7280'
-                      }}
-                      title={(message as any).isArchived ? "Restore message" : "Archive message"}
-                    >
-                      {(message as any).isArchived ? (
-                        <ArchiveRestore className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
-                      ) : (
-                        <Archive className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
-                      )}
-                    </button>
-                  )}
                 </div>
-                <MessageExportButton
-                  messageId={message.id}
-                  sessionId={sessionId || ""}
-                  className={`touch-target ${mobileResponsiveClasses.actionButtonSize}`}
-                />
+                <div className="flex items-center gap-1">
+                  <MessageExportButton
+                    messageId={message.id}
+                    sessionId={sessionId || ""}
+                    className={`touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                  />
+                  
+                  {/* User Message Dropdown Menu */}
+                  <div className="relative" ref={userDropdownRef}>
+                    <button
+                      onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                      className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                      style={{
+                        backgroundColor: isUserDropdownOpen 
+                          ? (isDark ? '#374151' : '#e5e7eb') 
+                          : (isDark ? '#1f1f1f' : '#f9fafb'),
+                        color: isDark ? '#b8b8b8' : '#6b7280'
+                      }}
+                      title="More options"
+                    >
+                      <MoreHorizontal className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                    </button>
+
+                    {/* User Message Dropdown Menu */}
+                    {isUserDropdownOpen && (
+                      <div
+                        className="absolute right-0 top-full mt-1 rounded-lg border shadow-xl z-50 min-w-48"
+                        style={{
+                          backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                          borderColor: isDark ? '#374151' : '#e5e7eb',
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      >
+                        <div className="py-1">
+                          {/* Copy Message */}
+                          {handleCopyMessage && (
+                            <button
+                              onClick={() => {
+                                handleCopyMessage(message.id, message.content);
+                                setIsUserDropdownOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2 flex items-center gap-2 transition-colors text-sm"
+                              style={{
+                                color: isDark ? '#e5e7eb' : '#374151',
+                                backgroundColor: 'transparent'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              <Copy className="w-4 h-4" />
+                              Copy message
+                            </button>
+                          )}
+
+                          {/* Archive/Restore Message */}
+                          {handleToggleArchive && (
+                            <button
+                              onClick={() => {
+                                handleToggleArchive(message.id, !!(message as any).isArchived);
+                                setIsUserDropdownOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2 flex items-center gap-2 transition-colors text-sm"
+                              style={{
+                                color: isDark ? '#e5e7eb' : '#374151',
+                                backgroundColor: 'transparent'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              {(message as any).isArchived ? (
+                                <>
+                                  <ArchiveRestore className="w-4 h-4" />
+                                  Restore message
+                                </>
+                              ) : (
+                                <>
+                                  <Archive className="w-4 h-4" />
+                                  Archive message
+                                </>
+                              )}
+                            </button>
+                          )}
+
+                          {/* View Full Message Modal */}
+                          {onOpenModal && (
+                            <>
+                              <hr className="my-1" style={{ borderColor: isDark ? '#374151' : '#e5e7eb' }} />
+                              <button
+                                onClick={() => {
+                                  onOpenModal(message);
+                                  setIsUserDropdownOpen(false);
+                                }}
+                                className="w-full text-left px-3 py-2 flex items-center gap-2 transition-colors text-sm"
+                                style={{
+                                  color: isDark ? '#e5e7eb' : '#374151',
+                                  backgroundColor: 'transparent'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                </svg>
+                                View full message
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -313,49 +425,6 @@ const MessageItem = memo(function MessageItem({
                 tags={message.tags || []}
                 onTagsUpdate={(tags) => onTagsChange?.(message.id, tags)}
               />
-              {handleCopyMessage && (
-                <button
-                  onClick={() => handleCopyMessage(message.id, message.content)}
-                  className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
-                  style={{
-                    backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
-                    color: isDark ? '#b8b8b8' : '#6b7280'
-                  }}
-                  title="Copy message"
-                >
-                  <Copy className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
-                </button>
-              )}
-              {handleRetryMessage && (
-                <button
-                  onClick={() => handleRetryMessage(message.id)}
-                  className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
-                  style={{
-                    backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
-                    color: isDark ? '#b8b8b8' : '#6b7280'
-                  }}
-                  title="Retry message"
-                >
-                  <RotateCcw className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
-                </button>
-              )}
-              {handleToggleArchive && (
-                <button
-                  onClick={() => handleToggleArchive(message.id, !!(message as any).isArchived)}
-                  className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
-                  style={{
-                    backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
-                    color: isDark ? '#b8b8b8' : '#6b7280'
-                  }}
-                  title={(message as any).isArchived ? "Restore message" : "Archive message"}
-                >
-                  {(message as any).isArchived ? (
-                    <ArchiveRestore className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
-                  ) : (
-                    <Archive className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
-                  )}
-                </button>
-              )}
             </div>
             <div className="flex items-center gap-1">
               <MessageExportButton
@@ -363,19 +432,147 @@ const MessageItem = memo(function MessageItem({
                 sessionId={sessionId || ""}
                 className={`touch-target ${mobileResponsiveClasses.actionButtonSize}`}
               />
-              {onOpenModal && (
+              
+              {/* Dropdown Menu */}
+              <div className="relative" ref={assistantDropdownRef}>
                 <button
-                  onClick={() => onOpenModal(message)}
+                  onClick={() => setIsAssistantDropdownOpen(!isAssistantDropdownOpen)}
                   className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
                   style={{
-                    backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
+                    backgroundColor: isAssistantDropdownOpen 
+                      ? (isDark ? '#374151' : '#e5e7eb') 
+                      : (isDark ? '#1f1f1f' : '#f9fafb'),
                     color: isDark ? '#b8b8b8' : '#6b7280'
                   }}
-                  title="View in modal"
+                  title="More options"
                 >
                   <MoreHorizontal className={`${isMobileLayout ? 'w-3 h-3' : 'w-4 h-4'}`} />
                 </button>
-              )}
+
+                {/* Dropdown Menu */}
+                {isAssistantDropdownOpen && (
+                  <div
+                    className="absolute right-0 top-full mt-1 rounded-lg border shadow-xl z-50 min-w-48"
+                    style={{
+                      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                      borderColor: isDark ? '#374151' : '#e5e7eb',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <div className="py-1">
+                      {/* Copy Message */}
+                      {handleCopyMessage && (
+                        <button
+                          onClick={() => {
+                            handleCopyMessage(message.id, message.content);
+                            setIsAssistantDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 flex items-center gap-2 transition-colors text-sm"
+                          style={{
+                            color: isDark ? '#e5e7eb' : '#374151',
+                            backgroundColor: 'transparent'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          <Copy className="w-4 h-4" />
+                          Copy message
+                        </button>
+                      )}
+
+                      {/* Archive/Restore Message */}
+                      {handleToggleArchive && (
+                        <button
+                          onClick={() => {
+                            handleToggleArchive(message.id, !!(message as any).isArchived);
+                            setIsAssistantDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 flex items-center gap-2 transition-colors text-sm"
+                          style={{
+                            color: isDark ? '#e5e7eb' : '#374151',
+                            backgroundColor: 'transparent'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          {(message as any).isArchived ? (
+                            <>
+                              <ArchiveRestore className="w-4 h-4" />
+                              Restore message
+                            </>
+                          ) : (
+                            <>
+                              <Archive className="w-4 h-4" />
+                              Archive message
+                            </>
+                          )}
+                        </button>
+                      )}
+
+                      {/* Retry Message (for assistant messages) */}
+                      {handleRetryMessage && message.role === 'assistant' && (
+                        <button
+                          onClick={() => {
+                            handleRetryMessage(message.id);
+                            setIsAssistantDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 flex items-center gap-2 transition-colors text-sm"
+                          style={{
+                            color: isDark ? '#e5e7eb' : '#374151',
+                            backgroundColor: 'transparent'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          Retry message
+                        </button>
+                      )}
+
+                      {/* View Full Message Modal */}
+                      {onOpenModal && (
+                        <>
+                          <hr className="my-1" style={{ borderColor: isDark ? '#374151' : '#e5e7eb' }} />
+                          <button
+                            onClick={() => {
+                              onOpenModal(message);
+                              setIsAssistantDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-3 py-2 flex items-center gap-2 transition-colors text-sm"
+                            style={{
+                              color: isDark ? '#e5e7eb' : '#374151',
+                              backgroundColor: 'transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                            </svg>
+                            View full message
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
