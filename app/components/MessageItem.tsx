@@ -160,7 +160,7 @@ const MessageItem = memo(function MessageItem({
               {/* User Message Actions */}
               <div className={`flex items-center justify-between gap-2 mt-4 pt-3 border-t ${isMobileLayout ? 'flex-wrap' : ''}`}
                    style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   <StarButton
                     itemType="message"
                     itemId={message.id}
@@ -177,23 +177,29 @@ const MessageItem = memo(function MessageItem({
                     onTagsUpdate={(tags) => onTagsChange?.(message.id, tags)}
                   />
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-4">
                   <MessageExportButton
                     messageId={message.id}
                     sessionId={sessionId || ""}
-                    className={`touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                    className=""
                   />
                   
                   {/* User Message Dropdown Menu */}
                   <div className="relative" ref={userDropdownRef}>
                     <button
-                      onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                      className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('User dropdown button clicked, current state:', isUserDropdownOpen);
+                        setIsUserDropdownOpen(!isUserDropdownOpen);
+                      }}
+                      className={`rounded-lg transition-colors touch-target flex items-center justify-center ${mobileResponsiveClasses.actionButtonSize}`}
                       style={{
                         backgroundColor: isUserDropdownOpen 
                           ? (isDark ? '#374151' : '#e5e7eb') 
                           : (isDark ? '#1f1f1f' : '#f9fafb'),
-                        color: isDark ? '#b8b8b8' : '#6b7280'
+                        color: isDark ? '#b8b8b8' : '#6b7280',
+                        minWidth: isMobileLayout ? '32px' : '40px',
+                        padding: '8px'
                       }}
                       title="More options"
                     >
@@ -409,7 +415,7 @@ const MessageItem = memo(function MessageItem({
           {/* Assistant Message Actions */}
           <div className={`flex items-center justify-between gap-2 mt-4 pt-3 border-t ${isMobileLayout ? 'flex-wrap' : ''}`}
                style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-3">
               <StarButton
                 itemType="message"
                 itemId={message.id}
@@ -426,23 +432,29 @@ const MessageItem = memo(function MessageItem({
                 onTagsUpdate={(tags) => onTagsChange?.(message.id, tags)}
               />
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-4">
               <MessageExportButton
                 messageId={message.id}
                 sessionId={sessionId || ""}
-                className={`touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                className=""
               />
               
               {/* Dropdown Menu */}
               <div className="relative" ref={assistantDropdownRef}>
                 <button
-                  onClick={() => setIsAssistantDropdownOpen(!isAssistantDropdownOpen)}
-                  className={`rounded-lg transition-colors touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('Assistant dropdown button clicked, current state:', isAssistantDropdownOpen);
+                    setIsAssistantDropdownOpen(!isAssistantDropdownOpen);
+                  }}
+                  className={`rounded-lg transition-colors touch-target flex items-center justify-center ${mobileResponsiveClasses.actionButtonSize}`}
                   style={{
                     backgroundColor: isAssistantDropdownOpen 
                       ? (isDark ? '#374151' : '#e5e7eb') 
                       : (isDark ? '#1f1f1f' : '#f9fafb'),
-                    color: isDark ? '#b8b8b8' : '#6b7280'
+                    color: isDark ? '#b8b8b8' : '#6b7280',
+                    minWidth: isMobileLayout ? '32px' : '40px',
+                    padding: '8px'
                   }}
                   title="More options"
                 >

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Download, FileText, FileImage, File, ExternalLink, Loader, CheckCircle, AlertCircle } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { loadGoogleServices, isGoogleServicesReady } from '@/lib/googleServices';
@@ -58,6 +59,9 @@ export default function MessageExportButton({
     success: null
   });
   const [googleServicesReady, setGoogleServicesReady] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0, width: 0 });
 
   // Log prop values for debugging (only in development)
   if (process.env.NODE_ENV === 'development') {
@@ -123,6 +127,23 @@ export default function MessageExportButton({
 
     initializeGoogleServices();
   }, []);
+
+  // Calculate button position when dropdown opens
+  useEffect(() => {
+    if (showDropdown && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setButtonPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.right - 208 + window.scrollX, // 208px is min-w-52 (13rem)
+        width: rect.width
+      });
+      
+      console.log('Export dropdown position:', {
+        top: rect.bottom + window.scrollY,
+        left: rect.right - 208 + window.scrollX
+      });
+    }
+  }, [showDropdown]);
 
   const handleGoogleAuth = async (): Promise<string | null> => {
     try {
@@ -395,10 +416,14 @@ export default function MessageExportButton({
     <div className={`relative ${className}`}>
       {/* Export Button */}
       <button
+        ref={buttonRef}
         data-testid="export-button"
-        onClick={() => setShowDropdown(!showDropdown)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowDropdown(!showDropdown);
+        }}
         disabled={exportState.isExporting || !isValidForExport(messageId, effectiveSessionId)}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center gap-2 px-3 pr-4 py-1.5 text-sm rounded-lg transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
         title={!isValidForExport(messageId, effectiveSessionId) ? "Export unavailable - session loading" : "Export message to Google Drive"}
       >
         {exportState.isExporting ? (
@@ -409,56 +434,74 @@ export default function MessageExportButton({
         <span className="hidden sm:inline">Export</span>
       </button>
 
-      {/* Dropdown Menu */}
-      {showDropdown && !exportState.isExporting && (
-        <div
-          data-testid="export-menu"
-          className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-800 rounded-xl shadow-2xl shadow-blue-500/20 z-[60] min-w-52 animate-in slide-in-from-top-2 duration-200 backdrop-blur-sm"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="p-3">
-            <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-3 px-2 flex items-center gap-2">
-              <Download className="w-3 h-3" />
-              {googleServicesReady ? 'Export to Google Drive' : 'Export & Download'}
+      {/* Dropdown Menu - Rendered via Portal */}
+      {showDropdown && !exportState.isExporting && typeof document !== 'undefined' && createPortal(
+        <>
+          {/* Invisible backdrop to capture clicks outside */}
+          <div 
+            className="fixed inset-0" 
+            style={{ zIndex: 99998 }}
+            onClick={() => setShowDropdown(false)}
+          />
+          <div
+            ref={dropdownRef}
+            data-testid="export-menu"
+            className="fixed bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-800 rounded-xl shadow-2xl min-w-52"
+            style={{ 
+              zIndex: 99999,
+              top: `${buttonPosition.top + 8}px`,
+              left: `${buttonPosition.left}px`,
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              transform: 'translateZ(0)', // Force GPU acceleration
+              willChange: 'transform'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-3">
+              <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-3 px-2 flex items-center gap-2">
+                <Download className="w-3 h-3" />
+                {googleServicesReady ? 'Export to Google Drive' : 'Export & Download'}
+              </div>
+
+              <button
+                data-testid="export-pdf"
+                onClick={() => handleExport('pdf')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-700 transition-colors duration-200 mb-2"
+              >
+                <FileImage className="w-5 h-5 text-red-500" />
+                <div className="text-left">
+                  <div>Export as PDF</div>
+                  <div className="text-xs text-red-500/70">Portable document format</div>
+                </div>
+              </button>
+
+              <button
+                data-testid="export-word"
+                onClick={() => handleExport('word')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-200 mb-2"
+              >
+                <FileText className="w-5 h-5 text-blue-500" />
+                <div className="text-left">
+                  <div>Export as Word</div>
+                  <div className="text-xs text-blue-500/70">Microsoft Word document</div>
+                </div>
+              </button>
+
+              <button
+                data-testid="export-text"
+                onClick={() => handleExport('text')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-300 hover:border-green-300 dark:hover:border-green-700 transition-colors duration-200"
+              >
+                <File className="w-5 h-5 text-green-500" />
+                <div className="text-left">
+                  <div>Export as Text</div>
+                  <div className="text-xs text-green-500/70">Plain text file</div>
+                </div>
+              </button>
             </div>
-
-            <button
-              data-testid="export-pdf"
-              onClick={() => handleExport('pdf')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-700 transition-colors duration-200 mb-2"
-            >
-              <FileImage className="w-5 h-5 text-red-500" />
-              <div className="text-left">
-                <div>Export as PDF</div>
-                <div className="text-xs text-red-500/70">Portable document format</div>
-              </div>
-            </button>
-
-            <button
-              data-testid="export-word"
-              onClick={() => handleExport('word')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-200 mb-2"
-            >
-              <FileText className="w-5 h-5 text-blue-500" />
-              <div className="text-left">
-                <div>Export as Word</div>
-                <div className="text-xs text-blue-500/70">Microsoft Word document</div>
-              </div>
-            </button>
-
-            <button
-              data-testid="export-text"
-              onClick={() => handleExport('text')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg border border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-300 hover:border-green-300 dark:hover:border-green-700 transition-colors duration-200"
-            >
-              <File className="w-5 h-5 text-green-500" />
-              <div className="text-left">
-                <div>Export as Text</div>
-                <div className="text-xs text-green-500/70">Plain text file</div>
-              </div>
-            </button>
           </div>
-        </div>
+        </>,
+        document.body
       )}
 
       {/* Status Messages */}
@@ -509,13 +552,6 @@ export default function MessageExportButton({
         </div>
       )}
 
-      {/* Click outside to close dropdown */}
-      {showDropdown && (
-        <div
-          className="fixed inset-0 z-[55]"
-          onClick={() => setShowDropdown(false)}
-        />
-      )}
     </div>
   );
 }
