@@ -30,6 +30,10 @@ export async function POST(request: NextRequest) {
             const data = `data: ${JSON.stringify(chunk)}\n\n`;
             controller.enqueue(encoder.encode(data));
           }
+          
+          // Ensure completion signal is sent (defense against missing completion)
+          const completionData = `data: ${JSON.stringify({ content: '', isComplete: true })}\n\n`;
+          controller.enqueue(encoder.encode(completionData));
         } catch (error) {
           const errorData = `data: ${JSON.stringify({
             error: error instanceof Error ? error.message : 'Unknown error',

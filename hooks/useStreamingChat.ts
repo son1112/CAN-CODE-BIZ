@@ -16,6 +16,7 @@ interface StreamingChatHook {
   sendMessage: (content: string) => Promise<void>;
   retryMessage: (messageId: string) => Promise<void>;
   clearMessages: () => void;
+  resetStreamingState: () => void;
 }
 
 export function useStreamingChat(): StreamingChatHook {
@@ -24,6 +25,7 @@ export function useStreamingChat(): StreamingChatHook {
   const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
   const [failedMessages, setFailedMessages] = useState<Set<string>>(new Set());
   const abortControllerRef = useRef<AbortController | null>(null);
+  const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { getSystemPrompt, addContext, currentAgent, currentPowerAgent, getEffectiveModel } = useAgent();
   const { data: authSession } = useAuthSession();
   const { messages, addMessage, currentSession } = useSession();
@@ -37,6 +39,13 @@ export function useStreamingChat(): StreamingChatHook {
     setIsStreaming(true);
     setError(null);
     setFallbackMessage(null);
+    
+    // Set timeout to auto-clear streaming state if it gets stuck (30 seconds)
+    streamingTimeoutRef.current = setTimeout(() => {
+      console.warn('useStreamingChat: Streaming timeout reached, auto-clearing state');
+      setIsStreaming(false);
+      setError('Response timeout - please try again');
+    }, 30000);
 
     let currentUserMessageId: string | null = null;
 
@@ -118,6 +127,7 @@ export function useStreamingChat(): StreamingChatHook {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6));
+              
 
               if (data.content) {
                 accumulatedContent += data.content;
@@ -131,6 +141,11 @@ export function useStreamingChat(): StreamingChatHook {
               }
 
               if (data.isComplete) {
+                // Clear timeout since streaming completed successfully
+                if (streamingTimeoutRef.current) {
+                  clearTimeout(streamingTimeoutRef.current);
+                  streamingTimeoutRef.current = null;
+                }
                 setIsStreaming(false);
 
                 // Add assistant response to session
@@ -169,6 +184,11 @@ export function useStreamingChat(): StreamingChatHook {
         }
       }
     } finally {
+      // Clear timeout in case of any errors
+      if (streamingTimeoutRef.current) {
+        clearTimeout(streamingTimeoutRef.current);
+        streamingTimeoutRef.current = null;
+      }
       setIsStreaming(false);
       abortControllerRef.current = null;
     }
@@ -205,6 +225,30 @@ export function useStreamingChat(): StreamingChatHook {
     // when it calls clearContext() and potentially creates a new session
   }, []);
 
+  // Emergency reset function for stuck streaming state
+  const resetStreamingState = useCallback(() => {
+    // Clear timeout if active
+    if (streamingTimeoutRef.current) {
+      clearTimeout(streamingTimeoutRef.current);
+      streamingTimeoutRef.current = null;
+    }
+    setIsStreaming(false);
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (streamingTimeoutRef.current) {
+        clearTimeout(streamingTimeoutRef.current);
+        streamingTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   return {
     messages,
     isStreaming,
@@ -214,5 +258,6 @@ export function useStreamingChat(): StreamingChatHook {
     sendMessage,
     retryMessage,
     clearMessages,
+    resetStreamingState,
   };
 }

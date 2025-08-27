@@ -331,8 +331,8 @@ body {
   -webkit-text-size-adjust: none !important;
   -moz-text-size-adjust: none !important;
   text-size-adjust: none !important;
-  min-height: 80px !important;
-  max-height: 120px !important;
+  min-height: 140px !important;
+  max-height: min(50vh, 450px) !important;
 }
 
 .scale-locked-footer * {

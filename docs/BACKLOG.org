@@ -15,6 +15,55 @@ This file tracks **active** future work items, feature requests, improvements, a
 
 ** 🔴 HIGH Priority
 
+*** Record Button Response Lag - Voice Input UI Performance Issue
+**** Problem Statement
+**PERFORMANCE ISSUE**: The voice recording button experiences noticeable response lag when clicked, impacting user experience during voice input interactions.
+
+**** Specific Issues Identified
+- **Button Response Delay**: Noticeable lag between clicking record button and visual feedback
+- **User Experience Impact**: Creates uncertainty about whether button press registered
+- **Voice Recording Start**: Potential delay in actual recording initiation
+- **UI Responsiveness**: Button feels sluggish compared to other interface elements
+
+**** Technical Details
+- VoiceInput component may have performance bottlenecks in click handler
+- Possible state update delays causing UI lag
+- WebSocket connection initialization might block button response
+- AssemblyAI token fetch could be causing delay
+
+**** Suspected Root Causes
+1. **Heavy Click Handler**: Button click handler may be performing synchronous operations
+2. **State Update Blocking**: setState operations might be blocking UI updates
+3. **API Call Blocking**: AssemblyAI token generation blocking button response
+4. **Component Re-rendering**: Expensive re-renders triggered by button state changes
+
+**** Implementation Approach
+**PERFORMANCE OPTIMIZATION REQUIRED:**
+1. **Button Response Optimization**
+   - Add immediate visual feedback (optimistic UI updates)
+   - Move heavy operations to async handlers
+   - Implement loading states for better UX
+
+2. **Click Handler Refactoring**
+   - Separate immediate UI updates from async operations
+   - Use React.startTransition for non-urgent updates
+   - Add performance profiling to identify bottlenecks
+
+3. **State Management Improvements**
+   - Optimize state structure to minimize re-renders
+   - Use useCallback/useMemo for expensive operations
+   - Consider moving heavy logic to custom hooks
+
+4. **Testing & Validation**
+   - Add performance monitoring for button response times
+   - Test on various devices/browsers for consistency
+   - User testing to validate improved responsiveness
+
+**** Priority: 🔴 HIGH
+**** Complexity: Medium
+**** Dependencies: VoiceInput component, AssemblyAI integration
+**** Related Files: `app/components/VoiceInput.tsx`, `hooks/useSpeechRecognition.ts`
+
 *** Session Chat Message Order - Change Message Display Order
 **** Problem Statement
 **UX FEATURE**: Users need the ability to change the order in which messages are displayed within a chat session for better conversation flow and usability.
@@ -323,6 +372,230 @@ Need ability to click on text sections to make them more prominent/highlighted/f
 
 **** Implementation Approach
 Add interactive text highlighting functionality for better message readability and emphasis.
+
+*** Voice Transcript Status Indicators
+**** Problem Statement
+Users need visual feedback about the status of their voice transcripts during the speech-to-text process. Currently, there's no clear indication of whether a transcript is waiting to be sent, ready to be sent to the transcriber, or has been sent to the transcriber.
+
+**** Technical Requirements
+- Add small color-coded status indicators for voice transcript states
+- Red indicator: Transcript waiting to be sent (buffering/silence detection phase)
+- Yellow indicator: Ready to be sent to transcriber (silence threshold met)
+- Green indicator: Sent to transcriber (processing by AssemblyAI)
+- Position indicator near the voice input area for clear visibility
+
+**** Implementation Approach
+1. **Status State Management**
+   - Track transcript status in useSpeechRecognition hook
+   - Create TranscriptStatus enum with WAITING, READY, SENT states
+   - Update status based on WebSocket connection and data flow
+
+2. **UI Component**
+   - Create TranscriptStatusIndicator component
+   - Use small circular indicators with appropriate colors
+   - Add tooltips explaining each status
+   - Smooth transitions between states
+
+3. **Integration Points**
+   - Update ChatInterface to include status indicator
+   - Position near microphone button or input area
+   - Ensure mobile-responsive sizing and positioning
+
+**** Priority Level: 🟡 MEDIUM
+**** Complexity Estimate: Simple (2-3 days)
+**** Dependencies: AssemblyAI integration, useSpeechRecognition hook
+**** Acceptance Criteria
+- [ ] Status indicator shows red when recording but not ready to send
+- [ ] Status indicator shows yellow when silence detected and ready to send
+- [ ] Status indicator shows green when transcript sent to AssemblyAI
+- [ ] Indicators have clear tooltips explaining their meaning
+- [ ] Mobile-responsive design implemented
+**** Related Files
+- hooks/useSpeechRecognition.ts (main voice recognition hook)
+- app/components/ChatInterface.tsx (main chat UI)
+- app/components/VoiceInput.tsx (voice input component)
+
+*** ElevenLabs Text-to-Speech Integration
+**** Problem Statement
+Users want the ability to have AI responses read aloud using natural-sounding voices. ElevenLabs provides high-quality text-to-speech capabilities that would enhance the conversational experience, especially for accessibility and hands-free usage.
+
+**** Technical Requirements
+- Integrate ElevenLabs API for text-to-speech conversion
+- Add play/pause controls for AI message audio playbook
+- Support multiple voice options from ElevenLabs
+- Implement audio queue management for streaming responses
+- Add user preferences for auto-play and voice selection
+
+**** Implementation Approach
+1. **API Integration**
+   - Set up ElevenLabs API client with authentication
+   - Create TTS service module for API calls
+   - Handle streaming audio responses
+   - Implement error handling and fallbacks
+
+2. **Audio Player Component**
+   - Create AudioPlayer component for message playback
+   - Add play/pause/stop controls
+   - Show audio loading and progress indicators
+   - Support playback speed adjustment
+
+3. **User Preferences**
+   - Add TTS settings to user preferences
+   - Voice selection dropdown with preview
+   - Auto-play toggle for new messages
+   - Volume and speed controls
+
+4. **Performance Considerations**
+   - Cache audio for repeated playback
+   - Implement audio preloading for better UX
+   - Handle concurrent audio requests efficiently
+   - Clean up audio resources properly
+
+**** Priority Level: 🟡 MEDIUM
+**** Complexity Estimate: Medium (1-2 weeks)
+**** Dependencies: User preferences system, message rendering
+**** Acceptance Criteria
+- [ ] ElevenLabs API successfully integrated
+- [ ] Audio playback controls added to AI messages
+- [ ] Multiple voice options available
+- [ ] User preferences for TTS implemented
+- [ ] Smooth playback of streaming responses
+- [ ] Proper error handling for API failures
+- [ ] Mobile-responsive audio controls
+**** Related Files
+- lib/elevenlabs.ts (new - API client)
+- app/components/AudioPlayer.tsx (new - audio controls)
+- app/components/MessageItem.tsx (integrate audio player)
+- contexts/PreferencesContext.tsx (TTS preferences)
+- app/api/tts/route.ts (new - TTS API endpoint)
+
+*** Feature Flags System
+**** Problem Statement
+The application needs a robust feature flags system to enable controlled rollouts, A/B testing, feature toggles for different environments, and the ability to quickly disable features in production without code deployments. Currently, there's no systematic way to control feature availability across different users, environments, or deployment stages.
+
+**** Technical Requirements
+- Dynamic feature flag management without code deployments
+- User-based, role-based, and percentage-based flag targeting
+- Environment-specific flag configurations (dev, staging, production)
+- Real-time flag updates without application restart
+- Admin interface for managing flags
+- Analytics and metrics for flag usage
+- Integration with existing user preferences system
+
+**** Implementation Approach
+1. **Core Flag System**
+   - Create FeatureFlag model with flag definitions
+   - Implement flag evaluation engine with targeting rules
+   - Add caching layer for performance (Redis or in-memory)
+   - Create flag configuration API endpoints
+
+2. **Flag Management Interface**
+   - Build admin dashboard for flag management
+   - Add flag creation, editing, and deletion functionality
+   - Implement targeting rules UI (user groups, percentages, etc.)
+   - Add flag status monitoring and usage analytics
+
+3. **Client Integration**
+   - Create useFeatureFlag hook for React components
+   - Add FeatureFlag component for conditional rendering
+   - Implement flag prefetching and caching on client
+   - Add debugging tools for development
+
+4. **Common Feature Flags**
+   - NEW_VOICE_TRANSCRIPT_INDICATORS (voice status indicators)
+   - ELEVENLABS_TTS_INTEGRATION (text-to-speech features)
+   - ENHANCED_EXPORT_OPTIONS (advanced export features)
+   - CONTINUOUS_MODE_V2 (improved continuous conversation)
+   - ADVANCED_AGENT_FEATURES (power agent enhancements)
+
+**** Priority Level: 🟡 MEDIUM  
+**** Complexity Estimate: Medium to Complex (2-3 weeks)
+**** Dependencies: User authentication, admin roles, preferences system
+**** Acceptance Criteria
+- [ ] Feature flags can be created and managed via admin interface
+- [ ] Flags support user-based and percentage-based targeting
+- [ ] Real-time flag updates work without app restart
+- [ ] useFeatureFlag hook provides clean component integration
+- [ ] Flag usage analytics and monitoring implemented
+- [ ] Environment-specific flag configurations supported
+- [ ] Performance impact is minimal (< 5ms per flag check)
+- [ ] Rollback capability for quickly disabling problematic flags
+**** Related Files
+- models/FeatureFlag.ts (new - flag definitions and targeting)
+- contexts/FeatureFlagsContext.tsx (new - flag state management)
+- hooks/useFeatureFlag.ts (new - flag consumption hook)
+- app/components/FeatureFlag.tsx (new - conditional rendering)
+- app/admin/feature-flags/page.tsx (new - management interface)
+- app/api/feature-flags/route.ts (new - flag management API)
+- lib/featureFlags.ts (new - flag evaluation engine)
+- lib/flagCache.ts (new - caching and performance)
+
+*** Message Queue System for Session Chats
+**** Problem Statement
+The current session chat system processes messages synchronously, which can lead to blocking, race conditions, and poor user experience during high-load scenarios. A queueing system could improve reliability, performance, and enable advanced features like message retry, batch processing, and better error handling.
+
+**** Technical Requirements
+- Asynchronous message processing with queue management
+- Message retry mechanism for failed operations
+- Priority-based message handling (user messages vs system messages)
+- Queue persistence for reliability across server restarts
+- Real-time status updates for message processing states
+- Dead letter queue for permanently failed messages
+- Queue monitoring and analytics dashboard
+
+**** Implementation Approach
+1. **Core Queue Infrastructure**
+   - Implement Redis-based message queue (Bull or BullMQ)
+   - Create message job types (user message, AI response, export, etc.)
+   - Add queue workers for different message types
+   - Implement job retry logic with exponential backoff
+
+2. **Message Processing Pipeline**
+   - Queue user messages instead of immediate processing
+   - Process AI responses asynchronously with progress tracking
+   - Handle message dependencies (responses depend on user messages)
+   - Add message validation and sanitization in queue workers
+
+3. **User Experience Enhancements**
+   - Real-time message status updates (queued, processing, completed, failed)
+   - Optimistic UI updates with queue status indicators
+   - Message retry UI for failed messages
+   - Queue position and estimated processing time
+
+4. **Advanced Features**
+   - Batch processing for export operations
+   - Priority queues for premium users or urgent messages
+   - Message scheduling (delayed sending)
+   - Queue-based rate limiting per user/session
+
+**** Benefits
+- **Improved Reliability**: Messages won't be lost during server issues
+- **Better Performance**: Non-blocking message processing
+- **Enhanced UX**: Clear status indicators and retry mechanisms  
+- **Scalability**: Queue workers can be scaled independently
+- **Advanced Features**: Enables batch operations and scheduling
+- **Monitoring**: Detailed insights into message processing patterns
+
+**** Priority Level: 🟡 MEDIUM
+**** Complexity Estimate: Complex (3-4 weeks)
+**** Dependencies: Redis infrastructure, message processing refactor
+**** Acceptance Criteria
+- [ ] Messages are queued and processed asynchronously
+- [ ] Real-time status updates for message processing
+- [ ] Failed message retry mechanism implemented
+- [ ] Queue monitoring dashboard available
+- [ ] Message processing is more reliable than current system
+- [ ] Performance improvement measurable (faster response times)
+- [ ] Queue persistence survives server restarts
+- [ ] Dead letter queue handling implemented
+**** Related Files
+- lib/messageQueue.ts (new - queue management)
+- lib/queueWorkers.ts (new - job processing workers)
+- contexts/MessageQueueContext.tsx (new - queue state management)
+- hooks/useMessageQueue.ts (new - queue status hook)
+- app/components/MessageStatusIndicator.tsx (new - queue status UI)
+- app/api/queue/route.ts (new - queue management API)
+- app/admin/queue/page.tsx (new - queue monitoring dashboard)
 
 ** 🟢 LOW Priority
 

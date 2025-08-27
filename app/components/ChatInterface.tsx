@@ -166,18 +166,17 @@ function getFirstSentencePreview(content: string, maxLength: number = 80): strin
 
 
 export default function ChatInterface() {
-  // Force client-side hydration
-  const [isMounted, setIsMounted] = useState(false);
-  
-  // Critical: Set mounted state on client-side to ensure proper hydration
-  useEffect(() => {
-    console.log('🚀 CLIENT-SIDE MOUNT: Setting isMounted to true');
-    setIsMounted(true);
-  }, []);
+  // Hydration-safe component with consistent server/client rendering
+  const [isClient, setIsClient] = useState(false);
   
   const { agents } = useAgents();
   const { userId } = useAuth();
   const { isMobile, isTablet } = useMobileNavigation();
+  
+  // Set client flag after hydration to avoid hydration mismatches
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Helper function to get agent display name
   const getAgentDisplayName = (agentUsed: string | undefined): string => {
@@ -231,7 +230,7 @@ export default function ChatInterface() {
   const [debouncedInputValue, setDebouncedInputValue] = useState('');
   const inputDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { messages, isStreaming, error, fallbackMessage, failedMessages, sendMessage, retryMessage, clearMessages } = useStreamingChat();
+  const { messages, isStreaming, error, fallbackMessage, failedMessages, sendMessage, retryMessage, clearMessages, resetStreamingState } = useStreamingChat();
 
   // Virtual scrolling optimization
   const {
@@ -335,10 +334,14 @@ export default function ChatInterface() {
     return firstSentence.charAt(0).toUpperCase() + firstSentence.slice(1);
   };
 
-  // Filter messages based on active tag filter and archive status (optimized)
+  // Filter messages based on active tag filter and archive status (hydration-safe)
   const filteredMessages = useMemo(() => {
-    // Prioritize session messages when we have a current session (important for URL-based session loading)
-    // Fall back to streaming messages for new conversations
+    // Prioritize session messages when we have a current session
+    // Only use after client hydration to avoid server/client mismatches
+    if (!isClient) {
+      return []; // Return empty array on server-side to prevent hydration issues
+    }
+    
     const sourceMessages = (currentSession?.messages && currentSession.messages.length > 0) 
       ? currentSession.messages 
       : messages;
@@ -359,33 +362,25 @@ export default function ChatInterface() {
     });
 
     return filtered;
-  }, [messages, currentSession?.messages, activeTagFilter, archivedMessages, showArchivedMessages]);
+  }, [isClient, messages, currentSession?.messages, activeTagFilter, archivedMessages, showArchivedMessages]);
 
   // Debug logging removed - session loading issue resolved
 
   // Debug logging removed - session loading issue resolved
 
-  // Force client-side session loading with aggressive hydration fix
+  // Client-side session loading with hydration safety
   useEffect(() => {
     // Only run on client side after mount
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !isClient) return;
     
     const sessionParam = new URLSearchParams(window.location.search).get('session');
     
-    console.log('🚨 FORCE CLIENT-SIDE SESSION LOAD:', {
-      sessionParam,
-      hasCurrentSession: !!currentSession,
-      isLoadingSession,
-      shouldLoad: sessionParam && !currentSession && !isLoadingSession,
-      windowLocation: window.location.href
-    });
-    
-    // Force load session if URL has session parameter and we don't have one loaded
+    // Load session if URL has session parameter and we don't have one loaded
     if (sessionParam && !currentSession && !isLoadingSession) {
-      console.log('🚨 FORCE LOADING SESSION NOW:', sessionParam);
+      console.log('🚨 Loading session from URL:', sessionParam);
       loadSession(sessionParam);
     }
-  }, [currentSession, isLoadingSession, loadSession]);
+  }, [isClient, currentSession, isLoadingSession, loadSession]);
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
@@ -446,23 +441,44 @@ export default function ChatInterface() {
   };
 
   const handleQuickNewSession = async () => {
+    console.log('handleQuickNewSession: Starting new session creation...');
     try {
+      console.log('handleQuickNewSession: Calling createSession()...');
       const newSession = await createSession(); // Creates session with auto-generated name
+      
+      if (!newSession) {
+        console.error('handleQuickNewSession: createSession returned null/undefined');
+        setError('Failed to create new session. Please try again.');
+        return;
+      }
+      
+      console.log('handleQuickNewSession: New session created:', newSession);
+      
       // Update URL to reflect new session
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('session', newSession.sessionId);
+      console.log('handleQuickNewSession: Updating URL to:', newUrl.toString());
       router.replace(newUrl.pathname + newUrl.search);
 
+      console.log('handleQuickNewSession: Clearing messages and context...');
       clearMessages();
       clearContext();
       if (isContinuousMode) {
+        console.log('handleQuickNewSession: Ending continuous mode conversation...');
         endConversation();
       }
 
       // Add welcome message from current agent
+      console.log('handleQuickNewSession: Adding welcome message...');
       await addWelcomeMessage();
+      console.log('handleQuickNewSession: New session setup complete!');
     } catch (error) {
-      console.error('Failed to create new session:', error);
+      console.error('handleQuickNewSession: Failed to create new session:', error);
+      console.error('handleQuickNewSession: Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      setError('Failed to create new session. Please try again.');
     }
   };
 
@@ -542,15 +558,58 @@ export default function ChatInterface() {
 
   const handleVoiceTranscript = async (transcript: string) => {
     console.log('ChatInterface: Voice transcript received:', transcript);
+    console.log('ChatInterface: Transcript length:', transcript.length);
+    console.log('ChatInterface: Trimmed transcript:', transcript.trim());
     console.log('ChatInterface: isStreaming:', isStreaming);
     console.log('ChatInterface: isContinuousMode:', isContinuousMode);
 
     // Update current transcript for display
     setCurrentTranscript(transcript);
 
-    if (transcript.trim() && !isStreaming) {
+    // Check if transcript is empty
+    if (!transcript.trim()) {
+      console.warn('ChatInterface: Voice transcript is empty, not sending');
+      return;
+    }
+
+    // Check if streaming is in progress
+    if (isStreaming) {
+      console.error('ChatInterface: BLOCKED - System is currently streaming, cannot send voice message');
+      console.error('ChatInterface: This is likely the bug - streaming state is stuck at true');
+      
+      // Log more debugging info
+      console.log('ChatInterface: Current messages count:', messages.length);
+      console.log('ChatInterface: Last message:', messages[messages.length - 1]);
+      
+      // Check if the last message was completed (assistant message exists)
+      const lastMessage = messages[messages.length - 1];
+      const secondLastMessage = messages[messages.length - 2];
+      
+      // If we have a completed assistant response, the streaming might be stuck
+      if (lastMessage?.role === 'assistant' && secondLastMessage?.role === 'user') {
+        console.warn('ChatInterface: Detected potentially stuck streaming state - last message is from assistant');
+        console.warn('ChatInterface: Attempting to reset streaming state...');
+        resetStreamingState();
+        
+        // Try sending the message after reset
+        setTimeout(async () => {
+          console.log('ChatInterface: Retrying voice message after reset...');
+          if (!isStreaming) {
+            await sendMessage(transcript);
+            setCurrentTranscript('');
+          }
+        }, 100);
+      } else {
+        // Show error to user
+        setError('Please wait for the current response to complete before sending a new message');
+      }
+      return;
+    }
+
+    try {
       console.log('ChatInterface: Sending voice message to Claude...');
-      await sendMessage(transcript);
+      const result = await sendMessage(transcript);
+      console.log('ChatInterface: sendMessage completed, result:', result);
 
       // Clear transcript after sending
       setCurrentTranscript('');
@@ -561,8 +620,11 @@ export default function ChatInterface() {
         console.log('ChatInterface: Should AI respond?', shouldRespond);
         // The AI response is already triggered by sendMessage, so we don't need to do anything extra
       }
-    } else {
-      console.log('ChatInterface: NOT sending voice message - empty transcript or streaming in progress');
+    } catch (error) {
+      console.error('ChatInterface: Failed to send voice transcript:', error);
+      setError('Failed to send voice message. Please try again.');
+      // Clear streaming state in case it's stuck
+      console.log('ChatInterface: Attempting to clear potentially stuck streaming state');
     }
   };
 
@@ -878,28 +940,6 @@ export default function ChatInterface() {
     filteredMessages
   ]);
 
-  // Show loading screen until client-side mount completes
-  if (!isMounted) {
-    return (
-      <div
-        data-testid="chat-interface"
-        className="flex flex-col h-screen relative overflow-hidden bg-primary"
-        style={{
-          background: isDark
-            ? 'linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)'
-            : 'linear-gradient(135deg, #fafafa 0%, #f0f9ff 50%, #e0f2fe 100%)'
-        }}
-      >
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p style={{ color: isDark ? '#e5e7eb' : '#374151' }}>Loading session...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
       data-testid="chat-interface"
@@ -909,6 +949,7 @@ export default function ChatInterface() {
           ? 'linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)'
           : 'linear-gradient(135deg, #fafafa 0%, #f0f9ff 50%, #e0f2fe 100%)'
       }}
+      suppressHydrationWarning
     >
       {/* Modern Background Elements */}
       <div
@@ -960,18 +1001,29 @@ export default function ChatInterface() {
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="absolute transition-all duration-300 ease-in-out transform hover:scale-110 hover:shadow-lg"
             style={{
-              right: '-22px', // Position halfway outside the sidebar edge
+              right: '-22px',
               top: '50%',
               transform: 'translateY(-50%)',
-              padding: '12px 8px',
+              paddingTop: '12px',
+              paddingRight: '8px', 
+              paddingBottom: '12px',
+              paddingLeft: '8px',
               backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              border: '2px solid #3b82f6', // Blue when open
-              zIndex: 9999, // Very high to ensure it's above all content
-              borderLeft: 'none', // No left border - attached to sidebar
+              borderTopWidth: '2px',
+              borderTopStyle: 'solid', 
+              borderTopColor: '#3b82f6',
+              borderRightWidth: '2px',
+              borderRightStyle: 'solid',
+              borderRightColor: '#3b82f6', 
+              borderBottomWidth: '2px',
+              borderBottomStyle: 'solid',
+              borderBottomColor: '#3b82f6',
+              borderLeftWidth: '0px',
+              zIndex: 9999,
               borderTopRightRadius: '12px',
-              borderBottomRightRadius: '12px',
-              borderTopLeftRadius: '0px', // Square left edge - attached to sidebar
-              borderBottomLeftRadius: '0px', // Square left edge - attached to sidebar
+              borderBottomRightRadius: '12px', 
+              borderTopLeftRadius: '0px',
+              borderBottomLeftRadius: '0px',
               boxShadow: 'var(--shadow-xl)',
               backdropFilter: 'blur(12px)',
               color: 'var(--accent-primary)',
@@ -1305,10 +1357,15 @@ export default function ChatInterface() {
         </div>
 
         {/* Main Content */}
-        <div data-onboarding="chat-area" className="flex-1 flex overflow-hidden">
-          {isLoadingSession ? (
-            <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
-              <SessionLoadingIndicator />
+        <div data-onboarding="chat-area" className="flex-1 flex overflow-hidden" suppressHydrationWarning>
+          {/* Render loading state during hydration, then actual content */}
+          {!isClient ? (
+            <div className="relative flex-1 flex items-center justify-center p-12">
+              <div className="text-center space-y-4">
+                <div className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  Loading...
+                </div>
+              </div>
             </div>
           ) : filteredMessages.length === 0 ? (
             <div className={`relative flex-1 flex items-center justify-center p-12 ${isDropdownOpen ? 'pointer-events-none' : ''}`}>
@@ -1660,24 +1717,30 @@ export default function ChatInterface() {
       <div
         className="relative border-t backdrop-blur-xl shadow-2xl scale-locked-footer"
         style={{
-          padding: isVirtualMobileLayout ? '20px 16px max(24px, env(safe-area-inset-bottom, 24px))' : '16px 16px 20px 16px',
+          paddingTop: isVirtualMobileLayout ? '20px' : '16px',
+          paddingRight: '16px',
+          paddingLeft: '16px',
+          paddingBottom: isVirtualMobileLayout ? 'max(60px, env(safe-area-inset-bottom, 60px))' : '48px',
           position: 'relative',
           zIndex: 100,
           width: '100%',
-          minHeight: isVirtualMobileLayout ? '160px' : '140px', // Increased for mobile
-          maxHeight: isVirtualMobileLayout ? 'min(55vh, 500px)' : 'min(50vh, 450px)', // More space for mobile
+          minHeight: isVirtualMobileLayout ? '160px' : '140px',
+          maxHeight: isVirtualMobileLayout ? 'min(55vh, 500px)' : 'min(50vh, 450px)',
           backgroundColor: isDark ? 'rgba(13, 13, 13, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-          borderColor: 'var(--border-primary)',
-          overflow: 'hidden', // Prevent content from extending beyond footer
-          paddingBottom: isVirtualMobileLayout ? 'max(24px, env(safe-area-inset-bottom, 24px))' : '20px' // Safe area for mobile
+          borderTopColor: 'var(--border-primary)',
+          borderRightColor: 'var(--border-primary)',
+          borderBottomColor: 'var(--border-primary)', 
+          borderLeftColor: 'var(--border-primary)',
+          overflow: 'hidden'
         }}
       >
         <div className="absolute inset-0" style={{ background: isDark ? 'linear-gradient(to top, rgba(13, 13, 13, 0.2), transparent)' : 'linear-gradient(to top, rgba(59, 130, 246, 0.08), transparent)' }}></div>
-        <div className="relative max-w-6xl mx-auto space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent" style={{ maxHeight: 'min(35vh, 280px)' }}>
+        <div className="relative max-w-6xl mx-auto space-y-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent px-4 pt-4 pb-12" style={{ maxHeight: 'min(35vh, 280px)' }}>
 
 
-          {/* Current Input/Transcription Area */}
+          {/* Current Input/Transcription Area - Split Layout */}
           <div className="flex flex-col sm:flex-row items-start" style={{ gap: '12px' }}>
+            {/* Voice Input Section - Left Side */}
             <div data-onboarding="voice-input" className="voice-input-wrapper w-full sm:w-auto flex-shrink-0">
               <VoiceInput
                 onTranscript={handleVoiceTranscript}
@@ -1688,24 +1751,52 @@ export default function ChatInterface() {
               />
             </div>
 
+            {/* Text Input Section - Right Side */}
             <form data-onboarding="message-input" onSubmit={handleSubmit} className="flex-1 flex" style={{ gap: '10px' }}>
               <div className="flex-1 relative">
-                {/* Current Transcription Display */}
+                {/* Current Transcription Display - Enhanced */}
                 {currentTranscript && (
                   <div
-                    className="mb-3 p-2.5 rounded-lg border animate-pulse"
+                    className="mb-4 p-4 rounded-lg border-2 animate-pulse shadow-md"
                     style={{
                       backgroundColor: 'var(--bg-tertiary)',
-                      borderColor: 'var(--border-primary)',
+                      borderColor: 'var(--accent-primary)',
                       color: 'var(--text-secondary)',
-                      maxHeight: '100px',
+                      maxHeight: '120px',
                       overflow: 'hidden'
                     }}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-green-500 text-xs font-medium">🎙️ Current Transcription:</span>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-green-500 text-sm font-semibold">🎙️ Current Transcription:</span>
                     </div>
-                    <div className="text-sm italic overflow-y-auto" style={{ maxHeight: '60px' }}>&quot;{currentTranscript}&quot;</div>
+                    <div className="text-sm italic overflow-y-auto font-medium" style={{ maxHeight: '80px' }}>&quot;{currentTranscript}&quot;</div>
+                  </div>
+                )}
+                
+                {/* Streaming State Debug Indicator - Improved Visibility */}
+                {isStreaming && (
+                  <div
+                    className="mb-4 p-3 rounded-lg border-2 flex items-center justify-between shadow-lg"
+                    style={{
+                      backgroundColor: 'var(--bg-warning)',
+                      borderColor: 'var(--border-warning)',
+                      color: 'var(--text-warning)'
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold">⚠️ Streaming Active</span>
+                      <span className="text-sm opacity-75">Voice input blocked</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        console.log('Manual reset of streaming state triggered');
+                        resetStreamingState();
+                      }}
+                      className="text-sm px-3 py-2 rounded-lg hover:bg-opacity-20 hover:bg-black transition-colors font-medium"
+                      style={{ border: '2px solid currentColor' }}
+                    >
+                      Reset
+                    </button>
                   </div>
                 )}
 
@@ -1959,18 +2050,29 @@ export default function ChatInterface() {
           onClick={() => setIsSidebarOpen(true)}
           className="fixed transition-all duration-300 ease-in-out transform hover:scale-110 hover:shadow-lg"
           style={{
-          left: '0px', // Always at left edge when collapsed
+          left: '0px',
           top: '50%',
           transform: 'translateY(-50%)',
-          padding: '12px 8px',
+          paddingTop: '12px',
+          paddingRight: '8px',
+          paddingBottom: '12px', 
+          paddingLeft: '8px',
           backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          border: '2px solid #10b981', // Green when closed
-          zIndex: 9999, // Very high to ensure it's above all content
-          borderLeft: 'none', // No left border - attached to edge
+          borderTopWidth: '2px',
+          borderTopStyle: 'solid',
+          borderTopColor: '#10b981',
+          borderRightWidth: '2px', 
+          borderRightStyle: 'solid',
+          borderRightColor: '#10b981',
+          borderBottomWidth: '2px',
+          borderBottomStyle: 'solid',
+          borderBottomColor: '#10b981',
+          borderLeftWidth: '0px',
+          zIndex: 9999,
           borderTopRightRadius: '12px',
           borderBottomRightRadius: '12px',
-          borderTopLeftRadius: '0px', // Square left edge
-          borderBottomLeftRadius: '0px', // Square left edge
+          borderTopLeftRadius: '0px',
+          borderBottomLeftRadius: '0px',
           boxShadow: 'var(--shadow-xl)',
           backdropFilter: 'blur(12px)',
           color: 'var(--accent-primary)',
