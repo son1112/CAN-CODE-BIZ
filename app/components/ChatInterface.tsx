@@ -349,21 +349,15 @@ export default function ChatInterface() {
 
   // Debug logging removed - session loading issue resolved
 
-  // 🔍 AUTO-LOAD SESSION FROM URL PARAMETER
+  // Auto-load session from URL parameter
   useEffect(() => {
     const sessionParam = searchParams?.get('session');
-
-    // Auto-load session from URL if:
-    // 1. There's a session parameter in URL
-    // 2. We don't already have a current session loaded
-    // 3. We're not currently loading a session
-    // 4. The URL session is different from current session
-    if (sessionParam && 
-        !isLoadingSession && 
-        (!currentSession || currentSession.sessionId !== sessionParam)) {
+    
+    // Only load if we have a session parameter and no current session
+    if (sessionParam && !currentSession && !isLoadingSession) {
       loadSession(sessionParam);
     }
-  }, [searchParams, currentSession?.sessionId, isLoadingSession]);
+  }, [searchParams, currentSession, isLoadingSession, loadSession]);
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
