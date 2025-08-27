@@ -45,3 +45,6 @@ next-env.d.ts
 
 # mini features - experimental tools not part of main project
 /mini-features/
+
+# Playwright MCP Screenshots  
+.playwright-mcp/
