@@ -32,6 +32,18 @@ export async function* streamClaudeResponse(
     try {
       const modelConfig = getModelConfig(currentModel);
 
+      // Add defensive check for modelConfig
+      if (!modelConfig) {
+        throw new Error(`Invalid model configuration for: ${currentModel}`);
+      }
+
+      logger.info(`Using model configuration`, {
+        component: 'claude',
+        model: currentModel,
+        maxTokens: modelConfig.maxTokens,
+        attempt
+      });
+
       // Create stream with timeout wrapper
       const streamPromise = anthropic.messages.create({
         model: currentModel,
