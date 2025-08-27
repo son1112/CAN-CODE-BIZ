@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { Send, X, MoreHorizontal, RefreshCw, User, LogOut, Settings, Hash, Star, Archive, ArchiveRestore, History } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import VoiceInput from './VoiceInput';
 import Logo from './Logo';
 import FormattedMessage from './FormattedMessage';
@@ -233,7 +233,7 @@ export default function ChatInterface() {
     isMobileLayout: isVirtualMobileLayout,
     virtualizationConfig
   } = useMessageVirtualization(messages, {
-    enabled: true,
+    enabled: false, // DISABLED AGAIN - messages still disappearing with virtualization
     threshold: 20, // Enable for 20+ messages
     estimatedItemHeight: isMobile ? 160 : 200,
     maintainScrollPosition: true
@@ -246,19 +246,9 @@ export default function ChatInterface() {
   const { isDropdownOpen } = useDropdown();
   const { shouldAIRespond, isInConversation, startConversation, endConversation } = useConversationManager();
   const { isDark } = useTheme();
-  
-  // 🔍 DEBUG: Log currentSession state on every render
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 ChatInterface render - currentSession state:', {
-      hasCurrentSession: !!currentSession,
-      currentSessionId,
-      sessionIdFromCurrentSession: currentSession?.sessionId,
-      currentSessionKeys: currentSession ? Object.keys(currentSession) : 'null',
-      messagesLength: messages.length
-    });
-  }
   const { data: authSession } = useAuthSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Helper function to format session names into readable titles
   const formatSessionTitle = (sessionName: string) => {
@@ -331,9 +321,11 @@ export default function ChatInterface() {
 
   // Filter messages based on active tag filter and archive status (optimized)
   const filteredMessages = useMemo(() => {
-    // Use session messages if available and streaming messages if not
-    // This ensures we show session content when loaded from URL
-    const sourceMessages = messages.length > 0 ? messages : (currentSession?.messages || []);
+    // Prioritize session messages when we have a current session (important for URL-based session loading)
+    // Fall back to streaming messages for new conversations
+    const sourceMessages = (currentSession?.messages && currentSession.messages.length > 0) 
+      ? currentSession.messages 
+      : messages;
     let filtered = sourceMessages;
 
     // Filter by tags first
@@ -352,6 +344,26 @@ export default function ChatInterface() {
 
     return filtered;
   }, [messages, currentSession?.messages, activeTagFilter, archivedMessages, showArchivedMessages]);
+
+  // Debug logging removed - session loading issue resolved
+
+  // Debug logging removed - session loading issue resolved
+
+  // 🔍 AUTO-LOAD SESSION FROM URL PARAMETER
+  useEffect(() => {
+    const sessionParam = searchParams?.get('session');
+
+    // Auto-load session from URL if:
+    // 1. There's a session parameter in URL
+    // 2. We don't already have a current session loaded
+    // 3. We're not currently loading a session
+    // 4. The URL session is different from current session
+    if (sessionParam && 
+        !isLoadingSession && 
+        (!currentSession || currentSession.sessionId !== sessionParam)) {
+      loadSession(sessionParam);
+    }
+  }, [searchParams, currentSession?.sessionId, isLoadingSession]);
 
   // Get text size class based on current setting
   const getTextSizeClass = () => {
@@ -795,17 +807,7 @@ export default function ChatInterface() {
     const reversedIndex = filteredMessages.length - 1 - index;
     const isCurrentlyStreaming = isStreaming && message.role === 'assistant' && reversedIndex === 0;
 
-    // 🔍 CRITICAL DEBUG: Log what we're actually passing to MessageItem
-    if (process.env.NODE_ENV === 'development' && message.id === 'f99bdbf4-cb66-4201-93ca-9306e8708274') {
-      console.log('🔍 ChatInterface passing to MessageItem:', {
-        messageId: message.id,
-        currentSession: currentSession,
-        currentSessionId: currentSessionId,
-        sessionIdFromCurrentSession: currentSession?.sessionId,
-        currentSessionKeys: currentSession ? Object.keys(currentSession) : 'null',
-        currentSessionStringified: currentSession ? JSON.stringify(currentSession, null, 2) : 'null'
-      });
-    }
+    // Message rendering - debug logging removed
 
     return (
       <MessageItem

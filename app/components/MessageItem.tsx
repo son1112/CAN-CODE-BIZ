@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useEffect } from 'react';
 import { Star, MoreHorizontal, Hash, Copy, RotateCcw, Archive, ArchiveRestore } from 'lucide-react';
 import Image from 'next/image';
 import FormattedMessage from './FormattedMessage';
@@ -55,6 +55,39 @@ const MessageItem = memo(function MessageItem({
   const { isDark } = useTheme();
   const { isMobile, isTablet } = useMobileNavigation();
   const isMobileLayout = isMobile || isTablet;
+
+  // 🔍 CRITICAL DEBUG: Add lifecycle logging to track message mounting/unmounting
+  useEffect(() => {
+    console.log('💬 MessageItem MOUNTED:', {
+      messageId: message.id,
+      role: message.role,
+      contentLength: message.content?.length || 0,
+      contentPreview: message.content?.substring(0, 50),
+      sessionId,
+      timestamp: new Date().toISOString()
+    });
+
+    return () => {
+      console.log('💬 MessageItem UNMOUNTING:', {
+        messageId: message.id,
+        role: message.role,
+        sessionId,
+        timestamp: new Date().toISOString()
+      });
+    };
+  }, [message.id, message.role, message.content, sessionId]);
+
+  // 🔍 CRITICAL DEBUG: Log when MessageItem props change
+  useEffect(() => {
+    console.log('💬 MessageItem PROPS CHANGED:', {
+      messageId: message.id,
+      role: message.role,
+      isCollapsed: collapsedMessages.has(message.id),
+      sessionId,
+      hasSessionId: !!sessionId,
+      timestamp: new Date().toISOString()
+    });
+  }, [message.id, message.role, collapsedMessages, sessionId]);
 
   // Memoize expensive calculations
   const isCollapsed = useMemo(() => collapsedMessages.has(message.id), [collapsedMessages, message.id]);
