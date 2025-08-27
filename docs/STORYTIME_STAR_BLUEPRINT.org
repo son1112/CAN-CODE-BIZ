@@ -1,0 +1,1272 @@
+#+TITLE: StoryTimeStar Blueprint - Building a Domain-Specific Voice AI Application
+#+AUTHOR: Claude Code Session
+#+DATE: 2025-08-27
+#+OPTIONS: toc:3 num:t H:3 ^:nil
+
+* Executive Summary
+
+This document provides a comprehensive blueprint for building StoryTimeStar, a
+voice-enabled AI storytelling application based on the Rubber Ducky Live
+architecture. The document is designed to guide a new Claude Code session
+through implementing a domain-specific variant that focuses on interactive
+storytelling rather than general conversation.
+
+Key differences from Rubber Ducky Live:
+- Controlled set of storyteller agents instead of general AI assistants
+- Story-focused conversation flow and context management
+- Child-safe content filtering and age-appropriate responses
+- Story progression tracking and chapter management
+- Narrative state preservation between sessions
+
+* Core Architecture Foundation
+
+** Technology Stack Requirements
+
+#+BEGIN_SRC javascript
+// package.json core dependencies
+{
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.59.0",      // Claude AI integration
+    "next": "15.4.6",                     // Framework
+    "react": "19.1.0",                    // UI library
+    "mongoose": "^8.17.1",                // MongoDB ODM
+    "assemblyai": "^4.15.0",              // Speech-to-text
+    "next-auth": "^5.0.0-beta.29",       // Authentication
+    "lucide-react": "^0.539.0",          // Icons
+    "tailwindcss": "^3.4.17"             // Styling
+  }
+}
+#+END_SRC
+
+** Essential Directory Structure
+
+#+BEGIN_SRC text
+storytime-star/
+├── app/
+│   ├── api/
+│   │   ├── chat/                # Streaming AI responses
+│   │   ├── stories/              # Story session management
+│   │   ├── storytellers/         # Agent management
+│   │   ├── speech-token/         # AssemblyAI tokens
+│   │   └── auth/                 # Authentication
+│   ├── components/
+│   │   ├── StoryInterface.tsx   # Main storytelling UI
+│   │   ├── StorytellerSelector.tsx
+│   │   └── ChapterNavigation.tsx
+│   └── page.tsx
+├── lib/
+│   ├── claude.ts                # AI streaming
+│   ├── mongodb.ts                # Database connection
+│   ├── assemblyai.ts             # Speech recognition
+│   └── storytellers/             # Story agent definitions
+├── models/
+│   ├── Story.ts                  # Story session schema
+│   ├── Storyteller.ts            # Agent schema
+│   └── User.ts                   # User profiles
+├── hooks/
+│   ├── useStreamingStory.ts      # Story streaming
+│   └── useSpeechRecognition.ts   # Voice input
+└── contexts/
+    ├── StorytellerContext.tsx    # Agent state
+    └── StoryContext.tsx           # Story session state
+#+END_SRC
+
+* Phase 1: Foundation Setup (Days 1-2)
+
+** 1.1 Project Initialization
+
+#+BEGIN_SRC bash
+# Initialize Next.js project with TypeScript
+npx create-next-app@latest storytime-star --typescript --tailwind --app
+
+# Install core dependencies
+npm install @anthropic-ai/sdk mongoose assemblyai next-auth lucide-react
+
+# Create environment file
+cat > .env.local << 'EOF'
+MONGODB_URI=mongodb://localhost:27017/storytime-star
+MONGODB_DB=storytime-star
+ANTHROPIC_API_KEY=your_key_here
+ASSEMBLYAI_API_KEY=your_key_here
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=generate_with_openssl_rand_base64_32
+EOF
+#+END_SRC
+
+** 1.2 Database Schema Creation
+
+#+BEGIN_SRC typescript
+// models/Story.ts - Core story session model
+import mongoose, { Schema, Document } from 'mongoose';
+
+export interface StoryMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'narrator';
+  content: string;
+  timestamp: Date;
+  chapterNumber?: number;
+  isChapterStart?: boolean;
+  emotionalTone?: 'happy' | 'sad' | 'exciting' | 'scary' | 'funny';
+  storyElements?: {
+    characters?: string[];
+    setting?: string;
+    plotPoint?: string;
+  };
+}
+
+export interface StoryDocument extends Document {
+  storyId: string;
+  title: string;
+  genre: 'fantasy' | 'adventure' | 'mystery' | 'educational' | 'bedtime';
+  ageGroup: '3-5' | '6-8' | '9-12' | '13+';
+  messages: StoryMessage[];
+  currentChapter: number;
+  storyState: {
+    mainCharacter?: string;
+    currentSetting?: string;
+    plotProgress?: number; // 0-100
+    storyMood?: string;
+  };
+  storyteller: string;
+  createdBy: string;
+  isComplete: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const StorySchema = new Schema<StoryDocument>({
+  storyId: { type: String, required: true, unique: true },
+  title: { type: String, required: true },
+  genre: { type: String, enum: ['fantasy', 'adventure', 'mystery', 'educational', 'bedtime'], required: true },
+  ageGroup: { type: String, enum: ['3-5', '6-8', '9-12', '13+'], required: true },
+  messages: [{
+    id: String,
+    role: { type: String, enum: ['user', 'assistant', 'narrator'] },
+    content: String,
+    timestamp: { type: Date, default: Date.now },
+    chapterNumber: Number,
+    isChapterStart: Boolean,
+    emotionalTone: String,
+    storyElements: {
+      characters: [String],
+      setting: String,
+      plotPoint: String
+    }
+  }],
+  currentChapter: { type: Number, default: 1 },
+  storyState: {
+    mainCharacter: String,
+    currentSetting: String,
+    plotProgress: { type: Number, default: 0 },
+    storyMood: String
+  },
+  storyteller: { type: String, required: true },
+  createdBy: { type: String, required: true },
+  isComplete: { type: Boolean, default: false }
+}, { timestamps: true });
+
+export default mongoose.models.Story || mongoose.model<StoryDocument>('Story', StorySchema);
+#+END_SRC
+
+** 1.3 Storyteller Agent Configuration
+
+#+BEGIN_SRC typescript
+// lib/storytellers/storyteller-registry.ts
+export interface Storyteller {
+  id: string;
+  name: string;
+  personality: string;
+  specialties: string[];
+  ageGroups: string[];
+  systemPrompt: string;
+  voiceStyle: 'warm' | 'enthusiastic' | 'mysterious' | 'gentle' | 'playful';
+  avatar?: string;
+}
+
+export const STORYTELLERS: Record<string, Storyteller> = {
+  'luna-dreamweaver': {
+    id: 'luna-dreamweaver',
+    name: 'Luna the Dreamweaver',
+    personality: 'Gentle and soothing, perfect for bedtime stories',
+    specialties: ['bedtime', 'fantasy', 'calming tales'],
+    ageGroups: ['3-5', '6-8'],
+    voiceStyle: 'gentle',
+    systemPrompt: `You are Luna the Dreamweaver, a gentle storyteller who specializes in 
+    soothing bedtime stories. Your stories should be calming, with soft imagery and 
+    peaceful resolutions. Always maintain a warm, nurturing tone. Include gentle 
+    repetition and rhythmic language that helps children relax. Never include scary 
+    or overly exciting elements. End stories with peaceful, sleepy conclusions.`,
+    avatar: '/avatars/luna.png'
+  },
+  
+  'captain-adventure': {
+    id: 'captain-adventure',
+    name: 'Captain Adventure',
+    personality: 'Bold and exciting, loves action-packed tales',
+    specialties: ['adventure', 'mystery', 'exploration'],
+    ageGroups: ['6-8', '9-12'],
+    voiceStyle: 'enthusiastic',
+    systemPrompt: `You are Captain Adventure, an enthusiastic storyteller who creates 
+    exciting adventure stories. Your tales should be engaging and action-packed while 
+    remaining age-appropriate. Include problem-solving, teamwork, and courage themes. 
+    Always ensure positive outcomes and learning moments. Keep violence minimal and 
+    cartoon-like if necessary for the plot.`,
+    avatar: '/avatars/captain.png'
+  },
+  
+  'professor-wonder': {
+    id: 'professor-wonder',
+    name: 'Professor Wonder',
+    personality: 'Curious and educational, makes learning fun',
+    specialties: ['educational', 'science', 'history'],
+    ageGroups: ['6-8', '9-12', '13+'],
+    voiceStyle: 'warm',
+    systemPrompt: `You are Professor Wonder, an educational storyteller who weaves 
+    learning into engaging narratives. Your stories should teach real facts about 
+    science, history, or nature while maintaining an exciting plot. Always ensure 
+    factual accuracy. Make complex concepts simple and relatable. Include "Did you 
+    know?" moments naturally in the story flow.`,
+    avatar: '/avatars/professor.png'
+  }
+};
+
+// Helper function to select storyteller based on preferences
+export function selectStoryteller(genre: string, ageGroup: string): Storyteller {
+  const candidates = Object.values(STORYTELLERS).filter(st => 
+    st.specialties.some(s => genre.includes(s)) && 
+    st.ageGroups.includes(ageGroup)
+  );
+  
+  return candidates[0] || STORYTELLERS['luna-dreamweaver'];
+}
+#+END_SRC
+
+* Phase 2: Core Streaming Architecture (Days 3-4)
+
+** 2.1 Claude AI Integration with Story Context
+
+#+BEGIN_SRC typescript
+// lib/story-claude.ts
+import Anthropic from '@anthropic-ai/sdk';
+import { Storyteller } from './storytellers/storyteller-registry';
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+});
+
+export async function* streamStoryResponse(
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  storyteller: Storyteller,
+  storyContext: {
+    title: string;
+    genre: string;
+    ageGroup: string;
+    currentChapter: number;
+    storyState: any;
+  }
+) {
+  try {
+    // Build enhanced system prompt with story context
+    const systemPrompt = `
+${storyteller.systemPrompt}
+
+Current Story Context:
+- Title: ${storyContext.title}
+- Genre: ${storyContext.genre}
+- Target Age: ${storyContext.ageGroup}
+- Chapter: ${storyContext.currentChapter}
+- Main Character: ${storyContext.storyState.mainCharacter || 'Not yet established'}
+- Current Setting: ${storyContext.storyState.currentSetting || 'Not yet established'}
+- Story Progress: ${storyContext.storyState.plotProgress}%
+
+Guidelines:
+1. Maintain story continuity and consistency
+2. Keep content age-appropriate for ${storyContext.ageGroup} year olds
+3. Use simple, clear language appropriate for the age group
+4. If the child asks to continue, progress the story naturally
+5. If the child wants to change something, adapt creatively
+6. Always encourage imagination and participation
+7. Ask engaging questions to involve the child in storytelling
+8. Keep responses to 2-3 paragraphs for younger children, 3-4 for older
+`;
+
+    const stream = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      messages: messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      })),
+      system: systemPrompt,
+      max_tokens: 1024, // Shorter for story segments
+      stream: true,
+      temperature: 0.8, // More creative for storytelling
+    });
+
+    for await (const chunk of stream) {
+      if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+        yield { 
+          content: chunk.delta.text, 
+          isComplete: false,
+          storyteller: storyteller.id 
+        };
+      }
+    }
+
+    yield { content: '', isComplete: true, storyteller: storyteller.id };
+
+  } catch (error) {
+    console.error('Story streaming error:', error);
+    yield { 
+      content: '', 
+      isComplete: true, 
+      error: 'Story generation failed',
+      storyteller: storyteller.id 
+    };
+  }
+}
+#+END_SRC
+
+** 2.2 API Route for Story Streaming
+
+#+BEGIN_SRC typescript
+// app/api/story/route.ts
+import { NextRequest } from 'next/server';
+import { streamStoryResponse } from '@/lib/story-claude';
+import { STORYTELLERS } from '@/lib/storytellers/storyteller-registry';
+import connectDB from '@/lib/mongodb';
+import Story from '@/models/Story';
+
+export async function POST(request: NextRequest) {
+  try {
+    await connectDB();
+    
+    const body = await request.json();
+    const { messages, storyId, storytellerId, storyContext } = body;
+    
+    // Validate storyteller
+    const storyteller = STORYTELLERS[storytellerId];
+    if (!storyteller) {
+      return new Response('Invalid storyteller', { status: 400 });
+    }
+    
+    // Get or create story session
+    let story = await Story.findOne({ storyId });
+    if (!story) {
+      story = await Story.create({
+        storyId,
+        title: storyContext.title || 'Untitled Story',
+        genre: storyContext.genre,
+        ageGroup: storyContext.ageGroup,
+        storyteller: storytellerId,
+        createdBy: 'user-id', // From auth
+        messages: [],
+        storyState: {}
+      });
+    }
+    
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of streamStoryResponse(
+            messages, 
+            storyteller, 
+            storyContext
+          )) {
+            const data = `data: ${JSON.stringify(chunk)}\n\n`;
+            controller.enqueue(encoder.encode(data));
+          }
+        } catch (error) {
+          const errorData = `data: ${JSON.stringify({
+            error: 'Story generation failed',
+            isComplete: true
+          })}\n\n`;
+          controller.enqueue(encoder.encode(errorData));
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
+  } catch (error) {
+    return new Response('Internal server error', { status: 500 });
+  }
+}
+#+END_SRC
+
+* Phase 3: Speech Recognition Integration (Days 5-6)
+
+** 3.1 Speech Recognition Hook for Story Context
+
+#+BEGIN_SRC typescript
+// hooks/useStorySpeechRecognition.ts
+import { useState, useEffect, useCallback, useRef } from 'react';
+
+// Story-specific silence thresholds
+const STORY_SILENCE_THRESHOLD = 3000; // 3 seconds for natural story pauses
+const MIN_STORY_INPUT_LENGTH = 3; // Minimum words for story input
+
+export function useStorySpeechRecognition() {
+  const [transcript, setTranscript] = useState('');
+  const [interimTranscript, setInterimTranscript] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const wsRef = useRef<WebSocket | null>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Story-specific command detection
+  const detectStoryCommands = useCallback((text: string): {
+    isCommand: boolean;
+    commandType?: string;
+    processedText: string;
+  } => {
+    const lowerText = text.toLowerCase().trim();
+    
+    // Check for story control commands
+    const commands = [
+      { pattern: /^(next chapter|continue story|keep going)/i, type: 'continue' },
+      { pattern: /^(change|make|let's have|what if)/i, type: 'modify' },
+      { pattern: /^(tell me about|who is|what is)/i, type: 'question' },
+      { pattern: /^(again|repeat|say that again)/i, type: 'repeat' },
+      { pattern: /^(the end|finish|stop story)/i, type: 'end' }
+    ];
+    
+    for (const cmd of commands) {
+      if (cmd.pattern.test(lowerText)) {
+        return { 
+          isCommand: true, 
+          commandType: cmd.type, 
+          processedText: text 
+        };
+      }
+    }
+    
+    return { isCommand: false, processedText: text };
+  }, []);
+  
+  const startListening = useCallback(async () => {
+    if (isListening) return;
+    
+    try {
+      setError(null);
+      setTranscript('');
+      setInterimTranscript('');
+      
+      // Get microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+        }
+      });
+      
+      // Get AssemblyAI token
+      const tokenResponse = await fetch('/api/speech-token', {
+        method: 'POST',
+      });
+      
+      if (!tokenResponse.ok) {
+        throw new Error('Failed to get speech token');
+      }
+      
+      const { apiKey } = await tokenResponse.json();
+      
+      // Connect to AssemblyAI with content safety for children
+      const wsUrl = `wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&encoding=pcm_s16le&content_safety_detection=true&token=${apiKey}`;
+      
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+      
+      ws.onopen = () => {
+        setIsListening(true);
+        
+        // Setup audio streaming
+        const audioContext = new AudioContext({ sampleRate: 16000 });
+        const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+        
+        processor.onaudioprocess = (event) => {
+          if (ws.readyState === WebSocket.OPEN) {
+            const inputData = event.inputBuffer.getChannelData(0);
+            const pcm16Buffer = new Int16Array(inputData.length);
+            
+            for (let i = 0; i < inputData.length; i++) {
+              const sample = Math.max(-1, Math.min(1, inputData[i]));
+              pcm16Buffer[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+            }
+            
+            ws.send(pcm16Buffer.buffer);
+          }
+        };
+        
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+        
+        // Store for cleanup
+        (ws as any).audioContext = audioContext;
+        (ws as any).processor = processor;
+        (ws as any).stream = stream;
+      };
+      
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        // Handle content safety for children's content
+        if (data.content_safety) {
+          const safety = data.content_safety;
+          if (safety.profanity?.detected || safety.hate_speech?.detected) {
+            // Filter inappropriate content
+            console.warn('Inappropriate content detected, filtering...');
+            return;
+          }
+        }
+        
+        if (data.hasOwnProperty('transcript')) {
+          const transcript = data.transcript || '';
+          const isEndOfTurn = data.end_of_turn === true;
+          
+          if (!isEndOfTurn && transcript) {
+            setInterimTranscript(transcript);
+            
+            // Reset silence timer
+            if (silenceTimerRef.current) {
+              clearTimeout(silenceTimerRef.current);
+            }
+          } else if (isEndOfTurn && transcript) {
+            setTranscript(prev => {
+              const newTranscript = prev + transcript + ' ';
+              
+              // Auto-send for story continuation
+              const wordCount = newTranscript.trim().split(/\s+/).length;
+              if (wordCount >= MIN_STORY_INPUT_LENGTH) {
+                silenceTimerRef.current = setTimeout(() => {
+                  // Trigger auto-send for natural conversation
+                  if (wsRef.current) {
+                    const { processedText } = detectStoryCommands(newTranscript);
+                    // This would trigger the send in the parent component
+                    (ws as any).onAutoSend?.(processedText);
+                  }
+                }, STORY_SILENCE_THRESHOLD);
+              }
+              
+              return newTranscript;
+            });
+            setInterimTranscript('');
+          }
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setError('Connection error. Please try again.');
+        stopListening();
+      };
+      
+      ws.onclose = () => {
+        setIsListening(false);
+      };
+      
+    } catch (err: any) {
+      console.error('Failed to start speech recognition:', err);
+      setError(err.message || 'Failed to start listening');
+    }
+  }, [isListening, detectStoryCommands]);
+  
+  const stopListening = useCallback(() => {
+    if (wsRef.current) {
+      const ws = wsRef.current as any;
+      
+      // Cleanup audio
+      if (ws.audioContext) {
+        ws.audioContext.close();
+      }
+      if (ws.processor) {
+        ws.processor.disconnect();
+      }
+      if (ws.stream) {
+        ws.stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+      }
+      
+      ws.close();
+      wsRef.current = null;
+    }
+    
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+    }
+    
+    setIsListening(false);
+  }, []);
+  
+  return {
+    transcript,
+    interimTranscript,
+    isListening,
+    startListening,
+    stopListening,
+    error,
+    detectStoryCommands
+  };
+}
+#+END_SRC
+
+* Phase 4: User Interface Components (Days 7-8)
+
+** 4.1 Main Story Interface Component
+
+#+BEGIN_SRC typescript
+// app/components/StoryInterface.tsx
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useStorySpeechRecognition } from '@/hooks/useStorySpeechRecognition';
+import { useStreamingStory } from '@/hooks/useStreamingStory';
+import { StorytellerSelector } from './StorytellerSelector';
+import { ChapterNavigation } from './ChapterNavigation';
+import { MessageBubble } from './MessageBubble';
+import { Mic, MicOff, BookOpen, Sparkles } from 'lucide-react';
+
+export function StoryInterface() {
+  const [selectedStoryteller, setSelectedStoryteller] = useState('luna-dreamweaver');
+  const [storyStarted, setStoryStarted] = useState(false);
+  const [ageGroup, setAgeGroup] = useState<string>('6-8');
+  const [genre, setGenre] = useState<string>('adventure');
+  
+  const {
+    transcript,
+    interimTranscript,
+    isListening,
+    startListening,
+    stopListening,
+    error: speechError,
+    detectStoryCommands
+  } = useStorySpeechRecognition();
+  
+  const {
+    messages,
+    isStreaming,
+    sendMessage,
+    currentChapter,
+    storyTitle,
+    storyProgress
+  } = useStreamingStory(selectedStoryteller, { ageGroup, genre });
+  
+  // Auto-send transcript when user stops speaking
+  useEffect(() => {
+    if (transcript && !isListening && !isStreaming) {
+      const { processedText, commandType } = detectStoryCommands(transcript);
+      
+      // Add special handling for story commands
+      if (commandType === 'continue') {
+        sendMessage("Continue the story, what happens next?");
+      } else if (commandType === 'end') {
+        sendMessage("Let's bring the story to a nice ending.");
+      } else {
+        sendMessage(processedText);
+      }
+    }
+  }, [transcript, isListening, isStreaming, detectStoryCommands, sendMessage]);
+  
+  const handleStartStory = () => {
+    setStoryStarted(true);
+    sendMessage(`Start a ${genre} story for a ${ageGroup} year old child.`);
+  };
+  
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  }, [isListening, startListening, stopListening]);
+  
+  if (!storyStarted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-300 to-blue-400 p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-6xl font-bold text-white mb-4 flex items-center justify-center">
+              <Sparkles className="w-12 h-12 mr-4" />
+              StoryTime Star
+              <Sparkles className="w-12 h-12 ml-4" />
+            </h1>
+            <p className="text-xl text-white/90">
+              Choose your storyteller and let's create magical stories together!
+            </p>
+          </div>
+          
+          <div className="bg-white/95 rounded-3xl shadow-2xl p-8">
+            <StorytellerSelector
+              selected={selectedStoryteller}
+              onSelect={setSelectedStoryteller}
+            />
+            
+            <div className="mt-8 grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Age Group
+                </label>
+                <select
+                  value={ageGroup}
+                  onChange={(e) => setAgeGroup(e.target.value)}
+                  className="w-full p-3 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                >
+                  <option value="3-5">3-5 years</option>
+                  <option value="6-8">6-8 years</option>
+                  <option value="9-12">9-12 years</option>
+                  <option value="13+">13+ years</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Story Type
+                </label>
+                <select
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                  className="w-full p-3 border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                >
+                  <option value="adventure">Adventure</option>
+                  <option value="fantasy">Fantasy</option>
+                  <option value="mystery">Mystery</option>
+                  <option value="educational">Educational</option>
+                  <option value="bedtime">Bedtime</option>
+                </select>
+              </div>
+            </div>
+            
+            <button
+              onClick={handleStartStory}
+              className="mt-8 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xl font-bold py-4 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all transform hover:scale-105"
+            >
+              <BookOpen className="inline w-6 h-6 mr-2" />
+              Start My Story!
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-300 to-blue-400">
+      {/* Story header */}
+      <div className="bg-white/90 shadow-lg p-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-purple-800">
+              {storyTitle || 'Our Story'}
+            </h2>
+            <p className="text-sm text-gray-600">
+              Chapter {currentChapter} • {storyProgress}% complete
+            </p>
+          </div>
+          <ChapterNavigation
+            currentChapter={currentChapter}
+            totalChapters={5}
+          />
+        </div>
+      </div>
+      
+      {/* Messages area */}
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-white/95 rounded-3xl shadow-2xl p-6 mb-6 max-h-[60vh] overflow-y-auto">
+          {messages.length === 0 ? (
+            <div className="text-center py-12">
+              <Sparkles className="w-16 h-16 mx-auto text-purple-400 mb-4" />
+              <p className="text-xl text-gray-600">
+                Our story is about to begin...
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message, index) => (
+                <MessageBubble
+                  key={index}
+                  message={message}
+                  isUser={message.role === 'user'}
+                  storyteller={selectedStoryteller}
+                />
+              ))}
+              {isStreaming && (
+                <div className="flex items-center space-x-2 text-purple-600">
+                  <div className="animate-bounce">✨</div>
+                  <div className="animate-bounce animation-delay-100">✨</div>
+                  <div className="animate-bounce animation-delay-200">✨</div>
+                  <span className="text-sm">Creating magic...</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Voice input controls */}
+        <div className="bg-white/95 rounded-3xl shadow-2xl p-6">
+          {/* Transcript display */}
+          {(transcript || interimTranscript) && (
+            <div className="mb-4 p-4 bg-purple-50 rounded-xl">
+              <p className="text-gray-800">
+                {transcript}
+                <span className="text-gray-400">{interimTranscript}</span>
+              </p>
+            </div>
+          )}
+          
+          {/* Error display */}
+          {speechError && (
+            <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-xl">
+              {speechError}
+            </div>
+          )}
+          
+          {/* Voice button */}
+          <div className="flex justify-center">
+            <button
+              onClick={toggleListening}
+              disabled={isStreaming}
+              className={`
+                relative p-8 rounded-full transition-all transform
+                ${isListening
+                  ? 'bg-red-500 hover:bg-red-600 scale-110 animate-pulse'
+                  : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 hover:scale-105'
+                }
+                ${isStreaming ? 'opacity-50 cursor-not-allowed' : ''}
+                text-white shadow-xl
+              `}
+            >
+              {isListening ? (
+                <MicOff className="w-12 h-12" />
+              ) : (
+                <Mic className="w-12 h-12" />
+              )}
+              
+              {/* Listening indicator */}
+              {isListening && (
+                <span className="absolute inset-0 rounded-full animate-ping bg-red-400 opacity-30" />
+              )}
+            </button>
+          </div>
+          
+          <p className="text-center mt-4 text-gray-600">
+            {isListening 
+              ? "I'm listening... Tell me what happens next!" 
+              : "Press the button and tell me your ideas!"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+#+END_SRC
+
+* Phase 5: State Management & Context (Days 9-10)
+
+** 5.1 Storyteller Context Provider
+
+#+BEGIN_SRC typescript
+// contexts/StorytellerContext.tsx
+'use client';
+
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { STORYTELLERS, Storyteller } from '@/lib/storytellers/storyteller-registry';
+
+interface StorytellerContextType {
+  currentStoryteller: Storyteller;
+  selectStoryteller: (id: string) => void;
+  getStoryPrompt: (userInput: string, context: any) => string;
+  storytellers: typeof STORYTELLERS;
+}
+
+const StorytellerContext = createContext<StorytellerContextType | undefined>(undefined);
+
+export function StorytellerProvider({ children }: { children: React.ReactNode }) {
+  const [currentStorytellerId, setCurrentStorytellerId] = useState('luna-dreamweaver');
+  
+  const currentStoryteller = STORYTELLERS[currentStorytellerId];
+  
+  const selectStoryteller = useCallback((id: string) => {
+    if (STORYTELLERS[id]) {
+      setCurrentStorytellerId(id);
+    }
+  }, []);
+  
+  const getStoryPrompt = useCallback((userInput: string, context: any) => {
+    // Enhance user input with story-specific context
+    const enhancedPrompt = `
+${currentStoryteller.systemPrompt}
+
+User Input: "${userInput}"
+
+Story Context:
+- Current Chapter: ${context.chapter || 1}
+- Story Progress: ${context.progress || 0}%
+- Previous Events: ${context.previousEvents?.slice(-3).join(' ') || 'Story just beginning'}
+
+Please continue the story based on the user's input, maintaining consistency
+with previous events and the storytelling style.
+`;
+    
+    return enhancedPrompt;
+  }, [currentStoryteller]);
+  
+  const value = {
+    currentStoryteller,
+    selectStoryteller,
+    getStoryPrompt,
+    storytellers: STORYTELLERS
+  };
+  
+  return (
+    <StorytellerContext.Provider value={value}>
+      {children}
+    </StorytellerContext.Provider>
+  );
+}
+
+export function useStoryteller() {
+  const context = useContext(StorytellerContext);
+  if (context === undefined) {
+    throw new Error('useStoryteller must be used within a StorytellerProvider');
+  }
+  return context;
+}
+#+END_SRC
+
+** 5.2 Story Session Context
+
+#+BEGIN_SRC typescript
+// contexts/StoryContext.tsx
+'use client';
+
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+
+interface StoryMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'narrator';
+  content: string;
+  timestamp: Date;
+  chapterNumber?: number;
+  storytellerId?: string;
+}
+
+interface StoryState {
+  mainCharacter?: string;
+  currentSetting?: string;
+  plotProgress: number;
+  storyMood?: string;
+  previousEvents: string[];
+}
+
+interface StoryContextType {
+  storyId: string;
+  messages: StoryMessage[];
+  addMessage: (message: Omit<StoryMessage, 'id' | 'timestamp'>) => void;
+  currentChapter: number;
+  nextChapter: () => void;
+  storyState: StoryState;
+  updateStoryState: (updates: Partial<StoryState>) => void;
+  clearStory: () => void;
+  storyTitle: string;
+  setStoryTitle: (title: string) => void;
+}
+
+const StoryContext = createContext<StoryContextType | undefined>(undefined);
+
+export function StoryProvider({ children }: { children: React.ReactNode }) {
+  const [storyId] = useState(() => uuidv4());
+  const [messages, setMessages] = useState<StoryMessage[]>([]);
+  const [currentChapter, setCurrentChapter] = useState(1);
+  const [storyTitle, setStoryTitle] = useState('Our Magical Story');
+  const [storyState, setStoryState] = useState<StoryState>({
+    plotProgress: 0,
+    previousEvents: []
+  });
+  
+  const addMessage = useCallback((message: Omit<StoryMessage, 'id' | 'timestamp'>) => {
+    const newMessage: StoryMessage = {
+      ...message,
+      id: uuidv4(),
+      timestamp: new Date(),
+      chapterNumber: currentChapter
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
+    
+    // Update story progress
+    if (message.role === 'assistant') {
+      setStoryState(prev => ({
+        ...prev,
+        plotProgress: Math.min(prev.plotProgress + 5, 100),
+        previousEvents: [...prev.previousEvents.slice(-4), message.content.slice(0, 100)]
+      }));
+    }
+    
+    // Auto-save to localStorage
+    localStorage.setItem(`story-${storyId}`, JSON.stringify({
+      messages: [...messages, newMessage],
+      storyState,
+      currentChapter,
+      storyTitle
+    }));
+  }, [storyId, messages, storyState, currentChapter, storyTitle]);
+  
+  const nextChapter = useCallback(() => {
+    setCurrentChapter(prev => prev + 1);
+    addMessage({
+      role: 'narrator',
+      content: `Chapter ${currentChapter + 1} begins...`
+    });
+  }, [currentChapter, addMessage]);
+  
+  const updateStoryState = useCallback((updates: Partial<StoryState>) => {
+    setStoryState(prev => ({ ...prev, ...updates }));
+  }, []);
+  
+  const clearStory = useCallback(() => {
+    setMessages([]);
+    setCurrentChapter(1);
+    setStoryState({
+      plotProgress: 0,
+      previousEvents: []
+    });
+    localStorage.removeItem(`story-${storyId}`);
+  }, [storyId]);
+  
+  // Load saved story on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(`story-${storyId}`);
+    if (saved) {
+      const data = JSON.parse(saved);
+      setMessages(data.messages || []);
+      setStoryState(data.storyState || { plotProgress: 0, previousEvents: [] });
+      setCurrentChapter(data.currentChapter || 1);
+      setStoryTitle(data.storyTitle || 'Our Magical Story');
+    }
+  }, [storyId]);
+  
+  const value = {
+    storyId,
+    messages,
+    addMessage,
+    currentChapter,
+    nextChapter,
+    storyState,
+    updateStoryState,
+    clearStory,
+    storyTitle,
+    setStoryTitle
+  };
+  
+  return (
+    <StoryContext.Provider value={value}>
+      {children}
+    </StoryContext.Provider>
+  );
+}
+
+export function useStory() {
+  const context = useContext(StoryContext);
+  if (context === undefined) {
+    throw new Error('useStory must be used within a StoryProvider');
+  }
+  return context;
+}
+#+END_SRC
+
+* Phase 6: Testing & Deployment (Days 11-12)
+
+** 6.1 Essential Test Suite
+
+#+BEGIN_SRC typescript
+// __tests__/story-generation.test.ts
+import { streamStoryResponse } from '@/lib/story-claude';
+import { STORYTELLERS } from '@/lib/storytellers/storyteller-registry';
+
+describe('Story Generation', () => {
+  it('should generate age-appropriate content', async () => {
+    const messages = [
+      { role: 'user' as const, content: 'Tell me about a dragon' }
+    ];
+    
+    const storyteller = STORYTELLERS['luna-dreamweaver'];
+    const storyContext = {
+      title: 'Dragon Tale',
+      genre: 'fantasy',
+      ageGroup: '3-5',
+      currentChapter: 1,
+      storyState: { plotProgress: 0 }
+    };
+    
+    let fullResponse = '';
+    for await (const chunk of streamStoryResponse(messages, storyteller, storyContext)) {
+      fullResponse += chunk.content;
+    }
+    
+    // Check for age-appropriate language
+    expect(fullResponse).not.toContain('scary');
+    expect(fullResponse).not.toContain('violent');
+    expect(fullResponse.length).toBeGreaterThan(50);
+  });
+  
+  it('should maintain story continuity', async () => {
+    const messages = [
+      { role: 'user' as const, content: 'The hero is named Alex' },
+      { role: 'assistant' as const, content: 'Alex was a brave young adventurer...' },
+      { role: 'user' as const, content: 'What does Alex find?' }
+    ];
+    
+    const storyteller = STORYTELLERS['captain-adventure'];
+    const storyContext = {
+      title: 'Alex Adventure',
+      genre: 'adventure',
+      ageGroup: '6-8',
+      currentChapter: 1,
+      storyState: { 
+        mainCharacter: 'Alex',
+        plotProgress: 20 
+      }
+    };
+    
+    let fullResponse = '';
+    for await (const chunk of streamStoryResponse(messages, storyteller, storyContext)) {
+      fullResponse += chunk.content;
+    }
+    
+    // Should reference the established character
+    expect(fullResponse.toLowerCase()).toContain('alex');
+  });
+});
+#+END_SRC
+
+** 6.2 Deployment Configuration
+
+#+BEGIN_SRC yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017/storytime-star
+    depends_on:
+      - mongo
+    volumes:
+      - ./public/avatars:/app/public/avatars
+  
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  mongo-data:
+#+END_SRC
+
+#+BEGIN_SRC dockerfile
+# Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+CMD ["npm", "start"]
+#+END_SRC
+
+* Critical Implementation Notes
+
+** Security Considerations for Children's Application
+
+1. *Content Filtering*: Always enable AssemblyAI content safety detection
+2. *Age Verification*: Implement COPPA compliance for users under 13
+3. *Data Privacy*: Never store personal information about children
+4. *Parental Controls*: Add parent dashboard for story history review
+5. *Safe Defaults*: Default to most restrictive content settings
+
+** Performance Optimizations
+
+1. *Streaming Buffer*: Keep responses under 1024 tokens for smooth streaming
+2. *Context Window*: Limit story context to last 10 messages
+3. *Database Indexes*: Create indexes on storyId, createdBy, createdAt
+4. *Audio Compression*: Use 16kHz sampling rate for speech recognition
+5. *Caching Strategy*: Cache storyteller data and recent stories
+
+** Key Differences from Rubber Ducky Live
+
+| Feature | Rubber Ducky Live | StoryTimeStar |
+|---------|-------------------|---------------|
+| Agent System | General AI assistants | Fixed storyteller personas |
+| Content Safety | Optional | Mandatory for children |
+| Conversation Flow | Open-ended | Story-structured with chapters |
+| Context Management | Full conversation history | Story state tracking |
+| Voice Thresholds | 5 seconds silence | 3 seconds for natural pauses |
+| Export System | PDF/Word documents | Story books with illustrations |
+| Authentication | Google OAuth | Parent/child accounts |
+| UI Design | Professional/minimal | Colorful/playful |
+
+** Testing Checklist
+
+- [ ] Voice recognition works across devices
+- [ ] Content safety filters inappropriate language
+- [ ] Story continuity maintained across sessions
+- [ ] Age-appropriate content generation verified
+- [ ] Chapter progression functions correctly
+- [ ] Story state saves and restores properly
+- [ ] Storyteller personalities are distinct
+- [ ] Mobile responsiveness tested
+- [ ] Error handling for network interruptions
+- [ ] Performance under concurrent users
+
+** Environment Variables Template
+
+#+BEGIN_SRC bash
+# .env.local
+MONGODB_URI=mongodb://localhost:27017/storytime-star
+MONGODB_DB=storytime-star
+ANTHROPIC_API_KEY=sk-ant-...
+ASSEMBLYAI_API_KEY=...
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=<generate-with-openssl>
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Optional for production
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+#+END_SRC
+
+* Conclusion
+
+This blueprint provides a complete roadmap for building StoryTimeStar based on
+the proven Rubber Ducky Live architecture. The key to success is maintaining
+the robust streaming and voice recognition foundation while adapting the
+conversation flow and content generation for storytelling purposes.
+
+Focus on getting the core streaming working first, then layer on the
+story-specific features. The controlled agent system (storytellers) actually
+simplifies many aspects compared to the open-ended Rubber Ducky system.
+
+Remember: Start simple with one storyteller, get the full flow working, then
+expand to multiple personas and advanced features.
