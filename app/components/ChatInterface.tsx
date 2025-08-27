@@ -1082,7 +1082,9 @@ export default function ChatInterface() {
                       backgroundColor: activeTab === 'menu' ? '#ffffff' : 'transparent',
                       color: activeTab === 'menu' ? '#3b82f6' : 'var(--text-secondary)',
                       boxShadow: activeTab === 'menu' ? '0 2px 4px rgba(59, 130, 246, 0.15)' : 'none',
-                      borderLeft: activeTab === 'menu' ? '3px solid #3b82f6' : '3px solid transparent'
+                      borderLeftWidth: '3px',
+                      borderLeftStyle: 'solid',
+                      borderLeftColor: activeTab === 'menu' ? '#3b82f6' : 'transparent'
                     }}
                   >
                     <MoreHorizontal style={{ width: '16px', height: '16px' }} />
@@ -1097,7 +1099,9 @@ export default function ChatInterface() {
                       backgroundColor: activeTab === 'tags' ? '#ffffff' : 'transparent',
                       color: activeTab === 'tags' ? '#10b981' : 'var(--text-secondary)',
                       boxShadow: activeTab === 'tags' ? '0 2px 4px rgba(16, 185, 129, 0.15)' : 'none',
-                      borderLeft: activeTab === 'tags' ? '3px solid #10b981' : '3px solid transparent'
+                      borderLeftWidth: '3px',
+                      borderLeftStyle: 'solid', 
+                      borderLeftColor: activeTab === 'tags' ? '#10b981' : 'transparent'
                     }}
                   >
                     <Hash style={{ width: '16px', height: '16px' }} />
@@ -1558,8 +1562,18 @@ export default function ChatInterface() {
                           backgroundColor: isDark ? '#ffffff' : '#ffffff',
                           color: isDark ? '#1f2937' : '#1f2937',
                           boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
-                          border: '1px solid #e5e7eb',
-                          borderLeft: '4px solid #eab308'
+                          borderTopWidth: '1px',
+                          borderRightWidth: '1px',
+                          borderBottomWidth: '1px',
+                          borderLeftWidth: '4px',
+                          borderTopStyle: 'solid',
+                          borderRightStyle: 'solid',
+                          borderBottomStyle: 'solid',
+                          borderLeftStyle: 'solid',
+                          borderTopColor: '#e5e7eb',
+                          borderRightColor: '#e5e7eb',
+                          borderBottomColor: '#e5e7eb',
+                          borderLeftColor: '#eab308'
                         }}
                       >
                         {/* Thinking Title */}
@@ -1661,7 +1675,7 @@ export default function ChatInterface() {
 
       {/* Error display */}
       {error && (
-        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/50 rounded-xl text-red-800 shadow-sm shadow-red-500/10 backdrop-blur-sm" style={{ margin: '0 12px 6px 12px', padding: '8px', fontSize: '12px' }}>
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/50 rounded-xl text-red-800 shadow-sm shadow-red-500/10 backdrop-blur-sm" style={{ marginTop: '0px', marginRight: '12px', marginBottom: '6px', marginLeft: '12px', paddingTop: '8px', paddingRight: '8px', paddingBottom: '8px', paddingLeft: '8px', fontSize: '12px' }}>
           <div className="flex items-center" style={{ gap: '6px' }}>
             <div className="bg-red-500 rounded-full flex-shrink-0 animate-pulse shadow-sm" style={{ width: '6px', height: '6px' }} />
             <span className="font-medium">{error}</span>
@@ -1671,7 +1685,7 @@ export default function ChatInterface() {
 
       {/* Fallback message display */}
       {fallbackMessage && (
-        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/50 rounded-xl text-amber-800 shadow-sm shadow-amber-500/10 backdrop-blur-sm" style={{ margin: '0 12px 6px 12px', padding: '8px', fontSize: '12px' }}>
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/50 rounded-xl text-amber-800 shadow-sm shadow-amber-500/10 backdrop-blur-sm" style={{ marginTop: '0px', marginRight: '12px', marginBottom: '6px', marginLeft: '12px', paddingTop: '8px', paddingRight: '8px', paddingBottom: '8px', paddingLeft: '8px', fontSize: '12px' }}>
           <div className="flex items-center" style={{ gap: '6px' }}>
             <RefreshCw className="w-3 h-3 flex-shrink-0" />
             <span className="font-medium">{fallbackMessage}</span>
@@ -1793,7 +1807,20 @@ export default function ChatInterface() {
                         resetStreamingState();
                       }}
                       className="text-sm px-3 py-2 rounded-lg hover:bg-opacity-20 hover:bg-black transition-colors font-medium"
-                      style={{ border: '2px solid currentColor' }}
+                      style={{ 
+                        borderTopWidth: '2px',
+                        borderRightWidth: '2px', 
+                        borderBottomWidth: '2px',
+                        borderLeftWidth: '2px',
+                        borderTopStyle: 'solid',
+                        borderRightStyle: 'solid',
+                        borderBottomStyle: 'solid', 
+                        borderLeftStyle: 'solid',
+                        borderTopColor: 'currentColor',
+                        borderRightColor: 'currentColor',
+                        borderBottomColor: 'currentColor',
+                        borderLeftColor: 'currentColor'
+                      }}
                     >
                       Reset
                     </button>
@@ -1821,7 +1848,10 @@ export default function ChatInterface() {
                         : ''
                     } ${debouncedInputValue.trim() ? 'border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600' : 'border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500'} disabled:opacity-50`}
                     style={useMemo(() => ({
-                      padding: isVirtualMobileLayout ? '16px 18px' : '12px 16px',
+                      paddingTop: isVirtualMobileLayout ? '16px' : '12px',
+                      paddingRight: isVirtualMobileLayout ? '18px' : '16px',
+                      paddingBottom: isVirtualMobileLayout ? '16px' : '12px',
+                      paddingLeft: isVirtualMobileLayout ? '18px' : '16px',
                       fontSize: isVirtualMobileLayout ? '16px' : '14px', // Prevent iOS zoom
                       lineHeight: isVirtualMobileLayout ? '24px' : '20px',
                       minHeight: isVirtualMobileLayout ? '52px' : '44px',
@@ -1850,7 +1880,10 @@ export default function ChatInterface() {
                 disabled={!inputValue.trim() || isStreaming || isProcessingMessage}
                 className="relative bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 text-white rounded-xl hover:from-yellow-400 hover:via-amber-400 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center shadow-lg shadow-yellow-500/25 hover:shadow-xl hover:shadow-yellow-500/30 transform hover:scale-105 touch-target"
                 style={{
-                  padding: isVirtualMobileLayout ? '16px 20px' : '12px 16px',
+                  paddingTop: isVirtualMobileLayout ? '16px' : '12px',
+                  paddingRight: isVirtualMobileLayout ? '20px' : '16px',
+                  paddingBottom: isVirtualMobileLayout ? '16px' : '12px',
+                  paddingLeft: isVirtualMobileLayout ? '20px' : '16px',
                   minWidth: isVirtualMobileLayout ? '52px' : '44px',
                   minHeight: isVirtualMobileLayout ? '52px' : '44px',
                   alignSelf: 'flex-end' // Align button to bottom when textarea grows
@@ -1945,7 +1978,10 @@ export default function ChatInterface() {
               <div
                 className="flex items-center justify-between border-b"
                 style={{
-                  padding: '20px 24px',
+                  paddingTop: '20px',
+                  paddingRight: '24px',
+                  paddingBottom: '20px',
+                  paddingLeft: '24px',
                   borderColor: 'var(--border-primary)',
                   backgroundColor: isDark ? 'var(--bg-secondary)' : 'var(--bg-secondary)'
                 }}
