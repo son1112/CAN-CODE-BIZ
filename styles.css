@@ -1,5 +1,6 @@
 /* Modern Awwwards-Style Variables */
 :root {
+    /* Light Theme */
     --primary-white: #ffffff;
     --light-gray: #f8f9fa;
     --medium-gray: #e9ecef;
@@ -12,6 +13,8 @@
     --border-light: #dee2e6;
     --shadow-light: rgba(0, 0, 0, 0.04);
     --shadow-medium: rgba(0, 0, 0, 0.12);
+    
+    /* Spacing & Layout */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
@@ -21,6 +24,22 @@
     --spacing-lg: 2rem;
     --spacing-xl: 3rem;
     --spacing-2xl: 4rem;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --primary-white: #1a1a1a;
+    --light-gray: #2d2d2d;
+    --medium-gray: #404040;
+    --dark-gray: #cccccc;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --accent-orange: #ff7849;
+    --accent-purple: #8b5cf6;
+    --accent-green: #34d399;
+    --border-light: #404040;
+    --shadow-light: rgba(255, 255, 255, 0.04);
+    --shadow-medium: rgba(255, 255, 255, 0.12);
 }
 
 /* Reset and Base Styles */
@@ -43,6 +62,14 @@ body {
     font-size: clamp(16px, 1.125rem, 18px);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth transitions for theme switching */
+*,
+*::before,
+*::after {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Modern Container System */
@@ -237,6 +264,68 @@ p {
 
 .nav-menu a:active {
     transform: translateY(1px);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    background: var(--light-gray);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    width: 48px;
+    height: 28px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-left: var(--spacing-sm);
+}
+
+.theme-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--shadow-medium);
+    border-color: var(--accent-orange);
+}
+
+.theme-toggle:active {
+    transform: translateY(0);
+}
+
+.theme-icon {
+    position: absolute;
+    font-size: 14px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.light-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.dark-icon {
+    opacity: 0;
+    transform: rotate(180deg) scale(0.5);
+}
+
+/* Dark mode icon states */
+[data-theme="dark"] .light-icon {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0.5);
+}
+
+[data-theme="dark"] .dark-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+[data-theme="dark"] .theme-toggle {
+    background: var(--medium-gray);
+    border-color: var(--border-light);
 }
 
 /* Modern Hero Section */
@@ -1519,6 +1608,14 @@ p {
 @media (max-width: 768px) {
     .nav-menu {
         display: none;
+    }
+    
+    .nav-container {
+        justify-content: space-between;
+    }
+    
+    .theme-toggle {
+        margin-left: 0;
     }
     
     .hero {
