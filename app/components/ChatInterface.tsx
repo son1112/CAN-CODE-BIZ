@@ -411,8 +411,8 @@ export default function ChatInterface() {
     }
   }, [currentAgent]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToTop = () => {
+    chatContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const addWelcomeMessage = async () => {
@@ -485,7 +485,7 @@ export default function ChatInterface() {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    scrollToTop();
   }, [messages]);
 
   // Add keyboard shortcut for new session (Ctrl/Cmd + N)

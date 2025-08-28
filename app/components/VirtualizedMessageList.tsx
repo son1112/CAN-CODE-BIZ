@@ -182,34 +182,34 @@ export default function VirtualizedMessageList({
     });
   }, [virtualItems, measurementCache]);
 
-  // Scroll to bottom when new messages are added (maintain scroll position)
+  // Scroll to top when new messages are added (since messages are reversed - newest first)
   useEffect(() => {
     if (!maintainScrollPosition) return;
 
     const element = scrollElementRef.current;
     if (!element) return;
 
-    // Check if user is near bottom (within 100px)
-    const { scrollTop, scrollHeight, clientHeight } = element;
-    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
+    // Check if user is near top (within 100px) - since messages are reversed
+    const { scrollTop } = element;
+    const isNearTop = scrollTop <= 100;
 
-    if (isNearBottom) {
-      // Scroll to bottom after a short delay to allow for rendering
+    if (isNearTop) {
+      // Scroll to top after a short delay to allow for rendering
       setTimeout(() => {
         element.scrollTo({
-          top: element.scrollHeight,
+          top: 0,
           behavior: 'smooth'
         });
       }, 50);
     }
   }, [messages.length, maintainScrollPosition]);
 
-  // Auto-scroll to bottom on mobile for better UX
-  const scrollToBottom = useCallback(() => {
+  // Auto-scroll to top on mobile for better UX (messages are reversed)
+  const scrollToTop = useCallback(() => {
     const element = scrollElementRef.current;
     if (element) {
       element.scrollTo({
-        top: element.scrollHeight,
+        top: 0,
         behavior: 'smooth'
       });
     }
@@ -256,16 +256,16 @@ export default function VirtualizedMessageList({
         </div>
       </div>
 
-      {/* Mobile scroll to bottom button */}
+      {/* Mobile scroll to top button (for newest messages since reversed) */}
       {isMobileLayout && scrollTop > 500 && (
         <button
-          onClick={scrollToBottom}
+          onClick={scrollToTop}
           className="fixed bottom-20 right-4 z-20 w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center touch-target"
           style={{
             background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
             boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
           }}
-          aria-label="Scroll to bottom"
+          aria-label="Scroll to top for newest messages"
         >
           <svg
             width="20"
@@ -275,8 +275,8 @@ export default function VirtualizedMessageList({
             stroke="currentColor"
             strokeWidth="2"
           >
-            <path d="M7 13l3 3 3-3" />
-            <path d="M7 6l3 3 3-3" />
+            <path d="M17 11l-3-3-3 3" />
+            <path d="M17 18l-3-3-3 3" />
           </svg>
         </button>
       )}
