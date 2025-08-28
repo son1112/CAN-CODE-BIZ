@@ -126,10 +126,10 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
   const sessionStartTimeRef = useRef<number>(Date.now());
 
   // Professional conversation thresholds for interview-quality discussions
-  // Use user preference for silence threshold, default to 5 seconds if not available
-  const SILENCE_THRESHOLD = (preferences?.voice?.silenceThreshold || 5) * 1000; // Convert seconds to milliseconds
-  const MAX_ACCUMULATION_TIME = 15000; // 15 seconds max before forced send
-  const MIN_TRANSCRIPT_LENGTH = 8; // Minimum words for professional conversations
+  // Use user preference for silence threshold, default to 2 seconds for better responsiveness
+  const SILENCE_THRESHOLD = (preferences?.voice?.silenceThreshold || 2) * 1000; // Convert seconds to milliseconds
+  const MAX_ACCUMULATION_TIME = 10000; // 10 seconds max before forced send (more responsive)
+  const MIN_TRANSCRIPT_LENGTH = 3; // Minimum words for conversations (more permissive)
 
   // Quality analysis helper functions
   const analyzeAudioQuality = useCallback((confidence: number, noiseLevel: 'low' | 'medium' | 'high'): 'excellent' | 'good' | 'fair' | 'poor' => {
@@ -246,16 +246,18 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
       endOfTurnScore -= 25;
     }
 
-    // 4. Length considerations
-    if (wordCount >= 15) {
-      endOfTurnScore += 15; // Substantial content is likely complete
-    } else if (wordCount < 5) {
-      endOfTurnScore -= 15; // Too short, likely incomplete
+    // 4. Length considerations (more permissive)
+    if (wordCount >= 8) {
+      endOfTurnScore += 15; // Good content length is likely complete
+    } else if (wordCount >= 5) {
+      endOfTurnScore += 5; // Medium length gets some points
+    } else if (wordCount < 3) {
+      endOfTurnScore -= 10; // Very short, likely incomplete
     }
 
-    // 5. Question detection
-    if (/\?$/.test(trimmed) && wordCount >= 5) {
-      endOfTurnScore += 15;
+    // 5. Question detection (more responsive)
+    if (/\?$/.test(trimmed) && wordCount >= 3) {
+      endOfTurnScore += 20; // Questions should be sent faster
     }
 
     // 6. Natural conversation flow
@@ -277,12 +279,12 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
       silenceDuration,
       wordCount,
       endOfTurnScore: normalizedScore,
-      threshold: 60 // Consider end-of-turn if score >= 60
+      threshold: 45 // Consider end-of-turn if score >= 45
     });
 
     return {
       score: normalizedScore,
-      isEndOfTurn: normalizedScore >= 60,
+      isEndOfTurn: normalizedScore >= 45, // Lower threshold for more responsiveness 
       confidence: normalizedScore / 100,
       factors: {
         silenceScore,
@@ -440,16 +442,19 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
       /\b(thanks|thank you|that's all|done|finished|complete|exactly|right|correct|absolutely|definitely|certainly|perfect|excellent|great|okay|alright)$/i.test(trimmed)
     );
 
-    // Professional conversation requirements:
-    // 1. Very substantial content (15+ words) is likely complete
-    // 2. Good length with natural ending (10+ words)
-    // 3. Clear questions (8+ words ending with ?)
-    if (wordCount >= 15) {
-      return true; // Very substantial content
-    } else if (wordCount >= 10 && hasNaturalEnding) {
-      return true; // Good length with clear ending
+    // More responsive conversation requirements:
+    // 1. Substantial content (10+ words) is likely complete
+    // 2. Medium length with natural ending (6+ words)
+    // 3. Clear questions (3+ words ending with ?)
+    // 4. Common conversation starters/enders
+    if (wordCount >= 10) {
+      return true; // Substantial content
+    } else if (wordCount >= 6 && hasNaturalEnding) {
+      return true; // Medium length with clear ending
     } else if (wordCount >= MIN_TRANSCRIPT_LENGTH && /\?$/.test(trimmed)) {
       return true; // Clear questions
+    } else if (wordCount >= MIN_TRANSCRIPT_LENGTH && /\b(hello|hi|hey|thanks|okay|yes|no|sure)\b/i.test(trimmed)) {
+      return true; // Common conversation words
     }
 
     return false;
