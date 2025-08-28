@@ -1491,7 +1491,7 @@ export default function ChatInterface() {
               />
 
               {/* View Mode Toggle - Desktop Only */}
-              {!isMobileLayout && typeof window !== 'undefined' && window.innerWidth >= 1280 && filteredMessages.length > 0 && (
+              {!(isMobile || isTablet) && typeof window !== 'undefined' && window.innerWidth >= 1280 && filteredMessages.length > 0 && (
                 <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-center">
                     <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
@@ -1525,7 +1525,7 @@ export default function ChatInterface() {
               )}
 
               {/* Conditional Chat View Rendering */}
-              {chatViewMode === 'analysis' && !isMobileLayout ? (
+              {chatViewMode === 'analysis' && !(isMobile || isTablet) ? (
                 // Analysis View - 3 Column Layout
                 <div className="flex-1 overflow-hidden">
                   <AnalysisChatView 
