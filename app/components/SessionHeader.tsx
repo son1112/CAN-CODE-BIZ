@@ -70,10 +70,10 @@ export default function SessionHeader({
     <div
       className="sticky top-0 z-40 border-b backdrop-blur-md px-4 sm:px-6 py-4"
       style={{
-        backgroundColor: isDark ? 'rgba(13, 13, 13, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-        borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-        boxShadow: 'var(--shadow-lg)',
-        borderImage: 'linear-gradient(90deg, rgba(59, 130, 246, 0.3), rgba(234, 179, 8, 0.3), rgba(16, 185, 129, 0.3)) 1'
+        backgroundColor: isDark ? 'rgba(31, 41, 55, 0.98)' : 'rgba(248, 249, 250, 0.98)',
+        borderColor: 'var(--border-primary)',
+        boxShadow: 'var(--shadow-md)',
+        borderImage: 'linear-gradient(90deg, rgba(111, 66, 193, 0.3), rgba(255, 107, 53, 0.3), rgba(32, 201, 151, 0.3)) 1'
       }}
     >
       <div className="max-w-7xl mx-auto">

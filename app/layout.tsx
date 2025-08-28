@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Roboto, Roboto_Mono } from "next/font/google";
-// Cache bust: 2025-08-22-mobile-fix
+import { Inter_Tight, Roboto, Roboto_Mono } from "next/font/google";
+// Cache bust: 2025-08-28-professional-alignment
 import Script from "next/script";
 import { AgentProvider } from "@/contexts/AgentContext";
 import { DropdownProvider } from "@/contexts/DropdownContext";
@@ -14,6 +14,13 @@ import { SessionAgentSync } from "@/components/SessionAgentSync";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import "./globals.css";
 import "./styles/mobile-touch.css";
+
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  display: "swap",
+});
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -138,13 +145,12 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
 
-        {/* Optimized font loading - only preload essential fonts */}
+        {/* Professional Typography - Inter Tight Font Family */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         
-        {/* Preload critical font files with proper 'as' attribute */}
-        <link rel="preload" href="https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxKKTU1Kg.woff2" as="font" type="font/woff2" crossOrigin="" />
-        <link rel="preload" href="https://fonts.gstatic.com/s/robotomono/v23/L0xuDF4xlVMF-BfR8bXMIhJHg45mwgGEFl0_3vq_ROW4AJi8SJQt.woff2" as="font" type="font/woff2" crossOrigin="" />
+        {/* Preload Inter Tight font for professional appearance */}
+        <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
         {/* PWA Configuration */}
         <link rel="manifest" href="/manifest.json" />
@@ -218,7 +224,7 @@ export default function RootLayout({
         }} />
       </head>
       <body
-        className={`${roboto.variable} ${robotoMono.variable} antialiased no-text-scale`}
+        className={`${interTight.variable} ${roboto.variable} ${robotoMono.variable} antialiased no-text-scale`}
       >
         <SessionProvider>
           <ThemeProvider>

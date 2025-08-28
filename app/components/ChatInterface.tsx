@@ -949,7 +949,7 @@ export default function ChatInterface() {
       style={{
         background: isDark
           ? 'linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)'
-          : 'linear-gradient(135deg, #fafafa 0%, #f0f9ff 50%, #e0f2fe 100%)'
+          : 'linear-gradient(135deg, var(--light-gray) 0%, var(--primary-white) 50%, var(--medium-gray) 100%)'
       }}
       suppressHydrationWarning
     >
@@ -958,16 +958,16 @@ export default function ChatInterface() {
         className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl"
         style={{
           background: isDark
-            ? 'radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%)'
-            : 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)'
+            ? 'radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(111, 66, 193, 0.15) 0%, transparent 70%)'
         }}
       ></div>
       <div
         className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl"
         style={{
           background: isDark
-            ? 'radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%)'
-            : 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)'
+            ? 'radial-gradient(circle, rgba(52, 211, 153, 0.1) 0%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(32, 201, 151, 0.15) 0%, transparent 70%)'
         }}
       ></div>
 

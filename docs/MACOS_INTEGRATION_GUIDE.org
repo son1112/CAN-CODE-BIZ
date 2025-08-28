@@ -1,0 +1,1013 @@
+#+TITLE: macOS Menu Bar App Integration Guide for Rubber Ducky Live
+#+AUTHOR: Claude Code
+#+DATE: 2025-08-27
+#+DESCRIPTION: Comprehensive guide for integrating with Rubber Ducky Live API from a macOS menu bar application
+
+* Table of Contents :toc:
+- [[#overview][Overview]]
+- [[#getting-started-speech--text--ai-response][Getting Started: Speech → Text → AI Response]]
+- [[#authentication-setup][Authentication Setup]]
+- [[#progressive-integration-roadmap][Progressive Integration Roadmap]]
+- [[#complete-api-reference][Complete API Reference]]
+- [[#code-examples][Code Examples]]
+- [[#advanced-features][Advanced Features]]
+- [[#troubleshooting][Troubleshooting]]
+- [[#best-practices][Best Practices]]
+
+* Overview
+
+This guide provides a complete roadmap for integrating a macOS menu bar application with the Rubber Ducky Live API. The integration progresses from basic speech-to-text-to-AI functionality to advanced features like session management, export capabilities, and real-time streaming.
+
+** System Architecture
+The Rubber Ducky Live API is built on Next.js 15 with the following key components:
+- Claude 4 AI with smart fallback to Claude 3.5 Sonnet
+- AssemblyAI Real-time Speech Recognition
+- MongoDB session persistence  
+- Server-Sent Events (SSE) for streaming responses
+- Google OAuth authentication with demo mode support
+- Comprehensive export system (PDF/Word to Google Drive)
+
+** Target Integration
+Your macOS menu bar app will communicate with the running Rubber Ducky Live server (typically ~http://localhost:3000~) to provide a native desktop experience while leveraging the full web application backend.
+
+* Getting Started: Speech → Text → AI Response
+
+** Prerequisites
+- Ensure Rubber Ducky Live server is running locally (~npm run dev~)
+- Server should be accessible at ~http://localhost:3000~
+- Demo mode enabled for initial development (~NEXT_PUBLIC_DEMO_MODE=true~)
+
+** Basic Integration Flow
+1. *Speech Token Acquisition*: Get AssemblyAI token from ~/api/speech-token~
+2. *Speech Recognition*: Connect to AssemblyAI WebSocket for real-time transcription
+3. *AI Chat*: Send transcribed text to ~/api/chat~ for streaming AI responses
+4. *Session Management*: Use ~/api/sessions~ for conversation persistence
+
+** Swift Code Foundation
+#+BEGIN_SRC swift
+import Foundation
+import Network
+import AVFoundation
+
+class RubberDuckyClient: ObservableObject {
+    private let baseURL = "http://localhost:3000"
+    private var speechToken: String?
+    private var websocket: URLSessionWebSocketTask?
+    private let session = URLSession.shared
+    
+    @Published var isListening = false
+    @Published var transcript = ""
+    @Published var aiResponse = ""
+    @Published var isStreaming = false
+    
+    // MARK: - Authentication
+    func authenticate() async throws -> String {
+        let url = URL(string: "\(baseURL)/api/speech-token")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        let (data, _) = try await session.data(for: request)
+        let response = try JSONDecoder().decode(TokenResponse.self, from: data)
+        speechToken = response.apiKey
+        return response.apiKey
+    }
+}
+
+struct TokenResponse: Codable {
+    let apiKey: String
+}
+#+END_SRC
+
+* Authentication Setup
+
+** Demo Mode (Development)
+For initial development, use demo mode which bypasses Google OAuth:
+- Set ~NEXT_PUBLIC_DEMO_MODE=true~ in the server's ~.env.local~
+- All API calls will use a consistent demo user ID
+- No additional authentication headers required
+
+** Production Authentication
+For production deployment:
+1. Implement Google OAuth flow in your macOS app
+2. Obtain JWT token from NextAuth.js
+3. Include ~Authorization: Bearer <token>~ header in all API requests
+
+#+BEGIN_SRC swift
+// Production authentication helper
+func authenticateWithGoogle() async throws -> String {
+    // Implement Google OAuth flow
+    // Return JWT token for API requests
+}
+
+private func authorizedRequest(url: URL) -> URLRequest {
+    var request = URLRequest(url: url)
+    if let token = authToken {
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+    return request
+}
+#+END_SRC
+
+* Progressive Integration Roadmap
+
+** Phase 1: Basic Speech-to-AI (Week 1)
+*** Goals
+- Establish connection to Rubber Ducky Live API
+- Implement speech recognition via AssemblyAI
+- Send text to AI and receive streaming responses
+- Display results in menu bar popup
+
+*** Key Endpoints
+- ~POST /api/speech-token~ - Get AssemblyAI token
+- ~POST /api/chat~ - Send messages and receive streaming AI responses
+
+*** Implementation Steps
+1. Create basic menu bar app structure
+2. Implement speech token acquisition
+3. Set up AssemblyAI WebSocket connection
+4. Implement SSE client for AI streaming responses
+5. Create simple UI for speech input and AI output
+
+** Phase 2: Session Management (Week 2)
+*** Goals
+- Create and manage conversation sessions
+- Persist conversations across app launches
+- Implement basic session switching
+
+*** Key Endpoints
+- ~GET /api/sessions~ - List user sessions
+- ~POST /api/sessions~ - Create new session
+- ~PUT /api/sessions/:id~ - Update session
+- ~DELETE /api/sessions/:id~ - Archive session
+
+*** Implementation Features
+- Session creation and naming
+- Conversation history persistence
+- Session selection dropdown in menu bar
+- Auto-save functionality
+
+** Phase 3: Advanced Features (Week 3-4)
+*** Goals
+- Message management (copy, retry, star)
+- Export functionality (PDF/Word)
+- Real-time features (sentiment analysis, speaker detection)
+- Offline capabilities
+
+*** Key Endpoints
+- ~POST /api/stars~ - Star/unstar messages
+- ~POST /api/tags~ - Add tags to messages
+- ~POST /api/export/pdf~ - Generate and export PDFs
+- ~POST /api/export/word~ - Generate Word documents
+
+* Complete API Reference
+
+** Authentication Endpoints
+*** POST /api/speech-token
+*Purpose*: Obtain AssemblyAI API key for speech recognition
+*Authentication*: Required (demo mode bypasses)
+*Request*: Empty POST body
+*Response*:
+#+BEGIN_SRC json
+{
+  "apiKey": "your-assemblyai-token"
+}
+#+END_SRC
+
+** Chat Endpoints  
+*** POST /api/chat
+*Purpose*: Send message and receive streaming AI response
+*Authentication*: Required
+*Content-Type*: ~application/json~
+*Request Body*:
+#+BEGIN_SRC json
+{
+  "messages": [
+    {"role": "user", "content": "Hello, how can you help me?"}
+  ],
+  "systemPrompt": "You are a helpful AI assistant...",
+  "model": "claude-4"
+}
+#+END_SRC
+*Response*: Server-Sent Events stream with chunks:
+#+BEGIN_SRC json
+data: {"content": "Hello! I'm", "isComplete": false}
+data: {"content": " here to help", "isComplete": false}  
+data: {"content": "", "isComplete": true}
+#+END_SRC
+
+** Session Management Endpoints
+*** GET /api/sessions
+*Purpose*: List user sessions with pagination and filtering
+*Authentication*: Required
+*Query Parameters*:
+- ~page~ (number, default: 1)
+- ~limit~ (number, default: 20, max: 100)
+- ~search~ (string, optional)
+- ~tags~ (comma-separated, optional)
+- ~archived~ (boolean, default: false)
+
+*Response*:
+#+BEGIN_SRC json
+{
+  "sessions": [
+    {
+      "sessionId": "uuid-here",
+      "name": "My Chat Session",
+      "createdAt": "2025-08-27T...",
+      "lastAccessedAt": "2025-08-27T...",
+      "messageCount": 15,
+      "lastMessage": "Thank you for the help!",
+      "tags": ["development", "debugging"],
+      "avatar": {
+        "imageUrl": "/path/to/avatar.png",
+        "prompt": "Friendly AI assistant"
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "totalCount": 45,
+    "totalPages": 3,
+    "hasNext": true,
+    "hasPrev": false
+  }
+}
+#+END_SRC
+
+*** POST /api/sessions
+*Purpose*: Create new chat session
+*Authentication*: Required
+*Request Body*:
+#+BEGIN_SRC json
+{
+  "name": "Debug Session",
+  "tags": ["debugging", "swift"],
+  "conversationStarter": "I need help debugging my Swift code"
+}
+#+END_SRC
+*Response*:
+#+BEGIN_SRC json
+{
+  "success": true,
+  "session": {
+    "sessionId": "new-uuid-here",
+    "name": "Debug Session",
+    "createdAt": "2025-08-27T...",
+    "tags": ["debugging", "swift"],
+    "avatar": {
+      "imageUrl": "/path/to/avatar.png",
+      "prompt": "AI debugging companion"
+    }
+  }
+}
+#+END_SRC
+
+** Message Management Endpoints
+*** POST /api/stars
+*Purpose*: Star or unstar messages
+*Authentication*: Required
+*Request Body*:
+#+BEGIN_SRC json
+{
+  "messageId": "message-uuid",
+  "starred": true
+}
+#+END_SRC
+
+*** POST /api/tags
+*Purpose*: Add tags to messages
+*Authentication*: Required  
+*Request Body*:
+#+BEGIN_SRC json
+{
+  "messageId": "message-uuid",
+  "tags": ["important", "code-review"]
+}
+#+END_SRC
+
+** Export Endpoints
+*** POST /api/export/pdf
+*Purpose*: Generate PDF export of session/messages
+*Authentication*: Required
+*Request Body*:
+#+BEGIN_SRC json
+{
+  "sessionId": "session-uuid",
+  "messageIds": ["msg1", "msg2"], // optional, exports entire session if omitted
+  "includeMetadata": true,
+  "uploadToGoogleDrive": false // true to upload, false for local download
+}
+#+END_SRC
+
+*** POST /api/export/word
+*Purpose*: Generate Word document export
+*Authentication*: Required
+*Request Body*: Same as PDF export
+
+* Code Examples
+
+** Complete Speech Recognition Implementation
+#+BEGIN_SRC swift
+import Foundation
+import AVFoundation
+
+class SpeechRecognitionManager: ObservableObject {
+    private var audioEngine: AVAudioEngine
+    private var websocket: URLSessionWebSocketTask?
+    private let rubberDuckyClient: RubberDuckyClient
+    
+    @Published var transcript = ""
+    @Published var isListening = false
+    @Published var error: String?
+    
+    init(client: RubberDuckyClient) {
+        self.rubberDuckyClient = client
+        self.audioEngine = AVAudioEngine()
+        requestMicrophonePermission()
+    }
+    
+    private func requestMicrophonePermission() {
+        AVAudioSession.sharedInstance().requestRecordPermission { granted in
+            if !granted {
+                DispatchQueue.main.async {
+                    self.error = "Microphone permission required"
+                }
+            }
+        }
+    }
+    
+    func startListening() async {
+        guard let token = try? await rubberDuckyClient.getAuthToken() else { return }
+        
+        let wsURL = URL(string: "wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&encoding=pcm_s16le&token=\(token)")!
+        websocket = URLSession.shared.webSocketTask(with: wsURL)
+        websocket?.resume()
+        
+        startAudioCapture()
+        listenForMessages()
+        
+        DispatchQueue.main.async {
+            self.isListening = true
+        }
+    }
+    
+    private func startAudioCapture() {
+        let inputNode = audioEngine.inputNode
+        let inputFormat = inputNode.outputFormat(forBus: 0)
+        
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { buffer, _ in
+            self.sendAudioData(buffer: buffer)
+        }
+        
+        do {
+            try audioEngine.start()
+        } catch {
+            DispatchQueue.main.async {
+                self.error = "Failed to start audio engine: \(error)"
+            }
+        }
+    }
+    
+    private func sendAudioData(buffer: AVAudioPCMBuffer) {
+        guard let websocket = websocket,
+              let channelData = buffer.floatChannelData?[0] else { return }
+        
+        // Convert float32 to PCM16
+        let frameLength = Int(buffer.frameLength)
+        var pcm16Data = Data()
+        
+        for i in 0..<frameLength {
+            let sample = channelData[i]
+            let pcm16Value = Int16(sample * 32767)
+            pcm16Data.append(contentsOf: withUnsafeBytes(of: pcm16Value) { Data($0) })
+        }
+        
+        websocket.send(.data(pcm16Data)) { error in
+            if let error = error {
+                print("WebSocket send error: \(error)")
+            }
+        }
+    }
+    
+    private func listenForMessages() {
+        websocket?.receive { [weak self] result in
+            switch result {
+            case .success(let message):
+                switch message {
+                case .data(_):
+                    break
+                case .string(let text):
+                    if let data = text.data(using: .utf8),
+                       let response = try? JSONDecoder().decode(TranscriptResponse.self, from: data) {
+                        DispatchQueue.main.async {
+                            if response.endOfTurn {
+                                self?.transcript += response.transcript + " "
+                            }
+                        }
+                    }
+                @unknown default:
+                    break
+                }
+                self?.listenForMessages() // Continue listening
+                
+            case .failure(let error):
+                DispatchQueue.main.async {
+                    self?.error = "WebSocket error: \(error)"
+                }
+            }
+        }
+    }
+    
+    func stopListening() {
+        audioEngine.stop()
+        audioEngine.inputNode.removeTap(onBus: 0)
+        websocket?.cancel()
+        
+        DispatchQueue.main.async {
+            self.isListening = false
+        }
+    }
+}
+
+struct TranscriptResponse: Codable {
+    let transcript: String
+    let endOfTurn: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case transcript
+        case endOfTurn = "end_of_turn"
+    }
+}
+#+END_SRC
+
+** AI Chat Implementation with Streaming
+#+BEGIN_SRC swift
+class ChatManager: ObservableObject {
+    private let rubberDuckyClient: RubberDuckyClient
+    
+    @Published var messages: [ChatMessage] = []
+    @Published var isStreaming = false
+    @Published var currentResponse = ""
+    
+    func sendMessage(_ content: String) async {
+        let userMessage = ChatMessage(role: .user, content: content)
+        
+        DispatchQueue.main.async {
+            self.messages.append(userMessage)
+            self.isStreaming = true
+            self.currentResponse = ""
+        }
+        
+        do {
+            let url = URL(string: "\(rubberDuckyClient.baseURL)/api/chat")!
+            var request = rubberDuckyClient.authorizedRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let chatRequest = ChatRequest(
+                messages: messages.map { APIMessage(role: $0.role.rawValue, content: $0.content) },
+                systemPrompt: "You are a helpful AI assistant for a macOS menu bar app.",
+                model: "claude-4"
+            )
+            
+            request.httpBody = try JSONEncoder().encode(chatRequest)
+            
+            let (data, response) = try await URLSession.shared.bytes(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                throw ChatError.invalidResponse
+            }
+            
+            var accumulatedContent = ""
+            
+            for try await line in data.lines {
+                if line.hasPrefix("data: ") {
+                    let jsonString = String(line.dropFirst(6))
+                    if let data = jsonString.data(using: .utf8),
+                       let chunk = try? JSONDecoder().decode(ChatChunk.self, from: data) {
+                        
+                        accumulatedContent += chunk.content
+                        
+                        DispatchQueue.main.async {
+                            self.currentResponse = accumulatedContent
+                        }
+                        
+                        if chunk.isComplete {
+                            let aiMessage = ChatMessage(role: .assistant, content: accumulatedContent)
+                            DispatchQueue.main.async {
+                                self.messages.append(aiMessage)
+                                self.isStreaming = false
+                                self.currentResponse = ""
+                            }
+                            break
+                        }
+                    }
+                }
+            }
+            
+        } catch {
+            DispatchQueue.main.async {
+                self.isStreaming = false
+                // Handle error appropriately
+            }
+        }
+    }
+}
+
+struct ChatRequest: Codable {
+    let messages: [APIMessage]
+    let systemPrompt: String
+    let model: String
+}
+
+struct APIMessage: Codable {
+    let role: String
+    let content: String
+}
+
+struct ChatChunk: Codable {
+    let content: String
+    let isComplete: Bool
+}
+
+struct ChatMessage: Identifiable {
+    let id = UUID()
+    let role: Role
+    let content: String
+    
+    enum Role: String, CaseIterable {
+        case user, assistant
+    }
+}
+
+enum ChatError: Error {
+    case invalidResponse
+}
+#+END_SRC
+
+** Menu Bar UI Implementation
+#+BEGIN_SRC swift
+import SwiftUI
+
+struct MenuBarView: View {
+    @StateObject private var rubberDucky = RubberDuckyClient()
+    @StateObject private var speechManager: SpeechRecognitionManager
+    @StateObject private var chatManager: ChatManager
+    @State private var showingSettings = false
+    
+    init() {
+        let client = RubberDuckyClient()
+        self._rubberDucky = StateObject(wrappedValue: client)
+        self._speechManager = StateObject(wrappedValue: SpeechRecognitionManager(client: client))
+        self._chatManager = StateObject(wrappedValue: ChatManager(client: client))
+    }
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Header
+            HStack {
+                Image(systemName: "bubble.left.and.bubble.right")
+                    .foregroundColor(.blue)
+                Text("Rubber Ducky")
+                    .font(.headline)
+                Spacer()
+                Button(action: { showingSettings.toggle() }) {
+                    Image(systemName: "gear")
+                }
+            }
+            .padding(.horizontal)
+            
+            Divider()
+            
+            // Speech Controls
+            VStack(spacing: 8) {
+                HStack {
+                    Button(action: toggleListening) {
+                        Image(systemName: speechManager.isListening ? "mic.fill" : "mic")
+                            .foregroundColor(speechManager.isListening ? .red : .blue)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    Text(speechManager.isListening ? "Listening..." : "Click to speak")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                if !speechManager.transcript.isEmpty {
+                    ScrollView {
+                        Text(speechManager.transcript)
+                            .font(.caption)
+                            .padding(.horizontal)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 60)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
+                    
+                    Button("Send to AI") {
+                        Task {
+                            await chatManager.sendMessage(speechManager.transcript)
+                            speechManager.transcript = ""
+                        }
+                    }
+                    .disabled(speechManager.transcript.isEmpty)
+                }
+            }
+            .padding(.horizontal)
+            
+            // AI Response
+            if chatManager.isStreaming || !chatManager.currentResponse.isEmpty {
+                Divider()
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: "brain")
+                            .foregroundColor(.green)
+                        Text("AI Response")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                        if chatManager.isStreaming {
+                            ProgressView()
+                                .scaleEffect(0.5)
+                        }
+                    }
+                    
+                    ScrollView {
+                        Text(chatManager.currentResponse.isEmpty ? 
+                             chatManager.messages.last?.content ?? "" : 
+                             chatManager.currentResponse)
+                            .font(.caption)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 100)
+                }
+                .padding(.horizontal)
+            }
+            
+            // Error Display
+            if let error = speechManager.error {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.horizontal)
+            }
+        }
+        .frame(width: 300, height: 400)
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+        }
+    }
+    
+    private func toggleListening() {
+        Task {
+            if speechManager.isListening {
+                speechManager.stopListening()
+            } else {
+                await speechManager.startListening()
+            }
+        }
+    }
+}
+#+END_SRC
+
+* Advanced Features
+
+** Session Management Integration
+#+BEGIN_SRC swift
+class SessionManager: ObservableObject {
+    private let client: RubberDuckyClient
+    
+    @Published var sessions: [ChatSession] = []
+    @Published var currentSession: ChatSession?
+    @Published var isLoading = false
+    
+    init(client: RubberDuckyClient) {
+        self.client = client
+    }
+    
+    func loadSessions() async {
+        DispatchQueue.main.async { self.isLoading = true }
+        
+        do {
+            let url = URL(string: "\(client.baseURL)/api/sessions")!
+            let request = client.authorizedRequest(url: url)
+            
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let response = try JSONDecoder().decode(SessionsResponse.self, from: data)
+            
+            DispatchQueue.main.async {
+                self.sessions = response.sessions
+                self.isLoading = false
+            }
+        } catch {
+            DispatchQueue.main.async {
+                self.isLoading = false
+                // Handle error
+            }
+        }
+    }
+    
+    func createSession(name: String, tags: [String] = []) async -> ChatSession? {
+        do {
+            let url = URL(string: "\(client.baseURL)/api/sessions")!
+            var request = client.authorizedRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let createRequest = CreateSessionRequest(name: name, tags: tags)
+            request.httpBody = try JSONEncoder().encode(createRequest)
+            
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let response = try JSONDecoder().decode(CreateSessionResponse.self, from: data)
+            
+            if response.success {
+                await loadSessions() // Refresh list
+                return response.session
+            }
+            
+        } catch {
+            // Handle error
+        }
+        
+        return nil
+    }
+}
+
+struct ChatSession: Codable, Identifiable {
+    let id = UUID()
+    let sessionId: String
+    let name: String
+    let createdAt: String
+    let lastAccessedAt: String
+    let messageCount: Int
+    let lastMessage: String
+    let tags: [String]
+    let avatar: Avatar
+    
+    struct Avatar: Codable {
+        let imageUrl: String
+        let prompt: String
+    }
+}
+
+struct SessionsResponse: Codable {
+    let sessions: [ChatSession]
+    let pagination: Pagination
+    
+    struct Pagination: Codable {
+        let page: Int
+        let limit: Int
+        let totalCount: Int
+        let totalPages: Int
+        let hasNext: Bool
+        let hasPrev: Bool
+    }
+}
+
+struct CreateSessionRequest: Codable {
+    let name: String
+    let tags: [String]
+}
+
+struct CreateSessionResponse: Codable {
+    let success: Bool
+    let session: ChatSession
+}
+#+END_SRC
+
+** Export Functionality
+#+BEGIN_SRC swift
+class ExportManager: ObservableObject {
+    private let client: RubberDuckyClient
+    
+    @Published var isExporting = false
+    @Published var exportProgress: Double = 0
+    
+    init(client: RubberDuckyClient) {
+        self.client = client
+    }
+    
+    func exportSessionToPDF(sessionId: String, uploadToGoogleDrive: Bool = false) async -> URL? {
+        DispatchQueue.main.async {
+            self.isExporting = true
+            self.exportProgress = 0
+        }
+        
+        do {
+            let url = URL(string: "\(client.baseURL)/api/export/pdf")!
+            var request = client.authorizedRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let exportRequest = ExportRequest(
+                sessionId: sessionId,
+                includeMetadata: true,
+                uploadToGoogleDrive: uploadToGoogleDrive
+            )
+            
+            request.httpBody = try JSONEncoder().encode(exportRequest)
+            
+            // Monitor progress
+            let (data, response) = try await URLSession.shared.data(for: request) { sentBytes, totalBytes, _ in
+                DispatchQueue.main.async {
+                    self.exportProgress = Double(sentBytes) / Double(totalBytes)
+                }
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                return nil
+            }
+            
+            let exportResponse = try JSONDecoder().decode(ExportResponse.self, from: data)
+            
+            DispatchQueue.main.async {
+                self.isExporting = false
+                self.exportProgress = 1.0
+            }
+            
+            if uploadToGoogleDrive, let driveUrl = exportResponse.googleDriveUrl {
+                // Return Google Drive URL
+                return URL(string: driveUrl)
+            } else if let localUrl = exportResponse.downloadUrl {
+                // Download file locally
+                return try await downloadFile(from: localUrl)
+            }
+            
+        } catch {
+            DispatchQueue.main.async {
+                self.isExporting = false
+                self.exportProgress = 0
+            }
+        }
+        
+        return nil
+    }
+    
+    private func downloadFile(from urlString: String) async throws -> URL {
+        let url = URL(string: "\(client.baseURL)\(urlString)")!
+        let (localURL, _) = try await URLSession.shared.download(from: url)
+        
+        // Move to desired location
+        let documentsPath = FileManager.default.urls(for: .documentsDirectory, 
+                                                   in: .userDomainMask).first!
+        let destinationURL = documentsPath.appendingPathComponent("export.pdf")
+        
+        try FileManager.default.moveItem(at: localURL, to: destinationURL)
+        return destinationURL
+    }
+}
+
+struct ExportRequest: Codable {
+    let sessionId: String
+    let messageIds: [String]?
+    let includeMetadata: Bool
+    let uploadToGoogleDrive: Bool
+    
+    init(sessionId: String, messageIds: [String]? = nil, includeMetadata: Bool = true, uploadToGoogleDrive: Bool = false) {
+        self.sessionId = sessionId
+        self.messageIds = messageIds
+        self.includeMetadata = includeMetadata
+        self.uploadToGoogleDrive = uploadToGoogleDrive
+    }
+}
+
+struct ExportResponse: Codable {
+    let success: Bool
+    let downloadUrl: String?
+    let googleDriveUrl: String?
+    let fileSize: Int?
+    let fileName: String?
+}
+#+END_SRC
+
+* Troubleshooting
+
+** Common Issues and Solutions
+
+*** Connection Issues
+*Problem*: Cannot connect to ~http://localhost:3000~
+*Solutions*:
+- Verify Rubber Ducky Live server is running (~npm run dev~)
+- Check server logs for startup errors
+- Ensure port 3000 is not blocked by firewall
+- Try connecting via browser first to verify server accessibility
+
+*** Authentication Failures
+*Problem*: 401 Unauthorized responses
+*Solutions*:
+- Verify ~NEXT_PUBLIC_DEMO_MODE=true~ in server ~.env.local~
+- For production: ensure valid JWT token in Authorization header
+- Check server logs for authentication middleware errors
+
+*** Speech Recognition Issues  
+*Problem*: WebSocket connection to AssemblyAI fails
+*Solutions*:
+- Verify AssemblyAI API key is configured on server (~ASSEMBLYAI_API_KEY~)
+- Check speech token API response (~GET /api/speech-token~)
+- Ensure microphone permissions granted in macOS System Preferences
+- Test WebSocket connection manually with curl or browser dev tools
+
+*** Streaming Response Issues
+*Problem*: AI responses not streaming properly
+*Solutions*:
+- Verify SSE parsing logic handles ~data:~ prefixed lines correctly
+- Check for proper JSON parsing of streaming chunks
+- Ensure ~isComplete: true~ flag is handled to end streaming
+- Monitor network tab for proper Content-Type: ~text/event-stream~
+
+** Debugging Tools
+*** API Testing
+Use curl to test endpoints directly:
+#+BEGIN_SRC bash
+# Test speech token (demo mode)
+curl -X POST http://localhost:3000/api/speech-token
+
+# Test chat endpoint
+curl -X POST http://localhost:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Hello"}],"systemPrompt":"You are helpful"}'
+
+# Test sessions
+curl http://localhost:3000/api/sessions
+#+END_SRC
+
+*** Network Monitoring
+Enable network logging in your Swift app:
+#+BEGIN_SRC swift
+// Add to URLSession configuration
+let config = URLSessionConfiguration.default
+config.waitsForConnectivity = true
+config.timeoutIntervalForRequest = 30
+config.timeoutIntervalForResource = 60
+
+// Log all requests
+URLProtocol.registerClass(LoggingURLProtocol.self)
+config.protocolClasses = [LoggingURLProtocol.self]
+#+END_SRC
+
+* Best Practices
+
+** Performance Optimization
+- *Connection Pooling*: Reuse URLSession instances
+- *Background Processing*: Perform network requests on background queues
+- *Memory Management*: Release audio resources when not in use
+- *Caching*: Cache session data and user preferences locally
+- *Throttling*: Limit speech recognition updates to avoid UI flooding
+
+** Security Considerations
+- *Token Storage*: Use Keychain for storing authentication tokens
+- *Network Security*: Always use HTTPS in production
+- *API Key Protection*: Never embed API keys directly in app bundle
+- *User Data*: Respect user privacy and provide clear data usage policies
+
+** User Experience
+- *Offline Handling*: Gracefully handle network outages
+- *Error Messaging*: Provide clear, actionable error messages
+- *Visual Feedback*: Show loading states and progress indicators
+- *Keyboard Shortcuts*: Support system-wide hotkeys for quick access
+- *Settings Management*: Allow users to configure speech recognition preferences
+
+** Code Organization
+#+BEGIN_SRC swift
+// Recommended project structure
+RubberDuckyMenuBar/
+├── Models/
+│   ├── ChatModels.swift
+│   ├── SessionModels.swift
+│   └── APIModels.swift
+├── Services/
+│   ├── RubberDuckyClient.swift
+│   ├── SpeechRecognitionManager.swift
+│   ├── ChatManager.swift
+│   └── SessionManager.swift
+├── Views/
+│   ├── MenuBarView.swift
+│   ├── SettingsView.swift
+│   └── ChatHistoryView.swift
+├── Utilities/
+│   ├── Extensions.swift
+│   ├── Constants.swift
+│   └── Logger.swift
+└── App.swift
+#+END_SRC
+
+** Testing Strategy
+- *Unit Tests*: Test individual managers and API clients
+- *Integration Tests*: Test full speech-to-AI workflow
+- *UI Tests*: Automate menu bar interactions
+- *Network Tests*: Mock API responses for reliable testing
+- *Performance Tests*: Measure speech recognition latency and memory usage
+
+---
+
+*Note*: This guide assumes familiarity with Swift, SwiftUI, and macOS development. For additional support, refer to the Rubber Ducky Live server documentation and API logs for detailed error information.
+
+#+BEGIN_EXPORT html
+<div style="text-align: center; margin-top: 2em; padding: 1em; border-top: 1px solid #ccc;">
+<em>Generated by Claude Code for Rubber Ducky Live Integration</em><br>
+<small>Last updated: August 27, 2025</small>
+</div>
+#+END_EXPORT

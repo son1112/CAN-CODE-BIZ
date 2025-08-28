@@ -50,7 +50,7 @@ export default function MobileOptimizedHeader({
         style={{
           zIndex: 50,
           width: '100%',
-          backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backgroundColor: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(248, 249, 250, 0.95)',
           borderColor: 'var(--border-primary)',
           boxShadow: 'var(--shadow-lg)',
         }}
@@ -119,14 +119,14 @@ export default function MobileOptimizedHeader({
           style={{
             zIndex: 50,
             width: '100%',
-            backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            backgroundColor: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(248, 249, 250, 0.95)',
             borderColor: 'var(--border-primary)',
             boxShadow: 'var(--shadow-lg)',
-            borderImage: 'linear-gradient(90deg, #3b82f6, #eab308, #10b981) 1',
+            borderImage: 'linear-gradient(90deg, #6f42c1, #ff6b35, #20c997) 1',
             borderBottom: '2px solid transparent',
             backgroundImage: isDark
-              ? 'linear-gradient(rgba(13, 13, 13, 0.95), rgba(13, 13, 13, 0.95)), linear-gradient(90deg, #3b82f6, #eab308, #10b981)'
-              : 'linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)), linear-gradient(90deg, #3b82f6, #eab308, #10b981)',
+              ? 'linear-gradient(rgba(31, 41, 55, 0.95), rgba(31, 41, 55, 0.95)), linear-gradient(90deg, #6f42c1, #ff6b35, #20c997)'
+              : 'linear-gradient(rgba(248, 249, 250, 0.95), rgba(248, 249, 250, 0.95)), linear-gradient(90deg, #6f42c1, #ff6b35, #20c997)',
             backgroundClip: 'padding-box, border-box',
             backgroundOrigin: 'padding-box, border-box'
           }}
@@ -197,8 +197,8 @@ export default function MobileOptimizedHeader({
                 style={{
                   minWidth: '48px', // Larger touch target
                   minHeight: '48px',
-                  backgroundColor: isMenuOpen ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                  border: isMenuOpen ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent',
+                  backgroundColor: isMenuOpen ? 'rgba(111, 66, 193, 0.1)' : 'transparent',
+                  border: isMenuOpen ? '1px solid rgba(111, 66, 193, 0.3)' : '1px solid transparent',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -207,7 +207,7 @@ export default function MobileOptimizedHeader({
               >
                 <Menu
                   className="w-5 h-5"
-                  style={{ color: isMenuOpen ? '#3b82f6' : 'var(--text-secondary)' }}
+                  style={{ color: isMenuOpen ? '#6f42c1' : 'var(--text-secondary)' }}
                 />
               </button>
             </div>
@@ -240,14 +240,14 @@ export default function MobileOptimizedHeader({
           style={{
             zIndex: 50,
             width: '100%',
-            backgroundColor: isDark ? 'rgba(13, 13, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            backgroundColor: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(248, 249, 250, 0.95)',
             borderColor: 'var(--border-primary)',
             boxShadow: 'var(--shadow-lg)',
-            borderImage: 'linear-gradient(90deg, #3b82f6, #eab308, #10b981) 1',
+            borderImage: 'linear-gradient(90deg, #6f42c1, #ff6b35, #20c997) 1',
             borderBottom: '2px solid transparent',
             backgroundImage: isDark
-              ? 'linear-gradient(rgba(13, 13, 13, 0.95), rgba(13, 13, 13, 0.95)), linear-gradient(90deg, #3b82f6, #eab308, #10b981)'
-              : 'linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)), linear-gradient(90deg, #3b82f6, #eab308, #10b981)',
+              ? 'linear-gradient(rgba(31, 41, 55, 0.95), rgba(31, 41, 55, 0.95)), linear-gradient(90deg, #6f42c1, #ff6b35, #20c997)'
+              : 'linear-gradient(rgba(248, 249, 250, 0.95), rgba(248, 249, 250, 0.95)), linear-gradient(90deg, #6f42c1, #ff6b35, #20c997)',
             backgroundClip: 'padding-box, border-box',
             backgroundOrigin: 'padding-box, border-box'
           }}

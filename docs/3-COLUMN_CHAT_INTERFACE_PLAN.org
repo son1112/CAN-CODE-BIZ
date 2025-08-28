@@ -1,0 +1,183 @@
+#+TITLE: Enhanced Chat Interface with 3-Column Thread Analysis
+#+AUTHOR: Claude Code Planning Session
+#+DATE: 2025-08-28
+#+STARTUP: overview indent
+#+OPTIONS: toc:2 num:t
+
+* Vision
+Transform the chat experience by applying SessionOverview's thread detection and 
+3-column organization to the live chat interface, making conversations more 
+analytical and easier to follow.
+
+* Approach Options
+
+** Option 1: Toggle View Mode (Recommended) 🎯
+#+BEGIN_EXAMPLE
+[Linear Chat] [Analysis View] 
+#+END_EXAMPLE
+
+- Add view toggle in chat header (like SessionBrowser)
+- *Linear Mode*: Traditional chat flow
+- *Analysis Mode*: 3-column layout with real-time threads
+- Smooth transition between views
+- Desktop-only (≥1280px), mobile uses linear
+
+** Option 2: Split Screen Layout
+#+BEGIN_EXAMPLE
+[Traditional Chat]  |  [Thread Analysis Panel]
+#+END_EXAMPLE
+
+- Keep linear chat on left (70%)
+- Collapsible analysis panel on right (30%)
+- Real-time thread updates in panel
+- Both views simultaneously active
+
+** Option 3: Enhanced Message Grouping
+#+BEGIN_EXAMPLE
+[Thread 1: Blue border]
+  User: Question...
+  AI: Response...
+[Thread 2: Green border]
+  User: Follow-up...
+  AI: Response...
+#+END_EXAMPLE
+
+- Single column with visual thread indicators
+- Color-coded message groups
+- Collapsible thread sections
+- Visual connection lines
+
+* Technical Architecture
+
+** Real-Time Thread Detection
+#+BEGIN_SRC typescript
+const useRealTimeThreads = (messages: Message[]) => {
+  const [threads, setThreads] = useState<MessageThread[]>([]);
+  
+  useEffect(() => {
+    // Recalculate threads when messages change
+    const newThreads = detectThreads(messages);
+    setThreads(newThreads);
+  }, [messages]);
+  
+  return threads;
+};
+#+END_SRC
+
+** Component Structure
+#+BEGIN_EXAMPLE
+ChatInterface
+├── ChatHeader (with view toggle)
+├── LinearChatView (traditional)
+└── AnalysisChatView (3-column)
+    ├── UserMessagesColumn
+    ├── AIResponsesColumn
+    └── InsightsColumn
+#+END_EXAMPLE
+
+* User Experience Flow
+
+** Desktop (≥1280px)
+1. *Default*: Linear chat view
+2. *Toggle*: Click "Analysis" button in header
+3. *Transition*: Smooth animation to 3-column layout
+4. *Streaming*: New messages update threads in real-time
+5. *Input*: Message input integrates with analysis view
+
+** Mobile (<1280px)
+- Analysis view disabled
+- Shows linear chat only
+- Optional: Thread indicators in linear view
+
+* Visual Design Elements
+
+** Thread Visualization
+- *Color coding*: Each thread gets unique color
+- *Connection lines*: Visual flow between related messages
+- *Hover effects*: Highlight thread on message hover
+- *Thread badges*: Show message count per thread
+
+** 3-Column Layout
+#+BEGIN_EXAMPLE
+┌─────────────┬─────────────┬─────────────┐
+│ Your Qs (8) │ AI Answers  │ Key Insights│
+│             │    (8)      │             │
+├─────────────┼─────────────┼─────────────┤
+│ Thread 1 🔵 │ Thread 1 🔵 │ ⭐ Starred  │
+│ Thread 2 🟢 │ Thread 2 🟢 │ 🏷️ Tagged   │
+│ Thread 3 🟡 │ Thread 3 🟡 │ 📊 Stats    │
+└─────────────┴─────────────┴─────────────┘
+#+END_EXAMPLE
+
+* Implementation Plan
+
+** Phase 1: Foundation
+- [ ] Create ~AnalysisChatView~ component
+- [ ] Add view toggle to chat header
+- [ ] Implement real-time thread detection
+- [ ] Basic 3-column layout
+
+** Phase 2: Streaming Integration
+- [ ] Handle streaming responses in analysis view
+- [ ] Update threads as messages arrive
+- [ ] Maintain scroll sync across columns
+- [ ] Performance optimization
+
+** Phase 3: Enhanced UX
+- [ ] Visual thread connections
+- [ ] Hover effects and highlighting
+- [ ] Message input integration
+- [ ] Smooth view transitions
+
+** Phase 4: Polish
+- [ ] Mobile fallback behavior
+- [ ] Accessibility features
+- [ ] Performance monitoring
+- [ ] User testing feedback
+
+* Key Questions for Review
+
+1. *Primary Approach*: Which option resonates most? Toggle view, split screen, 
+   or enhanced grouping?
+
+2. *Message Input*: In analysis view, where should the input field go? Bottom 
+   overlay? Integrated into columns?
+
+3. *Thread Updates*: Should threads recalculate on every new message, or batch 
+   updates for performance?
+
+4. *Mobile Strategy*: Enhanced linear view with thread indicators, or keep mobile 
+   unchanged?
+
+5. *Transition*: Instant toggle or animated transition between views?
+
+* Technical Considerations
+
+** Performance
+- Thread detection algorithm optimization
+- Memory usage with large conversations
+- Real-time updates during streaming
+- Virtual scrolling for large thread lists
+
+** State Management
+- Thread state synchronization
+- View mode persistence
+- Message grouping cache
+- Scroll position memory
+
+** Accessibility
+- Keyboard navigation between columns
+- Screen reader support for thread structure
+- Focus management on view toggle
+- ARIA labels for visual connections
+
+* Next Steps
+1. Review this plan and select preferred approach
+2. Create detailed wireframes for chosen option
+3. Set up development environment for implementation
+4. Begin Phase 1 foundation work
+
+* References
+- [[file:../app/components/SessionOverview.tsx][SessionOverview Component]] (inspiration)
+- [[file:../app/components/SessionBrowser.tsx][SessionBrowser Component]] (view toggle pattern)
+- [[file:../app/components/ChatInterface.tsx][ChatInterface Component]] (integration target)
