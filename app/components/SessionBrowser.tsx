@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { History, Search, Calendar, MessageCircle, Archive, Trash2, X, Eye, Database, Check, MoreHorizontal, RefreshCw, Heart, FileText, Copy } from 'lucide-react';
+import { History, Search, Calendar, MessageCircle, Archive, Trash2, X, Eye, Database, Check, MoreHorizontal, RefreshCw, Heart, FileText, Copy, LayoutGrid, List } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
@@ -12,6 +12,7 @@ import { SessionsPullToRefresh } from './PullToRefresh';
 import { useRefreshManager } from '@/hooks/useRefreshManager';
 import { useAuth } from '@/hooks/useAuth';
 import { SessionShare } from './WebShare';
+import SessionOverview from './SessionOverview';
 
 interface SessionBrowserProps {
   isOpen: boolean;
@@ -27,6 +28,8 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [isProcessingOperation, setIsProcessingOperation] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'overview'>('list');
+  const [selectedSessionForOverview, setSelectedSessionForOverview] = useState<string | null>(null);
 
   // Enhanced filtering states
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -150,8 +153,16 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
   };
 
   const handleSessionSelect = (sessionId: string) => {
-    onSelectSession(sessionId);
-    onClose();
+    if (viewMode === 'overview') {
+      // In overview mode, load the session for overview display
+      setSelectedSessionForOverview(sessionId);
+      onSelectSession(sessionId); // This will load the session data
+      // Don't close the browser in overview mode
+    } else {
+      // In list mode, behave as normal
+      onSelectSession(sessionId);
+      onClose();
+    }
   };
 
   const handleDeleteSession = async (sessionId: string, permanent = false) => {
@@ -453,6 +464,42 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                 {isMobileLayout ? 'Sessions' : 'Session History'}
               </h2>
             </div>
+            
+            {/* View Mode Toggle - Desktop Only */}
+            {!isMobileLayout && typeof window !== 'undefined' && window.innerWidth >= 1280 && (
+              <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    viewMode === 'list' 
+                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm' 
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                  title="List View"
+                >
+                  <List className="w-4 h-4 inline mr-1" />
+                  List
+                </button>
+                <button
+                  onClick={() => {
+                    setViewMode('overview');
+                    if (currentSession?.sessionId) {
+                      setSelectedSessionForOverview(currentSession.sessionId);
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    viewMode === 'overview' 
+                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm' 
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                  title="Overview - 3 Column Layout"
+                >
+                  <LayoutGrid className="w-4 h-4 inline mr-1" />
+                  Overview
+                </button>
+              </div>
+            )}
+            
             <button
               onClick={onClose}
               className={`rounded-lg transition-colors touch-target ${
@@ -800,13 +847,29 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
             )}
           </div>
 
-          {/* Sessions List */}
-          <SessionsPullToRefresh
-            onRefresh={async () => {
-              await smartRefresh('sessions');
-            }}
-          >
-            <div className={`relative flex-1 ${
+          {/* Conditional rendering based on view mode */}
+          {viewMode === 'overview' && selectedSessionForOverview && currentSession?.messages ? (
+            /* Session Overview - 3 Column Layout */
+            <div className="flex-1 overflow-hidden">
+              <SessionOverview 
+                messages={currentSession.messages || []}
+                sessionId={selectedSessionForOverview}
+                onMessageClick={(message) => {
+                  console.log('Message clicked:', message);
+                }}
+                onTagsChange={(messageId, tags) => {
+                  console.log('Tags changed:', messageId, tags);
+                }}
+              />
+            </div>
+          ) : (
+            /* Sessions List */
+            <SessionsPullToRefresh
+              onRefresh={async () => {
+                await smartRefresh('sessions');
+              }}
+            >
+              <div className={`relative flex-1 ${
               isMobileLayout
                 ? 'px-4 pt-4 pb-24'
                 : 'px-6 pt-6 pb-32'
@@ -1101,6 +1164,7 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
             )}
             </div>
           </SessionsPullToRefresh>
+          )}
         </div>
       </div>
 
