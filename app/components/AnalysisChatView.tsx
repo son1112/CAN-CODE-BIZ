@@ -161,7 +161,7 @@ export default function AnalysisChatView({
         </div>
 
         {/* Message Content */}
-        <div className="text-sm leading-relaxed">
+        <div className="text-base leading-relaxed">
           {message.content.length > 150 
             ? `${message.content.substring(0, 150)}...`
             : message.content
@@ -319,7 +319,7 @@ export default function AnalysisChatView({
               {starredMessages.length > 0 ? (
                 <div className="space-y-2">
                   {starredMessages.slice(0, 3).map((message) => (
-                    <div key={message.id} className="text-sm p-2 rounded bg-gray-100 dark:bg-gray-800">
+                    <div key={message.id} className="text-base p-2 rounded bg-gray-100 dark:bg-gray-800">
                       {message.content.substring(0, 100)}...
                     </div>
                   ))}
@@ -338,7 +338,7 @@ export default function AnalysisChatView({
               {taggedMessages.length > 0 ? (
                 <div className="space-y-2">
                   {taggedMessages.slice(0, 3).map((message) => (
-                    <div key={message.id} className="text-sm">
+                    <div key={message.id} className="text-base">
                       <div className="p-2 rounded bg-gray-100 dark:bg-gray-800 mb-1">
                         {message.content.substring(0, 80)}...
                       </div>

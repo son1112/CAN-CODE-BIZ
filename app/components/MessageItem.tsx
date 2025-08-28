@@ -153,7 +153,7 @@ const MessageItem = memo(function MessageItem({
               <div className="space-y-3">
                 <FormattedMessage
                   content={message.content}
-                  textSizeClass={`${isMobileLayout ? 'text-sm' : 'text-base'} leading-relaxed`}
+                  textSizeClass={`${isMobileLayout ? 'text-base' : 'text-lg'} leading-relaxed`}
                 />
               </div>
 
@@ -406,7 +406,7 @@ const MessageItem = memo(function MessageItem({
             <div className="space-y-4">
               <FormattedMessage
                 content={message.content}
-                textSizeClass={`${isMobileLayout ? 'text-sm' : 'text-base'} leading-relaxed`}
+                textSizeClass={`${isMobileLayout ? 'text-base' : 'text-lg'} leading-relaxed`}
                 expandedView={!isCollapsed}
               />
             </div>
