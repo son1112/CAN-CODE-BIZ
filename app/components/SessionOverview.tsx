@@ -107,8 +107,12 @@ export default function SessionOverview({
           backgroundColor: isDark 
             ? (isInSelectedThread ? '#1e293b' : '#0f172a')
             : (isInSelectedThread ? '#f1f5f9' : '#ffffff'),
-          borderLeft: thread ? `4px solid ${thread.color}` : 'none',
-          borderColor: isInSelectedThread ? thread?.color : undefined
+          borderLeftWidth: thread ? '4px' : '0px',
+          borderLeftStyle: thread ? 'solid' : 'none',
+          borderLeftColor: thread ? thread.color : 'transparent',
+          borderTopColor: isInSelectedThread ? thread?.color : 'transparent',
+          borderRightColor: isInSelectedThread ? thread?.color : 'transparent',
+          borderBottomColor: isInSelectedThread ? thread?.color : 'transparent'
         }}
         onMouseEnter={() => setHoveredMessage(message.id)}
         onMouseLeave={() => setHoveredMessage(null)}
