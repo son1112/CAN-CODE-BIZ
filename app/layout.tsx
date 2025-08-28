@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter_Tight, Roboto, Roboto_Mono } from "next/font/google";
+import { Inter, Roboto, Roboto_Mono } from "next/font/google";
 // Cache bust: 2025-08-28-professional-alignment
 import Script from "next/script";
 import { AgentProvider } from "@/contexts/AgentContext";
@@ -15,8 +15,8 @@ import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import "./globals.css";
 import "./styles/mobile-touch.css";
 
-const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800", "900"],
   display: "swap",
@@ -145,12 +145,12 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
 
-        {/* Professional Typography - Inter Tight Font Family */}
+        {/* Professional Typography - Inter Sans-Serif Font Family */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         
-        {/* Preload Inter Tight font for professional appearance */}
-        <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        {/* Preload Inter font for professional sans-serif appearance */}
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
         {/* PWA Configuration */}
         <link rel="manifest" href="/manifest.json" />
@@ -224,7 +224,7 @@ export default function RootLayout({
         }} />
       </head>
       <body
-        className={`${interTight.variable} ${roboto.variable} ${robotoMono.variable} antialiased no-text-scale`}
+        className={`${inter.variable} ${roboto.variable} ${robotoMono.variable} antialiased no-text-scale`}
       >
         <SessionProvider>
           <ThemeProvider>
