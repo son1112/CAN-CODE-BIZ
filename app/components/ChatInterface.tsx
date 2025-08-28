@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { Send, X, MoreHorizontal, RefreshCw, User, LogOut, Settings, Hash, Star, Archive, ArchiveRestore, History } from 'lucide-react';
+import { Send, X, MoreHorizontal, RefreshCw, User, LogOut, Settings, Hash, Star, Archive, ArchiveRestore, History, MessageSquare, LayoutGrid } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -41,6 +41,7 @@ import { useConversationManager } from '@/hooks/useConversationManager';
 import { useAuth } from '@/hooks/useAuth';
 import { useSession } from '@/contexts/SessionContext';
 const SessionBrowser = dynamic(() => import('./SessionBrowser'), { ssr: false });
+const AnalysisChatView = dynamic(() => import('./AnalysisChatView'), { ssr: false });
 import { useSession as useAuthSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
 import { getAgentById, getRandomConversationStarter } from '@/lib/agents';
@@ -198,6 +199,7 @@ export default function ChatInterface() {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSessionBrowserOpen, setIsSessionBrowserOpen] = useState(false);
+  const [chatViewMode, setChatViewMode] = useState<'linear' | 'analysis'>('linear');
   const [showUserHistory, setShowUserHistory] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
@@ -1488,47 +1490,95 @@ export default function ChatInterface() {
                 }}
               />
 
-              <div
-                ref={chatContainerRef}
-                className={`flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-8 py-4 sm:pb-4 space-y-4 sm:space-y-6 w-full max-w-full ${
-                  (isMobile || isTablet) ? 'mobile-chat-container mobile-scroll-momentum mobile-scrollbar' : ''
-                }`}
-                style={{
-                  backgroundColor: '#f0f0f0',
-                  backgroundImage: `
-                    linear-gradient(90deg, #d1d5db 1px, transparent 1px),
-                    linear-gradient(#d1d5db 1px, transparent 1px)
-                  `,
-                  backgroundSize: '24px 24px',
-                  backgroundPosition: '0 0, 0 0'
-                }}
-              >
-
-              {shouldVirtualize ? (
-                <VirtualizedMessageList
-                  messages={[...filteredMessages].reverse()}
-                  renderMessage={renderMessage}
-                  className="space-y-4 sm:space-y-6"
-                  itemHeight={virtualizationConfig.itemHeight}
-                  overscan={getAdaptiveOverscan()}
-                  onScroll={(scrollTop) => {
-                    // Optional scroll tracking for analytics
-                  }}
-                />
-              ) : (
-                // Fallback to regular rendering for small lists
-                <div className="space-y-4 sm:space-y-6">
-                  {[...filteredMessages].reverse().map((message, index) => {
-                    const isCurrentlyStreaming = isStreaming && message.role === 'assistant' && index === 0;
-
-                    return renderMessage(message, index);
-                  })}
+              {/* View Mode Toggle - Desktop Only */}
+              {!isMobileLayout && typeof window !== 'undefined' && window.innerWidth >= 1280 && filteredMessages.length > 0 && (
+                <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-center">
+                    <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                      <button
+                        onClick={() => setChatViewMode('linear')}
+                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                          chatViewMode === 'linear' 
+                            ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm' 
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                        }`}
+                        title="Linear Chat View"
+                      >
+                        <MessageSquare className="w-4 h-4 inline mr-1" />
+                        Chat
+                      </button>
+                      <button
+                        onClick={() => setChatViewMode('analysis')}
+                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                          chatViewMode === 'analysis' 
+                            ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm' 
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                        }`}
+                        title="Analysis - 3 Column Layout"
+                      >
+                        <LayoutGrid className="w-4 h-4 inline mr-1" />
+                        Analysis
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
+              {/* Conditional Chat View Rendering */}
+              {chatViewMode === 'analysis' && !isMobileLayout ? (
+                // Analysis View - 3 Column Layout
+                <div className="flex-1 overflow-hidden">
+                  <AnalysisChatView 
+                    messages={filteredMessages}
+                    onMessageClick={(message) => {
+                      setSelectedMessage(message);
+                      setIsModalOpen(true);
+                    }}
+                    sessionId={currentSession?.sessionId}
+                  />
+                </div>
+              ) : (
+                // Traditional Linear Chat View
+                <div
+                  ref={chatContainerRef}
+                  className={`flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-8 py-4 sm:pb-4 space-y-4 sm:space-y-6 w-full max-w-full ${
+                    (isMobile || isTablet) ? 'mobile-chat-container mobile-scroll-momentum mobile-scrollbar' : ''
+                  }`}
+                  style={{
+                    backgroundColor: '#f0f0f0',
+                    backgroundImage: `
+                      linear-gradient(90deg, #d1d5db 1px, transparent 1px),
+                      linear-gradient(#d1d5db 1px, transparent 1px)
+                    `,
+                    backgroundSize: '24px 24px',
+                    backgroundPosition: '0 0, 0 0'
+                  }}
+                >
 
-              {/* Show thinking bubble when processing a message or when streaming but no content yet */}
-              {(isProcessingMessage || (isStreaming && messages.filter(m => m.role === 'assistant').length === 0)) && (
+                {shouldVirtualize ? (
+                  <VirtualizedMessageList
+                    messages={[...filteredMessages].reverse()}
+                    renderMessage={renderMessage}
+                    className="space-y-4 sm:space-y-6"
+                    itemHeight={virtualizationConfig.itemHeight}
+                    overscan={getAdaptiveOverscan()}
+                    onScroll={(scrollTop) => {
+                      // Optional scroll tracking for analytics
+                    }}
+                  />
+                ) : (
+                  // Fallback to regular rendering for small lists
+                  <div className="space-y-4 sm:space-y-6">
+                    {[...filteredMessages].reverse().map((message, index) => {
+                      const isCurrentlyStreaming = isStreaming && message.role === 'assistant' && index === 0;
+
+                      return renderMessage(message, index);
+                    })}
+                  </div>
+                )}
+
+                {/* Show thinking bubble when processing a message or when streaming but no content yet */}
+                {(isProcessingMessage || (isStreaming && messages.filter(m => m.role === 'assistant').length === 0)) && (
                 <div className="group">
                   {/* Thinking bubble that matches AI response style */}
                   <div className="w-full max-w-full overflow-hidden">
@@ -1664,10 +1714,11 @@ export default function ChatInterface() {
                     </div>
                   </div>
                 </div>
-              )}
-              </div>
+                )}
 
-              <div ref={messagesEndRef} />
+                <div ref={messagesEndRef} />
+                </div>
+              )}
             </div>
           )}
         </div>
