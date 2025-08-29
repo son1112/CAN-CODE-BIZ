@@ -913,7 +913,7 @@
                 }
             }
 
-            handleSubmission(e) {
+            async handleSubmission(e) {
                 e.preventDefault();
                 
                 const submitButton = this.form.querySelector('.subscription-btn');
@@ -925,28 +925,46 @@
                 btnLoading.style.display = 'inline';
                 submitButton.disabled = true;
 
-                // For now, use mailto and simulate success
-                // TODO: Replace with proper Formspree setup later
                 const email = this.form.querySelector('input[name="email"]').value;
                 
-                // Create mailto link for immediate functionality
-                const mailtoLink = `mailto:anderson.reinkordt@gmail.com?subject=New Early Access Subscription - can.code&body=Email: ${email}%0D%0ADate: ${new Date().toISOString()}`;
-                
-                // Simulate form submission delay
-                setTimeout(() => {
-                    // Open mailto (user's default email client)
+                try {
+                    // Submit to Formspree
+                    const response = await fetch('https://formspree.io/f/mandqdze', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            subject: 'New Early Access Subscription - can.code',
+                            message: `New early access signup from: ${email}\nDate: ${new Date().toISOString()}\nSource: Context Engineering Toolkit - Early Access`
+                        })
+                    });
+
+                    if (response.ok) {
+                        // Show success state
+                        localStorage.setItem('cancode-early-access', 'true');
+                        this.showSuccess();
+                        this.revealToolkit();
+                    } else {
+                        throw new Error('Form submission failed');
+                    }
+                } catch (error) {
+                    console.error('Subscription error:', error);
+                    // Fallback to mailto if Formspree fails
+                    const mailtoLink = `mailto:anderson.reinkordt@gmail.com?subject=New Early Access Subscription - can.code&body=Email: ${email}%0D%0ADate: ${new Date().toISOString()}`;
                     window.open(mailtoLink, '_blank');
                     
-                    // Show success state
+                    // Still show success to avoid poor UX
                     localStorage.setItem('cancode-early-access', 'true');
                     this.showSuccess();
                     this.revealToolkit();
-                    
-                    // Reset button state
-                    btnText.style.display = 'inline';
-                    btnLoading.style.display = 'none';
-                    submitButton.disabled = false;
-                }, 1500);
+                }
+                
+                // Reset button state
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                submitButton.disabled = false;
             }
 
             showSuccess() {
