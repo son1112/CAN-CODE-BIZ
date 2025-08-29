@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MongoClient } from 'mongodb';
+import { requireAuth } from '@/lib/middleware/auth';
 
 export async function GET(req: NextRequest) {
+  // SECURITY: Debug endpoints should only be accessible in development
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Debug endpoints disabled in production' },
+      { status: 404 }
+    );
+  }
+
+  // Require authentication even in development
+  try {
+    await requireAuth(req);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
   try {
     console.log('🔍 Testing NextAuth MongoDB adapter connection...');
 

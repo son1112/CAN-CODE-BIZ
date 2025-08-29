@@ -16,16 +16,29 @@ export async function GET(request: NextRequest) {
       status: 'healthy'
     });
 
-    return NextResponse.json({
+    // Limit exposed information in production
+    const isProduction = process.env.NODE_ENV === 'production';
+    const response = {
       status: 'healthy',
       timestamp,
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
+      ...(isProduction ? {} : {
+        version: process.env.npm_package_version || '1.0.0',
+        environment: process.env.NODE_ENV || 'development'
+      }),
       services: {
         database: 'connected',
         api: 'operational'
       }
-    }, { status: 200 });
+    };
+
+    return NextResponse.json(response, { 
+      status: 200,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
 
   } catch (error) {
     logger.error('Health check failed', {

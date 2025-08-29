@@ -21,45 +21,71 @@ export async function requireAuth(request?: NextRequest): Promise<AuthResult> {
   try {
     const session = await auth();
     const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+    const userId = session?.user?.id;
 
     logger.debug('Authentication check', {
       component: 'auth-middleware',
       isDemoMode,
-      hasSession: !!session?.user?.id,
+      hasSession: !!userId,
       path: request?.nextUrl?.pathname
     });
 
-    if (isDemoMode) {
-      logger.info('Demo mode - bypassing authentication', {
+    // If we have a valid session, use it regardless of demo mode
+    if (userId) {
+      logger.debug('Authentication successful', {
         component: 'auth-middleware',
-        path: request?.nextUrl?.pathname
+        userId,
+        path: request?.nextUrl?.pathname,
+        isDemo: isDemoMode
       });
-      // Use real user ID in demo mode for data consistency after migration
+      return {
+        userId,
+        isDemo: isDemoMode
+      };
+    }
+
+    // No valid session - check if demo mode allows fallback
+    if (isDemoMode) {
+      const path = request?.nextUrl?.pathname;
+      
+      // SECURITY: Never allow demo fallback for sensitive endpoints
+      const isDebugEndpoint = path?.includes('/api/debug');
+      const isExportEndpoint = path?.includes('/api/export');
+      
+      if (isDebugEndpoint) {
+        logger.warn('Debug endpoint blocked - requires real authentication', {
+          component: 'auth-middleware',
+          path
+        });
+        throw new UnauthorizedError('Debug endpoints require authentication');
+      }
+      
+      if (isExportEndpoint) {
+        logger.warn('Export endpoint blocked - requires real authentication', {
+          component: 'auth-middleware', 
+          path
+        });
+        throw new UnauthorizedError('Export endpoints require authentication');
+      }
+      
+      // Allow demo fallback for basic endpoints only
+      logger.warn('Demo mode fallback - using default user', {
+        component: 'auth-middleware',
+        path
+      });
       return {
         userId: '68a33c99df2098d5e02a84e3',
         isDemo: true
       };
     }
 
-    const userId = session?.user?.id;
-    if (!userId) {
-      logger.warn('Authentication failed - no user ID', {
-        component: 'auth-middleware',
-        path: request?.nextUrl?.pathname
-      });
-      throw new UnauthorizedError('Authentication required');
-    }
-
-    logger.debug('Authentication successful', {
+    // Production or no demo mode - require valid authentication
+    logger.warn('Authentication failed - no user ID', {
       component: 'auth-middleware',
-      userId,
       path: request?.nextUrl?.pathname
     });
+    throw new UnauthorizedError('Authentication required');
 
-    return {
-      userId,
-      isDemo: false
-    };
   } catch (error) {
     logger.error('Authentication error', {
       component: 'auth-middleware',
