@@ -637,8 +637,8 @@ export default function ChatInterface() {
     }
   };
 
-  // Optimized input handler with debouncing for expensive operations
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // Simplified input handler - removed useCallback to avoid stale closure issues
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInputValue(value); // Immediate UI update
 
@@ -649,7 +649,7 @@ export default function ChatInterface() {
     inputDebounceRef.current = setTimeout(() => {
       setDebouncedInputValue(value);
     }, 100); // 100ms debounce
-  }, []);
+  };
 
 
   const handleCreateNewSession = async () => {
