@@ -69,7 +69,7 @@ export default function MessageExportButton({
       messageId: messageId ? `${messageId.substring(0, 8)}...` : 'EMPTY',
       sessionId: sessionId ? `${sessionId.substring(0, 8)}...` : 'EMPTY',
       effectiveSessionId: effectiveSessionId ? `${effectiveSessionId.substring(0, 8)}...` : 'EMPTY',
-      isValid: isValidForExport(messageId, effectiveSessionId)
+      isValid: isValidForExport(messageId, effectiveSessionId || undefined)
     });
   }
 
@@ -204,7 +204,7 @@ export default function MessageExportButton({
 
   const handleExport = async (type: 'pdf' | 'word' | 'text') => {
     // CRITICAL FIX: Validate props before attempting export
-    if (!isValidForExport(messageId, effectiveSessionId)) {
+    if (!isValidForExport(messageId, effectiveSessionId || undefined)) {
       console.error('🚨 Export failed - invalid props:', {
         messageId: messageId || 'MISSING',
         sessionId: sessionId || 'MISSING',
@@ -422,9 +422,9 @@ export default function MessageExportButton({
           e.stopPropagation();
           setShowDropdown(!showDropdown);
         }}
-        disabled={exportState.isExporting || !isValidForExport(messageId, effectiveSessionId)}
+        disabled={exportState.isExporting || !isValidForExport(messageId, effectiveSessionId || undefined)}
         className="flex items-center gap-2 px-3 pr-4 py-1.5 text-sm rounded-lg transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-        title={!isValidForExport(messageId, effectiveSessionId) ? "Export unavailable - session loading" : "Export message to Google Drive"}
+        title={!isValidForExport(messageId, effectiveSessionId || undefined) ? "Export unavailable - session loading" : "Export message to Google Drive"}
       >
         {exportState.isExporting ? (
           <Loader className="w-4 h-4 animate-spin" />

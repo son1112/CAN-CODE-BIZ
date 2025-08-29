@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         component: 'export-pdf-local-api',
         messageId: messageId || 'MISSING',
         sessionId: sessionId || 'MISSING',
-        body
+        bodyKeys: Object.keys(body).join(', ')
       });
       throw new ValidationRequestError('Missing required fields: messageId or sessionId');
     }

@@ -29,7 +29,7 @@ export async function GET(
     const sessionDoc = await Session.findOne({
       sessionId: id,
       createdBy: userId
-    }).lean();
+    }).lean() as any;
 
     if (!sessionDoc) {
       return NextResponse.json(

@@ -44,7 +44,7 @@ export default function SessionOverview({
   const categorizedMessages = useMemo(() => {
     const userMessages = messages.filter(m => m.role === 'user');
     const assistantMessages = messages.filter(m => m.role === 'assistant');
-    const starredMessages = messages.filter(m => m.isStarred);
+    const starredMessages = messages.filter(m => (m as any).isStarred);
     const taggedMessages = messages.filter(m => m.tags && m.tags.length > 0);
     
     return {

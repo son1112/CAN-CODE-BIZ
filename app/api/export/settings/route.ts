@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
     const { userId } = await requireAuth(request);
     await connectDB();
 
-    const userPrefs = await UserPreferences.findOne({ userId }).lean();
+    const userPrefs = await UserPreferences.findOne({ userId }).lean() as any;
     
     // Return user's export settings or defaults
-    const exportSettings = userPrefs?.export || DEFAULT_EXPORT_SETTINGS;
+    const exportSettings = (userPrefs?.export as ExportCustomizationSettings) || DEFAULT_EXPORT_SETTINGS;
 
     logger.info('Export settings retrieved', {
       component: 'export-settings-api',

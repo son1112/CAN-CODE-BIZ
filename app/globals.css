@@ -544,5 +544,176 @@ body {
 }
 */
 
+/* Professional Component Spacing Utilities */
+.spacing-xs { margin: var(--spacing-xs); }
+.spacing-sm { margin: var(--spacing-sm); }
+.spacing-md { margin: var(--spacing-md); }
+.spacing-lg { margin: var(--spacing-lg); }
+.spacing-xl { margin: var(--spacing-xl); }
+.spacing-2xl { margin: var(--spacing-2xl); }
+
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+.gap-xl { gap: var(--spacing-xl); }
+.gap-2xl { gap: var(--spacing-2xl); }
+
+.padding-xs { padding: var(--spacing-xs); }
+.padding-sm { padding: var(--spacing-sm); }
+.padding-md { padding: var(--spacing-md); }
+.padding-lg { padding: var(--spacing-lg); }
+.padding-xl { padding: var(--spacing-xl); }
+.padding-2xl { padding: var(--spacing-2xl); }
+
+.margin-xs { margin: var(--spacing-xs); }
+.margin-sm { margin: var(--spacing-sm); }
+.margin-md { margin: var(--spacing-md); }
+.margin-lg { margin: var(--spacing-lg); }
+.margin-xl { margin: var(--spacing-xl); }
+.margin-2xl { margin: var(--spacing-2xl); }
+
+/* Professional Message Layout Patterns */
+.message-container {
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.message-header {
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.message-actions {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-primary);
+  gap: var(--spacing-sm);
+}
+
+.professional-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.professional-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-secondary);
+}
+
+/* Enhanced Visual Hierarchy System */
+.visual-hierarchy-1 { 
+  font-size: 2.25rem; 
+  font-weight: var(--font-weight-bold); 
+  line-height: 1.2; 
+  margin-bottom: var(--spacing-lg);
+}
+
+.visual-hierarchy-2 { 
+  font-size: 1.875rem; 
+  font-weight: var(--font-weight-semibold); 
+  line-height: 1.25; 
+  margin-bottom: var(--spacing-md);
+}
+
+.visual-hierarchy-3 { 
+  font-size: 1.5rem; 
+  font-weight: var(--font-weight-medium); 
+  line-height: 1.3; 
+  margin-bottom: var(--spacing-sm);
+}
+
+.visual-hierarchy-4 { 
+  font-size: 1.125rem; 
+  font-weight: var(--font-weight-medium); 
+  line-height: 1.4; 
+  margin-bottom: var(--spacing-xs);
+}
+
+.visual-hierarchy-body { 
+  font-size: 1rem; 
+  font-weight: var(--font-weight-normal); 
+  line-height: 1.6; 
+  margin-bottom: var(--spacing-sm);
+}
+
+.visual-hierarchy-caption { 
+  font-size: 0.875rem; 
+  font-weight: var(--font-weight-normal); 
+  line-height: 1.4; 
+  color: var(--text-secondary);
+}
+
+/* Professional Container Layouts */
+.desktop-chat-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-secondary) transparent;
+}
+
+.desktop-chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.desktop-chat-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.desktop-chat-container::-webkit-scrollbar-thumb {
+  background-color: var(--border-secondary);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.desktop-chat-container::-webkit-scrollbar-thumb:hover {
+  background-color: var(--border-primary);
+}
+
+/* Enhanced Mobile Scrolling */
+.mobile-chat-container {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mobile-chat-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Professional Focus States */
+.professional-focus:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.professional-focus:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Enhanced Touch Targets for Mobile */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
 /* Progressive Image Loading Styles */
 @import '../styles/progressive-image.css';

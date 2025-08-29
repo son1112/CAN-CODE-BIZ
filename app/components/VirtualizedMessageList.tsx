@@ -42,9 +42,16 @@ export default function VirtualizedMessageList({
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [measurementCache, setMeasurementCache] = useState<Map<number, number>>(new Map());
 
-  // Adjust item height for mobile
-  const adaptiveItemHeight = useMemo(() => {
-    return isMobileLayout ? Math.floor(itemHeight * 0.8) : itemHeight;
+  // Professional responsive spacing system
+  const professionalSpacing = useMemo(() => {
+    const baseHeight = isMobileLayout ? Math.floor(itemHeight * 0.8) : itemHeight;
+    return {
+      itemHeight: baseHeight,
+      containerClass: isMobileLayout 
+        ? 'mobile-chat-container mobile-scroll-momentum mobile-scrollbar' 
+        : 'desktop-chat-container',
+      scrollButtonClass: 'fixed bottom-20 right-4 z-20 w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center touch-target'
+    };
   }, [itemHeight, isMobileLayout]);
 
   // Calculate total height and virtual items
@@ -75,15 +82,15 @@ export default function VirtualizedMessageList({
     for (let i = 0; i < messages.length; i++) {
       itemPositions[i] = totalHeight;
       const cachedHeight = measurementCache.get(i);
-      totalHeight += cachedHeight || adaptiveItemHeight;
+      totalHeight += cachedHeight || professionalSpacing.itemHeight;
     }
 
     // Calculate visible range with fallback handling
     const effectiveHeight = useHeightFallback ? fallbackHeight : height;
     const startIndex = Math.max(0,
-      Math.floor(scrollTop / adaptiveItemHeight) - overscan
+      Math.floor(scrollTop / professionalSpacing.itemHeight) - overscan
     );
-    const visibleCount = Math.ceil(effectiveHeight / adaptiveItemHeight);
+    const visibleCount = Math.ceil(effectiveHeight / professionalSpacing.itemHeight);
     
     // CRITICAL FIX: When using height fallback, show all messages to prevent disappearing
     // This ensures messages are always visible even during container size calculations
@@ -95,7 +102,7 @@ export default function VirtualizedMessageList({
     const virtualItems: VirtualItem[] = [];
     for (let i = startIndex; i <= endIndex; i++) {
       const start = itemPositions[i];
-      const height = measurementCache.get(i) || adaptiveItemHeight;
+      const height = measurementCache.get(i) || professionalSpacing.itemHeight;
       virtualItems.push({
         index: i,
         start,
@@ -105,7 +112,7 @@ export default function VirtualizedMessageList({
     }
 
     return { totalHeight, virtualItems, startIndex, endIndex };
-  }, [messages.length, scrollTop, containerSize.height, containerHeight, adaptiveItemHeight, overscan, measurementCache, isMobileLayout]);
+  }, [messages.length, scrollTop, containerSize.height, containerHeight, professionalSpacing.itemHeight, overscan, measurementCache, isMobileLayout]);
 
   // Handle scroll events
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
@@ -218,9 +225,7 @@ export default function VirtualizedMessageList({
   return (
     <div
       ref={scrollElementRef}
-      className={`virtual-scroll-container ${className} ${
-        isMobileLayout ? 'mobile-chat-container mobile-scroll-momentum mobile-scrollbar' : ''
-      }`}
+      className={`virtual-scroll-container ${className} ${professionalSpacing.containerClass}`}
       style={{
         ...style,
         overflowY: 'auto',
@@ -260,10 +265,10 @@ export default function VirtualizedMessageList({
       {isMobileLayout && scrollTop > 500 && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-20 right-4 z-20 w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center touch-target"
+          className={professionalSpacing.scrollButtonClass}
           style={{
-            background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+            background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+            boxShadow: 'var(--shadow-md)',
           }}
           aria-label="Scroll to top for newest messages"
         >

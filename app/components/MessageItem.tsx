@@ -89,13 +89,19 @@ const MessageItem = memo(function MessageItem({
     return generateMessageTitle?.(message.content, role) || message.content.slice(0, 50) + '...';
   }, [message.content, message.role, generateMessageTitle]);
 
-  // Mobile-optimized styling
-  const mobileResponsiveClasses = useMemo(() => ({
-    container: isMobileLayout ? 'px-3 py-3 space-y-3' : 'px-4 py-4 space-y-4',
-    padding: isMobileLayout ? 'p-3 sm:p-6' : 'p-4 sm:p-8 lg:p-12',
+  // Professional spacing system - consistent across all devices
+  const professionalSpacing = useMemo(() => ({
+    // Base container spacing using design system
+    container: 'px-4 py-4 space-y-4', // Consistent --spacing-sm equivalent
+    padding: isMobileLayout ? 'p-4' : 'p-6', // --spacing-sm to --spacing-md progression
     titleSize: isMobileLayout ? 'text-base' : 'text-lg',
     actionButtonSize: isMobileLayout ? 'w-8 h-8' : 'w-10 h-10',
-    avatarSize: isMobileLayout ? 'w-8 h-8' : 'w-12 h-12'
+    avatarSize: isMobileLayout ? 'w-8 h-8' : 'w-12 h-12',
+    // Professional spacing tokens
+    marginBottom: 'mb-4', // --spacing-sm
+    borderPadding: 'pb-3', // --spacing-xs + 0.25rem
+    sectionGap: 'gap-4', // --spacing-sm
+    actionGap: isMobileLayout ? 'gap-2' : 'gap-4' // Responsive but systematic
   }), [isMobileLayout]);
 
   if (message.role === 'user') {
@@ -104,7 +110,7 @@ const MessageItem = memo(function MessageItem({
         <div className="w-full flex justify-end">
           <div className="max-w-[80%]">
             <div
-              className={`relative shadow-xl rounded-lg border-l-4 ${mobileResponsiveClasses.padding}`}
+              className={`relative shadow-xl rounded-lg border-l-4 ${professionalSpacing.padding}`}
               style={{
                 backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
                 color: isDark ? '#e5e5e5' : '#1f2937',
@@ -116,8 +122,8 @@ const MessageItem = memo(function MessageItem({
               }}
             >
               {/* User Message Title & Header */}
-              <div className="mb-3 border-b pb-2" style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
-                <h3 className={`font-bold mb-1 ${mobileResponsiveClasses.titleSize}`} style={{
+              <div className={`${professionalSpacing.marginBottom} border-b ${professionalSpacing.borderPadding}`} style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
+                <h3 className={`font-bold mb-2 ${professionalSpacing.titleSize}`} style={{
                   color: '#1e40af',
                   backgroundImage: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
                   WebkitBackgroundClip: 'text',
@@ -127,7 +133,7 @@ const MessageItem = memo(function MessageItem({
                   {messageTitle}
                 </h3>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className={`flex items-center ${professionalSpacing.actionGap}`}>
                     <span className={`font-semibold px-2 py-1 rounded ${isMobileLayout ? 'text-xs' : 'text-xs'}`} style={{
                       backgroundColor: isDark ? '#404040' : '#f3f4f6',
                       color: '#3b82f6'
@@ -150,7 +156,7 @@ const MessageItem = memo(function MessageItem({
               </div>
 
               {/* User Message Content */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <FormattedMessage
                   content={message.content}
                   textSizeClass={`${isMobileLayout ? 'text-base' : 'text-lg'} leading-relaxed`}
@@ -158,9 +164,9 @@ const MessageItem = memo(function MessageItem({
               </div>
 
               {/* User Message Actions */}
-              <div className={`flex items-center justify-between gap-2 mt-4 pt-3 border-t ${isMobileLayout ? 'flex-wrap' : ''}`}
+              <div className={`flex items-center justify-between ${professionalSpacing.actionGap} mt-6 pt-4 border-t ${isMobileLayout ? 'flex-wrap' : ''}`}
                    style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
-                <div className="flex items-center gap-2">
+                <div className={`flex items-center ${professionalSpacing.actionGap}`}>
                   <StarButton
                     itemType="message"
                     itemId={message.id}
@@ -169,7 +175,7 @@ const MessageItem = memo(function MessageItem({
                       messageContent: message.content
                     }}
                     size={isMobileLayout ? 'sm' : 'md'}
-                    className={`touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                    className={`touch-target ${professionalSpacing.actionButtonSize}`}
                   />
                   <MessageTagInterface
                     messageId={message.id}
@@ -177,7 +183,7 @@ const MessageItem = memo(function MessageItem({
                     onTagsUpdate={(tags) => onTagsChange?.(message.id, tags)}
                   />
                 </div>
-                <div className="flex items-center gap-4">
+                <div className={`flex items-center ${professionalSpacing.sectionGap}`}>
                   <MessageExportButton
                     messageId={message.id}
                     sessionId={sessionId || ""}
@@ -192,7 +198,7 @@ const MessageItem = memo(function MessageItem({
                         console.log('User dropdown button clicked, current state:', isUserDropdownOpen);
                         setIsUserDropdownOpen(!isUserDropdownOpen);
                       }}
-                      className={`rounded-lg transition-colors touch-target flex items-center justify-center ${mobileResponsiveClasses.actionButtonSize}`}
+                      className={`rounded-lg transition-colors touch-target flex items-center justify-center ${professionalSpacing.actionButtonSize}`}
                       style={{
                         backgroundColor: isUserDropdownOpen 
                           ? (isDark ? '#374151' : '#e5e7eb') 
@@ -318,11 +324,11 @@ const MessageItem = memo(function MessageItem({
   // Assistant Message
   return (
     <div className="group w-full">
-      <div className="flex items-start gap-3 w-full max-w-full">
+      <div className={`flex items-start ${professionalSpacing.sectionGap} w-full max-w-full`}>
         {/* Assistant Avatar */}
         <div className="flex-shrink-0">
-          <div className={`rounded-full overflow-hidden ${mobileResponsiveClasses.avatarSize}`} style={{ backgroundColor: '#f3f4f6' }}>
-            <div className={`flex items-center justify-center ${mobileResponsiveClasses.avatarSize}`} style={{ backgroundColor: '#f59e0b' }}>
+          <div className={`rounded-full overflow-hidden ${professionalSpacing.avatarSize}`} style={{ backgroundColor: '#f3f4f6' }}>
+            <div className={`flex items-center justify-center ${professionalSpacing.avatarSize}`} style={{ backgroundColor: '#f59e0b' }}>
               <span className={`${isMobileLayout ? 'text-xs' : 'text-sm'}`}>🦆</span>
             </div>
           </div>
@@ -330,7 +336,7 @@ const MessageItem = memo(function MessageItem({
 
         {/* Assistant Message Content */}
         <div className={`flex-1 relative shadow-xl transition-all duration-300 group-hover:shadow-2xl rounded-lg border-l-4 w-full max-w-full overflow-visible ${
-          isCollapsed ? mobileResponsiveClasses.container : mobileResponsiveClasses.padding
+          isCollapsed ? professionalSpacing.container : professionalSpacing.padding
         }`}
         style={{
           borderLeftColor: '#eab308',
@@ -343,10 +349,10 @@ const MessageItem = memo(function MessageItem({
           borderLeft: '4px solid #eab308'
         }}>
           {/* Assistant Message Header */}
-          <div className="mb-3 border-b pb-2" style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
+          <div className={`${professionalSpacing.marginBottom} border-b ${professionalSpacing.borderPadding}`} style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
-                <h3 className={`font-bold mb-2 ${mobileResponsiveClasses.titleSize}`} style={{
+                <h3 className={`font-bold mb-2 ${professionalSpacing.titleSize}`} style={{
                   color: '#d97706',
                   backgroundImage: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                   WebkitBackgroundClip: 'text',
@@ -355,7 +361,7 @@ const MessageItem = memo(function MessageItem({
                 }}>
                   {messageTitle}
                 </h3>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className={`flex items-center ${professionalSpacing.actionGap} flex-wrap`}>
                   <span className={`font-semibold px-2 py-1 rounded ${isMobileLayout ? 'text-xs' : 'text-xs'}`} style={{
                     backgroundColor: isDark ? '#404040' : '#fef3c7',
                     color: '#d97706'
@@ -380,7 +386,7 @@ const MessageItem = memo(function MessageItem({
               {expandMessage && collapseMessage && (
                 <button
                   onClick={() => isCollapsed ? expandMessage(message.id) : collapseMessage(message.id)}
-                  className={`flex-shrink-0 rounded-lg transition-colors ml-2 touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                  className={`flex-shrink-0 rounded-lg transition-colors ml-3 touch-target ${professionalSpacing.actionButtonSize}`}
                   style={{
                     backgroundColor: isDark ? '#1f1f1f' : '#f9fafb',
                     color: isDark ? '#b8b8b8' : '#6b7280'
@@ -413,9 +419,9 @@ const MessageItem = memo(function MessageItem({
           )}
 
           {/* Assistant Message Actions */}
-          <div className={`flex items-center justify-between gap-2 mt-4 pt-3 border-t ${isMobileLayout ? 'flex-wrap' : ''}`}
+          <div className={`flex items-center justify-between ${professionalSpacing.actionGap} mt-6 pt-4 border-t ${isMobileLayout ? 'flex-wrap' : ''}`}
                style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
-            <div className="flex items-center gap-3">
+            <div className={`flex items-center ${professionalSpacing.sectionGap}`}>
               <StarButton
                 itemType="message"
                 itemId={message.id}
@@ -424,7 +430,7 @@ const MessageItem = memo(function MessageItem({
                   messageContent: message.content
                 }}
                 size={isMobileLayout ? 'sm' : 'md'}
-                className={`touch-target ${mobileResponsiveClasses.actionButtonSize}`}
+                className={`touch-target ${professionalSpacing.actionButtonSize}`}
               />
               <MessageTagInterface
                 messageId={message.id}
@@ -432,7 +438,7 @@ const MessageItem = memo(function MessageItem({
                 onTagsUpdate={(tags) => onTagsChange?.(message.id, tags)}
               />
             </div>
-            <div className="flex items-center gap-4">
+            <div className={`flex items-center ${professionalSpacing.sectionGap}`}>
               <MessageExportButton
                 messageId={message.id}
                 sessionId={sessionId || ""}
@@ -447,7 +453,7 @@ const MessageItem = memo(function MessageItem({
                     console.log('Assistant dropdown button clicked, current state:', isAssistantDropdownOpen);
                     setIsAssistantDropdownOpen(!isAssistantDropdownOpen);
                   }}
-                  className={`rounded-lg transition-colors touch-target flex items-center justify-center ${mobileResponsiveClasses.actionButtonSize}`}
+                  className={`rounded-lg transition-colors touch-target flex items-center justify-center ${professionalSpacing.actionButtonSize}`}
                   style={{
                     backgroundColor: isAssistantDropdownOpen 
                       ? (isDark ? '#374151' : '#e5e7eb') 

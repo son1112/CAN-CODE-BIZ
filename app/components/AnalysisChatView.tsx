@@ -43,7 +43,8 @@ export default function AnalysisChatView({
   sessionId 
 }: AnalysisChatViewProps) {
   const { isDark } = useTheme();
-  const { isMobileLayout } = useMobileNavigation();
+  const { isMobile, isTablet } = useMobileNavigation();
+  const isMobileLayout = isMobile || isTablet;
   const [selectedThread, setSelectedThread] = useState<string | null>(null);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
 
@@ -99,7 +100,7 @@ export default function AnalysisChatView({
     messages.filter(m => m.role === 'assistant'), [messages]);
 
   const starredMessages = useMemo(() => 
-    messages.filter(m => m.isStarred), [messages]);
+    messages.filter(m => (m as any).isStarred), [messages]);
 
   const taggedMessages = useMemo(() => 
     messages.filter(m => m.tags && m.tags.length > 0), [messages]);
@@ -157,7 +158,7 @@ export default function AnalysisChatView({
               />
             )}
           </div>
-          {message.isStarred && <Star className="w-4 h-4 text-yellow-500 fill-current" />}
+          {(message as any).isStarred && <Star className="w-4 h-4 text-yellow-500 fill-current" />}
         </div>
 
         {/* Message Content */}

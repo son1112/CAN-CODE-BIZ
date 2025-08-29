@@ -450,7 +450,7 @@ export default function ChatInterface() {
       
       if (!newSession) {
         console.error('handleQuickNewSession: createSession returned null/undefined');
-        setError('Failed to create new session. Please try again.');
+        console.error('Failed to create new session. Please try again.');
         return;
       }
       
@@ -480,7 +480,7 @@ export default function ChatInterface() {
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
       });
-      setError('Failed to create new session. Please try again.');
+      console.error('Failed to create new session. Please try again.');
     }
   };
 
@@ -603,7 +603,7 @@ export default function ChatInterface() {
         }, 100);
       } else {
         // Show error to user
-        setError('Please wait for the current response to complete before sending a new message');
+        console.error('Please wait for the current response to complete before sending a new message');
       }
       return;
     }
@@ -624,7 +624,7 @@ export default function ChatInterface() {
       }
     } catch (error) {
       console.error('ChatInterface: Failed to send voice transcript:', error);
-      setError('Failed to send voice message. Please try again.');
+      console.error('Failed to send voice message. Please try again.');
       // Clear streaming state in case it's stuck
       console.log('ChatInterface: Attempting to clear potentially stuck streaming state');
     }
@@ -1608,7 +1608,6 @@ export default function ChatInterface() {
                       <div
                         className="flex-1 relative shadow-xl rounded-lg border-l-4 animate-pulse w-full max-w-full overflow-hidden p-4 sm:p-8 lg:p-12"
                         style={{
-                          borderLeftColor: '#eab308',
                           backgroundColor: isDark ? '#ffffff' : '#ffffff',
                           color: isDark ? '#1f2937' : '#1f2937',
                           boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
