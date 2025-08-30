@@ -76,8 +76,8 @@
   --spacing-xl: 3rem;
   --spacing-2xl: 4rem;
   
-  /* Professional Typography System */
-  --font-family-primary: var(--font-inter-tight), 'Inter Tight', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* CAN-CODE-BIZ Professional Typography System */
+  --font-family-primary: 'Inter Tight', var(--font-inter-tight), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-weight-light: 300;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
@@ -145,7 +145,7 @@
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-family-primary);
+  font-family: 'Inter Tight', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   font-weight: var(--font-weight-normal);
   line-height: 1.5;
