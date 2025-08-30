@@ -120,7 +120,7 @@ export default function MobileOptimizedHeader({
       {/* Mobile/Tablet Header */}
       {showMobileLayout ? (
         <div
-          className="sticky top-0 px-4 backdrop-blur-md border-b z-50"
+          className="sticky top-0 backdrop-blur-md border-b z-50"
           style={{
             zIndex: 50,
             width: '100%',
@@ -131,16 +131,19 @@ export default function MobileOptimizedHeader({
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            paddingLeft: isMobile ? '16px' : '20px',
+            paddingRight: isMobile ? '16px' : '20px'
           }}
         >
-          <div className="flex items-center justify-between min-w-0">
+          <div className="w-full flex items-center justify-between min-w-0">
             {/* Left Side: Logo + Session Info */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex items-center gap-3 min-w-0 flex-1 max-w-[calc(100%-120px)]">
               <Logo
                 size={isMobile ? "md" : "lg"}
                 showText={false}
                 onClick={onNavigateToHome}
+                className="flex-shrink-0"
               />
 
               {/* Session Title - Mobile Optimized */}
@@ -153,13 +156,13 @@ export default function MobileOptimizedHeader({
                       </div>
                     )}
                     <span
-                      className={`font-semibold truncate text-sm ${
-                        isMobile ? 'mobile-typography-sm' : ''
+                      className={`font-semibold truncate ${
+                        isMobile ? 'text-sm mobile-typography-sm' : 'text-base'
                       }`}
                       style={{
                         color: 'var(--text-primary)',
                         letterSpacing: '-0.01em',
-                        maxWidth: isMobile ? '140px' : '200px'
+                        // Remove maxWidth constraint to allow natural flex truncation
                       }}
                       title={currentSession.name}
                     >
@@ -189,7 +192,7 @@ export default function MobileOptimizedHeader({
             </div>
 
             {/* Right Side: Theme Toggle + Hamburger Menu */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1 flex-shrink-0" style={{ minWidth: '104px' }}>
               {/* Mobile Theme Toggle */}
               <ThemeToggle />
               
@@ -198,13 +201,15 @@ export default function MobileOptimizedHeader({
                 onClick={toggleMenu}
                 className="rounded-lg transition-all duration-200 p-2 touch-target"
                 style={{
-                  minWidth: '48px', // Larger touch target
+                  minWidth: '48px', // CAN-CODE-BIZ standard touch target
                   minHeight: '48px',
                   backgroundColor: isMenuOpen ? 'rgba(111, 66, 193, 0.1)' : 'transparent',
                   border: isMenuOpen ? '1px solid rgba(111, 66, 193, 0.3)' : '1px solid transparent',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  backdropFilter: 'var(--backdrop-blur-light)',
+                  borderRadius: 'var(--radius-md)'
                 }}
                 aria-label="Open menu"
               >
