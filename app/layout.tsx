@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Roboto, Roboto_Mono } from "next/font/google";
+import { Inter_Tight, Roboto, Roboto_Mono } from "next/font/google";
 // Cache bust: 2025-08-28-professional-alignment
 import Script from "next/script";
 import { AgentProvider } from "@/contexts/AgentContext";
@@ -15,11 +15,12 @@ import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import "./globals.css";
 import "./styles/mobile-touch.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800", "900"],
   display: "swap",
+  preload: true,
 });
 
 const roboto = Roboto({
@@ -224,7 +225,7 @@ export default function RootLayout({
         }} />
       </head>
       <body
-        className={`${inter.variable} ${roboto.variable} ${robotoMono.variable} antialiased no-text-scale`}
+        className={`${interTight.variable} ${roboto.variable} ${robotoMono.variable} antialiased no-text-scale`}
       >
         <SessionProvider>
           <ThemeProvider>

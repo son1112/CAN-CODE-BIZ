@@ -7,7 +7,7 @@
   --background: #ffffff;
   --foreground: #212529;
   
-  /* Professional Color Palette - CAN-CODE-BIZ Inspired */
+  /* CAN-CODE-BIZ Color Palette - Exact Match */
   --primary-white: #ffffff;
   --light-gray: #f8f9fa;
   --medium-gray: #e9ecef;
@@ -17,6 +17,9 @@
   --accent-orange: #ff6b35;
   --accent-purple: #6f42c1;
   --accent-green: #20c997;
+  --border-light: #dee2e6;
+  --shadow-light: rgba(0, 0, 0, 0.04);
+  --shadow-medium: rgba(0, 0, 0, 0.12);
   
   /* Enhanced Background System */
   --bg-primary: var(--primary-white);
@@ -50,6 +53,21 @@
   --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
   --shadow-xl: 0 1.5rem 4rem rgba(0, 0, 0, 0.2);
   
+  /* CAN-CODE-BIZ Backdrop Blur System */
+  --backdrop-blur-light: blur(8px);
+  --backdrop-blur-medium: blur(12px);
+  --backdrop-blur-heavy: blur(16px);
+  --backdrop-blur-extreme: blur(24px);
+  
+  /* CAN-CODE-BIZ Animation System */
+  --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-in: cubic-bezier(0.4, 0, 1, 1);
+  --easing-out: cubic-bezier(0, 0, 0.2, 1);
+  --easing-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  
   /* Professional Spacing System */
   --spacing-xs: 0.5rem;
   --spacing-sm: 1rem;
@@ -59,7 +77,7 @@
   --spacing-2xl: 4rem;
   
   /* Professional Typography System */
-  --font-family-primary: var(--font-inter), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-primary: var(--font-inter-tight), 'Inter Tight', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-weight-light: 300;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
@@ -77,22 +95,25 @@
   --background: #111827;
   --foreground: #f9fafb;
   
-  /* Professional Dark Palette */
-  --primary-white: #1f2937;
-  --light-gray: #374151;
-  --medium-gray: #4b5563;
-  --dark-gray: #6b7280;
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --accent-orange: #fb923c;
-  --accent-purple: #a855f7;
+  /* CAN-CODE-BIZ Dark Palette - Exact Match */
+  --primary-white: #1a1a1a;
+  --light-gray: #2d2d2d;
+  --medium-gray: #404040;
+  --dark-gray: #cccccc;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --accent-orange: #ff7849;
+  --accent-purple: #8b5cf6;
   --accent-green: #34d399;
+  --border-light: #404040;
+  --shadow-light: rgba(255, 255, 255, 0.04);
+  --shadow-medium: rgba(255, 255, 255, 0.12);
   
-  /* Enhanced Dark Background System */
-  --bg-primary: #111827;
-  --bg-secondary: #1f2937;
-  --bg-tertiary: #374151;
-  --bg-quaternary: #4b5563;
+  /* CAN-CODE-BIZ Dark Background System */
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #404040;
+  --bg-quaternary: #4d4d4d;
   
   /* Professional Dark Border System */
   --border-primary: #374151;
@@ -128,7 +149,124 @@ body {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   font-weight: var(--font-weight-normal);
   line-height: 1.5;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  font-size: clamp(16px, 1.125rem, 18px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* CAN-CODE-BIZ Typography System */
+h1, h2, h3, h4 {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
+  font-family: var(--font-family-primary);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 1.875rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.lead {
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xl);
+  line-height: 1.5;
+  max-width: 60ch;
+}
+
+.text-large {
+  font-size: clamp(1.125rem, 2.5vw, 1.25rem);
+  line-height: 1.5;
+}
+
+.text-small {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* CAN-CODE-BIZ Button System */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1;
+  text-align: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+  min-height: 48px;
+}
+
+.btn-primary {
+  background-color: var(--text-primary);
+  color: var(--primary-white);
+  font-weight: 500;
+  box-shadow: 0 1px 3px var(--shadow-light);
+}
+
+.btn-primary:hover {
+  background-color: var(--dark-gray);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background-color: var(--light-gray);
+  border-color: var(--medium-gray);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-purple) 100%);
+  color: var(--primary-white);
+  font-weight: 500;
+  border: none;
+}
+
+.btn-accent:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
+  filter: brightness(1.05);
 }
 
 /* Dark mode overrides for better contrast */
@@ -177,6 +315,98 @@ body {
 .shadow-theme-md { box-shadow: var(--shadow-md); }
 .shadow-theme-lg { box-shadow: var(--shadow-lg); }
 .shadow-theme-xl { box-shadow: var(--shadow-xl); }
+
+/* CAN-CODE-BIZ Backdrop Blur Utilities */
+.backdrop-blur-light { 
+  backdrop-filter: var(--backdrop-blur-light);
+  -webkit-backdrop-filter: var(--backdrop-blur-light);
+}
+
+.backdrop-blur-medium { 
+  backdrop-filter: var(--backdrop-blur-medium);
+  -webkit-backdrop-filter: var(--backdrop-blur-medium);
+}
+
+.backdrop-blur-heavy { 
+  backdrop-filter: var(--backdrop-blur-heavy);
+  -webkit-backdrop-filter: var(--backdrop-blur-heavy);
+}
+
+.backdrop-blur-extreme { 
+  backdrop-filter: var(--backdrop-blur-extreme);
+  -webkit-backdrop-filter: var(--backdrop-blur-extreme);
+}
+
+/* Professional Glass Effect Components */
+.glass-card {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: var(--backdrop-blur-medium);
+  -webkit-backdrop-filter: var(--backdrop-blur-medium);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-lg);
+}
+
+.glass-overlay {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: var(--backdrop-blur-light);
+  -webkit-backdrop-filter: var(--backdrop-blur-light);
+}
+
+/* Dark mode glass effects */
+[data-theme="dark"] .glass-card {
+  background-color: rgba(26, 26, 26, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* CAN-CODE-BIZ Animation Utilities */
+.transition-can-code {
+  transition: all var(--duration-normal) var(--easing-default);
+}
+
+.transition-can-code-fast {
+  transition: all var(--duration-fast) var(--easing-default);
+}
+
+.transition-can-code-slow {
+  transition: all var(--duration-slow) var(--easing-default);
+}
+
+.hover-lift {
+  transition: transform var(--duration-normal) var(--easing-default),
+              box-shadow var(--duration-normal) var(--easing-default);
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.hover-lift-subtle {
+  transition: transform var(--duration-fast) var(--easing-default),
+              box-shadow var(--duration-fast) var(--easing-default);
+}
+
+.hover-lift-subtle:hover {
+  transform: translateY(-0.5px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Professional Button Animations */
+.btn-professional {
+  transition: all var(--duration-normal) var(--easing-default);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-professional:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.btn-professional:active {
+  transform: translateY(0);
+  transition-duration: var(--duration-fast);
+}
 
 /* Dark mode utility classes for consistent styling */
 .theme-card {

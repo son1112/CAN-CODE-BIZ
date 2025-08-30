@@ -46,13 +46,18 @@ export default function MobileOptimizedHeader({
   if (!isHydrated) {
     return (
       <div
-        className="sticky top-0 px-6 py-4 backdrop-blur-md border-b-2 border-transparent z-50"
+        className="sticky top-0 px-6 backdrop-blur-md border-b z-50"
         style={{
           zIndex: 50,
           width: '100%',
-          backgroundColor: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(248, 249, 250, 0.95)',
-          borderColor: 'var(--border-primary)',
-          boxShadow: 'var(--shadow-lg)',
+          height: '72px',
+          backgroundColor: isDark ? 'rgba(26, 26, 26, 0.95)' : 'rgba(248, 249, 250, 0.95)',
+          borderBottomColor: isDark ? 'var(--medium-gray)' : 'var(--medium-gray)',
+          boxShadow: 'var(--shadow-light)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          display: 'flex',
+          alignItems: 'center'
         }}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -115,20 +120,18 @@ export default function MobileOptimizedHeader({
       {/* Mobile/Tablet Header */}
       {showMobileLayout ? (
         <div
-          className="sticky top-0 px-4 py-3 backdrop-blur-md border-b-2 border-transparent z-50"
+          className="sticky top-0 px-4 backdrop-blur-md border-b z-50"
           style={{
             zIndex: 50,
             width: '100%',
-            backgroundColor: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(248, 249, 250, 0.95)',
-            borderColor: 'var(--border-primary)',
-            boxShadow: 'var(--shadow-lg)',
-            borderImage: 'linear-gradient(90deg, #6f42c1, #ff6b35, #20c997) 1',
-            borderBottom: '2px solid transparent',
-            backgroundImage: isDark
-              ? 'linear-gradient(rgba(31, 41, 55, 0.95), rgba(31, 41, 55, 0.95)), linear-gradient(90deg, #6f42c1, #ff6b35, #20c997)'
-              : 'linear-gradient(rgba(248, 249, 250, 0.95), rgba(248, 249, 250, 0.95)), linear-gradient(90deg, #6f42c1, #ff6b35, #20c997)',
-            backgroundClip: 'padding-box, border-box',
-            backgroundOrigin: 'padding-box, border-box'
+            height: '72px',
+            backgroundColor: isDark ? 'rgba(26, 26, 26, 0.95)' : 'rgba(248, 249, 250, 0.95)',
+            borderBottomColor: isDark ? 'var(--medium-gray)' : 'var(--medium-gray)',
+            boxShadow: 'var(--shadow-light)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            display: 'flex',
+            alignItems: 'center'
           }}
         >
           <div className="flex items-center justify-between min-w-0">
@@ -236,20 +239,18 @@ export default function MobileOptimizedHeader({
       ) : (
         // Optimized Desktop Header
         <div
-          className="sticky top-0 px-6 py-4 backdrop-blur-md border-b-2 border-transparent z-50"
+          className="sticky top-0 px-6 backdrop-blur-md border-b z-50"
           style={{
             zIndex: 50,
             width: '100%',
-            backgroundColor: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(248, 249, 250, 0.95)',
-            borderColor: 'var(--border-primary)',
-            boxShadow: 'var(--shadow-lg)',
-            borderImage: 'linear-gradient(90deg, #6f42c1, #ff6b35, #20c997) 1',
-            borderBottom: '2px solid transparent',
-            backgroundImage: isDark
-              ? 'linear-gradient(rgba(31, 41, 55, 0.95), rgba(31, 41, 55, 0.95)), linear-gradient(90deg, #6f42c1, #ff6b35, #20c997)'
-              : 'linear-gradient(rgba(248, 249, 250, 0.95), rgba(248, 249, 250, 0.95)), linear-gradient(90deg, #6f42c1, #ff6b35, #20c997)',
-            backgroundClip: 'padding-box, border-box',
-            backgroundOrigin: 'padding-box, border-box'
+            height: '72px',
+            backgroundColor: isDark ? 'rgba(26, 26, 26, 0.95)' : 'rgba(248, 249, 250, 0.95)',
+            borderBottomColor: isDark ? 'var(--medium-gray)' : 'var(--medium-gray)',
+            boxShadow: 'var(--shadow-light)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            display: 'flex',
+            alignItems: 'center'
           }}
         >
           <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -317,12 +318,21 @@ export default function MobileOptimizedHeader({
               <div className="flex items-center gap-2">
                 <button
                   onClick={onNewSession}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                  className="btn btn-primary flex items-center gap-2 transition-all duration-200"
                   style={{
-                    backgroundColor: 'var(--accent-primary)',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)'
+                    backgroundColor: 'var(--text-primary)',
+                    color: 'var(--primary-white)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-light)',
+                    minHeight: '48px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-medium)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-light)';
                   }}
                   title="Start new conversation"
                 >
@@ -334,11 +344,22 @@ export default function MobileOptimizedHeader({
                 <div className="flex items-center gap-1">
                   <button
                     onClick={onShowSessionBrowser}
-                    className="p-2 rounded-lg transition-all duration-200 hover:scale-105"
+                    className="p-2 transition-all duration-200"
                     style={{
-                      backgroundColor: currentView === 'sessions' ? 'var(--bg-tertiary)' : 'transparent',
-                      border: '1px solid var(--border-primary)',
-                      color: 'var(--text-secondary)'
+                      backgroundColor: currentView === 'sessions' ? 'var(--light-gray)' : 'transparent',
+                      border: '1px solid var(--medium-gray)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-secondary)',
+                      minHeight: '40px',
+                      minWidth: '40px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.backgroundColor = 'var(--light-gray)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.backgroundColor = currentView === 'sessions' ? 'var(--light-gray)' : 'transparent';
                     }}
                     title="Browse sessions"
                   >
@@ -347,11 +368,22 @@ export default function MobileOptimizedHeader({
 
                   <button
                     onClick={onShowStarsBrowser}
-                    className="p-2 rounded-lg transition-all duration-200 hover:scale-105"
+                    className="p-2 transition-all duration-200"
                     style={{
-                      backgroundColor: currentView === 'stars' ? 'var(--bg-tertiary)' : 'transparent',
-                      border: '1px solid var(--border-primary)',
-                      color: 'var(--text-secondary)'
+                      backgroundColor: currentView === 'stars' ? 'var(--light-gray)' : 'transparent',
+                      border: '1px solid var(--medium-gray)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-secondary)',
+                      minHeight: '40px',
+                      minWidth: '40px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.backgroundColor = 'var(--light-gray)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.backgroundColor = currentView === 'stars' ? 'var(--light-gray)' : 'transparent';
                     }}
                     title="Browse starred messages"
                   >
@@ -360,11 +392,22 @@ export default function MobileOptimizedHeader({
 
                   <button
                     onClick={onShowTagBrowser}
-                    className="p-2 rounded-lg transition-all duration-200 hover:scale-105"
+                    className="p-2 transition-all duration-200"
                     style={{
-                      backgroundColor: currentView === 'tags' ? 'var(--bg-tertiary)' : 'transparent',
-                      border: '1px solid var(--border-primary)',
-                      color: 'var(--text-secondary)'
+                      backgroundColor: currentView === 'tags' ? 'var(--light-gray)' : 'transparent',
+                      border: '1px solid var(--medium-gray)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-secondary)',
+                      minHeight: '40px',
+                      minWidth: '40px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.backgroundColor = 'var(--light-gray)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.backgroundColor = currentView === 'tags' ? 'var(--light-gray)' : 'transparent';
                     }}
                     title="Browse tags"
                   >
@@ -379,10 +422,22 @@ export default function MobileOptimizedHeader({
               {/* Settings/Profile */}
               <button
                 onClick={onStartTour}
-                className="p-2 rounded-lg transition-all duration-200 hover:scale-105"
+                className="p-2 transition-all duration-200"
                 style={{
-                  border: '1px solid var(--border-primary)',
-                  color: 'var(--text-secondary)'
+                  border: '1px solid var(--medium-gray)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-secondary)',
+                  backgroundColor: 'transparent',
+                  minHeight: '40px',
+                  minWidth: '40px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.backgroundColor = 'var(--light-gray)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
                 title="Start tour"
               >

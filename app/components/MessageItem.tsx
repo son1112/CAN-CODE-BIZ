@@ -110,22 +110,29 @@ const MessageItem = memo(function MessageItem({
         <div className="w-full flex justify-end">
           <div className="max-w-[80%]">
             <div
-              className={`relative shadow-xl rounded-lg border-l-4 ${professionalSpacing.padding}`}
+              className={`relative rounded-lg border-l-4 transition-all duration-200 ${professionalSpacing.padding}`}
               style={{
-                backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
-                color: isDark ? '#e5e5e5' : '#1f2937',
-                borderLeftColor: '#3b82f6',
-                boxShadow: isDark 
-                  ? '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
-                  : '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
-                border: isDark ? '1px solid #404040' : '1px solid #e5e7eb',
+                backgroundColor: 'var(--primary-white)',
+                color: 'var(--text-primary)',
+                borderLeftColor: 'var(--accent-purple)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: 'var(--shadow-light)',
+                border: `1px solid var(--medium-gray)`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-medium)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-light)';
               }}
             >
               {/* User Message Title & Header */}
-              <div className={`${professionalSpacing.marginBottom} border-b ${professionalSpacing.borderPadding}`} style={{ borderColor: isDark ? '#404040' : '#e5e7eb' }}>
+              <div className={`${professionalSpacing.marginBottom} border-b ${professionalSpacing.borderPadding}`} style={{ borderColor: 'var(--medium-gray)' }}>
                 <h3 className={`font-bold mb-2 ${professionalSpacing.titleSize}`} style={{
-                  color: '#1e40af',
-                  backgroundImage: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+                  color: 'var(--accent-purple)',
+                  backgroundImage: 'linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-orange) 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
@@ -135,8 +142,9 @@ const MessageItem = memo(function MessageItem({
                 <div className="flex items-center justify-between">
                   <div className={`flex items-center ${professionalSpacing.actionGap}`}>
                     <span className={`font-semibold px-2 py-1 rounded ${isMobileLayout ? 'text-xs' : 'text-xs'}`} style={{
-                      backgroundColor: isDark ? '#404040' : '#f3f4f6',
-                      color: '#3b82f6'
+                      backgroundColor: 'var(--light-gray)',
+                      color: 'var(--accent-purple)',
+                      borderRadius: 'var(--radius-sm)'
                     }}>
                       You
                     </span>
