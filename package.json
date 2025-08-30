@@ -64,7 +64,10 @@
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "typescript": "^5",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19.1.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -74,13 +77,10 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/react-dom": "^19.1.7",
     "ccusage": "^16.1.1",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
     "@types/html2canvas": "^0.5.35",
-    "@types/node": "^20",
-    "@types/react": "^19",
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^10.0.0",
     "eslint-plugin-prettier": "^5.5.4",
