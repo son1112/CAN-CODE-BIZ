@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { MessageCircle, Clock, Zap, Activity, Hash, Check, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MessageCircle, Clock, Zap, Activity, Hash, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import StarButton from './StarButton';
 import AgentSelector from './AgentSelector';
 import PrimaryAgentSelector from './PrimaryAgentSelector';
@@ -40,6 +40,26 @@ export default function SessionHeader({
   renameSession,
   loadSession
 }: SessionHeaderProps) {
+  // Mobile collapse state management
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport and set default collapse state
+  useEffect(() => {
+    const checkIsMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // Default to collapsed on mobile, expanded on desktop
+      if (mobile && !isCollapsed) {
+        setIsCollapsed(true);
+      }
+    };
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, [isCollapsed]);
+
   // CRITICAL FIX: Show loading state when session is null or being loaded
   // This prevents showing stale data from previous session
   if (!currentSession) {
@@ -173,6 +193,22 @@ export default function SessionHeader({
                     {formatSessionTitle(currentSession.name)}
                   </h1>
                   
+                  {/* Mobile Collapse Toggle */}
+                  {isMobile && (
+                    <button
+                      onClick={() => setIsCollapsed(!isCollapsed)}
+                      className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-target flex-shrink-0"
+                      style={{ minWidth: '32px', minHeight: '32px' }}
+                      title={isCollapsed ? 'Show session details' : 'Hide session details'}
+                    >
+                      {isCollapsed ? (
+                        <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+                      ) : (
+                        <ChevronUp className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+                      )}
+                    </button>
+                  )}
+                  
                   {/* Session Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0 ml-3">
                     {/* Session Star/Favorite Button */}
@@ -207,8 +243,14 @@ export default function SessionHeader({
               )}
             </div>
           
-            {/* Session Metadata Row */}
-            <div className="flex flex-wrap items-center gap-4 text-sm mt-2">
+            {/* Session Metadata Row - Collapsible on Mobile */}
+            <div 
+              className={`flex flex-wrap items-center gap-4 text-sm transition-all duration-300 ease-in-out ${
+                isMobile && isCollapsed 
+                  ? 'max-h-0 overflow-hidden opacity-0 mt-0' 
+                  : 'max-h-32 opacity-100 mt-2'
+              }`}
+            >
               {/* Creation Date */}
               {currentSession.createdAt && (
                 <div className="flex items-center gap-1.5">
@@ -237,8 +279,12 @@ export default function SessionHeader({
             </div>
           </div>
           
-          {/* Session Metrics & Controls */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 lg:gap-6">
+          {/* Session Metrics & Controls - Collapsible on Mobile */}
+          <div className={`flex flex-col lg:flex-row items-start lg:items-center gap-3 lg:gap-6 transition-all duration-300 ease-in-out ${
+            isMobile && isCollapsed 
+              ? 'max-h-0 overflow-hidden opacity-0' 
+              : 'max-h-96 opacity-100'
+          }`}>
             
             {/* Current Session Metrics */}
             <div className="flex items-center gap-4 text-sm">
