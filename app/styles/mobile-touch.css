@@ -15,30 +15,34 @@
   margin-bottom: env(keyboard-inset-height, 0px);
 }
 
-/* Ensure proper touch targets (minimum 44px) */
+/* CAN-CODE-BIZ Mobile Touch Targets (48px minimum) */
 .touch-target {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 48px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--easing-default);
+  backdrop-filter: var(--backdrop-blur-light);
+  -webkit-backdrop-filter: var(--backdrop-blur-light);
 }
 
-/* Enhanced touch feedback */
+/* CAN-CODE-BIZ Enhanced Touch Feedback */
 .touch-target:active {
   transform: scale(0.96);
-  background-color: rgba(59, 130, 246, 0.08);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
-  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: rgba(111, 66, 193, 0.08);
+  box-shadow: 0 2px 8px rgba(111, 66, 193, 0.15);
+  transition: all var(--duration-fast) var(--easing-default);
 }
 
-/* Improved touch feedback for buttons */
+/* CAN-CODE-BIZ Professional Touch Hover */
 .touch-target:hover {
-  background-color: rgba(59, 130, 246, 0.04);
+  background-color: rgba(111, 66, 193, 0.04);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Ripple effect for mobile touches */
@@ -56,9 +60,9 @@
 .touch-ripple {
   position: absolute;
   border-radius: 50%;
-  background: rgba(59, 130, 246, 0.3);
+  background: rgba(111, 66, 193, 0.3);
   pointer-events: none;
-  animation: mobile-ripple 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: mobile-ripple 0.5s var(--easing-default);
 }
 
 /* Mobile message container enhancements */

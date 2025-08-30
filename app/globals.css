@@ -408,6 +408,80 @@ p {
   transition-duration: var(--duration-fast);
 }
 
+/* CAN-CODE-BIZ Mobile Optimization System */
+@media (max-width: 768px) {
+  /* Mobile-first container system */
+  .container {
+    max-width: min(100vw, 100%);
+    margin: 0 auto;
+    padding: 0 var(--spacing-sm);
+  }
+  
+  .container-narrow {
+    max-width: min(100vw, 100%);
+    padding: 0 var(--spacing-xs);
+  }
+  
+  /* Mobile typography scaling */
+  .mobile-typography-sm {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    line-height: 1.4;
+  }
+  
+  .mobile-typography-md {
+    font-size: clamp(1rem, 3vw, 1.125rem);
+    line-height: 1.5;
+  }
+  
+  .mobile-typography-lg {
+    font-size: clamp(1.125rem, 4vw, 1.375rem);
+    line-height: 1.4;
+  }
+  
+  /* Mobile glass effects (performance optimized) */
+  .glass-card {
+    backdrop-filter: var(--backdrop-blur-light);
+    -webkit-backdrop-filter: var(--backdrop-blur-light);
+  }
+  
+  /* Mobile touch enhancement */
+  .mobile-card {
+    background-color: rgba(248, 249, 250, 0.98);
+    backdrop-filter: var(--backdrop-blur-light);
+    -webkit-backdrop-filter: var(--backdrop-blur-light);
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--duration-normal) var(--easing-default);
+  }
+  
+  .mobile-card:active {
+    transform: scale(0.98);
+    box-shadow: var(--shadow-light);
+  }
+  
+  /* Mobile navigation optimizations */
+  .mobile-nav-item {
+    min-height: 48px;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    transition: all var(--duration-fast) var(--easing-default);
+  }
+  
+  .mobile-nav-item:active {
+    background-color: rgba(111, 66, 193, 0.1);
+    transform: scale(0.96);
+  }
+}
+
+/* Dark mode mobile optimizations */
+@media (max-width: 768px) {
+  [data-theme="dark"] .mobile-card {
+    background-color: rgba(26, 26, 26, 0.98);
+    border-color: var(--medium-gray);
+  }
+}
+
 /* Dark mode utility classes for consistent styling */
 .theme-card {
   background: var(--bg-secondary);
