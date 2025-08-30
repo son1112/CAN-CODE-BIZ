@@ -201,29 +201,131 @@
                         </div>
                     </div>
                     
-                    <div class="about-grid">
-                        <div class="about-card modern">
-                            <div class="card-header">
-                                <h4>Our Approach</h4>
-                                <span class="card-icon">🔬</span>
-                            </div>
-                            <p>Drawing from rubber duck debugging principles, we're creating systematic approaches to AI context design. Our focus is on making AI interactions more consistent and reliable for practical business applications.</p>
+                    <!-- Feature Status Tabs -->
+                    <div class="feature-status-tabs">
+                        <div class="tab-navigation">
+                            <button class="tab-btn active" data-tab="current">✅ Available Now</button>
+                            <button class="tab-btn" data-tab="planned">🚀 Planned Features</button>
                         </div>
                         
-                        <div class="about-card modern">
-                            <div class="card-header">
-                                <h4>Target Applications</h4>
-                                <span class="card-icon">🎯</span>
+                        <div class="tab-content">
+                            <!-- Current Features Tab -->
+                            <div id="current-tab" class="tab-pane active">
+                                <div class="features-grid">
+                                    <div class="feature-card delivered">
+                                        <div class="feature-header">
+                                            <h4>🧠 Claude 4 AI Integration</h4>
+                                            <span class="status-badge live">LIVE</span>
+                                        </div>
+                                        <p>State-of-the-art conversational AI with intelligent responses and technical problem-solving capabilities</p>
+                                        <ul class="feature-details">
+                                            <li>Advanced natural language understanding</li>
+                                            <li>Technical debugging assistance</li>
+                                            <li>Real-time streaming responses</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="feature-card delivered">
+                                        <div class="feature-header">
+                                            <h4>🗣️ Voice-Enabled Conversations</h4>
+                                            <span class="status-badge live">LIVE</span>
+                                        </div>
+                                        <p>AssemblyAI-powered speech recognition for natural, hands-free debugging conversations</p>
+                                        <ul class="feature-details">
+                                            <li>Real-time voice input processing</li>
+                                            <li>Natural conversation flow</li>
+                                            <li>Think-out-loud debugging support</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="feature-card delivered">
+                                        <div class="feature-header">
+                                            <h4>📱 Production-Ready Platform</h4>
+                                            <span class="status-badge live">LIVE</span>
+                                        </div>
+                                        <p>Next.js 15 architecture with professional design, responsive layout, and enterprise security</p>
+                                        <ul class="feature-details">
+                                            <li>Mobile-responsive interface</li>
+                                            <li>Cross-platform compatibility</li>
+                                            <li>Professional user experience</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="feature-card delivered">
+                                        <div class="feature-header">
+                                            <h4>🤖 Smart Agent System</h4>
+                                            <span class="status-badge live">LIVE</span>
+                                        </div>
+                                        <p>Customizable AI personalities and specialized agents for different technical domains</p>
+                                        <ul class="feature-details">
+                                            <li>Custom agent personalities</li>
+                                            <li>Specialized technical expertise</li>
+                                            <li>Conversation management tools</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-                            <p>Software development teams, business consultants, educational organizations, and creative professionals looking to improve their AI implementations through better context engineering.</p>
-                        </div>
-                        
-                        <div class="about-card modern">
-                            <div class="card-header">
-                                <h4>Current Status</h4>
-                                <span class="card-icon">📊</span>
+                            
+                            <!-- Planned Features Tab -->
+                            <div id="planned-tab" class="tab-pane">
+                                <div class="roadmap-disclaimer">
+                                    <p><strong>Transparency Note:</strong> These features are planned based on user feedback and technical roadmap. Timelines may vary based on development priorities.</p>
+                                </div>
+                                
+                                <div class="features-grid">
+                                    <div class="feature-card planned">
+                                        <div class="feature-header">
+                                            <h4>📄 Export Capabilities</h4>
+                                            <span class="status-badge roadmap">Q1 2025</span>
+                                        </div>
+                                        <p>Professional document export with PDF, Word, and Google Drive integration for conversation archival</p>
+                                        <ul class="feature-details">
+                                            <li>PDF conversation exports</li>
+                                            <li>Word document formatting</li>
+                                            <li>Google Drive integration</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="feature-card planned">
+                                        <div class="feature-header">
+                                            <h4>👤 User Accounts & History</h4>
+                                            <span class="status-badge roadmap">Q1 2025</span>
+                                        </div>
+                                        <p>Persistent user accounts with conversation history, bookmarking, and cross-device sync</p>
+                                        <ul class="feature-details">
+                                            <li>Secure user authentication</li>
+                                            <li>Conversation history storage</li>
+                                            <li>Cross-device synchronization</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="feature-card planned">
+                                        <div class="feature-header">
+                                            <h4>📱 Enhanced Mobile Experience</h4>
+                                            <span class="status-badge roadmap">Q1 2025</span>
+                                        </div>
+                                        <p>PWA capabilities, offline mode, and mobile-optimized voice interactions</p>
+                                        <ul class="feature-details">
+                                            <li>Progressive Web App installation</li>
+                                            <li>Offline conversation capability</li>
+                                            <li>Mobile voice optimization</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="feature-card planned">
+                                        <div class="feature-header">
+                                            <h4>🎓 Developer Education Hub</h4>
+                                            <span class="status-badge roadmap">Q2 2025</span>
+                                        </div>
+                                        <p>Interactive tutorials, best practices guides, and rubber duck methodology training</p>
+                                        <ul class="feature-details">
+                                            <li>Step-by-step tutorials</li>
+                                            <li>Debugging methodology guides</li>
+                                            <li>Interactive learning modules</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-                            <p>We're actively developing and testing our platform components. Interested in contributing feedback or exploring early access? We're connecting with organizations interested in practical AI improvements.</p>
                         </div>
                     </div>
                 </div>
@@ -998,6 +1100,47 @@
         // Initialize early access manager when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
             new EarlyAccessManager();
+        });
+
+        // Tab Functionality for Feature Status Tabs
+        class TabManager {
+            constructor() {
+                this.tabButtons = document.querySelectorAll('.tab-btn');
+                this.tabPanes = document.querySelectorAll('.tab-pane');
+                this.init();
+            }
+
+            init() {
+                this.tabButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.switchTab(button.getAttribute('data-tab'));
+                    });
+                });
+            }
+
+            switchTab(targetTab) {
+                // Remove active class from all buttons and panes
+                this.tabButtons.forEach(btn => btn.classList.remove('active'));
+                this.tabPanes.forEach(pane => pane.classList.remove('active'));
+
+                // Add active class to clicked button
+                const activeButton = document.querySelector(`[data-tab="${targetTab}"]`);
+                if (activeButton) {
+                    activeButton.classList.add('active');
+                }
+
+                // Show corresponding tab pane
+                const activePane = document.querySelector(`#${targetTab}-tab`);
+                if (activePane) {
+                    activePane.classList.add('active');
+                }
+            }
+        }
+
+        // Initialize tab manager when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new TabManager();
         });
     </script>
 </body>
