@@ -66,7 +66,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       <SessionContext.Provider value={{
         currentSession: null,
         currentSessionId: null,
-        createSession: async () => ({ sessionId: '', name: '', messages: [], createdBy: '', createdAt: new Date(), updatedAt: new Date() } as SessionDocument),
+        createSession: async () => ({ sessionId: '', name: '', messages: [], createdBy: '', createdAt: new Date(), updatedAt: new Date() } as unknown as SessionDocument),
         loadSession: async () => null,
         updateSession: async () => false,
         renameSession: async () => false,

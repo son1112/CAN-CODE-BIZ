@@ -32,7 +32,7 @@ export function usePerformanceMonitor(componentName: string) {
         if (entry.entryType === 'navigation') {
           const navEntry = entry as PerformanceNavigationTiming;
           logMetrics({
-            loadTime: navEntry.loadEventEnd - navEntry.navigationStart,
+            loadTime: navEntry.loadEventEnd - navEntry.startTime,
           });
         }
       }

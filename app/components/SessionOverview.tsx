@@ -11,6 +11,7 @@ import MessageTagInterface from './MessageTagInterface';
 interface SessionOverviewProps {
   messages: SessionMessage[];
   sessionId: string;
+  userId?: string;
   onMessageClick?: (message: SessionMessage) => void;
   onTagsChange?: (messageId: string, tags: string[]) => void;
 }
@@ -32,6 +33,7 @@ interface MessageThread {
 export default function SessionOverview({
   messages,
   sessionId,
+  userId = 'demo-user',
   onMessageClick,
   onTagsChange
 }: SessionOverviewProps) {
@@ -85,8 +87,8 @@ export default function SessionOverview({
       }
     });
 
-    if (currentThread && currentThread.messages.length > 0) {
-      threads.push(currentThread);
+    if (currentThread && (currentThread as MessageThread).messages && (currentThread as MessageThread).messages.length > 0) {
+      threads.push(currentThread as MessageThread);
     }
 
     return threads;
@@ -136,9 +138,9 @@ export default function SessionOverview({
           {column !== 'metadata' && (
             <div className="flex items-center gap-1">
               <StarButton
+                userId={userId}
                 itemType="message"
                 itemId={message.id}
-                initialState={message.isStarred}
                 size="sm"
               />
             </div>
