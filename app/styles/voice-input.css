@@ -1,0 +1,172 @@
+/* Voice Input Mobile Enhancement Styles */
+
+/* Hardware-accelerated animations for smooth mobile performance */
+.voice-input-container {
+  contain: layout style;
+  transform: translateZ(0); /* Force hardware acceleration */
+  will-change: transform, opacity;
+}
+
+/* Status bar animations optimized for mobile */
+.persistent-status-bar {
+  transform: translateZ(0);
+  will-change: transform, background-color, opacity;
+  backface-visibility: hidden; /* Prevent flicker on mobile */
+}
+
+/* Collapsible panel animations using transform for better performance */
+.voice-controls-mobile {
+  transform-origin: top center;
+  backface-visibility: hidden;
+  /* Use transform instead of height changes for smoother animations */
+}
+
+/* Mobile touch optimizations */
+.touch-target {
+  /* Ensure minimum 44px touch targets for iOS guidelines */
+  min-width: 44px;
+  min-height: 44px;
+  
+  /* Prevent double-tap zoom and improve touch responsiveness */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  
+  /* Remove tap highlight on mobile browsers */
+  -webkit-tap-highlight-color: transparent;
+  
+  /* Improve button responsiveness on mobile */
+  cursor: pointer;
+}
+
+/* Status indicator animations optimized for performance */
+.status-indicator-dot {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* Waveform mini indicator animations */
+.waveform-mini {
+  transform: translateZ(0);
+  animation-fill-mode: both;
+}
+
+/* Prevent layout shift during animations */
+.voice-transcript-area {
+  contain: layout;
+  transform: translateZ(0);
+}
+
+/* Enhanced focus states for accessibility */
+.persistent-status-bar:focus,
+.touch-target:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .persistent-status-bar {
+    border: 2px solid currentColor;
+  }
+  
+  .status-indicator-dot {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Reduced motion support for users with vestibular disorders */
+@media (prefers-reduced-motion: reduce) {
+  .persistent-status-bar,
+  .voice-controls-mobile,
+  .status-indicator-dot,
+  .waveform-mini {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .persistent-status-bar {
+    /* Enhanced contrast for dark mode */
+    backdrop-filter: blur(8px) saturate(180%);
+  }
+}
+
+/* Mobile landscape optimizations */
+@media (orientation: landscape) and (max-height: 500px) {
+  .voice-controls-mobile {
+    /* Reduce padding in landscape to maximize space */
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+}
+
+/* Animation keyframes optimized for performance */
+@keyframes statusPulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1) translateZ(0); 
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.1) translateZ(0); 
+  }
+}
+
+@keyframes miniWaveform {
+  0% { 
+    transform: scaleY(0.3) translateZ(0); 
+  }
+  50% { 
+    transform: scaleY(1) translateZ(0); 
+  }
+  100% { 
+    transform: scaleY(0.3) translateZ(0); 
+  }
+}
+
+/* Apply optimized animations */
+.status-pulse {
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+.mini-waveform-bar {
+  animation: miniWaveform 1s ease-in-out infinite;
+}
+
+/* Ensure proper z-index stacking for mobile */
+.voice-input-container {
+  position: relative;
+  z-index: 10;
+}
+
+.persistent-status-bar {
+  z-index: 20;
+}
+
+/* iOS safe area support */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .voice-input-container {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Android Chrome specific fixes */
+@supports (-webkit-appearance: none) {
+  /* Fix dropdown flicker on Android Chrome */
+  .touch-target {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Performance optimization for large screens */
+@media (min-width: 1024px) {
+  .voice-input-container {
+    contain: layout style paint;
+  }
+}

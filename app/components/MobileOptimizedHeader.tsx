@@ -120,11 +120,11 @@ export default function MobileOptimizedHeader({
       {/* Mobile/Tablet Header */}
       {showMobileLayout ? (
         <div
-          className="sticky top-0 backdrop-blur-md border-b z-50"
+          className="sticky top-0 backdrop-blur-md border-b z-50 mobile-optimized-header"
           style={{
             zIndex: 50,
             width: '100%',
-            height: '72px',
+            height: isMobile ? '64px' : '72px',
             backgroundColor: isDark ? 'rgba(26, 26, 26, 0.95)' : 'rgba(248, 249, 250, 0.95)',
             borderBottomColor: isDark ? 'var(--medium-gray)' : 'var(--medium-gray)',
             boxShadow: 'var(--shadow-light)',
@@ -132,37 +132,40 @@ export default function MobileOptimizedHeader({
             WebkitBackdropFilter: 'blur(12px)',
             display: 'flex',
             alignItems: 'center',
-            paddingLeft: isMobile ? '16px' : '20px',
-            paddingRight: isMobile ? '16px' : '20px'
+            paddingLeft: isMobile ? '12px' : '20px',
+            paddingRight: isMobile ? '12px' : '20px'
           }}
         >
-          <div className="w-full flex items-center justify-between min-w-0">
+          <div className="header-container">
             {/* Left Side: Logo + Session Info */}
-            <div className="flex items-center gap-3 min-w-0 flex-1 max-w-[calc(100%-120px)]">
-              <Logo
-                size={isMobile ? "md" : "lg"}
-                showText={false}
-                onClick={onNavigateToHome}
-                className="flex-shrink-0"
-              />
+            <div className="header-left">
+              <div className="logo-container">
+                <Logo
+                  size={isMobile ? "sm" : "md"}
+                  showText={false}
+                  onClick={onNavigateToHome}
+                  className="flex-shrink-0"
+                />
+              </div>
 
               {/* Session Title - Mobile Optimized */}
-              <div className="min-w-0 flex-1">
+              <div className="session-title-container">
                 {currentSession ? (
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 w-full">
                     {isContinuousMode && (
-                      <div className="flex-shrink-0">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
+                      <div className="continuous-mode-indicator">
+                        <div className={`bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50 ${
+                          isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'
+                        }`}></div>
                       </div>
                     )}
                     <span
-                      className={`font-semibold truncate ${
+                      className={`session-title font-semibold ${
                         isMobile ? 'text-sm mobile-typography-sm' : 'text-base'
                       }`}
                       style={{
                         color: 'var(--text-primary)',
-                        letterSpacing: '-0.01em',
-                        // Remove maxWidth constraint to allow natural flex truncation
+                        letterSpacing: '-0.01em'
                       }}
                       title={currentSession.name}
                     >
@@ -176,33 +179,46 @@ export default function MobileOptimizedHeader({
                       style={{ color: 'var(--text-secondary)' }}
                     />
                     <span
-                      className="text-sm font-medium"
-                      style={{ color: 'var(--text-secondary)' }}
+                      className={`font-medium truncate ${
+                        isMobile ? 'text-xs' : 'text-sm'
+                      }`}
+                      style={{ 
+                        color: 'var(--text-secondary)',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
                     >
                       {isMobile ? 'Chat' : 'New Conversation'}
                     </span>
                   </div>
                 )}
 
-                {/* Offline Status Badge */}
-                {isMobile && (
-                  <OfflineStatusBadge className="ml-2" />
+                {/* Offline Status Badge - Only show when not in session to prevent overcrowding */}
+                {isMobile && !currentSession && (
+                  <div className="flex-shrink-0 ml-2">
+                    <OfflineStatusBadge />
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Right Side: Theme Toggle + Hamburger Menu */}
-            <div className="flex items-center gap-1 flex-shrink-0" style={{ minWidth: '104px' }}>
-              {/* Mobile Theme Toggle */}
-              <ThemeToggle />
+            <div className="header-right">
+              {/* Mobile Theme Toggle - Smaller on mobile */}
+              <div className="theme-toggle-container">
+                <ThemeToggle />
+              </div>
               
               {/* Hamburger Menu Button */}
-              <button
+              <div className="menu-button-container">
+                <button
                 onClick={toggleMenu}
-                className="rounded-lg transition-all duration-200 p-2 touch-target"
+                className="rounded-lg transition-all duration-200 p-2 touch-target flex-shrink-0"
                 style={{
-                  minWidth: '48px', // CAN-CODE-BIZ standard touch target
-                  minHeight: '48px',
+                  minWidth: '44px', // Slightly smaller for better fit
+                  minHeight: '44px',
                   backgroundColor: isMenuOpen ? 'rgba(111, 66, 193, 0.1)' : 'transparent',
                   border: isMenuOpen ? '1px solid rgba(111, 66, 193, 0.3)' : '1px solid transparent',
                   display: 'flex',
@@ -214,10 +230,11 @@ export default function MobileOptimizedHeader({
                 aria-label="Open menu"
               >
                 <Menu
-                  className="w-5 h-5"
+                  className={isMobile ? 'w-4 h-4' : 'w-5 h-5'}
                   style={{ color: isMenuOpen ? '#6f42c1' : 'var(--text-secondary)' }}
                 />
-              </button>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -258,9 +275,9 @@ export default function MobileOptimizedHeader({
             alignItems: 'center'
           }}
         >
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="header-container w-full px-4 lg:px-6 xl:px-8 flex items-center justify-between">
             {/* Left Side: Logo + Session Info */}
-            <div className="flex items-center gap-6 min-w-0 flex-1">
+            <div className="header-left flex items-center gap-4 lg:gap-6 min-w-0 flex-1">
               <Logo
                 size="lg"
                 showText={false}
@@ -318,7 +335,7 @@ export default function MobileOptimizedHeader({
             </div>
 
             {/* Right Side: Controls */}
-            <div className="flex items-center gap-4">
+            <div className="header-right flex items-center gap-3 lg:gap-4 flex-shrink-0">
               {/* Session Actions */}
               <div className="flex items-center gap-2">
                 <button

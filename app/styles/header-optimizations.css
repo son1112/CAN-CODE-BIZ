@@ -1,0 +1,213 @@
+/* Header Layout Optimization CSS */
+
+/* Prevent layout overflow and ensure proper space distribution */
+.mobile-optimized-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  overflow: hidden;
+}
+
+.mobile-optimized-header .header-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Use full width with responsive padding instead of centering */
+  margin: 0;
+}
+
+/* Left side optimization */
+.mobile-optimized-header .header-left {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  /* Ensure adequate spacing from right side controls */
+  margin-right: 24px;
+}
+
+/* Session title container */
+.mobile-optimized-header .session-title-container {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mobile-optimized-header .session-title {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Right side optimization */
+.mobile-optimized-header .header-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: fit-content;
+  /* Ensure buttons don't get too close to each other or viewport edge */
+  margin-left: 16px;
+}
+
+/* Mobile specific optimizations */
+@media (max-width: 768px) {
+  .mobile-optimized-header {
+    height: 64px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  
+  .mobile-optimized-header .header-left {
+    gap: 6px;
+    max-width: calc(100% - 120px); /* Account for right side controls */
+  }
+  
+  .mobile-optimized-header .session-title {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  
+  .mobile-optimized-header .header-right {
+    gap: 6px;
+    min-width: 112px; /* Fixed width for predictable layout */
+  }
+}
+
+/* Tablet specific adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .mobile-optimized-header {
+    height: 68px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  .mobile-optimized-header .header-left {
+    gap: 20px;
+    margin-right: 32px;
+  }
+  
+  .mobile-optimized-header .header-right {
+    gap: 16px;
+    margin-left: 20px;
+  }
+}
+
+/* Desktop specific optimizations */
+@media (min-width: 1025px) and (max-width: 1919px) {
+  .mobile-optimized-header .header-left {
+    gap: 24px;
+    margin-right: 40px;
+  }
+  
+  .mobile-optimized-header .header-right {
+    gap: 20px;
+    margin-left: 24px;
+  }
+}
+
+/* Theme toggle and menu button specific optimizations */
+.mobile-optimized-header .theme-toggle-container {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-optimized-header .menu-button-container {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Continuous mode indicator optimizations */
+.mobile-optimized-header .continuous-mode-indicator {
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+/* Logo optimizations */
+.mobile-optimized-header .logo-container {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure proper z-index stacking */
+.mobile-optimized-header .hamburger-menu {
+  z-index: 60;
+}
+
+/* Prevent content jumping during loading */
+.mobile-optimized-header .loading-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .mobile-optimized-header {
+    border-bottom: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-optimized-header * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode specific adjustments */
+@media (prefers-color-scheme: dark) {
+  .mobile-optimized-header {
+    backdrop-filter: blur(12px) saturate(180%);
+  }
+}
+
+/* Ultra-wide screen optimizations */
+@media (min-width: 1920px) {
+  .mobile-optimized-header .header-container {
+    /* Use full width with larger padding for ultra-wide screens */
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+/* Portrait orientation specific adjustments */
+@media (orientation: portrait) and (max-width: 768px) {
+  .mobile-optimized-header .session-title {
+    max-width: calc(100vw - 160px); /* More conservative on portrait mobile */
+  }
+}
+
+/* Landscape orientation specific adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+  .mobile-optimized-header {
+    height: 56px; /* Reduce height in landscape to maximize content */
+  }
+  
+  .mobile-optimized-header .session-title {
+    font-size: 13px;
+  }
+}

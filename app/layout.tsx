@@ -14,6 +14,8 @@ import { SessionAgentSync } from "@/components/SessionAgentSync";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import "./globals.css";
 import "./styles/mobile-touch.css";
+import "./styles/voice-input.css";
+import "./styles/header-optimizations.css";
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",

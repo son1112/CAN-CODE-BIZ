@@ -17,13 +17,47 @@ interface VoiceInputProps {
   isContinuousMode?: boolean;
 }
 
+// Enhanced status indicator colors and animations
+const STATUS_COLORS = {
+  recording: {
+    bg: 'bg-gradient-to-r from-red-500 to-red-600',
+    text: 'text-red-100',
+    accent: 'bg-red-400',
+    pulse: 'animate-pulse'
+  },
+  readyToSend: {
+    bg: 'bg-gradient-to-r from-green-500 to-green-600', 
+    text: 'text-green-100',
+    accent: 'bg-green-400',
+    pulse: 'animate-bounce'
+  },
+  idle: {
+    bg: 'bg-gradient-to-r from-blue-500 to-blue-600',
+    text: 'text-blue-100', 
+    accent: 'bg-blue-400',
+    pulse: ''
+  }
+};
+
 export default function VoiceInput({ onTranscript, isDisabled = false, enableContinuousMode = false, onContinuousModeToggle, isContinuousMode = false }: VoiceInputProps) {
   const { settings: safetySettings } = useContentSafety();
   const { isMobile, isTablet } = useMobileNavigation();
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
+  
+  // Collapsible panel state
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+  const [persistCollapsedState, setPersistCollapsedState] = useState(false);
 
   // Mobile-first: Show mobile layout for mobile and tablet
   const isMobileLayout = isMobile || isTablet;
+  
+  // Auto-collapse on mobile by default
+  useEffect(() => {
+    if (isMobileLayout && !persistCollapsedState) {
+      setIsPanelCollapsed(true);
+      setPersistCollapsedState(true);
+    }
+  }, [isMobileLayout, persistCollapsedState]);
 
   const {
     transcript,
@@ -210,6 +244,58 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
       }
     }
   };
+  
+  // Get current status for indicator system
+  const getCurrentStatus = () => {
+    if (isListening || isInContinuousMode) {
+      return 'recording';
+    } else if (transcript.trim()) {
+      return 'readyToSend';
+    } else {
+      return 'idle';
+    }
+  };
+  
+  const currentStatus = getCurrentStatus();
+  const statusConfig = STATUS_COLORS[currentStatus];
+  
+  // Status text for collapsed state
+  const getStatusText = () => {
+    switch (currentStatus) {
+      case 'recording':
+        return isInContinuousMode ? (isMuted ? 'Muted' : 'Listening...') : 'Recording...';
+      case 'readyToSend':
+        return 'Ready to Send';
+      default:
+        return enableContinuousMode ? 'Tap to start chat mode' : 'Tap to start talking';
+    }
+  };
+  
+  // Handle panel toggle with improved touch handling
+  const handlePanelToggle = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Fix Android Chrome dropdown flicker by preventing default touch behavior
+    if ('touches' in e) {
+      // Touch event specific handling
+      const touch = e.touches[0] || e.changedTouches[0];
+      if (touch) {
+        // Debounce rapid touch events
+        const now = Date.now();
+        if (now - (handlePanelToggle as any).lastTouchTime < 300) {
+          return;
+        }
+        (handlePanelToggle as any).lastTouchTime = now;
+      }
+    }
+    
+    if (isMobileLayout) {
+      onPress();
+    }
+    
+    setIsPanelCollapsed(!isPanelCollapsed);
+  };
 
   // Show loading state during initial support check to prevent hydration flash
   if (isCheckingSupport) {
@@ -253,10 +339,103 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
   }
 
   return (
-    <div className="voice-input-container no-text-scale">
+    <div className="voice-input-container no-text-scale" role="region" aria-label="Voice input controls">
+      {/* Screen reader announcements */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {currentStatus === 'recording' && (
+          isInContinuousMode ? (isMuted ? 'Microphone muted' : 'Listening for speech') : 'Recording your voice'
+        )}
+        {currentStatus === 'readyToSend' && 'Voice transcript ready to send'}
+      </div>
+      {/* Always-visible Status Bar for Mobile */}
+      {isMobileLayout && (
+        <div 
+          className={`persistent-status-bar ${statusConfig.bg} ${statusConfig.text} px-4 py-2 flex items-center justify-between cursor-pointer transition-all duration-300 rounded-t-xl shadow-lg`}
+          onClick={handlePanelToggle}
+          onTouchEnd={handlePanelToggle}
+          style={{
+            minHeight: '44px',
+            zIndex: 50,
+            userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            touchAction: 'manipulation' // Prevent double-tap zoom and improve touch response
+          }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handlePanelToggle(e as any);
+            }
+          }}
+          aria-label={isPanelCollapsed ? 'Expand voice controls' : 'Collapse voice controls'}
+          aria-expanded={!isPanelCollapsed}
+        >
+          <div className="flex items-center gap-3">
+            {/* Status Indicator Dot */}
+            <div className={`w-3 h-3 rounded-full ${statusConfig.accent} ${statusConfig.pulse} status-indicator-dot`} />
+            
+            {/* Status Text */}
+            <span className="font-medium text-sm">
+              {getStatusText()}
+            </span>
+            
+            {/* Recording Waveform Mini Indicator */}
+            {(isListening || isInContinuousMode) && (
+              <div className="flex items-center gap-1 waveform-mini">
+                <div className={`w-1 h-2 ${statusConfig.accent} rounded-full mini-waveform-bar`} style={{ animationDelay: '0ms' }} />
+                <div className={`w-1 h-3 ${statusConfig.accent} rounded-full mini-waveform-bar`} style={{ animationDelay: '150ms' }} />
+                <div className={`w-1 h-2 ${statusConfig.accent} rounded-full mini-waveform-bar`} style={{ animationDelay: '300ms' }} />
+              </div>
+            )}
+          </div>
+          
+          {/* Expand/Collapse Icon */}
+          <div className="flex items-center gap-2">
+            {/* Quick Action Buttons in Status Bar */}
+            {currentStatus === 'readyToSend' && !enableContinuousMode && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isMobileLayout) onPress();
+                  handleSendTranscript();
+                }}
+                className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors touch-target"
+                style={{ minHeight: '32px', minWidth: '32px' }}
+                title="Send message"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            )}
+            
+            {isPanelCollapsed ? (
+              <ChevronUp className="w-5 h-5" />
+            ) : (
+              <ChevronDown className="w-5 h-5" />
+            )}
+          </div>
+        </div>
+      )}
+      
       {isMobileLayout ? (
-        /* Mobile-Optimized Control Panel */
-        <div className="voice-controls-mobile">
+        /* Mobile-Optimized Control Panel - Now Collapsible */
+        <div 
+          className={`voice-controls-mobile transition-all duration-300 ease-in-out overflow-hidden ${
+            isPanelCollapsed ? 'max-h-0 opacity-0' : 'max-h-screen opacity-100'
+          }`}
+          style={{
+            transformOrigin: 'top',
+            ...(isPanelCollapsed ? {
+              transform: 'scaleY(0)',
+              paddingTop: '0',
+              paddingBottom: '0'
+            } : {
+              transform: 'scaleY(1)',
+              paddingTop: '16px',
+              paddingBottom: '16px'
+            })
+          }}
+        >
           {/* Primary Controls Row */}
           <div className="flex items-center justify-center gap-3 mb-3">
             {/* Enhanced Main Action Button - Mobile Optimized */}
@@ -276,7 +455,9 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
                 padding: '20px', 
                 minHeight: '72px', 
                 minWidth: '72px',
-                position: 'relative'
+                position: 'relative',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent'
               }}
               title={
                 enableContinuousMode
@@ -317,7 +498,13 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
                 }}
                 disabled={isDisabled}
                 className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95 touch-target relative overflow-hidden"
-                style={{ padding: '16px', minHeight: '64px', minWidth: '64px' }}
+                style={{ 
+                  padding: '16px', 
+                  minHeight: '64px', 
+                  minWidth: '64px',
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent'
+                }}
                 title="Send message"
               >
                 <Send style={{ width: '24px', height: '24px' }} className="drop-shadow-lg" />
@@ -351,7 +538,13 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
               className={`bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl transition-all duration-300 shadow-lg transform active:scale-95 touch-target relative ${
                 showAdvancedControls ? 'ring-2 ring-purple-300 shadow-purple-500/40' : ''
               }`}
-              style={{ padding: '14px', minHeight: '56px', minWidth: '56px' }}
+              style={{ 
+                padding: '14px', 
+                minHeight: '56px', 
+                minWidth: '56px',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent'
+              }}
               title="More options"
             >
               {showAdvancedControls ?
@@ -604,8 +797,12 @@ export default function VoiceInput({ onTranscript, isDisabled = false, enableCon
         </div>
       )}
 
-      {/* Expandable Transcript Area - positioned below controls */}
-      <div className="voice-transcript-area" style={{ marginTop: '8px' }}>
+      {/* Expandable Transcript Area - positioned below controls, responsive to collapse state */}
+      <div 
+        className={`voice-transcript-area transition-all duration-300 ease-in-out ${
+          isMobileLayout && isPanelCollapsed ? 'mt-2' : 'mt-4'
+        }`}
+      >
         {/* Current Transcript */}
         {transcript.trim() && (
           <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 border border-yellow-200/50 rounded-xl shadow-sm shadow-yellow-500/10 backdrop-blur-sm" style={{ padding: '6px', marginBottom: '6px' }}>
