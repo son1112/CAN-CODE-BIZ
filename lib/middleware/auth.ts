@@ -30,7 +30,7 @@ export async function requireAuth(request?: NextRequest, requiredScope?: string)
     if (apiKeyHeader) {
       const clientIp = request?.headers.get('x-forwarded-for')?.split(',')[0] || 
                       request?.headers.get('x-real-ip') || 
-                      request?.ip;
+                      'unknown';
       
       const apiKeyResult = await validateApiKey(apiKeyHeader, clientIp);
       

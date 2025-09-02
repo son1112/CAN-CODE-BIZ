@@ -4,17 +4,17 @@ import { handleApiError } from '@/lib/error-handler';
 import { getApiKeyInfo, revokeApiKey } from '@/lib/api-keys';
 import { logger } from '@/lib/logger';
 
-interface RouteParams {
-  params: {
+interface RouteContext {
+  params: Promise<{
     keyId: string;
-  };
+  }>;
 }
 
 // GET /api/api-keys/[keyId] - Get specific API key info
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { userId } = await requireAuth(request);
-    const { keyId } = params;
+    const { keyId } = await context.params;
     
     const apiKeyInfo = await getApiKeyInfo(keyId, userId);
     
@@ -42,10 +42,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE /api/api-keys/[keyId] - Revoke API key
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { userId } = await requireAuth(request);
-    const { keyId } = params;
+    const { keyId } = await context.params;
     
     const success = await revokeApiKey(keyId, userId);
     

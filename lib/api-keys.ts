@@ -181,7 +181,7 @@ export async function validateApiKey(key: string, ipAddress?: string): Promise<A
     if (!apiKeyDoc) {
       logger.warn('API key not found', {
         component: 'api-keys',
-        keyPreview: keyId,
+        keyPreview,
         ipAddress
       });
       return { isValid: false, error: 'API key not found' };
@@ -200,11 +200,11 @@ export async function validateApiKey(key: string, ipAddress?: string): Promise<A
     }
     
     // Check if key is expired
-    if (apiKeyDoc.isExpired()) {
+    if (apiKeyDoc.expiresAt && apiKeyDoc.expiresAt < new Date()) {
       logger.warn('API key expired', {
         component: 'api-keys',
         keyId: apiKeyDoc.keyId,
-        expiresAt: apiKeyDoc.expiresAt
+        expiresAt: apiKeyDoc.expiresAt?.toISOString()
       });
       return { isValid: false, error: 'API key expired' };
     }
@@ -232,13 +232,21 @@ export async function validateApiKey(key: string, ipAddress?: string): Promise<A
     }
     
     // Update usage statistics (async, don't await to avoid blocking)
-    setImmediate(() => {
-      apiKeyDoc.updateUsage(ipAddress).catch(error => {
+    setImmediate(async () => {
+      try {
+        await ApiKey.updateOne(
+          { keyId: apiKeyDoc.keyId },
+          { 
+            $inc: { usageCount: 1 },
+            lastUsedAt: new Date()
+          }
+        );
+      } catch (error) {
         logger.error('Failed to update API key usage', {
           component: 'api-keys',
           keyId: apiKeyDoc.keyId
         }, error);
-      });
+      }
     });
     
     logger.debug('API key validation successful', {
@@ -293,7 +301,7 @@ export async function getApiKeyInfo(keyId: string, userId: string): Promise<ApiK
 export async function listUserApiKeys(userId: string): Promise<ApiKeyInfo[]> {
   await connectDB();
   
-  const apiKeys = await ApiKey.findActiveByUserId(userId);
+  const apiKeys = await ApiKey.find({ userId, isActive: true }).sort({ createdAt: -1 });
   
   return apiKeys.map(apiKey => ({
     keyId: apiKey.keyId,
