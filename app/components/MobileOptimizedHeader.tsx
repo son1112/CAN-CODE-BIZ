@@ -151,7 +151,7 @@ export default function MobileOptimizedHeader({
               {/* Session Title - Mobile Optimized */}
               <div className="session-title-container">
                 {currentSession ? (
-                  <div className="flex items-center gap-2 min-w-0 w-full">
+                  <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                     {isContinuousMode && (
                       <div className="continuous-mode-indicator">
                         <div className={`bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50 ${
@@ -160,12 +160,16 @@ export default function MobileOptimizedHeader({
                       </div>
                     )}
                     <span
-                      className={`session-title font-semibold ${
+                      className={`session-title font-semibold truncate ${
                         isMobile ? 'text-sm mobile-typography-sm' : 'text-base'
                       }`}
                       style={{
                         color: 'var(--text-primary)',
-                        letterSpacing: '-0.01em'
+                        letterSpacing: '-0.01em',
+                        maxWidth: isMobile ? 'calc(100vw - 200px)' : 'calc(100vw - 300px)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
                       }}
                       title={currentSession.name}
                     >

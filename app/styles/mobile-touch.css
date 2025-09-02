@@ -1,5 +1,112 @@
 /* Mobile Touch Optimization Styles */
 
+/* Mobile Header Components */
+.mobile-optimized-header .header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+}
+
+.mobile-optimized-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0; /* Allow shrinking */
+  overflow: hidden;
+}
+
+.mobile-optimized-header .header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.mobile-optimized-header .logo-container {
+  flex-shrink: 0;
+}
+
+.mobile-optimized-header .session-title-container {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mobile-optimized-header .theme-toggle-container {
+  flex-shrink: 0;
+}
+
+.mobile-optimized-header .menu-button-container {
+  flex-shrink: 0;
+}
+
+/* Mobile Input Area Optimizations */
+@media (max-width: 768px) {
+  /* Enhanced mobile input footer */
+  .scale-locked-footer {
+    min-height: 140px !important;
+    padding-top: 16px !important;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
+  }
+
+  /* Mobile voice input and text input layout */
+  .voice-input-wrapper {
+    margin-bottom: 8px;
+  }
+  
+  /* Optimize mobile input form spacing */
+  .flex.flex-col.sm\\:flex-row {
+    gap: 8px !important;
+  }
+
+  /* Mobile textarea optimizations */
+  .mobile-textarea-optimized {
+    min-height: 48px !important;
+    font-size: 16px !important; /* Prevent iOS zoom */
+    line-height: 1.4 !important;
+    border-radius: 12px !important;
+    padding: 14px 16px !important;
+  }
+
+  /* Better mobile input container spacing */
+  .relative.max-w-6xl.mx-auto {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    padding-top: 12px !important;
+  }
+
+  /* Mobile message list improvements */
+  .messages-container {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    padding-bottom: 20px !important;
+  }
+
+  /* Mobile message item spacing */
+  .mobile-chat-message {
+    margin-bottom: 16px !important;
+    padding: 14px !important;
+    border-radius: 12px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Mobile message content optimization */
+  .mobile-message-text {
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Better mobile button spacing */
+  .mobile-button-group {
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+}
+
 /* Safe Area Support for Mobile Devices */
 .safe-area-bottom {
   bottom: max(24px, env(safe-area-inset-bottom, 24px)) !important;

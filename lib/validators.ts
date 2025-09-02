@@ -60,6 +60,19 @@ interface CreateTagRequest {
   description?: string;
 }
 
+interface CreateApiKeyRequest {
+  name: string;
+  description?: string;
+  scopes: string[];
+  expiresInDays?: number;
+  rateLimit?: {
+    requestsPerMinute?: number;
+    requestsPerHour?: number;
+    requestsPerDay?: number;
+  };
+  ipWhitelist?: string[];
+}
+
 export interface ValidationResult {
   isValid: boolean;
   errors: FieldValidationError[];
@@ -448,5 +461,81 @@ export const validators = {
       .optionalString(category, 'category', 50)
       .optionalString(description, 'description', 200)
       .getResult();
+  },
+
+  /**
+   * Validate API key creation request
+   */
+  createApiKey: (data: unknown) => {
+    const validator = createValidator();
+
+    if (typeof data !== 'object' || data === null) {
+      validator.addError('body', 'must be an object');
+      return validator.getResult();
+    }
+
+    const { name, description, scopes, expiresInDays, rateLimit, ipWhitelist } = data as CreateApiKeyRequest;
+
+    validator
+      .required(name, 'name', 100)
+      .optionalString(description, 'description', 500)
+      .array(scopes, 'scopes', 20);
+
+    // Validate scopes array
+    if (Array.isArray(scopes)) {
+      if (scopes.length === 0) {
+        validator.addError('scopes', 'must include at least one scope');
+      }
+      
+      scopes.forEach((scope, index) => {
+        if (typeof scope !== 'string') {
+          validator.addError(`scopes[${index}]`, 'must be a string');
+        }
+      });
+    }
+
+    // Validate expiration
+    if (expiresInDays !== undefined) {
+      validator.integer(expiresInDays, 'expiresInDays', 1, 3650); // Max 10 years
+    }
+
+    // Validate rate limiting
+    if (rateLimit !== undefined) {
+      if (typeof rateLimit !== 'object' || rateLimit === null) {
+        validator.addError('rateLimit', 'must be an object');
+      } else {
+        if (rateLimit.requestsPerMinute !== undefined) {
+          validator.integer(rateLimit.requestsPerMinute, 'rateLimit.requestsPerMinute', 1, 10000);
+        }
+        if (rateLimit.requestsPerHour !== undefined) {
+          validator.integer(rateLimit.requestsPerHour, 'rateLimit.requestsPerHour', 1, 100000);
+        }
+        if (rateLimit.requestsPerDay !== undefined) {
+          validator.integer(rateLimit.requestsPerDay, 'rateLimit.requestsPerDay', 1, 1000000);
+        }
+      }
+    }
+
+    // Validate IP whitelist
+    if (ipWhitelist !== undefined) {
+      if (!Array.isArray(ipWhitelist)) {
+        validator.addError('ipWhitelist', 'must be an array');
+      } else {
+        ipWhitelist.forEach((ip, index) => {
+          if (typeof ip !== 'string') {
+            validator.addError(`ipWhitelist[${index}]`, 'must be a string');
+          } else {
+            // Basic IP validation
+            const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/[0-9]{1,2})?$/;
+            const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(?:\/[0-9]{1,3})?$/;
+            if (!ipv4Regex.test(ip) && !ipv6Regex.test(ip)) {
+              validator.addError(`ipWhitelist[${index}]`, 'must be a valid IP address or CIDR notation');
+            }
+          }
+        });
+      }
+    }
+
+    return validator.getResult();
   }
 };

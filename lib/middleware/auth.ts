@@ -7,23 +7,75 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { UnauthorizedError } from '@/lib/error-handler';
+import { validateApiKey, hasScope } from '@/lib/api-keys';
 
 export interface AuthResult {
   userId: string;
   isDemo: boolean;
+  isApiKey?: boolean;
+  scopes?: string[];
+  keyId?: string;
 }
 
 /**
  * Requires authentication for API endpoints
  * Returns user ID or throws UnauthorizedError
+ * Supports both session-based and API key authentication
  */
-export async function requireAuth(request?: NextRequest): Promise<AuthResult> {
+export async function requireAuth(request?: NextRequest, requiredScope?: string): Promise<AuthResult> {
   try {
+    // Check for API key authentication first
+    const apiKeyHeader = request?.headers.get('X-API-Key') || request?.headers.get('Authorization')?.replace('Bearer ', '');
+    
+    if (apiKeyHeader) {
+      const clientIp = request?.headers.get('x-forwarded-for')?.split(',')[0] || 
+                      request?.headers.get('x-real-ip') || 
+                      request?.ip;
+      
+      const apiKeyResult = await validateApiKey(apiKeyHeader, clientIp);
+      
+      if (apiKeyResult.isValid && apiKeyResult.userId && apiKeyResult.scopes) {
+        // Check scope if required
+        if (requiredScope && !hasScope(apiKeyResult.scopes, requiredScope)) {
+          logger.warn('API key insufficient scope', {
+            component: 'auth-middleware',
+            keyId: apiKeyResult.keyInfo?.keyId,
+            requiredScope,
+            availableScopes: apiKeyResult.scopes
+          });
+          throw new UnauthorizedError(`Insufficient scope: ${requiredScope} required`);
+        }
+        
+        logger.debug('API key authentication successful', {
+          component: 'auth-middleware',
+          keyId: apiKeyResult.keyInfo?.keyId,
+          userId: apiKeyResult.userId,
+          path: request?.nextUrl?.pathname
+        });
+        
+        return {
+          userId: apiKeyResult.userId,
+          isDemo: false,
+          isApiKey: true,
+          scopes: apiKeyResult.scopes,
+          keyId: apiKeyResult.keyInfo?.keyId
+        };
+      } else {
+        logger.warn('API key authentication failed', {
+          component: 'auth-middleware',
+          error: apiKeyResult.error,
+          path: request?.nextUrl?.pathname
+        });
+        throw new UnauthorizedError(apiKeyResult.error || 'Invalid API key');
+      }
+    }
+
+    // Fall back to session-based authentication
     const session = await auth();
     const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
     const userId = session?.user?.id;
 
-    logger.debug('Authentication check', {
+    logger.debug('Session authentication check', {
       component: 'auth-middleware',
       isDemoMode,
       hasSession: !!userId,
@@ -32,7 +84,7 @@ export async function requireAuth(request?: NextRequest): Promise<AuthResult> {
 
     // If we have a valid session, use it regardless of demo mode
     if (userId) {
-      logger.debug('Authentication successful', {
+      logger.debug('Session authentication successful', {
         component: 'auth-middleware',
         userId,
         path: request?.nextUrl?.pathname,
@@ -40,7 +92,8 @@ export async function requireAuth(request?: NextRequest): Promise<AuthResult> {
       });
       return {
         userId,
-        isDemo: isDemoMode
+        isDemo: isDemoMode,
+        isApiKey: false
       };
     }
 
@@ -75,7 +128,8 @@ export async function requireAuth(request?: NextRequest): Promise<AuthResult> {
       });
       return {
         userId: '68a33c99df2098d5e02a84e3',
-        isDemo: true
+        isDemo: true,
+        isApiKey: false
       };
     }
 

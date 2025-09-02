@@ -119,6 +119,27 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'no-store'
+          },
+          // CORS headers for cross-origin API access
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: process.env.NODE_ENV === 'development' ? '*' : 'https://can.code'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS, PATCH'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization, X-API-Key, X-Requested-With, Accept, Origin, Cache-Control, Pragma'
+          },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true'
+          },
+          {
+            key: 'Access-Control-Max-Age',
+            value: '86400' // 24 hours preflight cache
           }
         ],
       },

@@ -869,9 +869,9 @@ export default function SessionBrowser({ isOpen, onClose, onSelectSession }: Ses
                 await smartRefresh('sessions');
               }}
             >
-              <div className={`relative flex-1 ${
+              <div className={`relative flex-1 overflow-y-auto ${
               isMobileLayout
-                ? 'px-4 pt-4 pb-24'
+                ? 'px-4 pt-4 pb-24 mobile-scrollbar mobile-scroll-momentum'
                 : 'px-6 pt-6 pb-32'
             }`} style={{
               maxHeight: isMobileLayout ? 'calc(100vh - 180px)' : 'calc(80vh - 200px)'

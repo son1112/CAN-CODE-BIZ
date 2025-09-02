@@ -1,0 +1,841 @@
+#+TITLE: Rubber Ducky Live API Integration Guide
+#+AUTHOR: CAN-CODE-BIZ Ecosystem
+#+DATE: August 31, 2025
+#+STARTUP: overview
+#+OPTIONS: toc:2 num:nil
+
+* Table of Contents                                                   :TOC:
+- [[#overview][Overview]]
+- [[#authentication-system][Authentication System]]
+- [[#api-endpoints-reference][API Endpoints Reference]]
+- [[#integration-patterns][Integration Patterns]]
+- [[#security-requirements][Security Requirements]]
+- [[#error-handling][Error Handling]]
+- [[#testing-procedures][Testing Procedures]]
+- [[#deployment-checklist][Deployment Checklist]]
+
+* Overview
+
+** Purpose
+This document provides comprehensive integration instructions for Claude Code agents
+and developers working on projects that need to integrate with the Rubber Ducky Live
+AI chat platform API.
+
+** API Base Information
+- *Base URL*: =http://localhost:3000= (development) | =https://rubberducky.live= (production)
+- *API Version*: v1.0
+- *Authentication*: API Key + Scope-based authorization
+- *Response Format*: JSON
+- *Real-time Features*: Server-Sent Events (SSE) for streaming chat
+
+** Supported Integration Types
+1. *AI Chat Integration* - Embed Rubber Ducky Live chat in external applications
+2. *Session Management* - Create and manage chat sessions programmatically
+3. *Content Export* - Export conversations to PDF/Word with Google Drive integration
+4. *User Analytics* - Access conversation data for analytics and insights
+
+* Authentication System
+
+** API Key Format
+API keys follow this structure:
+#+BEGIN_EXAMPLE
+rbl_live_[32_chars_base64url]_[4_chars_checksum]
+
+Example: rbl_live_NoXwba1KXrA6J3Oh4CFBkwMfellJcFjb_RI1d
+#+END_EXAMPLE
+
+** Required Headers
+Always include these headers in API requests:
+#+BEGIN_SRC http
+X-API-Key: rbl_live_your_key_here
+Content-Type: application/json
+#+END_SRC
+
+Alternative authentication header:
+#+BEGIN_SRC http
+Authorization: Bearer rbl_live_your_key_here
+Content-Type: application/json
+#+END_SRC
+
+** Obtaining API Keys
+1. Create via API (requires existing authentication):
+   #+BEGIN_SRC bash
+   curl -X POST http://localhost:3000/api/api-keys \
+     -H "Content-Type: application/json" \
+     -d '{
+       "name": "Integration Name",
+       "description": "Brief description of integration purpose",
+       "scopes": ["chat:read", "chat:write", "sessions:read", "sessions:write"],
+       "expiresInDays": 365
+     }'
+   #+END_SRC
+
+2. Response includes the raw key (store securely - only shown once):
+   #+BEGIN_SRC json
+   {
+     "rawKey": "rbl_live_NoXwba1KXrA6J3Oh4CFBkwMfellJcFjb_RI1d",
+     "warning": "Store this API key securely. It will not be shown again."
+   }
+   #+END_SRC
+
+** Scope Permissions
+
+*** Essential Scopes for Most Integrations
+- =chat:read= - Read chat messages and conversations
+- =chat:write= - Send messages and create conversations
+- =sessions:read= - Read session data and history  
+- =sessions:write= - Create and modify sessions
+
+*** Additional Scopes
+- =sessions:delete= - Delete sessions
+- =agents:read= / =agents:write= - Manage AI agents
+- =export:pdf= / =export:word= - Document export capabilities
+- =tags:read= / =tags:write= - Message tagging system
+- =stars:read= / =stars:write= - Favorites system
+- =admin:read= / =admin:write= - Administrative access (includes all scopes)
+
+* API Endpoints Reference
+
+** Core Chat Functionality
+
+*** Stream AI Chat Response
+#+BEGIN_SRC http
+POST /api/chat
+X-API-Key: rbl_live_your_key_here
+Content-Type: application/json
+
+{
+  "messages": [
+    {"role": "user", "content": "Hello, how can you help me?"},
+    {"role": "assistant", "content": "I'm here to help with debugging and problem-solving!"},
+    {"role": "user", "content": "I'm having trouble with my React component"}
+  ],
+  "systemPrompt": "You are a helpful debugging assistant",
+  "model": "claude-4"
+}
+#+END_SRC
+
+*Response*: Server-Sent Events stream with incremental content
+#+BEGIN_EXAMPLE
+data: {"content":"I'd be happy","isComplete":false}
+data: {"content":" to help you debug","isComplete":false}  
+data: {"content":" your React component!","isComplete":false}
+data: {"content":"","isComplete":true}
+#+END_EXAMPLE
+
+** Session Management
+
+*** List User Sessions
+#+BEGIN_SRC http
+GET /api/sessions?page=1&limit=20&search=debug&tags=react,javascript
+X-API-Key: rbl_live_your_key_here
+#+END_SRC
+
+*** Create New Session
+#+BEGIN_SRC http
+POST /api/sessions
+X-API-Key: rbl_live_your_key_here
+Content-Type: application/json
+
+{
+  "name": "React Component Debugging",
+  "tags": ["react", "debugging", "frontend"],
+  "conversationStarter": "I need help debugging a React component issue"
+}
+#+END_SRC
+
+*** Get Session Details
+#+BEGIN_SRC http
+GET /api/sessions/{sessionId}
+X-API-Key: rbl_live_your_key_here
+#+END_SRC
+
+** Content Export
+
+*** Export to PDF
+#+BEGIN_SRC http
+POST /api/export/pdf
+X-API-Key: rbl_live_your_key_here
+Content-Type: application/json
+
+{
+  "sessionId": "session-uuid-here",
+  "title": "React Debugging Session",
+  "includeMetadata": true
+}
+#+END_SRC
+
+*** Export to Word Document
+#+BEGIN_SRC http
+POST /api/export/word
+X-API-Key: rbl_live_your_key_here
+Content-Type: application/json
+
+{
+  "sessionId": "session-uuid-here", 
+  "title": "Debugging Session Export",
+  "format": "docx"
+}
+#+END_SRC
+
+** API Key Management
+
+*** List Your API Keys
+#+BEGIN_SRC http
+GET /api/api-keys
+X-API-Key: rbl_live_your_key_here
+#+END_SRC
+
+*** Revoke API Key
+#+BEGIN_SRC http
+DELETE /api/api-keys/{keyId}
+X-API-Key: rbl_live_your_key_here
+#+END_SRC
+
+* Integration Patterns
+
+** Pattern 1: Simple Chat Integration
+
+*** JavaScript/Node.js Example
+#+BEGIN_SRC javascript
+class RubberDuckyClient {
+  constructor(apiKey, baseUrl = 'http://localhost:3000') {
+    this.apiKey = apiKey;
+    this.baseUrl = baseUrl;
+  }
+
+  async sendMessage(messages, systemPrompt = null) {
+    const response = await fetch(`${this.baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'X-API-Key': this.apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messages,
+        systemPrompt
+      })
+    });
+
+    return this.handleSSEStream(response);
+  }
+
+  async handleSSEStream(response) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullResponse = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      
+      for (let i = 0; i < lines.length - 1; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.content) {
+              fullResponse += data.content;
+            }
+            if (data.isComplete) {
+              return fullResponse;
+            }
+          } catch (e) {
+            console.warn('Failed to parse SSE data:', line);
+          }
+        }
+      }
+      
+      buffer = lines[lines.length - 1];
+    }
+    
+    return fullResponse;
+  }
+
+  async createSession(name, tags = [], conversationStarter = null) {
+    const response = await fetch(`${this.baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: {
+        'X-API-Key': this.apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name,
+        tags,
+        conversationStarter
+      })
+    });
+    
+    return response.json();
+  }
+
+  async getSessions(page = 1, limit = 20, search = '') {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      search
+    });
+    
+    const response = await fetch(`${this.baseUrl}/api/sessions?${params}`, {
+      headers: {
+        'X-API-Key': this.apiKey
+      }
+    });
+    
+    return response.json();
+  }
+}
+
+// Usage Example
+const client = new RubberDuckyClient('rbl_live_your_key_here');
+
+// Create a debugging session
+const session = await client.createSession(
+  'React Component Debug', 
+  ['react', 'debugging'],
+  'I have a component that won\'t re-render properly'
+);
+
+// Send a message
+const response = await client.sendMessage([
+  {
+    role: 'user', 
+    content: 'My React component state is updating but the UI isn\'t re-rendering'
+  }
+]);
+
+console.log('AI Response:', response);
+#+END_SRC
+
+** Pattern 2: Python Integration
+#+BEGIN_SRC python
+import requests
+import json
+import sseclient  # pip install sseclient-py
+
+class RubberDuckyClient:
+    def __init__(self, api_key, base_url='http://localhost:3000'):
+        self.api_key = api_key
+        self.base_url = base_url
+        self.headers = {
+            'X-API-Key': self.api_key,
+            'Content-Type': 'application/json'
+        }
+    
+    def send_message(self, messages, system_prompt=None):
+        data = {'messages': messages}
+        if system_prompt:
+            data['systemPrompt'] = system_prompt
+            
+        response = requests.post(
+            f'{self.base_url}/api/chat',
+            headers=self.headers,
+            json=data,
+            stream=True
+        )
+        
+        return self._handle_sse_stream(response)
+    
+    def _handle_sse_stream(self, response):
+        full_response = ""
+        client = sseclient.SSEClient(response)
+        
+        for event in client.events():
+            if event.data:
+                try:
+                    data = json.loads(event.data)
+                    if data.get('content'):
+                        full_response += data['content']
+                    if data.get('isComplete'):
+                        break
+                except json.JSONDecodeError:
+                    continue
+                    
+        return full_response
+    
+    def create_session(self, name, tags=None, conversation_starter=None):
+        data = {
+            'name': name,
+            'tags': tags or [],
+            'conversationStarter': conversation_starter
+        }
+        
+        response = requests.post(
+            f'{self.base_url}/api/sessions',
+            headers=self.headers,
+            json=data
+        )
+        
+        return response.json()
+    
+    def get_sessions(self, page=1, limit=20, search=''):
+        params = {
+            'page': page,
+            'limit': limit,
+            'search': search
+        }
+        
+        response = requests.get(
+            f'{self.base_url}/api/sessions',
+            headers=self.headers,
+            params=params
+        )
+        
+        return response.json()
+
+# Usage Example
+client = RubberDuckyClient('rbl_live_your_key_here')
+
+# Create session and get response
+session = client.create_session(
+    'Python Debug Session',
+    ['python', 'debugging'],
+    'Having issues with async/await in Python'
+)
+
+messages = [{
+    'role': 'user',
+    'content': 'My async function is not awaiting properly'
+}]
+
+response = client.send_message(messages)
+print(f"AI Response: {response}")
+#+END_SRC
+
+** Pattern 3: React Hook Integration
+#+BEGIN_SRC javascript
+// Custom React hook for Rubber Ducky integration
+import { useState, useCallback } from 'react';
+
+export function useRubberDucky(apiKey, baseUrl = 'http://localhost:3000') {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const sendMessage = useCallback(async (messages, systemPrompt = null) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'X-API-Key': apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ messages, systemPrompt })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      // Handle SSE stream
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.content) {
+                fullResponse += data.content;
+              }
+              if (data.isComplete) {
+                setIsLoading(false);
+                return fullResponse;
+              }
+            } catch (e) {
+              console.warn('Failed to parse SSE:', e);
+            }
+          }
+        }
+      }
+      
+      setIsLoading(false);
+      return fullResponse;
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+      throw err;
+    }
+  }, [apiKey, baseUrl]);
+
+  const createSession = useCallback(async (name, tags = []) => {
+    try {
+      const response = await fetch(`${baseUrl}/api/sessions`, {
+        method: 'POST',
+        headers: {
+          'X-API-Key': apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, tags })
+      });
+      
+      return response.json();
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }, [apiKey, baseUrl]);
+
+  return {
+    sendMessage,
+    createSession,
+    isLoading,
+    error
+  };
+}
+
+// Usage in React component
+function ChatComponent() {
+  const { sendMessage, createSession, isLoading, error } = useRubberDucky(
+    process.env.REACT_APP_RUBBER_DUCKY_API_KEY
+  );
+  
+  const handleSendMessage = async () => {
+    try {
+      const response = await sendMessage([
+        { role: 'user', content: 'Help me debug this React component' }
+      ]);
+      console.log('Response:', response);
+    } catch (err) {
+      console.error('Chat error:', err);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleSendMessage} disabled={isLoading}>
+        {isLoading ? 'Thinking...' : 'Ask Rubber Ducky'}
+      </button>
+      {error && <p style={{color: 'red'}}>Error: {error}</p>}
+    </div>
+  );
+}
+#+END_SRC
+
+* Security Requirements
+
+** API Key Management
+1. *Never commit API keys to version control*
+2. *Store keys in environment variables*:
+   #+BEGIN_EXAMPLE
+   # .env file
+   RUBBER_DUCKY_API_KEY=rbl_live_your_key_here
+   #+END_EXAMPLE
+3. *Use different keys for development/staging/production*
+4. *Rotate keys regularly* (recommend every 90 days)
+5. *Revoke unused or compromised keys immediately*
+
+** Network Security
+- *Always use HTTPS in production*
+- *Validate SSL certificates*
+- *Implement proper CORS handling*
+- *Use IP whitelisting when possible*
+
+** Error Handling Security
+- *Never log API keys in error messages*
+- *Don't expose internal errors to end users*
+- *Implement rate limiting on client side*
+
+** Example Secure Configuration
+#+BEGIN_SRC javascript
+// Secure client configuration
+class SecureRubberDuckyClient {
+  constructor(config) {
+    // Validate required configuration
+    if (!config.apiKey) {
+      throw new Error('API key is required');
+    }
+    
+    this.apiKey = config.apiKey;
+    this.baseUrl = config.baseUrl || 'https://rubberducky.live';
+    this.timeout = config.timeout || 30000;
+    this.retryAttempts = config.retryAttempts || 3;
+    
+    // Validate API key format
+    if (!this.isValidApiKey(this.apiKey)) {
+      throw new Error('Invalid API key format');
+    }
+  }
+  
+  isValidApiKey(key) {
+    return /^rbl_live_[A-Za-z0-9_-]{32}_[A-Za-z0-9_-]{4}$/.test(key);
+  }
+  
+  async makeRequest(endpoint, options = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          'X-API-Key': this.apiKey,
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`API Error ${response.status}: ${errorData.error || 'Unknown error'}`);
+      }
+      
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      // Don't log the API key
+      console.error('API request failed:', {
+        endpoint,
+        status: error.status,
+        message: error.message
+      });
+      
+      throw error;
+    }
+  }
+}
+#+END_SRC
+
+* Error Handling
+
+** Common Error Responses
+
+*** 401 Unauthorized
+#+BEGIN_SRC json
+{
+  "error": "Invalid API key",
+  "code": "UNAUTHORIZED"
+}
+#+END_SRC
+*Action*: Verify API key is correct and not expired
+
+*** 403 Forbidden  
+#+BEGIN_SRC json
+{
+  "error": "Insufficient scope: sessions:write required",
+  "code": "FORBIDDEN" 
+}
+#+END_SRC
+*Action*: Request API key with required scopes
+
+*** 429 Rate Limit Exceeded
+#+BEGIN_SRC json
+{
+  "error": "Rate limit exceeded",
+  "code": "RATE_LIMIT_EXCEEDED",
+  "retryAfter": 60
+}
+#+END_SRC
+*Action*: Implement exponential backoff retry logic
+
+*** 422 Validation Error
+#+BEGIN_SRC json
+{
+  "error": "Invalid data provided",
+  "code": "VALIDATION_ERROR",
+  "details": "messages: cannot be empty"
+}
+#+END_SRC
+*Action*: Check request payload format and required fields
+
+** Retry Logic Implementation
+#+BEGIN_SRC javascript
+async function retryWithBackoff(fn, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (error.status === 429 && attempt < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
+// Usage
+const response = await retryWithBackoff(() => 
+  client.sendMessage(messages)
+);
+#+END_SRC
+
+* Testing Procedures
+
+** API Key Validation Test
+#+BEGIN_SRC bash
+#!/bin/bash
+# Test API key authentication
+
+API_KEY="rbl_live_your_test_key_here"
+BASE_URL="http://localhost:3000"
+
+echo "Testing API key authentication..."
+
+# Test valid key
+response=$(curl -s -w "%{http_code}" -o /tmp/response.json \
+  -H "X-API-Key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  "$BASE_URL/api/sessions")
+
+if [ "$response" = "200" ]; then
+  echo "✓ API key authentication successful"
+else
+  echo "✗ API key authentication failed (HTTP $response)"
+  cat /tmp/response.json
+fi
+
+# Test invalid key
+response=$(curl -s -w "%{http_code}" -o /tmp/response.json \
+  -H "X-API-Key: invalid_key" \
+  -H "Content-Type: application/json" \
+  "$BASE_URL/api/sessions")
+
+if [ "$response" = "401" ]; then
+  echo "✓ Invalid key properly rejected"
+else
+  echo "✗ Invalid key validation failed"
+fi
+#+END_SRC
+
+** Chat Integration Test
+#+BEGIN_SRC javascript
+// Integration test suite
+describe('Rubber Ducky API Integration', () => {
+  const client = new RubberDuckyClient(process.env.TEST_API_KEY);
+  
+  test('should create session and send message', async () => {
+    // Create session
+    const session = await client.createSession('Test Session', ['test']);
+    expect(session.success).toBe(true);
+    expect(session.session.sessionId).toBeDefined();
+    
+    // Send message
+    const response = await client.sendMessage([
+      { role: 'user', content: 'Hello, test message' }
+    ]);
+    
+    expect(response).toBeTruthy();
+    expect(typeof response).toBe('string');
+  });
+  
+  test('should handle invalid API key', async () => {
+    const invalidClient = new RubberDuckyClient('invalid_key');
+    
+    await expect(
+      invalidClient.sendMessage([{ role: 'user', content: 'test' }])
+    ).rejects.toThrow('Invalid API key');
+  });
+  
+  test('should respect rate limits', async () => {
+    // Send many requests quickly
+    const promises = Array.from({ length: 100 }, () =>
+      client.sendMessage([{ role: 'user', content: 'rate limit test' }])
+    );
+    
+    // Some should be rate limited
+    const results = await Promise.allSettled(promises);
+    const rateLimited = results.some(r => 
+      r.status === 'rejected' && r.reason.message.includes('Rate limit')
+    );
+    
+    // This may or may not trigger depending on current limits
+    // Test mainly ensures proper error handling exists
+  });
+});
+#+END_SRC
+
+** Load Testing Script
+#+BEGIN_SRC bash
+#!/bin/bash
+# Simple load test for API endpoints
+
+API_KEY="rbl_live_your_test_key_here"
+BASE_URL="http://localhost:3000"
+CONCURRENT=10
+TOTAL=100
+
+echo "Starting load test..."
+echo "Concurrent requests: $CONCURRENT"
+echo "Total requests: $TOTAL"
+
+# Test sessions endpoint
+echo "Testing GET /api/sessions..."
+seq 1 $TOTAL | xargs -n1 -P$CONCURRENT -I{} curl -s \
+  -H "X-API-Key: $API_KEY" \
+  "$BASE_URL/api/sessions" > /dev/null
+
+echo "Load test completed"
+#+END_SRC
+
+* Deployment Checklist
+
+** Pre-Deployment Verification
+- [ ] API keys created with appropriate scopes
+- [ ] Environment variables configured securely
+- [ ] HTTPS enabled and certificates valid
+- [ ] CORS headers configured for allowed domains
+- [ ] Rate limiting tested and configured
+- [ ] Error handling implemented and tested
+- [ ] Logging configured (without exposing secrets)
+- [ ] Integration tests passing
+- [ ] Load testing completed
+- [ ] Security audit performed
+
+** Environment Configuration
+#+BEGIN_EXAMPLE
+# Production Environment Variables
+RUBBER_DUCKY_API_KEY=rbl_live_production_key_here
+RUBBER_DUCKY_BASE_URL=https://rubberducky.live
+API_TIMEOUT=30000
+RETRY_ATTEMPTS=3
+LOG_LEVEL=info
+#+END_EXAMPLE
+
+** Monitoring Setup
+- [ ] API response time monitoring
+- [ ] Error rate tracking
+- [ ] Rate limit violation alerts
+- [ ] Authentication failure monitoring
+- [ ] Integration health checks
+
+** Documentation Requirements
+- [ ] API integration documented in project README
+- [ ] Environment setup instructions provided
+- [ ] Error handling scenarios documented
+- [ ] Contact information for API support included
+
+** Post-Deployment Testing
+- [ ] End-to-end integration tests in production environment
+- [ ] Performance benchmarking completed
+- [ ] Error scenarios validated
+- [ ] Rollback procedures tested
+- [ ] Monitoring alerts verified
+
+---
+
+*For questions or support regarding Rubber Ducky Live API integration,*
+*contact the CAN-CODE-BIZ development team or create an issue in the*
+*project repository.*
+
+*This document is maintained as part of the Rubber Ducky Live project*
+*and should be updated whenever API changes are made.*
