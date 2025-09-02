@@ -106,7 +106,7 @@ function SignInForm() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Welcome back!</h1>
-              <p className="text-slate-700 dark:text-slate-300 mt-2 font-medium">Sign in to continue your conversations with your Rubber Ducky</p>
+              <p className="text-slate-900 dark:text-slate-200 mt-2 font-medium">Sign in to continue your conversations with your Rubber Ducky</p>
             </div>
           </div>
 
@@ -141,7 +141,7 @@ function SignInForm() {
                 <div className="flex-shrink-0">
                   {getProviderIcon(provider.id)}
                 </div>
-                <span className="text-slate-800 dark:text-slate-200 font-semibold text-lg">
+                <span className="text-slate-900 dark:text-slate-100 font-semibold text-lg">
                   Continue with {provider.name}
                 </span>
               </button>
@@ -156,7 +156,7 @@ function SignInForm() {
                 <div className="flex-shrink-0">
                   {getProviderIcon('google')}
                 </div>
-                <span className="text-slate-800 dark:text-slate-200 font-semibold text-lg">
+                <span className="text-slate-900 dark:text-slate-100 font-semibold text-lg">
                   Continue with Google
                 </span>
               </button>
@@ -164,7 +164,7 @@ function SignInForm() {
           </div>
 
           {/* Footer */}
-          <div className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
+          <div className="mt-8 text-center text-sm text-slate-800 dark:text-slate-300">
             <p>
               By signing in, you agree to our{' '}
               <a href="/terms" className="text-blue-700 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 font-medium underline underline-offset-2">
@@ -188,7 +188,7 @@ export default function SignIn() {
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-          <p className="text-slate-700 dark:text-slate-300 font-medium">Loading sign in...</p>
+          <p className="text-slate-900 dark:text-slate-200 font-medium">Loading sign in...</p>
         </div>
       </div>
     }>
