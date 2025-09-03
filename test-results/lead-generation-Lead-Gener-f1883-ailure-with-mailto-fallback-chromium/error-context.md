@@ -1,0 +1,307 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - heading "can.code" [level=1] [ref=e6]
+        - list [ref=e7]:
+          - listitem [ref=e8]:
+            - link "About" [ref=e9] [cursor=pointer]:
+              - /url: "#about"
+          - listitem [ref=e10]:
+            - link "Early Access" [ref=e11] [cursor=pointer]:
+              - /url: "#early-access"
+          - listitem [ref=e12]:
+            - link "Services" [ref=e13] [cursor=pointer]:
+              - /url: "#services"
+          - listitem [ref=e14]:
+            - link "Contact" [ref=e15] [cursor=pointer]:
+              - /url: "#contact"
+        - button "Switch to dark mode" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17] [cursor=pointer]: 🌙
+          - generic [ref=e18] [cursor=pointer]: ☀️
+  - main [ref=e19]:
+    - generic [ref=e21]:
+      - generic [ref=e23]: 🚀 Production Ready
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - heading "AI-Powered Development Companion" [level=1] [ref=e26]
+          - paragraph [ref=e27]: Your intelligent partner for debugging, technical problem-solving, and development conversations powered by Claude 4
+          - paragraph [ref=e29]:
+            - strong [ref=e30]: "Production Ready:"
+            - text: Professional-grade AI companion with voice input and export capabilities
+          - generic [ref=e31]:
+            - generic [ref=e32]: 🗣️
+            - paragraph [ref=e33]:
+              - text: Think out loud with
+              - strong [ref=e34]: voice-enabled conversations
+              - text: and export your debugging sessions to PDF or Word
+        - generic [ref=e36]:
+          - 'img "Rubber Ducky with #! banner - Context Engineering Mascot" [ref=e37]'
+          - generic:
+            - generic: "< /> #! {} => ... < /> #! {} => ..."
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - heading "The Rubber Ducky Method" [level=2] [ref=e42]
+        - paragraph [ref=e43]: Rubber duck debugging is a time-tested problem-solving technique where programmers explain their code line-by-line to an inanimate object—traditionally a rubber duck.
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - heading "🧠 Clarify Thinking" [level=4] [ref=e46]
+            - paragraph [ref=e47]: Articulating problems out loud helps identify gaps in logic and understanding
+          - generic [ref=e48]:
+            - heading "🔍 Find Solutions" [level=4] [ref=e49]
+            - paragraph [ref=e50]: The process of explanation often reveals the solution before finishing the description
+          - generic [ref=e51]:
+            - heading "📝 Improve Communication" [level=4] [ref=e52]
+            - paragraph [ref=e53]: Practice explaining complex concepts in simple, clear terms
+      - generic [ref=e54]:
+        - heading "Enhanced for Technical Excellence" [level=3] [ref=e55]
+        - paragraph [ref=e56]: "Our AI-powered rubber duck combines classic debugging methodology with Claude 4's intelligence for superior technical problem-solving:"
+        - list [ref=e57]:
+          - listitem [ref=e58]:
+            - strong [ref=e59]: Code Debugging
+            - text: "- Walk through logic errors, trace execution paths, identify bugs"
+          - listitem [ref=e60]:
+            - strong [ref=e61]: Architecture Decisions
+            - text: "- Evaluate design patterns, database choices, system architecture"
+          - listitem [ref=e62]:
+            - strong [ref=e63]: Performance Optimization
+            - text: "- Analyze bottlenecks, explore caching strategies, optimize algorithms"
+          - listitem [ref=e64]:
+            - strong [ref=e65]: Technical Documentation
+            - text: "- Structure API docs, write technical guides, clarify concepts"
+          - listitem [ref=e66]:
+            - strong [ref=e67]: Learning & Development
+            - text: "- Master new technologies, understand complex frameworks, skill building"
+        - paragraph [ref=e69]:
+          - emphasis [ref=e70]: "\"Think out loud with Claude 4 - your intelligent debugging partner that actually understands your code and technical challenges.\""
+    - generic [ref=e72]:
+      - generic [ref=e73]:
+        - generic [ref=e76]: 🚀 PRODUCTION READY
+        - heading "Professional AI Development Companion" [level=2] [ref=e77]
+        - paragraph [ref=e78]: can.code delivers production-ready AI development tools powered by Claude 4. Our platform combines voice-enabled conversations, professional export capabilities, and intelligent debugging assistance for technical professionals.
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - heading "Development Status Dashboard" [level=3] [ref=e81]
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - generic [ref=e84]:
+                - generic [ref=e85]: 🧠
+                - generic [ref=e86]: Context Engineering Sandbox
+                - generic [ref=e87]: IN DEVELOPMENT
+              - paragraph [ref=e90]: Tools for testing and refining AI prompts
+            - generic [ref=e91]:
+              - generic [ref=e92]:
+                - generic [ref=e93]: 🤖
+                - generic [ref=e94]: AI Agent Framework
+                - generic [ref=e95]: PROTOTYPING
+              - paragraph [ref=e98]: Custom AI assistants for specific business needs
+            - generic [ref=e99]:
+              - generic [ref=e100]:
+                - generic [ref=e101]: 🦆
+                - generic [ref=e102]: rubberDucky Platform
+                - generic [ref=e103]: LIVE DEMO
+              - paragraph [ref=e106]: Working demo with Next.js 15, voice integration, and real-time AI streaming
+            - generic [ref=e107]:
+              - generic [ref=e108]:
+                - generic [ref=e109]: 🎯
+                - generic [ref=e110]: Business Integration Tools
+                - generic [ref=e111]: PLANNING
+              - paragraph [ref=e114]: Solutions for implementing AI effectively in existing workflows
+        - generic [ref=e115]:
+          - heading "Current Technical Work" [level=3] [ref=e116]
+          - generic [ref=e118]:
+            - generic [ref=e119]:
+              - generic [ref=e120]: ●●●
+              - generic [ref=e121]: ~/can.code/development
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - generic [ref=e124]: ~/projects/rubber-ducky-live $
+                - text: npm run dev
+              - generic [ref=e125]: "# Next.js 15 universal thinking partner platform"
+              - generic [ref=e126]:
+                - generic [ref=e127]: ~/projects/rubber-ducky-api $
+                - text: npm run test:coverage
+              - generic [ref=e128]: "# AI conversation API with Jest testing"
+              - generic [ref=e129]:
+                - generic [ref=e130]: ~/projects/CAN-CODE-BIZ $
+                - text: git push origin develop
+              - generic [ref=e131]: "# Business site deployment and lead generation"
+              - generic [ref=e132]:
+                - generic [ref=e133]: ~/projects/rubber-ducky-rails $
+                - text: rails server
+              - generic [ref=e134]: "# Rails backend for AI agent management"
+              - generic [ref=e135]:
+                - generic [ref=e136]: ~/projects/rubber-ducky-live $
+                - text: playwright test --project=mobile
+              - generic [ref=e137]: "# Cross-platform testing for universal AI access"
+        - generic [ref=e138]:
+          - generic [ref=e139]:
+            - button "🚧 In Development" [ref=e140] [cursor=pointer]
+            - button "🚀 Planned Features" [ref=e141] [cursor=pointer]
+          - generic [ref=e142]:
+            - generic [ref=e144]:
+              - generic [ref=e145]:
+                - generic [ref=e146]:
+                  - heading "🧠 Claude 4 AI Integration" [level=4] [ref=e147]
+                  - generic [ref=e148]: LIVE
+                - paragraph [ref=e149]: State-of-the-art conversational AI with intelligent responses and technical problem-solving capabilities
+                - list [ref=e150]:
+                  - listitem [ref=e151]: ▶ Advanced natural language understanding
+                  - listitem [ref=e152]: ▶ Technical debugging assistance
+                  - listitem [ref=e153]: ▶ Real-time streaming responses
+              - generic [ref=e154]:
+                - generic [ref=e155]:
+                  - heading "🗣️ Voice-Enabled Conversations" [level=4] [ref=e156]
+                  - generic [ref=e157]: LIVE
+                - paragraph [ref=e158]: AssemblyAI-powered speech recognition for natural, hands-free debugging conversations
+                - list [ref=e159]:
+                  - listitem [ref=e160]: ▶ Real-time voice input processing
+                  - listitem [ref=e161]: ▶ Natural conversation flow
+                  - listitem [ref=e162]: ▶ Think-out-loud debugging support
+              - generic [ref=e163]:
+                - generic [ref=e164]:
+                  - heading "📱 Production-Ready Platform" [level=4] [ref=e165]
+                  - generic [ref=e166]: LIVE
+                - paragraph [ref=e167]: Next.js 15 architecture with professional design, responsive layout, and enterprise security
+                - list [ref=e168]:
+                  - listitem [ref=e169]: ▶ Mobile-responsive interface
+                  - listitem [ref=e170]: ▶ Cross-platform compatibility
+                  - listitem [ref=e171]: ▶ Professional user experience
+              - generic [ref=e172]:
+                - generic [ref=e173]:
+                  - heading "🤖 Smart Agent System" [level=4] [ref=e174]
+                  - generic [ref=e175]: LIVE
+                - paragraph [ref=e176]: Customizable AI personalities and specialized agents for different technical domains
+                - list [ref=e177]:
+                  - listitem [ref=e178]: ▶ Custom agent personalities
+                  - listitem [ref=e179]: ▶ Specialized technical expertise
+                  - listitem [ref=e180]: ▶ Conversation management tools
+            - text: ▶ ▶ ▶ ▶ ▶ ▶ ▶ ▶ ▶ ▶ ▶ ▶
+    - generic [ref=e183]:
+      - generic [ref=e184]:
+        - generic [ref=e187]: 🔓 EARLY ACCESS
+        - heading "Get Exclusive Access to Context Engineering Toolkit" [level=2] [ref=e188]
+        - paragraph [ref=e189]: Join forward-thinking developers and creators exploring the future of AI thinking tools. Be among the first to experiment with our pre-alpha sandbox.
+      - generic [ref=e191]:
+        - generic [ref=e192]: 🎉
+        - heading "Welcome to the Early Access Community!" [level=3] [ref=e193]
+        - paragraph [ref=e194]: Thank you for joining! The Context Engineering Toolkit is now unlocked below. Explore the tools and let us know your thoughts.
+        - button "Explore Toolkit Below ↓" [ref=e195] [cursor=pointer]
+    - text: 🔓 UNLOCKED - Welcome Early Adopter!
+    - generic [ref=e197]:
+      - heading "Our Services" [level=2] [ref=e198]
+      - paragraph [ref=e199]: Professional AI development companion services - Claude 4-powered debugging, technical problem-solving, and documentation tools
+      - generic [ref=e200]:
+        - generic [ref=e201]:
+          - heading "Core AI Services" [level=3] [ref=e202]
+          - generic [ref=e203]:
+            - generic [ref=e204]:
+              - generic [ref=e205]:
+                - heading "AI Development Companion Integration" [level=4] [ref=e206]
+                - generic [ref=e207]: Technical
+              - paragraph [ref=e208]: Integrate our production-ready AI companion into your development workflow with Claude 4 intelligence, voice input, and professional export capabilities
+              - list [ref=e209]:
+                - listitem [ref=e210]: ▶ Voice-enabled debugging conversations
+                - listitem [ref=e211]: ▶ Technical problem-solving assistance
+                - listitem [ref=e212]: ▶ PDF and Word documentation export
+                - listitem [ref=e213]: ▶ Custom agent personality configuration
+            - generic [ref=e214]:
+              - generic [ref=e215]:
+                - heading "Custom AI Agent Development" [level=4] [ref=e216]
+                - generic [ref=e217]: Specialized
+              - paragraph [ref=e218]: Tailored AI agents with specialized personalities, domain expertise, and business-specific capabilities designed for your unique workflows
+              - list [ref=e219]:
+                - listitem [ref=e220]: ▶ Custom personality and voice development
+                - listitem [ref=e221]: ▶ Domain-specific knowledge integration
+                - listitem [ref=e222]: ▶ Multi-model AI strategy implementation
+                - listitem [ref=e223]: ▶ Voice and real-time interaction capabilities
+            - generic [ref=e224]:
+              - generic [ref=e225]:
+                - heading "rubberDucky Platform Integration" [level=4] [ref=e226]
+                - generic [ref=e227]: Platform
+              - paragraph [ref=e228]: Seamless deployment and integration of the rubberDucky platform with your existing tools, workflows, and infrastructure
+              - list [ref=e229]:
+                - listitem [ref=e230]: ▶ Next.js 15 platform deployment
+                - listitem [ref=e231]: ▶ MongoDB integration and data migration
+                - listitem [ref=e232]: ▶ Voice recognition and streaming setup
+                - listitem [ref=e233]: ▶ Authentication and security configuration
+            - generic [ref=e234]:
+              - generic [ref=e235]:
+                - heading "AI Training & Methodology" [level=4] [ref=e236]
+                - generic [ref=e237]: Education
+              - paragraph [ref=e238]: Training programs focused on effective rubber duck debugging with AI, technical documentation, and maximizing development productivity
+              - list [ref=e239]:
+                - listitem [ref=e240]: ▶ Rubber duck debugging methodology
+                - listitem [ref=e241]: ▶ Voice-first development workflows
+                - listitem [ref=e242]: ▶ Technical documentation with AI
+                - listitem [ref=e243]: ▶ Team adoption and best practices
+        - generic [ref=e244]:
+          - heading "Specialized Context Engineering" [level=3] [ref=e245]
+          - generic [ref=e246]:
+            - generic [ref=e247]:
+              - generic [ref=e248]:
+                - heading "Conversation Architecture Design" [level=4] [ref=e249]
+                - generic [ref=e250]: Advanced
+              - paragraph [ref=e251]: Design sophisticated multi-turn conversation flows with context persistence, state management, and adaptive responses
+              - list [ref=e252]:
+                - listitem [ref=e253]: ▶ Dialogue flow mapping and optimization
+                - listitem [ref=e254]: ▶ Context window management strategies
+                - listitem [ref=e255]: ▶ State persistence across conversations
+                - listitem [ref=e256]: ▶ Adaptive response system design
+            - generic [ref=e257]:
+              - generic [ref=e258]:
+                - heading "AI Sandbox Development" [level=4] [ref=e259]
+                - generic [ref=e260]: Experimental
+              - paragraph [ref=e261]: Create isolated testing environments for safe prompt experimentation, A/B testing of contexts, and iterative AI improvement
+              - list [ref=e262]:
+                - listitem [ref=e263]: ▶ Isolated testing environment setup
+                - listitem [ref=e264]: ▶ Context pattern library development
+                - listitem [ref=e265]: ▶ A/B testing framework for prompts
+                - listitem [ref=e266]: ▶ Analytics and response quality metrics
+            - generic [ref=e267]:
+              - generic [ref=e268]:
+                - heading "Enterprise AI Solutions" [level=4] [ref=e269]
+                - generic [ref=e270]: Enterprise
+              - paragraph [ref=e271]: White-label AI platforms, custom enterprise deployments, and scalable AI infrastructure for large organizations
+              - list [ref=e272]:
+                - listitem [ref=e273]: ▶ White-label platform customization
+                - listitem [ref=e274]: ▶ Enterprise security and compliance
+                - listitem [ref=e275]: ▶ Scalable infrastructure architecture
+                - listitem [ref=e276]: ▶ Custom integration with existing systems
+      - generic [ref=e278]:
+        - heading "Ready for an AI thinking partner?" [level=3] [ref=e279]
+        - paragraph [ref=e280]: Whether you're debugging code or debugging life - let's explore how conversation-driven AI can help you find clarity
+        - link "Start a Conversation" [ref=e281] [cursor=pointer]:
+          - /url: https://www.linkedin.com/company/100943270
+  - contentinfo [ref=e282]:
+    - generic [ref=e283]:
+      - generic [ref=e284]:
+        - generic [ref=e285]:
+          - heading "can.code" [level=3] [ref=e286]
+          - paragraph [ref=e287]: Innovative AI solutions for modern business
+        - generic [ref=e288]:
+          - heading "Platform" [level=4] [ref=e289]
+          - list [ref=e290]:
+            - listitem [ref=e291]:
+              - link "rubberDucky" [ref=e292] [cursor=pointer]:
+                - /url: "#platform"
+            - listitem [ref=e293]:
+              - link "Services" [ref=e294] [cursor=pointer]:
+                - /url: "#services"
+            - listitem [ref=e295]:
+              - link "About Us" [ref=e296] [cursor=pointer]:
+                - /url: "#about"
+        - generic [ref=e297]:
+          - heading "Connect" [level=4] [ref=e298]
+          - list [ref=e299]:
+            - listitem [ref=e300]:
+              - link "hello@can.code" [ref=e301] [cursor=pointer]:
+                - /url: mailto:hello@can.code
+            - listitem [ref=e302]:
+              - link "Contact Us" [ref=e303] [cursor=pointer]:
+                - /url: "#contact"
+      - paragraph [ref=e305]: © 2024 can.code. All rights reserved.
+```

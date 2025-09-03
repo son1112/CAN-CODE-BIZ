@@ -1054,18 +1054,24 @@
                     console.error('Subscription error:', error);
                     // Fallback to mailto if Formspree fails
                     const mailtoLink = `mailto:anderson.reinkordt@gmail.com?subject=New Early Access Subscription - can.code&body=Email: ${email}%0D%0ADate: ${new Date().toISOString()}`;
-                    window.open(mailtoLink, '_blank');
+                    
+                    try {
+                        window.open(mailtoLink, '_blank');
+                    } catch (popupError) {
+                        // Popup blocked or window.open failed
+                        window.location.href = mailtoLink;
+                    }
                     
                     // Still show success to avoid poor UX
                     localStorage.setItem('cancode-early-access', 'true');
                     this.showSuccess();
                     this.revealToolkit();
+                } finally {
+                    // Always reset button state
+                    btnText.style.display = 'inline';
+                    btnLoading.style.display = 'none';
+                    submitButton.disabled = false;
                 }
-                
-                // Reset button state
-                btnText.style.display = 'inline';
-                btnLoading.style.display = 'none';
-                submitButton.disabled = false;
             }
 
             showSuccess() {

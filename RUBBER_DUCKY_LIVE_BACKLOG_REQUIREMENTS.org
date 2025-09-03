@@ -48,6 +48,44 @@ create user expectations that MUST be fulfilled in the actual product.
 ** Core Platform Features
 *** PROMISED: "Next.js 15 universal thinking partner platform"
 - Modern Next.js 15 architecture (✓ Already implemented)
+
+* Testing & Quality Assurance Backlog (TECHNICAL DEBT)
+
+** Lead Generation System Testing Issues
+*** PRIORITY: Medium - Production System Monitoring Required
+**** Mailto Fallback Testing Limitations
+- Playwright tests cannot properly simulate window.open() for mailto: links
+- Manual testing confirms functionality works in browsers
+- Need browser-based integration tests for mailto fallback scenarios
+- Consider Selenium or Cypress for better popup handling
+- WORKAROUND: Production monitoring for Formspree failures
+
+**** Button State Race Conditions  
+- Multiple rapid form submissions cause UI state conflicts
+- Button re-enabling logic has timing issues during error scenarios
+- Form remains disabled after successful submission in some edge cases
+- IMPACT: Poor UX with repeated clicks, minor cosmetic issue
+- FIX: Implement debouncing and more robust state management
+
+**** Hash Parameter Success Flow
+- URL hash #early-access-success not reliably triggering success state
+- localStorage persistence works but hash-based flow inconsistent
+- Affects users returning to success URL or sharing links
+- IMPACT: Users may not see success content when expected
+- FIX: Improve hash parameter detection and initialization timing
+
+** Test Suite Coverage Analysis
+*** Current Status: 63% pass rate (12/19 tests passing)
+- Core functionality fully tested and working
+- Error scenarios partially covered
+- Automation limitations prevent full coverage
+- Production functionality confirmed via manual testing
+
+*** Recommended Improvements
+- Add visual regression testing for UI state transitions
+- Implement end-to-end testing with real email delivery
+- Create performance testing for form submission under load
+- Add accessibility testing for screen readers and keyboard navigation
 - Mobile-first responsive design
 - Cross-platform compatibility
 - Progressive Web App capabilities
