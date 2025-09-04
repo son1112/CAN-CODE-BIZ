@@ -703,11 +703,14 @@ p {
     grid-column: 1 / -1;
 }
 
-/* Organization Intro Section */
+/* Organization Intro Section - Now Primary Hero */
 .organization-intro {
-    padding: var(--spacing-2xl) 0;
-    background: var(--primary-white);
+    padding: var(--spacing-3xl) 0;
+    background: linear-gradient(135deg, var(--primary-white) 0%, var(--light-gray) 100%);
     border-bottom: 1px solid var(--border-color);
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
 }
 
 .org-content {
@@ -720,17 +723,34 @@ p {
     margin-bottom: var(--spacing-2xl);
 }
 
-.org-header h2 {
+.org-header h1 {
     color: var(--primary-dark);
     margin-bottom: var(--spacing-sm);
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
 }
 
 .org-tagline {
-    font-size: clamp(1.125rem, 2.5vw, 1.25rem);
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
     color: var(--text-secondary);
     font-weight: 400;
-    max-width: 50ch;
-    margin: 0 auto;
+    max-width: 60ch;
+    margin: 0 auto var(--spacing-lg);
+}
+
+.development-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-full);
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: var(--spacing-lg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .org-story {
@@ -815,7 +835,7 @@ p {
     border-bottom-color: var(--dark-border-color);
 }
 
-[data-theme="dark"] .org-header h2 {
+[data-theme="dark"] .org-header h1 {
     color: var(--dark-text-primary);
 }
 
