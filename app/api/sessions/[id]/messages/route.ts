@@ -87,14 +87,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    // Use consistent authentication middleware
+    const { userId } = await requireAuth(request);
 
     await connectDB();
     const { id } = await params;
@@ -105,7 +99,7 @@ export async function GET(
 
     const sessionDoc = await Session.findOne({
       sessionId: id,
-      createdBy: session.user.id
+      createdBy: userId
     }).lean();
 
     if (!sessionDoc) {
