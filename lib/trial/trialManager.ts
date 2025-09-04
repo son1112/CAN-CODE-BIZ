@@ -130,7 +130,7 @@ export class TrialManager {
     
     // Calculate engagement score from analytics
     const engagementScore = userTier.trialAnalytics.length > 0
-      ? userTier.trialAnalytics.reduce((sum, entry) => sum + entry.engagementScore, 0) / userTier.trialAnalytics.length
+      ? userTier.trialAnalytics.reduce((sum: number, entry: any) => sum + entry.engagementScore, 0) / userTier.trialAnalytics.length
       : 0;
 
     return {
@@ -215,7 +215,7 @@ export class TrialManager {
 
   // Utility methods for feature checking
   static getFeatureLimit(tier: UserTierType, feature: string): number | 'unlimited' {
-    const limits = {
+    const limits: Record<string, Record<string, number | 'unlimited'>> = {
       trial: {
         messages: 'unlimited',
         exports: 'unlimited',

@@ -28,7 +28,7 @@ export default function TrialWelcome({
 }: TrialWelcomeProps) {
   const { trialStatus, isTrialUser, isPaidUser } = useTrial();
   const countdown = useTrialCountdown();
-  const { trialDaysRemaining } = useTrialStatus();
+  const { daysRemaining } = useTrialStatus();
   const { startOnboarding, hasCompletedOnboarding } = useOnboarding();
   const [showWelcome, setShowWelcome] = useState(false);
 
@@ -57,14 +57,14 @@ export default function TrialWelcome({
 
   // Different urgency levels based on days remaining
   const getUrgencyColor = () => {
-    if (trialDaysRemaining >= 5) return 'from-blue-500 to-purple-600';
-    if (trialDaysRemaining >= 3) return 'from-orange-500 to-red-500';
+    if (daysRemaining >= 5) return 'from-blue-500 to-purple-600';
+    if (daysRemaining >= 3) return 'from-orange-500 to-red-500';
     return 'from-red-500 to-pink-600';
   };
 
   const getUrgencyMessage = () => {
-    if (trialDaysRemaining >= 5) return 'Welcome to your premium trial!';
-    if (trialDaysRemaining >= 3) return 'Make the most of your trial time!';
+    if (daysRemaining >= 5) return 'Welcome to your premium trial!';
+    if (daysRemaining >= 3) return 'Make the most of your trial time!';
     return 'Your trial is ending soon!';
   };
 
@@ -198,7 +198,7 @@ export default function TrialWelcome({
           </div>
 
           {/* Upgrade prompt (conditional) */}
-          {showUpgradePrompt && trialDaysRemaining <= 2 && (
+          {showUpgradePrompt && daysRemaining <= 2 && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-center gap-2 text-sm text-yellow-800">
                 <Clock size={14} />
@@ -260,10 +260,10 @@ export function useTrialWelcome() {
 
   useEffect(() => {
     // Show welcome for new trial users who haven't completed onboarding
-    const shouldDisplay = isTrialUser && 
+    const shouldDisplay = Boolean(isTrialUser && 
                          !hasCompletedOnboarding && 
                          trialStatus?.isTrialActive &&
-                         !localStorage.getItem('trial-welcome-dismissed');
+                         !localStorage.getItem('trial-welcome-dismissed'));
     
     setShouldShow(shouldDisplay);
   }, [isTrialUser, hasCompletedOnboarding, trialStatus]);

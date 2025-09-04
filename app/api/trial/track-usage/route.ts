@@ -140,24 +140,24 @@ export async function GET(request: NextRequest) {
 
     // Filter checkpoints by timeframe
     const recentCheckpoints = userTier.conversionCheckpoints.filter(
-      checkpoint => checkpoint.timestamp >= startDate
+      (checkpoint: any) => checkpoint.timestamp >= startDate
     );
 
     // Filter by feature if specified
     const filteredCheckpoints = feature 
-      ? recentCheckpoints.filter(checkpoint => checkpoint.feature === feature)
+      ? recentCheckpoints.filter((checkpoint: any) => checkpoint.feature === feature)
       : recentCheckpoints;
 
     // Calculate usage statistics
-    const featureUsageCount = {};
-    const engagementLevels = { low: 0, medium: 0, high: 0 };
+    const featureUsageCount: Record<string, number> = {};
+    const engagementLevels: { low: number; medium: number; high: number } = { low: 0, medium: 0, high: 0 };
 
-    filteredCheckpoints.forEach(checkpoint => {
+    filteredCheckpoints.forEach((checkpoint: any) => {
       // Count feature usage
       featureUsageCount[checkpoint.feature] = (featureUsageCount[checkpoint.feature] || 0) + 1;
       
       // Count engagement levels
-      engagementLevels[checkpoint.engagement]++;
+      engagementLevels[checkpoint.engagement as keyof typeof engagementLevels]++;
     });
 
     // Calculate engagement score

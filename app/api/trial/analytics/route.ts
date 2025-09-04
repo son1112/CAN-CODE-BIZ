@@ -139,19 +139,19 @@ export async function GET(request: NextRequest) {
     if (summary) {
       // Return summary analytics
       const totalSessions = userTier.trialAnalytics.length;
-      const totalDuration = userTier.trialAnalytics.reduce((sum, entry) => sum + entry.sessionDuration, 0);
-      const totalMessages = userTier.trialAnalytics.reduce((sum, entry) => sum + entry.messagesCount, 0);
+      const totalDuration = userTier.trialAnalytics.reduce((sum: number, entry: any) => sum + entry.sessionDuration, 0);
+      const totalMessages = userTier.trialAnalytics.reduce((sum: number, entry: any) => sum + entry.messagesCount, 0);
       const avgEngagement = totalSessions > 0 
-        ? userTier.trialAnalytics.reduce((sum, entry) => sum + entry.engagementScore, 0) / totalSessions
+        ? userTier.trialAnalytics.reduce((sum: number, entry: any) => sum + entry.engagementScore, 0) / totalSessions
         : 0;
 
       const uniqueFeatures = new Set();
-      userTier.trialAnalytics.forEach(entry => {
-        entry.featuresUsed.forEach(feature => uniqueFeatures.add(feature));
+      userTier.trialAnalytics.forEach((entry: any) => {
+        entry.featuresUsed.forEach((feature: any) => uniqueFeatures.add(feature));
       });
 
       const conversionEvents = userTier.conversionCheckpoints.length;
-      const highEngagementSessions = userTier.trialAnalytics.filter(entry => entry.engagementScore >= 7).length;
+      const highEngagementSessions = userTier.trialAnalytics.filter((entry: any) => entry.engagementScore >= 7).length;
 
       return NextResponse.json({
         success: true,
@@ -177,7 +177,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Return detailed analytics (limit to last 50 entries for performance)
-    const analyticsData = {
+    const analyticsData: any = {
       trialAnalytics: userTier.trialAnalytics.slice(-50),
       conversionCheckpoints: userTier.conversionCheckpoints.slice(-20),
       featuresUsed: userTier.featuresUsed,

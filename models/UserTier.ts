@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export type UserTierType = 'trial' | 'free' | 'pro' | 'enterprise';
 
@@ -19,10 +19,19 @@ export interface TrialAnalytics {
   timestamp: Date;
 }
 
+// Interface for static methods
+interface UserTierModel extends Model<UserTierDocument> {
+  createTrialUser(userId: string, email?: string): Promise<UserTierDocument>;
+  findExpiringTrials(daysFromNow?: number): Promise<UserTierDocument[]>;
+}
+
 export interface UserTierDocument extends Document {
   userId: string;
   email?: string;
   tier: UserTierType;
+  
+  // Instance methods
+  resetUsageCounters(): void;
   
   // Trial management
   trialStartDate?: Date;
@@ -322,5 +331,5 @@ UserTierSchema.pre('save', function() {
   }
 });
 
-export default mongoose.models.UserTier || 
-  mongoose.model<UserTierDocument>('UserTier', UserTierSchema);
+export default (mongoose.models.UserTier as UserTierModel) || 
+  mongoose.model<UserTierDocument, UserTierModel>('UserTier', UserTierSchema);
