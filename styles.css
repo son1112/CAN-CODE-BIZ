@@ -723,6 +723,32 @@ p {
     margin-bottom: var(--spacing-2xl);
 }
 
+.org-logo-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
+}
+
+.org-logo-badge {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
+    transition: transform 0.3s ease;
+}
+
+.org-logo-badge:hover {
+    transform: scale(1.05) rotate(2deg);
+}
+
+.org-header-text {
+    flex: 1;
+    min-width: 300px;
+    text-align: center;
+}
+
 .org-header h1 {
     color: var(--primary-dark);
     margin-bottom: var(--spacing-sm);
@@ -872,6 +898,20 @@ p {
 
 /* Responsive design for organization intro */
 @media (max-width: 768px) {
+    .org-logo-section {
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+    
+    .org-logo-badge {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .org-header-text {
+        min-width: auto;
+    }
+    
     .org-principles {
         grid-template-columns: 1fr;
     }
