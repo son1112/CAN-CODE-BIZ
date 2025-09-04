@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireAuth } from '@/lib/middleware/auth';
 import Session from '@/models/Session';
 import connectDB from '@/lib/mongodb';
 
@@ -9,19 +9,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-
-    // Demo mode bypass for testing
-    const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-    // After migration, always use the real user ID for data consistency
-    const userId = isDemoMode ? '68a33c99df2098d5e02a84e3' : session?.user?.id;
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    // Use the same authentication middleware as session creation
+    const { userId } = await requireAuth(request);
 
     await connectDB();
     const { id } = await params;
@@ -73,19 +62,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-
-    // Demo mode bypass for testing
-    const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-    // After migration, always use the real user ID for data consistency
-    const userId = isDemoMode ? '68a33c99df2098d5e02a84e3' : session?.user?.id;
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    // Use the same authentication middleware as session creation
+    const { userId } = await requireAuth(request);
 
     await connectDB();
     const { id } = await params;
@@ -151,19 +129,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-
-    // Demo mode bypass for testing
-    const isDemoMode = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-    // After migration, always use the real user ID for data consistency
-    const userId = isDemoMode ? '68a33c99df2098d5e02a84e3' : session?.user?.id;
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    // Use the same authentication middleware as session creation
+    const { userId } = await requireAuth(request);
 
     await connectDB();
     const { id } = await params;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useTrial } from './TrialContext';
 
 export interface OnboardingStep {
   target: string;
@@ -14,6 +15,11 @@ export interface OnboardingStep {
   showProgress?: boolean;
   showSkipButton?: boolean;
   styles?: object;
+  // Trial-specific properties
+  trialFeature?: string;
+  premiumHighlight?: boolean;
+  demoAction?: string;
+  conversionValue?: number;
 }
 
 interface OnboardingContextType {
@@ -25,6 +31,9 @@ interface OnboardingContextType {
   resetOnboarding: () => void;
   completeOnboarding: () => void;
   steps: OnboardingStep[];
+  // Trial-specific methods
+  trackOnboardingProgress: (stepIndex: number) => void;
+  getOnboardingProgress: () => { current: number; total: number; percentage: number };
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -34,124 +43,212 @@ const ONBOARDING_STORAGE_KEY = 'rubber-ducky-onboarding-completed';
 export const onboardingSteps: OnboardingStep[] = [
   {
     target: '[data-onboarding="logo"]',
-    title: 'Welcome to Rubber Ducky Live! 🦆',
+    title: 'Welcome to Your 7-Day Premium Trial! 🦆✨',
     content: (
-      <div className="space-y-3">
-        <p className="text-base leading-relaxed">
-          Your AI thinking companion is here to help you work through problems, just like the classic <strong>rubber duck debugging</strong> technique!
-        </p>
-        <p className="text-sm text-gray-600">
-          Talk through your thoughts, get AI insights, and solve problems together.
+      <div className="space-y-4">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
+          <p className="text-base leading-relaxed font-medium text-blue-900">
+            Experience the full power of <strong>Claude 4 AI</strong>, unlimited exports, premium voice features, and priority support - completely free for 7 days!
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-green-50 p-2 rounded border border-green-200">
+            <span className="font-semibold text-green-800">🧠 Claude 4 Access</span>
+          </div>
+          <div className="bg-green-50 p-2 rounded border border-green-200">
+            <span className="font-semibold text-green-800">📄 Unlimited Exports</span>
+          </div>
+          <div className="bg-green-50 p-2 rounded border border-green-200">
+            <span className="font-semibold text-green-800">🎙️ Premium Voice</span>
+          </div>
+          <div className="bg-green-50 p-2 rounded border border-green-200">
+            <span className="font-semibold text-green-800">⚡ Priority Support</span>
+          </div>
+        </div>
+        <p className="text-sm text-gray-600 italic">
+          Your trial starts now - let's explore these premium features together!
         </p>
       </div>
     ),
     placement: 'bottom',
     disableBeacon: true,
+    trialFeature: 'trial_welcome',
+    premiumHighlight: true,
+    conversionValue: 10,
   },
   {
     target: '[data-onboarding="chat-area"]',
-    title: 'Your Conversation Space',
+    title: 'Professional Conversation Interface',
     content: (
       <div className="space-y-3">
         <p className="text-base leading-relaxed">
-          This is where all your conversations happen. Each message gets its own <strong>professional document-style</strong> presentation with titles and timestamps.
+          This is where all your conversations happen with <strong>Claude 4's advanced reasoning</strong>. Each message gets professional document-style presentation with timestamps and metadata.
         </p>
+        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+          <p className="text-sm font-medium text-blue-800">
+            🎁 Trial Bonus: Try asking complex questions that showcase Claude 4's superior reasoning abilities!
+          </p>
+        </div>
         <p className="text-sm text-gray-600">
-          Messages are organized like papers in a filing system for easy reference.
+          Messages export beautifully to PDF and Word during your trial - perfect for documentation and sharing.
         </p>
       </div>
     ),
     placement: 'left',
+    trialFeature: 'claude4_access',
+    premiumHighlight: true,
+    demoAction: 'show_claude4_capabilities',
+    conversionValue: 8,
   },
   {
     target: '[data-onboarding="voice-input"]',
-    title: 'Advanced Voice Recognition 🎙️',
+    title: 'Premium Voice Recognition 🎙️✨',
     content: (
       <div className="space-y-3">
         <p className="text-base leading-relaxed">
-          <span className="sm:hidden">Tap</span><span className="hidden sm:inline">Click</span> the microphone to <strong>talk directly</strong> to your AI companion! Our advanced voice system includes <strong>quality metrics</strong>, <strong>confidence scoring</strong>, and <strong>smart end-of-turn detection</strong>.
+          <span className="sm:hidden">Tap</span><span className="hidden sm:inline">Click</span> the microphone to experience <strong>premium voice quality</strong> with crystal-clear recognition! Your trial includes <strong>unlimited voice minutes</strong> with advanced features.
         </p>
+        <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+          <p className="text-sm font-medium text-purple-800">
+            🎯 Premium Features: Real-time quality metrics, confidence scoring, smart turn detection, and noise cancellation
+          </p>
+        </div>
         <p className="text-sm text-gray-600">
-          <span className="sm:hidden">Perfect for hands-free mobile conversations!</span><span className="hidden sm:inline">Watch for real-time quality indicators and personalized recommendations to improve your voice experience.</span>
+          <span className="sm:hidden">Try a voice conversation right now - it's included in your trial!</span><span className="hidden sm:inline">Experience professional-grade voice AI that free users don't get access to.</span>
         </p>
       </div>
     ),
     placement: 'top',
+    trialFeature: 'premium_voice',
+    premiumHighlight: true,
+    demoAction: 'demo_voice_quality',
+    conversionValue: 7,
   },
   {
     target: '[data-onboarding="agent-selector"]',
-    title: 'Choose Your AI Personality',
+    title: 'Premium AI Agents & Custom Personalities',
     content: (
       <div className="space-y-3">
         <p className="text-base leading-relaxed">
-          Select from different <strong>AI agents</strong> with specialized knowledge and personalities. Each agent brings unique expertise to your conversations.
+          Select from different <strong>premium AI agents</strong> with specialized knowledge and personalities. Your trial unlocks <strong>custom agent creation</strong> - build AI assistants tailored to your specific needs!
         </p>
+        <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+          <p className="text-sm font-medium text-emerald-800">
+            🚀 Trial Exclusive: Create unlimited custom agents with specialized prompts, knowledge bases, and personalities
+          </p>
+        </div>
         <p className="text-sm text-gray-600">
-          From coding help to creative thinking - there's an agent for every need.
+          From coding experts to creative writing coaches - build your AI team during the trial period.
         </p>
       </div>
     ),
     placement: 'bottom',
+    trialFeature: 'custom_agents',
+    premiumHighlight: true,
+    demoAction: 'show_agent_creation',
+    conversionValue: 6,
   },
   {
     target: '[data-onboarding="sidebar-toggle"]',
-    title: 'Session & Settings Management',
+    title: 'Premium Session Management & Export Hub',
     content: (
       <div className="space-y-3">
         <p className="text-base leading-relaxed">
-          <span className="sm:hidden">Tap the menu</span><span className="hidden sm:inline">Click here</span> to access your <strong>conversation history</strong>, manage sessions, and configure advanced features. <span className="sm:hidden">The mobile menu</span><span className="hidden sm:inline">The sidebar</span> includes your profile and comprehensive settings.
+          <span className="sm:hidden">Tap the menu</span><span className="hidden sm:inline">Click here</span> to access your <strong>unlimited conversation history</strong>, premium export options, and advanced analytics during your trial.
         </p>
+        <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+          <p className="text-sm font-medium text-amber-800">
+            💎 Trial Features: Unlimited PDF/Word exports, conversation analytics, priority support access
+          </p>
+        </div>
         <p className="text-sm text-gray-600">
-          Find <strong>Content Safety</strong>, voice quality settings, and personalization options in the Settings section.
+          Export any conversation to professional documents - perfect for reports, documentation, and sharing insights.
         </p>
       </div>
     ),
     placement: 'right',
+    trialFeature: 'unlimited_exports',
+    premiumHighlight: true,
+    demoAction: 'demo_export_options',
+    conversionValue: 8,
   },
   {
     target: '[data-onboarding="continuous-mode"]',
-    title: 'Live Conversation Mode',
+    title: 'Premium Continuous Conversation Mode',
     content: (
       <div className="space-y-3">
         <p className="text-base leading-relaxed">
-          Toggle <strong>continuous conversation mode</strong> for seamless, hands-free interaction. I'll listen and respond naturally as you think out loud.
+          Toggle <strong>premium continuous mode</strong> for seamless, hands-free interaction with Claude 4. Experience natural conversations with superior context understanding.
         </p>
+        <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+          <p className="text-sm font-medium text-indigo-800">
+            🎭 Premium Advantage: Claude 4's advanced reasoning maintains context better across long conversations
+          </p>
+        </div>
         <p className="text-sm text-gray-600">
-          Perfect for rubber duck debugging sessions!
+          Perfect for complex problem-solving sessions that require deep, contextual understanding.
         </p>
       </div>
     ),
     placement: 'bottom',
+    trialFeature: 'claude4_access',
+    premiumHighlight: true,
+    demoAction: 'demo_continuous_mode',
+    conversionValue: 5,
   },
   {
     target: '[data-onboarding="logo"]',
-    title: 'Advanced AI Features 🧠',
+    title: 'Premium AI Capabilities Unlocked! 🧠✨',
     content: (
-      <div className="space-y-3">
-        <p className="text-base leading-relaxed">
-          We've equipped you with cutting-edge AI capabilities: <strong>Claude 4</strong> with smart fallback, <strong>sentiment analysis</strong>, <strong>speaker diarization</strong> for multi-person conversations, and <strong>content safety detection</strong>.
+      <div className="space-y-4">
+        <p className="text-base leading-relaxed font-medium">
+          Your trial unlocks enterprise-grade AI capabilities that give you a competitive advantage:
         </p>
-        <p className="text-sm text-gray-600">
-          All features are configurable in Settings with privacy-first defaults.
+        <div className="grid grid-cols-1 gap-2">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-2 rounded border">
+            <span className="text-sm font-semibold text-blue-800">🧠 Claude 4: Superior reasoning & complex problem-solving</span>
+          </div>
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-2 rounded border">
+            <span className="text-sm font-semibold text-purple-800">🔍 Advanced Analytics: Conversation insights & productivity metrics</span>
+          </div>
+          <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 p-2 rounded border">
+            <span className="text-sm font-semibold text-emerald-800">🔒 Enterprise Security: Content safety & privacy controls</span>
+          </div>
+        </div>
+        <p className="text-sm text-gray-600 italic">
+          These professional features are only available to trial and paid users.
         </p>
       </div>
     ),
     placement: 'center',
+    trialFeature: 'advanced_analytics',
+    premiumHighlight: true,
+    conversionValue: 9,
   },
   {
     target: '[data-onboarding="message-input"]',
-    title: 'Ready to Start! 🚀',
+    title: 'Start Your Premium Trial Experience! 🚀✨',
     content: (
-      <div className="space-y-3">
-        <p className="text-base leading-relaxed">
-          You're all set! <strong>Type or speak</strong> to start your first conversation. Ask me anything, share your thoughts, or just start thinking out loud.
-        </p>
-        <p className="text-sm text-gray-600 font-medium">
-          Remember: I'm here to help you think through problems, just like a rubber duck! 🦆
+      <div className="space-y-4">
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg border-2 border-green-200">
+          <p className="text-base leading-relaxed font-medium text-green-800">
+            You're ready to experience the full power of premium AI! <strong>Type or speak</strong> to start with Claude 4 - try complex questions that showcase its advanced reasoning.
+          </p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-semibold text-blue-600">
+            🆕 7-Day Trial Active | 💎 All Premium Features Unlocked
+          </p>
+        </div>
+        <p className="text-sm text-gray-600 font-medium text-center">
+          Ask anything, export conversations, use voice features - it's all included! 🦆✨
         </p>
       </div>
     ),
     placement: 'top',
+    trialFeature: 'trial_complete',
+    premiumHighlight: true,
+    conversionValue: 10,
   },
 ];
 
@@ -163,6 +260,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [isOnboardingActive, setIsOnboardingActive] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false); // Fixed: default to false
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  
+  // Trial integration
+  const { trackFeatureUsage, recordTrialAnalytics } = useTrial();
 
   useEffect(() => {
     // Check localStorage for onboarding completion status
@@ -228,6 +328,38 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     setHasCompletedOnboarding(true);
     setIsOnboardingActive(false);
     setCurrentStepIndex(0);
+    
+    // Track onboarding completion
+    trackFeatureUsage('onboarding_completed', 'high');
+    recordTrialAnalytics({
+      onboardingCompleted: true,
+      stepsCompleted: onboardingSteps.length,
+      timeSpent: Date.now() // Could calculate actual time spent
+    });
+  };
+
+  // Trial-specific methods
+  const trackOnboardingProgress = (stepIndex: number) => {
+    const step = onboardingSteps[stepIndex];
+    if (step?.trialFeature) {
+      trackFeatureUsage(step.trialFeature, 'medium');
+      
+      if (step.conversionValue) {
+        recordTrialAnalytics({
+          onboardingStep: stepIndex,
+          feature: step.trialFeature,
+          conversionValue: step.conversionValue
+        });
+      }
+    }
+  };
+
+  const getOnboardingProgress = () => {
+    return {
+      current: currentStepIndex,
+      total: onboardingSteps.length,
+      percentage: Math.min((currentStepIndex / onboardingSteps.length) * 100, 100)
+    };
   };
 
   const value: OnboardingContextType = {
@@ -239,6 +371,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     resetOnboarding,
     completeOnboarding,
     steps: onboardingSteps,
+    // Trial-specific methods
+    trackOnboardingProgress,
+    getOnboardingProgress,
   };
 
   return (
