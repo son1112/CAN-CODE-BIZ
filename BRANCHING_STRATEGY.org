@@ -1,0 +1,243 @@
+#+TITLE: CAN-CODE-BIZ Git Branching Strategy
+#+AUTHOR: Can.Code Development Team
+#+DATE: September 4, 2025
+#+STARTUP: overview
+
+* Overview
+
+This document establishes the formal Git branching strategy for the
+CAN-CODE-BIZ project, ensuring consistent development practices,
+code quality, and deployment safety across the ecosystem.
+
+* Branch Structure
+
+** Production Branches
+*** =main=
+- *Purpose*: Production-ready code only
+- *Protection*: Full branch protection with required PR reviews
+- *Deployment*: Automatically deploys to https://can-code.dev
+- *Rules*: No direct commits allowed, merge via PR only
+
+*** =develop=
+- *Purpose*: Integration branch for completed features
+- *Testing*: All features must pass testing before merging to main
+- *Stability*: Should always be in a deployable state
+
+** Development Branches
+*** =feature/[description]=
+- *Purpose*: Individual feature development
+- *Naming Convention*: =feature/add-export-functionality=
+- *Lifespan*: Created from develop, merged back via PR
+- *Example*: =feature/email-subscription-system=
+
+*** =hotfix/[description]=
+- *Purpose*: Critical production fixes
+- *Naming Convention*: =hotfix/fix-email-validation=
+- *Urgency*: Can merge directly to main after review
+- *Backport*: Must also merge back to develop
+
+*** =enhancement/[description]=
+- *Purpose*: Non-critical improvements and optimizations
+- *Naming Convention*: =enhancement/improve-mobile-responsive=
+- *Process*: Same as features, merge via develop
+
+* Workflow Process
+
+** Standard Feature Development
+1. *Create Branch*: =git checkout -b feature/new-capability develop=
+2. *Develop*: Make commits with clear, descriptive messages
+3. *Test*: Run local tests and ensure functionality works
+4. *Create PR*: Pull Request from =feature/branch= → =develop=
+5. *Review*: Code review and approval required
+6. *Merge*: Squash merge to maintain clean history
+7. *Deploy to Staging*: Test on develop branch
+8. *Production PR*: Create PR from =develop= → =main=
+9. *Deploy*: Automatic deployment to production
+
+** Hotfix Process
+1. *Create Branch*: =git checkout -b hotfix/critical-fix main=
+2. *Fix*: Implement minimal fix with tests
+3. *Test*: Verify fix resolves issue without breaking changes
+4. *PR to Main*: Direct pull request to main for urgent deployment
+5. *Backport*: Create PR to merge hotfix back into develop
+
+** Release Process
+1. *Feature Freeze*: No new features in develop
+2. *Final Testing*: Comprehensive testing of develop branch
+3. *Version Bump*: Update version numbers and changelog
+4. *Release PR*: Create PR from =develop= → =main=
+5. *Production Deploy*: Automatic deployment via GitHub Pages
+
+* Branch Protection Rules
+
+** Main Branch Protection
+- *Require PR reviews*: Minimum 1 reviewer for all changes
+- *Require status checks*: All tests must pass (when implemented)
+- *Restrict direct pushes*: Only maintainers via PR
+- *Require up-to-date branches*: Must be current with main
+- *Require signed commits*: Enhanced security for production
+
+** Develop Branch Guidelines
+- *Encourage reviews*: Recommended but not required for features
+- *Require tests*: All features should include appropriate tests
+- *Maintain stability*: Should always be in working condition
+
+* Commit Message Standards
+
+** Format
+#+BEGIN_EXAMPLE
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+#+END_EXAMPLE
+
+** Types
+- *feat*: New feature implementation
+- *fix*: Bug fixes and corrections
+- *docs*: Documentation updates
+- *style*: Code formatting, CSS changes
+- *refactor*: Code restructuring without functionality changes
+- *test*: Adding or updating tests
+- *chore*: Maintenance tasks, dependency updates
+
+** Examples
+#+BEGIN_EXAMPLE
+feat(email): Add Formspree integration for lead generation
+
+Implement professional email capture system replacing mailto fallback.
+Includes form validation, error handling, and success animations.
+
+- Add EarlyAccessManager class with localStorage persistence
+- Integrate Formspree endpoint for direct email delivery
+- Update UI with loading states and success celebrations
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+#+END_EXAMPLE
+
+* Testing Requirements
+
+** Pre-Commit Checks
+- *Linting*: All code must pass linting standards
+- *Unit Tests*: New features require test coverage
+- *Integration Tests*: Critical paths must be tested
+- *Build Verification*: Must build successfully
+
+** PR Requirements  
+- *Test Coverage*: Maintain minimum 60% code coverage
+- *Manual Testing*: Functional verification required
+- *Performance Check*: No significant performance degradation
+- *Documentation*: Update relevant documentation
+
+* Deployment Strategy
+
+** Environments
+- *Development*: Local development servers (port 3004 reserved)
+- *Staging*: Develop branch testing environment
+- *Production*: Main branch → https://can-code.dev (GitHub Pages)
+
+** Deployment Pipeline
+1. *Commit*: Push to feature/develop branch
+2. *Build*: Automatic build verification
+3. *Test*: Run test suites (when implemented)
+4. *Review*: Human code review process
+5. *Merge*: Approved changes merge to target branch
+6. *Deploy*: Automatic deployment to appropriate environment
+
+* Team Collaboration
+
+** Code Reviews
+- *Reviewer Assignment*: Automatic assignment for main branch PRs
+- *Review Checklist*: Functionality, performance, security, documentation
+- *Approval Process*: At least one approval required for main
+- *Feedback Loop*: Constructive feedback and rapid iteration
+
+** Communication
+- *PR Descriptions*: Clear description of changes and impact
+- *Issue Linking*: Link PRs to relevant issues/tasks
+- *Documentation Updates*: Update README.org and relevant docs
+- *Session Notes*: Update SESSION_NOTES.md for significant changes
+
+* Emergency Procedures
+
+** Critical Hotfixes
+1. *Immediate Fix*: Create hotfix branch from main
+2. *Minimal Change*: Fix only the critical issue
+3. *Fast Track Review*: Expedited review process
+4. *Deploy*: Direct to main after single approval
+5. *Post-Deploy*: Backport to develop and document
+
+** Rollback Strategy
+1. *Identify Issue*: Detect production problems quickly
+2. *Assess Impact*: Determine if rollback is necessary
+3. *Revert Commit*: Use git revert for clean rollback
+4. *Emergency Deploy*: Push rollback to production
+5. *Root Cause*: Investigate and document the issue
+
+* Integration with CAN-CODE-BIZ Ecosystem
+
+** Cross-Project Coordination
+- *Consistent Strategy*: Align with rubber-ducky-live branching
+- *Version Coordination*: Coordinate releases across projects
+- *Shared Standards*: Common commit message and review standards
+- *Documentation Sync*: Keep documentation current across projects
+
+** Project Universe Integration
+- *Health Score Impact*: Branching strategy affects project health
+- *Metrics Tracking*: Monitor branch health and merge velocity  
+- *Quality Gates*: Ensure quality standards across ecosystem
+- *Strategic Alignment*: Support overall CAN-CODE business goals
+
+* Monitoring and Metrics
+
+** Branch Health Indicators
+- *Merge Velocity*: Time from PR creation to merge
+- *Review Coverage*: Percentage of changes reviewed
+- *Hotfix Frequency*: Number of production hotfixes needed
+- *Test Coverage*: Code coverage across branches
+
+** Quality Metrics
+- *Build Success Rate*: Percentage of successful builds
+- *Deployment Frequency*: Regular, predictable deployments
+- *Lead Time*: Time from feature start to production
+- *Recovery Time*: Time to fix production issues
+
+* Tools and Automation
+
+** GitHub Features
+- *Branch Protection*: Configured protection rules
+- *PR Templates*: Standardized pull request descriptions
+- *Issue Templates*: Consistent issue reporting format
+- *Actions*: Automated testing and deployment (future)
+
+** Development Tools
+- *Local Git Hooks*: Pre-commit validation
+- *IDE Integration*: Branch management in development environment
+- *Conventional Commits*: Automated commit message validation
+- *Changelog Generation*: Automatic release notes
+
+* Documentation Maintenance
+
+This document should be reviewed and updated:
+- *Monthly*: Regular strategy review and improvement
+- *After Major Releases*: Process refinement based on experience
+- *Team Changes*: Update when team structure changes  
+- *Tool Updates*: Reflect changes in development tools
+
+** Related Documentation
+- =README.org= - Project overview and setup
+- =SESSION_NOTES.md= - Development session tracking  
+- =CLAUDE.md= - Development standards and practices
+- =RUBBER_DUCKY_LIVE_BACKLOG_REQUIREMENTS.org= - Feature requirements
+
+---
+
+*This branching strategy supports the CAN-CODE-BIZ mission of building*
+*reliable, enterprise-grade AI tools through systematic development*
+*practices and quality assurance.*
+
+*Last Updated: September 4, 2025*
+*Next Review: October 4, 2025*
