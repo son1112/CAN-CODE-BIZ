@@ -8,6 +8,7 @@ export interface ConversionCheckpoint {
   engagement: 'low' | 'medium' | 'high';
   convertedToUpgrade: boolean;
   promptShown?: boolean;
+  metadata?: any;
 }
 
 export interface TrialAnalytics {
@@ -17,12 +18,17 @@ export interface TrialAnalytics {
   messagesCount: number;
   engagementScore: number;
   timestamp: Date;
+  customData?: any;
+  _id?: any;
+  extensionReason?: string;
+  extensionDays?: number;
+  previousExtensions?: number;
 }
 
 // Interface for static methods
 interface UserTierModel extends Model<UserTierDocument> {
   createTrialUser(userId: string, email?: string): Promise<UserTierDocument>;
-  findExpiringTrials(daysFromNow?: number): Promise<UserTierDocument[]>;
+  findExpiringTrials(daysFromNow?: number): any;
 }
 
 export interface UserTierDocument extends Document {
@@ -30,8 +36,18 @@ export interface UserTierDocument extends Document {
   email?: string;
   tier: UserTierType;
   
+  // Virtual properties
+  isTrialActive: boolean;
+  trialDaysRemaining: number;
+  hasTrialExpired: boolean;
+  canExtendTrial: boolean;
+  
   // Instance methods
   resetUsageCounters(): void;
+  trackFeatureUsage(feature: string, engagement?: 'low' | 'medium' | 'high'): void;
+  recordTrialAnalytics(data: Partial<TrialAnalytics>): void;
+  extendTrial(days?: number): boolean;
+  upgradeToTier(newTier: UserTierType, subscriptionData?: any): void;
   
   // Trial management
   trialStartDate?: Date;
@@ -267,7 +283,7 @@ UserTierSchema.methods.upgradeToTier = function(newTier: UserTierType, subscript
   }
   
   // Mark any pending conversion checkpoints as converted
-  this.conversionCheckpoints.forEach(checkpoint => {
+  this.conversionCheckpoints.forEach((checkpoint: ConversionCheckpoint) => {
     if (!checkpoint.convertedToUpgrade) {
       checkpoint.convertedToUpgrade = true;
     }
