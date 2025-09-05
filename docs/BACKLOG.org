@@ -15,6 +15,64 @@ This file tracks **active** future work items, feature requests, improvements, a
 
 ** 🔴 HIGH Priority
 
+*** Git History Token Cleanup (SECURITY)
+**** Problem Statement
+GitHub Personal Access Token remains in git commit history despite previous cleanup attempts, causing:
+- **Push Protection Blocks**: All pushes to develop/main branches require manual secret approval
+- **Security Risk**: Exposed PAT in public repository history poses security vulnerability
+- **Development Friction**: Every push requires manual GitHub approval, slowing development
+- **Compliance Issue**: Violates security best practices for token management
+- **Repository Health**: Git history contains sensitive data that should not be preserved
+
+**** Technical Requirements
+- **Git History Cleanup**: Completely remove PAT from all commit history using `git filter-branch` or `BFG Repo-Cleaner`
+- **Branch Protection**: Ensure cleanup doesn't break branch protection rules
+- **Backup Strategy**: Create repository backup before history rewriting
+- **Token Revocation**: Verify the exposed token has been revoked in GitHub settings
+- **Prevention Measures**: Strengthen `.gitignore` and pre-commit hooks to prevent future token commits
+
+**** Business Value & Impact
+- **Security Compliance**: Eliminates exposed credentials from repository history
+- **Development Velocity**: Removes friction from daily development workflow
+- **Professional Standards**: Maintains clean repository hygiene and security practices
+- **Risk Mitigation**: Prevents potential unauthorized access via exposed tokens
+
+**** Implementation Approach
+**GIT HISTORY CLEANUP PROJECT:**
+
+**Phase 1: Preparation (30 minutes)**
+1. **Repository Backup**: Create full repository backup
+2. **Token Verification**: Confirm PAT `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` is revoked
+3. **Branch Analysis**: Document all branches that need cleanup
+4. **Team Communication**: Notify team of upcoming history rewrite
+
+**Phase 2: History Cleanup (1-2 hours)**
+1. **BFG Repo-Cleaner Method** (Recommended):
+   ```bash
+   # Install BFG
+   brew install bfg
+   
+   # Remove secrets from history
+   bfg --replace-text secrets.txt --no-blob-protection .
+   git reflog expire --expire=now --all && git gc --prune=now --aggressive
+   ```
+
+2. **Git Filter-Branch Method** (Alternative):
+   ```bash
+   git filter-branch --tree-filter 'find . -name ".npmrc" -delete' --all
+   git push --force --all
+   ```
+
+**Phase 3: Verification (30 minutes)**
+1. **History Scan**: Verify no tokens remain in git history
+2. **Push Test**: Test normal push workflow without approval requirement
+3. **Documentation Update**: Update SECURITY.md with cleanup details
+
+**** Priority: 🔴 HIGH
+**** Complexity: Medium (requires careful git history manipulation)
+**** Dependencies: Team coordination, repository backup
+**** Related Files: `.gitignore`, `.npmrc`, all commit history
+
 *** Fix Session Creation and 404 Errors
 **** Problem Statement
 The application is experiencing critical session creation failures where newly created sessions immediately return 404 errors when trying to load them. The error stack shows:
