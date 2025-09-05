@@ -22,14 +22,21 @@ export async function GET(request: NextRequest) {
     
     if (!userTier) {
       // Create new trial user
-      userTier = await UserTier.createTrialUser(session.user.id, session.user.email);
+      userTier = await UserTier.createTrialUser(session.user.id, session.user.email || undefined) as any;
+    }
+
+    if (!userTier) {
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to create or find user tier'
+      }, { status: 500 });
     }
 
     // Build trial status response
     const trialStatus: TrialStatus = {
       isTrialActive: userTier.isTrialActive,
       trialDaysRemaining: userTier.trialDaysRemaining,
-      trialExpiresAt: userTier.trialEndDate,
+      trialExpiresAt: userTier.trialEndDate || null,
       hasTrialExpired: userTier.hasTrialExpired,
       canExtendTrial: userTier.canExtendTrial,
       tier: userTier.tier,
@@ -99,7 +106,7 @@ export async function PATCH(request: NextRequest) {
     const trialStatus: TrialStatus = {
       isTrialActive: userTier.isTrialActive,
       trialDaysRemaining: userTier.trialDaysRemaining,
-      trialExpiresAt: userTier.trialEndDate,
+      trialExpiresAt: userTier.trialEndDate || null,
       hasTrialExpired: userTier.hasTrialExpired,
       canExtendTrial: userTier.canExtendTrial,
       tier: userTier.tier,

@@ -10,7 +10,11 @@ export class TrialManager {
     let userTier = await UserTier.findOne({ userId });
     
     if (!userTier) {
-      userTier = await UserTier.createTrialUser(userId, email);
+      userTier = await UserTier.createTrialUser(userId, email) as any;
+    }
+
+    if (!userTier) {
+      throw new Error('Failed to create or find user tier');
     }
 
     return this.buildTrialStatus(userTier);

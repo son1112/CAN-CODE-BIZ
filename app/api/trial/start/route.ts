@@ -52,7 +52,14 @@ export async function POST(request: NextRequest) {
       userTier = await UserTier.createTrialUser(
         session.user.id, 
         email || session.user.email
-      );
+      ) as any;
+    }
+
+    if (!userTier) {
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to create or find user tier'
+      }, { status: 500 });
     }
 
     await userTier.save();
