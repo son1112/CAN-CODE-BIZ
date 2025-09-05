@@ -31,28 +31,49 @@ Rubber Ducky Live is a comprehensive real-time voice-enabled AI chat companion p
 - **`feature/*`**: Feature branches created from `develop`
 - **`hotfix/*`**: Emergency fixes branched from `main`
 
-### Development Workflow
+### Two-Stage Development Workflow
+
+**IMPORTANT**: This project now uses a two-stage workflow for better deployment control:
+
+#### Stage 1: Feature Development → Staging (develop branch)
 ```bash
 # ALWAYS start from develop branch
 git checkout develop
 git pull origin develop
 
-# For new features, create a feature branch
+# Create feature branch for new work
 git checkout -b feature/your-feature-name
 
 # Work on your changes, commit frequently
 git add .
-git commit -m "your commit message"
+git commit -m "feat: your feature description"
 
-# When ready, merge back to develop
-git checkout develop
-git merge feature/your-feature-name
+# Push feature branch and create PR to develop
+git push origin feature/your-feature-name
+gh pr create --title "Feature: Description" --body "Detailed description of changes" --base develop
 
-# Push develop (NOT main)
-git push origin develop
-
-# Only merge develop to main when ready for production deployment
+# After PR review and merge to develop, test on staging environment
+# develop branch deploys to staging environment for verification
 ```
+
+#### Stage 2: Staging → Production (main branch)  
+```bash
+# When staging is verified and ready for production
+git checkout develop
+git pull origin develop
+
+# Create production release PR from develop to main
+gh pr create --title "Release: Version X.Y.Z" --body "Production release with changes: [list key changes]" --base main
+
+# After PR review and merge to main, automatic deployment to production occurs
+# main branch auto-deploys to live production site
+```
+
+**Key Benefits:**
+- **Staging Environment**: develop branch provides staging environment for testing
+- **Production Control**: All production deployments go through PR review process  
+- **Rollback Safety**: develop branch remains stable for quick rollback
+- **Team Coordination**: Clear separation between staging and production deployments
 
 ### Claude Code Instructions
 
@@ -130,10 +151,12 @@ pkill -f chrome || true
 ```
 
 #### Deployment Safety
-- **develop → main merges**: Only for production-ready releases
-- **Automatic deployment**: Triggered on every push to main
-- **Testing requirement**: All tests must pass before any push
-- **Rollback plan**: Keep develop branch stable for quick rollback
+- **Two-Stage Process**: Feature branches → develop (staging) → main (production)
+- **Staging Testing**: develop branch provides staging environment for verification
+- **Production PRs Only**: All main branch changes must go through PR review process
+- **Automatic deployment**: Triggered on every push to main after PR approval
+- **Testing requirement**: All tests must pass before any merge to develop or main
+- **Rollback plan**: Keep develop branch stable for quick production rollback
 
 ## Development Commands
 
