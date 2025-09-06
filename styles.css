@@ -372,6 +372,14 @@ p {
     color: var(--accent-primary);
     margin-bottom: var(--spacing-sm);
     font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.feature-card h3::before {
+    content: '🦆';
+    font-size: 1.2rem;
 }
 
 .feature-card ul {
@@ -585,6 +593,11 @@ p {
     margin-bottom: var(--spacing-sm);
     font-family: 'Inter', sans-serif;
     font-weight: 600;
+}
+
+.footer-brand h3::before {
+    content: '🦆 ';
+    margin-right: 0.25rem;
 }
 
 .footer-brand p {
