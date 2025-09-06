@@ -607,6 +607,18 @@ p {
     color: var(--accent-secondary);
 }
 
+.contact-methods a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    transition: all var(--duration-fast) var(--easing-default);
+    border-bottom: 1px solid transparent;
+}
+
+.contact-methods a:hover {
+    color: var(--duck-red);
+    border-bottom-color: var(--duck-red);
+}
+
 /* Professional Footer */
 .footer {
     background: var(--bg-tertiary);
