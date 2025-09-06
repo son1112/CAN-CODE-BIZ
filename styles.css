@@ -5,45 +5,46 @@
     box-sizing: border-box;
 }
 
-/* Professional Design System - CAN-CODE-BIZ */
+/* Rubber Duck Themed Design System */
 :root {
-  /* CAN-CODE-BIZ Color Palette - Professional Theme */
+  /* Duck Illustration Color Palette */
+  --duck-yellow: #FFD700;
+  --duck-golden: #F4D03F;
+  --duck-red: #E74C3C;
+  --duck-coral: #FF6B6B;
+  --duck-blue: #3498DB;
+  --duck-water: #5DADE2;
   --primary-white: #ffffff;
-  --light-gray: #f8f9fa;
-  --medium-gray: #e9ecef;
-  --dark-gray: #495057;
-  --text-primary: #212529;
-  --text-secondary: #6c757d;
-  --accent-orange: #ff6b35;
-  --accent-purple: #6f42c1;
-  --accent-green: #20c997;
-  --border-light: #dee2e6;
-  --shadow-light: rgba(0, 0, 0, 0.04);
-  --shadow-medium: rgba(0, 0, 0, 0.12);
+  --light-cream: #FEF9E7;
+  --warm-yellow: #FFFACD;
+  --dark-gray: #2C3E50;
+  --text-primary: #2C3E50;
+  --text-secondary: #34495E;
+  --accent-primary: var(--duck-red);
+  --accent-secondary: var(--duck-yellow);
+  --accent-tertiary: var(--duck-blue);
+  --border-light: #F8C471;
+  --shadow-light: rgba(255, 107, 107, 0.1);
+  --shadow-medium: rgba(255, 107, 107, 0.2);
   
-  /* Enhanced Background System */
+  /* Duck-Themed Background System */
   --bg-primary: var(--primary-white);
-  --bg-secondary: var(--light-gray);
-  --bg-tertiary: var(--medium-gray);
-  --bg-quaternary: #dee2e6;
+  --bg-secondary: var(--light-cream);
+  --bg-tertiary: var(--warm-yellow);
+  --bg-quaternary: var(--duck-golden);
   
-  /* Professional Border System */
-  --border-primary: var(--medium-gray);
-  --border-secondary: #ced4da;
+  /* Duck-Themed Border System */
+  --border-primary: var(--border-light);
+  --border-secondary: var(--duck-coral);
   
-  /* Professional Text Hierarchy */
-  --text-tertiary: #868e96;
-  --text-quaternary: #adb5bd;
-  
-  /* Professional Accent System */
-  --accent-primary: var(--accent-purple);
-  --accent-secondary: var(--accent-orange);
-  --accent-tertiary: var(--accent-green);
+  /* Duck-Themed Text Hierarchy */
+  --text-tertiary: #5D6D7E;
+  --text-quaternary: #85929E;
   
   /* Enhanced Status Colors */
-  --status-success: var(--accent-green);
-  --status-warning: #ffc107;
-  --status-error: #dc3545;
+  --status-success: var(--duck-blue);
+  --status-warning: var(--duck-yellow);
+  --status-error: var(--duck-red)
   
   /* Professional Shadow System */
   --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -242,6 +243,40 @@ p {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 var(--spacing-lg);
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--spacing-xl);
+    align-items: center;
+    min-height: 400px;
+}
+
+.hero-text {
+    z-index: 2;
+}
+
+.hero-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.duck-mascot {
+    max-width: 300px;
+    height: auto;
+    filter: drop-shadow(0 8px 16px rgba(255, 107, 107, 0.3));
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
 }
 
 .hero-title {
@@ -647,6 +682,16 @@ p {
 @media (max-width: 768px) {
     .nav-menu {
         display: none;
+    }
+    
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: var(--spacing-lg);
+    }
+    
+    .duck-mascot {
+        max-width: 200px;
     }
     
     .hero-title {
