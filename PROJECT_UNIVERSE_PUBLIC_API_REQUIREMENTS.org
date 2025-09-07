@@ -1,0 +1,482 @@
+#+TITLE: Project Universe Public API Integration Requirements
+#+DATE: [2025-09-06 Fri]
+#+AUTHOR: CAN-CODE-BIZ Integration Team
+#+DESCRIPTION: Requirements specification for public-facing API endpoints to support CAN-CODE-BIZ marketing site integration
+#+PRIORITY: A+
+#+TODO: TODO REVIEW IN-PROGRESS | DONE CANCELLED
+
+* Executive Summary
+
+The CAN-CODE-BIZ marketing website (https://can-code.dev) requires a secure, 
+public-facing API endpoint from Project Universe to display live portfolio 
+metrics. This integration transforms our marketing approach from static claims 
+to live demonstration of actual capabilities - a strategic shift from 
+"promising potential" to "proving results."
+
+** Strategic Objective
+Replace vague marketing statements with concrete, live portfolio data:
+- Current: "17+ specialized agents active"
+- Target: "126+ active projects, 147M+ LOC analyzed, 8.2 average health score"
+
+** Business Impact
+- Radical competitive differentiation through transparency
+- Higher conversion rates through demonstrated credibility
+- Unique market positioning as data-driven development house
+- Foundation for future business intelligence integrations
+
+* Security Requirements (CRITICAL)
+
+** Data Classification Framework
+
+*** PUBLIC-SAFE (✅ Approved for Marketing Display)
+**** Portfolio Scale Metrics
+- Total project count (aggregated number only)
+- Total lines of code (aggregated number only)
+- Average portfolio health score (rounded to 1 decimal)
+- Project distribution by health category (counts only)
+
+**** Technology Statistics (Aggregated Only)
+- Programming language distribution (percentages)
+- Framework usage statistics (percentages)
+- Technology trend indicators (general direction)
+- Architecture pattern adoption rates (aggregated)
+
+**** Health & Quality Indicators  
+- Overall portfolio health score and trend
+- Production readiness distribution (counts by category)
+- Quality metrics (aggregated averages)
+- Success rate indicators (percentages)
+
+*** STRICTLY CONFIDENTIAL (🚫 Never Public)
+**** Individual Project Data
+- Specific project names, paths, or identifiers
+- Individual project health scores or metrics
+- Repository URLs or file structures
+- Specific dependency details
+
+**** Strategic Intelligence
+- AI-generated recommendations for specific projects
+- Competitive analysis insights
+- Internal development priorities
+- Resource allocation details
+
+**** Technical Infrastructure
+- Server configurations or internal URLs
+- Database schemas or connection details
+- Individual developer metrics
+- Specific vulnerability reports
+
+** Required Security Controls
+
+*** Data Sanitization Pipeline
+#+begin_src javascript
+// REQUIRED: Strict data filtering before public exposure
+const sanitizeForPublic = (rawData) => {
+  return {
+    // ONLY approved aggregate metrics
+    totalProjects: rawData.projects.length,
+    totalLOC: rawData.aggregates.totalLOC,
+    avgHealthScore: Math.round(rawData.aggregates.healthScore * 10) / 10,
+    // NO individual project identifiers
+    // NO detailed recommendations  
+    // NO internal paths or configurations
+  };
+};
+#+end_src
+
+*** Access Controls
+- Rate limiting: 100 requests per 15-minute window (existing)
+- CORS configuration for can-code.dev domain only
+- No authentication required (public endpoint by design)
+- Request logging for audit purposes
+
+*** Privacy Protections
+- Aggregate data only (minimum 5 projects per metric)
+- No personally identifiable information
+- No competitively sensitive details
+- Regular security review of exposed data
+
+* Technical Implementation Requirements
+
+** TODO New Public API Endpoint
+   SCHEDULED: <2025-09-07>
+   :PROPERTIES:
+   :EFFORT: 4h
+   :PRIORITY: A+
+   :END:
+
+*** Endpoint Specification
+#+begin_src http
+GET /api/public-stats
+Content-Type: application/json
+Cache-Control: public, max-age=3600
+#+end_src
+
+*** Required Response Schema
+#+begin_src json
+{
+  "portfolio": {
+    "overview": {
+      "totalProjects": 126,
+      "totalLOC": 147000000,
+      "avgHealthScore": 8.2,
+      "lastAnalyzed": "2025-09-06T10:30:00Z"
+    },
+    "healthDistribution": {
+      "excellent": 45,
+      "good": 52,
+      "needsAttention": 29,
+      "categories": {
+        "excellent": "9.0-10.0 health score",
+        "good": "7.0-8.9 health score", 
+        "needsAttention": "Below 7.0 health score"
+      }
+    },
+    "technologies": {
+      "languages": {
+        "JavaScript": 42,
+        "TypeScript": 38,
+        "Python": 18,
+        "Go": 12,
+        "Other": 16
+      },
+      "frameworks": {
+        "React": 35,
+        "Express": 28,
+        "Next.js": 15,
+        "FastAPI": 8,
+        "Other": 40
+      },
+      "totalTechStacks": 20
+    },
+    "trends": {
+      "healthTrend": "improving",
+      "portfolioGrowth": "12% per quarter",
+      "modernizationRate": "85% using current frameworks"
+    },
+    "readiness": {
+      "productionReady": 97,
+      "inDevelopment": 29,
+      "readinessRate": "77%"
+    }
+  },
+  "metadata": {
+    "dataSource": "Project Universe Strategic Intelligence Platform",
+    "version": "2.0",
+    "privacyLevel": "aggregated-public",
+    "updateFrequency": "hourly",
+    "privacyNote": "Aggregated metrics only - no individual project data exposed",
+    "methodology": "Automated analysis of development portfolio using Project Universe platform"
+  }
+}
+#+end_src
+
+** TODO Performance & Caching Implementation
+   SCHEDULED: <2025-09-07>
+   :PROPERTIES:
+   :EFFORT: 2h
+   :PRIORITY: A
+   :END:
+
+*** Caching Strategy
+- Cache duration: 1 hour (balances freshness with performance)
+- Cache invalidation on portfolio rescan completion
+- ETag support for conditional requests
+- Gzip compression enabled
+
+*** Performance Requirements
+- Response time: <200ms (matches existing API performance)
+- Cache hit ratio: >90% for public stats endpoint
+- Bandwidth optimization: <5KB response size
+- Error handling: Graceful degradation if underlying data unavailable
+
+** TODO CORS & Security Headers
+   SCHEDULED: <2025-09-07>
+   :PROPERTIES:  
+   :EFFORT: 1h
+   :PRIORITY: A
+   :END:
+
+#+begin_src javascript
+// Required CORS configuration
+app.use('/api/public-stats', cors({
+  origin: ['https://can-code.dev', 'http://localhost:3000'],
+  methods: ['GET'],
+  credentials: false,
+  maxAge: 3600
+}));
+
+// Required security headers
+app.use('/api/public-stats', (req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin'
+  });
+  next();
+});
+#+end_src
+
+* Data Integration Specifications
+
+** Mapping Current Analytics to Public Schema
+
+*** Portfolio Overview Mapping
+#+begin_src javascript  
+// Map existing analytics-dashboard data to public schema
+const mapToPublicStats = (dashboardData) => {
+  return {
+    totalProjects: dashboardData.overview.totalProjects,
+    totalLOC: dashboardData.overview.totalLOC,
+    avgHealthScore: Math.round(dashboardData.overview.healthScore * 10) / 10,
+    lastAnalyzed: dashboardData.overview.lastUpdated,
+    
+    // Health distribution from existing health-report endpoint
+    healthDistribution: {
+      excellent: dashboardData.health.excellent,
+      good: dashboardData.health.good,
+      needsAttention: dashboardData.health.needsAttention
+    },
+    
+    // Technology data from existing distribution analysis
+    technologies: extractPublicTechStats(dashboardData.technologies)
+  };
+};
+#+end_src
+
+*** Technology Statistics Aggregation
+- Source: Existing `/api/analytics-dashboard` technology distribution
+- Transform: Convert to percentages, group minor technologies as "Other"
+- Sanitize: Remove any technology names that could reveal internal projects
+
+*** Health Score Calculation  
+- Source: Existing project health analysis
+- Aggregate: Calculate portfolio-wide averages and distributions
+- Anonymize: Provide category counts without individual project identification
+
+** Data Freshness & Update Strategy
+
+*** Update Triggers
+- Automatic: After each portfolio scan completion
+- Manual: Via existing `/api/rescan` endpoint
+- Scheduled: Align with existing scan frequency
+
+*** Data Consistency
+- Source of truth: Existing Project Universe analytics engine
+- Transformation: Real-time calculation from existing aggregated data
+- Validation: Automated checks for data completeness and consistency
+
+* Error Handling & Resilience
+
+** TODO Robust Error Responses
+   SCHEDULED: <2025-09-07>
+   :PROPERTIES:
+   :EFFORT: 2h
+   :PRIORITY: A
+   :END:
+
+*** Standard Error Schema
+#+begin_src json
+{
+  "error": true,
+  "message": "Portfolio data temporarily unavailable",
+  "code": "DATA_NOT_READY",
+  "timestamp": "2025-09-06T10:30:00Z",
+  "fallbackData": {
+    "totalProjects": 126,
+    "note": "Last known values from previous successful analysis"
+  }
+}
+#+end_src
+
+*** Error Scenarios & Responses
+- Data not ready: HTTP 202, include last known values
+- Scan in progress: HTTP 202, include progress indicator  
+- System unavailable: HTTP 503, include retry-after header
+- Invalid request: HTTP 400, include correction guidance
+
+** Graceful Degradation Strategy
+- Always return basic portfolio counts (cached)
+- Progressive enhancement for detailed metrics
+- Clear communication when data is stale or unavailable
+- Fallback to last successful analysis data
+
+* Testing & Validation Requirements
+
+** TODO Comprehensive Testing Suite
+   SCHEDULED: <2025-09-08>
+   :PROPERTIES:
+   :EFFORT: 4h
+   :PRIORITY: A
+   :END:
+
+*** Security Testing
+- Data leak prevention: Verify no individual project data exposed
+- Input validation: Test malformed requests and edge cases
+- Rate limiting: Verify request throttling works correctly
+- CORS policy: Test cross-origin access controls
+
+*** Performance Testing  
+- Load testing: 100 concurrent requests (marketing site traffic)
+- Cache efficiency: Verify response times with/without cache
+- Memory usage: Monitor impact on existing Project Universe performance
+- Response size: Ensure efficient payload delivery
+
+*** Data Integrity Testing
+- Aggregation accuracy: Verify calculations match source data
+- Freshness validation: Ensure updates reflect after rescans
+- Schema compliance: Automated validation of response structure
+- Edge case handling: Empty portfolio, single project, etc.
+
+** TODO Integration Testing with CAN-CODE-BIZ
+   SCHEDULED: <2025-09-08>
+   :PROPERTIES:
+   :EFFORT: 2h
+   :PRIORITY: A
+   :END:
+
+*** End-to-End Validation
+- GitHub Actions workflow: Test automated data fetching
+- Marketing site integration: Verify JavaScript consumption
+- Fallback behavior: Test marketing site with API unavailable
+- Cross-browser compatibility: Ensure CORS works across browsers
+
+* Documentation & Maintenance
+
+** TODO API Documentation Update
+   SCHEDULED: <2025-09-08>
+   :PROPERTIES:
+   :EFFORT: 2h
+   :PRIORITY: A
+   :END:
+
+*** Required Documentation Updates
+- Add `/api/public-stats` to PROJECT_UNIVERSE_API.org
+- Document security considerations and data privacy
+- Include usage examples and response schemas
+- Update rate limiting information
+
+*** Usage Examples
+#+begin_src javascript
+// Marketing site integration example
+fetch('http://localhost:3004/api/public-stats')
+  .then(response => response.json())
+  .then(data => {
+    document.getElementById('project-count').textContent = 
+      `${data.portfolio.overview.totalProjects}+`;
+    document.getElementById('health-score').textContent = 
+      data.portfolio.overview.avgHealthScore;
+  })
+  .catch(error => {
+    console.log('Using fallback static content');
+    // Graceful degradation to static values
+  });
+#+end_src
+
+** Ongoing Maintenance Requirements
+
+*** Security Reviews
+- Monthly: Review exposed data for any new sensitive information
+- Quarterly: Update security controls and privacy assessment
+- Ad-hoc: After major Project Universe feature additions
+
+*** Performance Monitoring
+- Response time tracking: Alert if >300ms average
+- Cache hit ratio monitoring: Target >90% hit rate  
+- Error rate tracking: Alert if >1% error rate
+- Usage analytics: Monitor request patterns and peak times
+
+* Implementation Timeline
+
+** Phase 1: Core Implementation (Week 1)
+*** Day 1-2: Security & Data Schema
+- Implement data sanitization pipeline
+- Create public-stats endpoint with basic response
+- Add required security headers and CORS configuration
+
+*** Day 3-4: Performance & Caching
+- Implement response caching strategy
+- Add error handling and graceful degradation
+- Performance testing and optimization
+
+*** Day 5: Testing & Documentation
+- Comprehensive testing suite
+- API documentation updates
+- Integration testing preparation
+
+** Phase 2: Integration Support (Week 2)
+- Support CAN-CODE-BIZ GitHub Actions implementation
+- Monitor integration performance and errors
+- Refine based on real-world usage patterns
+- Documentation improvements based on integration experience
+
+* Success Criteria
+
+** Technical Success Metrics
+- ✅ Response time <200ms (95th percentile)
+- ✅ Zero data leaks (no individual project information)
+- ✅ >99.9% uptime for public-stats endpoint
+- ✅ Cache hit ratio >90%
+- ✅ Integration works seamlessly with CAN-CODE-BIZ site
+
+** Business Success Metrics  
+- ✅ Marketing site displays live, accurate portfolio metrics
+- ✅ Data updates automatically without manual intervention
+- ✅ Competitive differentiation through transparency achieved
+- ✅ Foundation established for future business intelligence features
+
+** Security Success Metrics
+- ✅ Security review approval for all exposed data
+- ✅ No sensitive information accessible via public endpoint
+- ✅ Rate limiting prevents abuse
+- ✅ Audit trail captures all public data access
+
+* Risk Assessment & Mitigation
+
+** High Risk: Data Exposure
+- Risk: Accidental exposure of sensitive project details
+- Mitigation: Multi-layer data sanitization, regular security reviews
+- Monitoring: Automated checks for individual project data in responses
+
+** Medium Risk: Performance Impact
+- Risk: Public endpoint affects core Project Universe performance
+- Mitigation: Aggressive caching, separate processing pipeline
+- Monitoring: Performance metrics dashboard, alerting thresholds
+
+** Low Risk: Integration Complexity
+- Risk: Complex integration affects marketing site reliability
+- Mitigation: Progressive enhancement, robust fallback strategies
+- Monitoring: End-to-end integration testing, error rate tracking
+
+* Contact & Coordination
+
+** Project Universe Team Lead Responsibilities
+- Technical implementation of `/api/public-stats` endpoint
+- Security review and approval of exposed data schema
+- Performance optimization and monitoring setup
+- Documentation updates and maintenance procedures
+
+** CAN-CODE-BIZ Team Responsibilities  
+- GitHub Actions workflow for data consumption
+- Marketing site integration and fallback strategies
+- User experience design for dynamic content
+- Business impact measurement and optimization
+
+** Coordination Protocol
+- Daily standups during implementation week
+- Shared Slack channel: #project-universe-integration
+- Weekly progress reviews with stakeholders
+- Security review checkpoints at each phase
+
+---
+
+*Document Version*: 1.0
+*Created*: [2025-09-06 Fri] 
+*Next Review*: [2025-09-13 Fri]
+*Approval Required*: Project Universe Team Lead, Security Review
+*Priority*: A+ (Strategic Initiative)
+
+*Note*: This integration represents a fundamental strategic shift for CAN-CODE-BIZ 
+marketing approach. The technical implementation must prioritize security and 
+privacy while enabling unprecedented transparency about our development capabilities.
