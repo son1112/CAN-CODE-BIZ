@@ -34,8 +34,359 @@
     <meta name="geo.placename" content="United States">
     <meta name="language" content="en">
     <meta name="rating" content="general">
-    <link rel="stylesheet" href="./styles.css">
+    
+    <!-- Resource Hints for LCP Optimization -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="./screenshots/1756957668700-cutout.webp" as="image" type="image/webp">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style">
+    
+    <!-- Font Loading Optimization -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Critical CSS for above-the-fold content -->
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Duck Color System */
+        :root {
+            --duck-yellow: #FFD700;
+            --duck-golden: #F4D03F;
+            --duck-red: #E74C3C;
+            --duck-coral: #FF6B6B;
+            --duck-blue: #3498DB;
+            --duck-water: #5DADE2;
+            --primary-white: #ffffff;
+            --light-cream: #FEF9E7;
+            --warm-yellow: #FFFACD;
+            --dark-gray: #2C3E50;
+            --text-primary: #2C3E50;
+            --text-secondary: #2C3E50;
+            --accent-primary: var(--duck-red);
+            --accent-secondary: var(--duck-yellow);
+            --accent-tertiary: var(--duck-blue);
+            --border-light: #F8C471;
+            --shadow-light: rgba(255, 107, 107, 0.1);
+            --shadow-medium: rgba(255, 107, 107, 0.2);
+            --bg-primary: var(--primary-white);
+            --bg-secondary: var(--light-cream);
+            --bg-tertiary: var(--warm-yellow);
+            --bg-quaternary: var(--duck-golden);
+            --border-primary: var(--border-light);
+            --border-secondary: var(--duck-coral);
+            --text-tertiary: #2C3E50;
+            --text-quaternary: #2C3E50;
+            --status-success: var(--duck-blue);
+            --status-warning: var(--duck-yellow);
+            --status-error: var(--duck-red);
+            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.2);
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+            --radius-sm: 0.25rem;
+            --radius-md: 0.375rem;
+            --radius-lg: 0.5rem;
+            --radius-xl: 0.75rem;
+            --duration-fast: 0.15s;
+            --duration-normal: 0.3s;
+            --duration-slow: 0.5s;
+            --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            font-weight: 400;
+            /* Prevent font swap CLS */
+            font-display: swap;
+        }
+        
+        /* Typography */
+        h1, h2, h3, h4 {
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.3;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+        
+        p {
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-secondary);
+            font-weight: 400;
+            line-height: 1.7;
+        }
+        
+        .lead {
+            font-size: 1.25rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-lg);
+            line-height: 1.6;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            text-align: center;
+            transition: all var(--duration-normal) var(--easing-default);
+            cursor: pointer;
+            border: 2px solid transparent;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-primary:hover {
+            background: #5a2d91;
+            border-color: #5a2d91;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* Header */
+        .header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            padding: 120px 0 80px;
+            text-align: center;
+            position: relative;
+            margin-top: 70px;
+        }
+        
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+        }
+        
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: var(--spacing-xl);
+            align-items: center;
+            min-height: 400px;
+        }
+        
+        .hero-text {
+            z-index: 2;
+        }
+        
+        .hero-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .duck-mascot {
+            max-width: 300px;
+            height: auto;
+            filter: drop-shadow(0 8px 16px rgba(255, 107, 107, 0.3));
+            animation: float 6s ease-in-out infinite;
+            /* Prevent CLS by reserving space */
+            aspect-ratio: 864 / 929;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-xl);
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+        
+        .hero-cta {
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Skip to main content link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: var(--accent-primary);
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            z-index: 10000;
+            transition: top var(--duration-fast) var(--easing-default);
+        }
+        
+        .skip-link:focus {
+            top: 6px;
+        }
+        
+        /* Focus styles for better accessibility */
+        a:focus,
+        button:focus,
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: 3px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+        
+        .btn:focus {
+            outline: 3px solid var(--accent-secondary);
+            outline-offset: 2px;
+        }
+        
+        /* Mobile-first responsive */
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+    
+    <!-- Deferred non-critical CSS -->
+    <link rel="preload" href="./styles.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="./styles.min.css"></noscript>
+    
+    <!-- Monitoring Script -->
+    <script defer src="./monitoring.js"></script>
     <!-- Force cache bust for GitHub Pages -->
+    
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        
+        // Configure GA4 with privacy-focused settings
+        gtag('config', 'G-XXXXXXXXXX', {
+            'anonymize_ip': true,
+            'respect_cookies': true,
+            'send_page_view': true,
+            'cookie_flags': 'SameSite=None;Secure'
+        });
+        
+        // Enhanced ecommerce and engagement tracking
+        gtag('config', 'G-XXXXXXXXXX', {
+            'custom_map': {
+                'custom_parameter_1': 'web_vitals_rating',
+                'custom_parameter_2': 'user_engagement_score'
+            }
+        });
+        
+        // Privacy-conscious tracking
+        if (navigator.doNotTrack === '1' || 
+            window.doNotTrack === '1' || 
+            navigator.msDoNotTrack === '1') {
+            console.log('Analytics disabled due to Do Not Track');
+            gtag('config', 'G-XXXXXXXXXX', {
+                'send_page_view': false
+            });
+        }
+    </script>
     
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -74,61 +425,551 @@
       "keywords": "AI, artificial intelligence, voice-enabled platform, problem-solving, coding assistance, business automation, MongoDB, specialized agents"
     }
     </script>
+    
+    <!-- Core Web Vitals Measurement -->
+    <script>
+        // Core Web Vitals measurement and reporting
+        function getCLS(onReport) {
+            let clsValue = 0;
+            let clsEntries = [];
+            
+            new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                    if (!entry.hadRecentInput) {
+                        const firstSessionEntry = clsEntries[0];
+                        const lastSessionEntry = clsEntries[clsEntries.length - 1];
+                        
+                        if (!firstSessionEntry || 
+                            entry.startTime - lastSessionEntry.startTime < 1000 ||
+                            entry.startTime - firstSessionEntry.startTime < 5000) {
+                            clsEntries.push(entry);
+                            clsValue += entry.value;
+                        } else {
+                            clsEntries = [entry];
+                            clsValue = entry.value;
+                        }
+                    }
+                }
+                onReport({
+                    name: 'CLS',
+                    value: clsValue,
+                    rating: clsValue > 0.25 ? 'poor' : clsValue > 0.1 ? 'needs-improvement' : 'good'
+                });
+            }).observe({entryTypes: ['layout-shift']});
+        }
+        
+        function getLCP(onReport) {
+            new PerformanceObserver((entryList) => {
+                const entries = entryList.getEntries();
+                const lastEntry = entries[entries.length - 1];
+                const value = lastEntry.startTime;
+                
+                onReport({
+                    name: 'LCP',
+                    value: value,
+                    rating: value > 4000 ? 'poor' : value > 2500 ? 'needs-improvement' : 'good'
+                });
+            }).observe({entryTypes: ['largest-contentful-paint']});
+        }
+        
+        function getFID(onReport) {
+            new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                    const value = entry.processingStart - entry.startTime;
+                    onReport({
+                        name: 'FID',
+                        value: value,
+                        rating: value > 300 ? 'poor' : value > 100 ? 'needs-improvement' : 'good'
+                    });
+                }
+            }).observe({entryTypes: ['first-input']});
+        }
+        
+        function getFCP(onReport) {
+            new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                    if (entry.name === 'first-contentful-paint') {
+                        const value = entry.startTime;
+                        onReport({
+                            name: 'FCP',
+                            value: value,
+                            rating: value > 3000 ? 'poor' : value > 1800 ? 'needs-improvement' : 'good'
+                        });
+                    }
+                }
+            }).observe({entryTypes: ['paint']});
+        }
+        
+        function getTTFB(onReport) {
+            const navEntry = performance.getEntriesByType('navigation')[0];
+            const value = navEntry.responseStart - navEntry.requestStart;
+            
+            onReport({
+                name: 'TTFB',
+                value: value,
+                rating: value > 800 ? 'poor' : value > 200 ? 'needs-improvement' : 'good'
+            });
+        }
+        
+        // Performance monitoring and reporting
+        const performanceData = {};
+        
+        function reportMetric(metric) {
+            performanceData[metric.name] = {
+                value: Math.round(metric.value),
+                rating: metric.rating
+            };
+            
+            console.log(`${metric.name}: ${Math.round(metric.value)}ms (${metric.rating})`);
+            
+            // Send to analytics with enhanced tracking
+            if (typeof gtag !== 'undefined') {
+                gtag('event', metric.name, {
+                    event_category: 'Web Vitals',
+                    value: Math.round(metric.value),
+                    custom_parameter_1: metric.rating,
+                    non_interaction: true
+                });
+            }
+        }
+        
+        // Initialize Core Web Vitals measurement
+        function initPerformanceMonitoring() {
+            getCLS(reportMetric);
+            getLCP(reportMetric);
+            getFID(reportMetric);
+            getFCP(reportMetric);
+            getTTFB(reportMetric);
+            
+            // Report summary after page load
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    console.log('Core Web Vitals Summary:', performanceData);
+                    
+                    // Create performance report
+                    const report = {
+                        url: window.location.href,
+                        timestamp: new Date().toISOString(),
+                        metrics: performanceData,
+                        userAgent: navigator.userAgent,
+                        connectionType: navigator.connection?.effectiveType || 'unknown'
+                    };
+                    
+                    // Store in localStorage for development
+                    localStorage.setItem('can-code-performance', JSON.stringify(report));
+                }, 2000);
+            });
+        }
+        
+        // Error Monitoring System
+        function initErrorMonitoring() {
+            const errorReports = [];
+            
+            // Track JavaScript errors
+            window.addEventListener('error', (event) => {
+                const error = {
+                    type: 'javascript_error',
+                    message: event.message,
+                    filename: event.filename,
+                    lineno: event.lineno,
+                    colno: event.colno,
+                    stack: event.error?.stack,
+                    timestamp: new Date().toISOString(),
+                    url: window.location.href,
+                    userAgent: navigator.userAgent
+                };
+                
+                reportError(error);
+            });
+            
+            // Track unhandled promise rejections
+            window.addEventListener('unhandledrejection', (event) => {
+                const error = {
+                    type: 'unhandled_rejection',
+                    message: event.reason?.message || 'Unhandled Promise Rejection',
+                    stack: event.reason?.stack,
+                    timestamp: new Date().toISOString(),
+                    url: window.location.href,
+                    userAgent: navigator.userAgent
+                };
+                
+                reportError(error);
+            });
+            
+            // Track resource loading errors
+            window.addEventListener('error', (event) => {
+                if (event.target !== window) {
+                    const error = {
+                        type: 'resource_error',
+                        message: `Failed to load: ${event.target.src || event.target.href}`,
+                        element: event.target.tagName,
+                        source: event.target.src || event.target.href,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    reportError(error);
+                }
+            }, true);
+            
+            // Track 404s and broken links
+            document.addEventListener('click', (event) => {
+                if (event.target.tagName === 'A') {
+                    const link = event.target;
+                    if (link.href && !link.href.startsWith('mailto:') && !link.href.startsWith('tel:')) {
+                        // Check for potential 404s (basic client-side detection)
+                        if (link.href.includes('#') && 
+                            !document.querySelector(link.getAttribute('href'))) {
+                            const error = {
+                                type: 'broken_link',
+                                message: `Broken internal link: ${link.href}`,
+                                element: 'anchor',
+                                source: link.href,
+                                timestamp: new Date().toISOString(),
+                                url: window.location.href
+                            };
+                            
+                            reportError(error);
+                        }
+                    }
+                }
+            });
+            
+            function reportError(error) {
+                errorReports.push(error);
+                
+                // Log to console for development
+                console.error('🚨 Error Detected:', error);
+                
+                // Send to analytics
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'exception', {
+                        description: `${error.type}: ${error.message}`,
+                        fatal: error.type === 'javascript_error'
+                    });
+                }
+                
+                // Store locally for review
+                try {
+                    const storedErrors = JSON.parse(localStorage.getItem('can-code-errors') || '[]');
+                    storedErrors.push(error);
+                    
+                    // Keep only last 50 errors
+                    if (storedErrors.length > 50) {
+                        storedErrors.splice(0, storedErrors.length - 50);
+                    }
+                    
+                    localStorage.setItem('can-code-errors', JSON.stringify(storedErrors));
+                } catch (e) {
+                    console.warn('Could not store error report locally');
+                }
+                
+                // Optional: Send to external error tracking service
+                // This would typically be Sentry, LogRocket, or similar
+                reportToExternalService(error);
+            }
+            
+            function reportToExternalService(error) {
+                // Placeholder for external error reporting
+                // Replace with actual service integration:
+                
+                // Example for Sentry:
+                // if (typeof Sentry !== 'undefined') {
+                //     Sentry.captureException(new Error(error.message), {
+                //         extra: error
+                //     });
+                // }
+                
+                // Example for LogRocket:
+                // if (typeof LogRocket !== 'undefined') {
+                //     LogRocket.captureException(new Error(error.message));
+                // }
+                
+                // Basic fetch to custom endpoint (if you have one)
+                if (window.location.hostname !== 'localhost') {
+                    fetch('/api/errors', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(error)
+                    }).catch(() => {
+                        // Silently fail for error reporting
+                        console.log('Error reporting endpoint not available');
+                    });
+                }
+            }
+            
+            // Periodic error summary reporting
+            setInterval(() => {
+                if (errorReports.length > 0) {
+                    console.log(`📊 Error Summary: ${errorReports.length} errors detected`);
+                    
+                    // Group errors by type
+                    const errorSummary = errorReports.reduce((acc, error) => {
+                        acc[error.type] = (acc[error.type] || 0) + 1;
+                        return acc;
+                    }, {});
+                    
+                    console.table(errorSummary);
+                    errorReports.length = 0; // Clear reported errors
+                }
+            }, 300000); // Every 5 minutes
+        }
+        
+        // Initialize monitoring
+        initPerformanceMonitoring();
+        initErrorMonitoring();
+    </script>
+    
+    <!-- FID Optimization: Non-blocking scripts -->
+    <script>
+        // Optimized for First Input Delay (FID)
+        // Use requestIdleCallback to defer non-critical work
+        function scheduleWork(callback) {
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(callback, { timeout: 2000 });
+            } else {
+                setTimeout(callback, 1);
+            }
+        }
+        
+        // Register service worker with deferred execution
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                scheduleWork(() => {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then((registration) => {
+                            console.log('Service Worker registered successfully:', registration.scope);
+                        })
+                        .catch((error) => {
+                            console.log('Service Worker registration failed:', error);
+                        });
+                });
+            });
+        }
+        
+        // Optimize event listeners for better responsiveness
+        function addPassiveEventListener(element, event, handler) {
+            if ('addEventListener' in element) {
+                element.addEventListener(event, handler, { passive: true });
+            } else {
+                element.attachEvent('on' + event, handler);
+            }
+        }
+        
+        // Enhanced Analytics Event Tracking
+        function trackEvent(action, category = 'User Interaction', label = '', value = 0) {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', action, {
+                    event_category: category,
+                    event_label: label,
+                    value: value,
+                    custom_parameter_2: calculateEngagementScore()
+                });
+            }
+            console.log(`📊 Tracked: ${category} - ${action}`, label);
+        }
+        
+        function calculateEngagementScore() {
+            const timeOnPage = (Date.now() - performance.timing.navigationStart) / 1000;
+            const scrollDepth = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+            return Math.round((timeOnPage * 0.1) + (scrollDepth * 0.01));
+        }
+        
+        function setupAnalyticsTracking() {
+            // Track CTA button clicks
+            document.querySelectorAll('.btn-primary').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    trackEvent('cta_click', 'Conversion', e.target.textContent.trim());
+                });
+            });
+            
+            // Track secondary button clicks
+            document.querySelectorAll('.btn-secondary').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    trackEvent('secondary_cta_click', 'Engagement', e.target.textContent.trim());
+                });
+            });
+            
+            // Track portfolio/external link clicks
+            document.querySelectorAll('a[href*="sonander.dev"]').forEach(link => {
+                link.addEventListener('click', () => {
+                    trackEvent('portfolio_click', 'External Link', 'sonander.dev');
+                });
+            });
+            
+            // Track section visibility (scroll tracking)
+            const sections = document.querySelectorAll('section[id]');
+            const sectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                        trackEvent('section_view', 'Content Engagement', entry.target.id);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            sections.forEach(section => sectionObserver.observe(section));
+            
+            // Track time-based engagement milestones
+            const engagementMilestones = [30, 60, 120, 300]; // seconds
+            engagementMilestones.forEach(milestone => {
+                setTimeout(() => {
+                    trackEvent('time_engagement', 'User Behavior', `${milestone}s`, milestone);
+                }, milestone * 1000);
+            });
+            
+            // Track duck mascot interaction (if animated)
+            const duckMascot = document.querySelector('.duck-mascot');
+            if (duckMascot) {
+                duckMascot.addEventListener('click', () => {
+                    trackEvent('mascot_interaction', 'Fun Engagement', 'duck_click');
+                });
+            }
+            
+            // Track form submissions (when contact forms are added)
+            document.addEventListener('submit', (e) => {
+                if (e.target.tagName === 'FORM') {
+                    trackEvent('form_submit', 'Conversion', e.target.id || 'contact_form');
+                }
+            });
+            
+            // Track scroll depth milestones
+            let maxScrollDepth = 0;
+            window.addEventListener('scroll', () => {
+                const scrollDepth = Math.round(window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100);
+                if (scrollDepth > maxScrollDepth) {
+                    maxScrollDepth = scrollDepth;
+                    if ([25, 50, 75, 90].includes(scrollDepth)) {
+                        trackEvent('scroll_depth', 'Content Engagement', `${scrollDepth}%`, scrollDepth);
+                    }
+                }
+            });
+        }
+        
+        // Defer non-critical JavaScript execution
+        window.addEventListener('load', () => {
+            scheduleWork(() => {
+                // Initialize analytics tracking
+                setupAnalyticsTracking();
+                console.log('Analytics tracking initialized');
+                
+                // Run accessibility audit in development
+                if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                    runAccessibilityAudit();
+                }
+            });
+        });
+        
+        // Accessibility audit function
+        function runAccessibilityAudit() {
+            // Load axe-core dynamically for development testing
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.8.2/axe.min.js';
+            script.onload = () => {
+                if (typeof axe !== 'undefined') {
+                    axe.run(document, {
+                        reporter: 'v2'
+                    }).then(results => {
+                        console.group('🔍 Accessibility Audit Results');
+                        console.log('Violations:', results.violations.length);
+                        console.log('Passes:', results.passes.length);
+                        console.log('Incomplete:', results.incomplete.length);
+                        
+                        if (results.violations.length > 0) {
+                            console.group('❌ Violations');
+                            results.violations.forEach(violation => {
+                                console.log(`${violation.impact}: ${violation.description}`);
+                                console.log('Help:', violation.helpUrl);
+                                console.log('Elements:', violation.nodes.length);
+                            });
+                            console.groupEnd();
+                        }
+                        
+                        if (results.incomplete.length > 0) {
+                            console.group('⚠️ Incomplete (Manual Check Required)');
+                            results.incomplete.forEach(incomplete => {
+                                console.log(`${incomplete.description}`);
+                                console.log('Help:', incomplete.helpUrl);
+                            });
+                            console.groupEnd();
+                        }
+                        
+                        console.log('✅ All passes:', results.passes.length);
+                        console.groupEnd();
+                        
+                        // Store results for review
+                        localStorage.setItem('can-code-accessibility', JSON.stringify({
+                            timestamp: new Date().toISOString(),
+                            violations: results.violations.length,
+                            passes: results.passes.length,
+                            incomplete: results.incomplete.length,
+                            details: results
+                        }));
+                    }).catch(error => {
+                        console.error('Accessibility audit failed:', error);
+                    });
+                }
+            };
+            document.head.appendChild(script);
+        }
+    </script>
 </head>
 <body>
-    <header class="header">
-        <nav class="nav">
+    <!-- Skip to main content link for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <header class="header" role="banner">
+        <nav class="nav" role="navigation" aria-label="Main navigation">
             <div class="nav-container">
                 <div class="nav-brand">
-                    <h1>🦆 can.code</h1>
+                    <a href="#main-content" class="logo" aria-label="can.code home">🦆 can.code</a>
                 </div>
-                <ul class="nav-menu">
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#platform">Platform</a></li>
-                    <li><a href="#showcase">Portfolio</a></li>
-                    <li><a href="#agents">Agents</a></li>
-                    <li><a href="#contact">Contact</a></li>
+                <ul class="nav-menu" role="menubar">
+                    <li role="none"><a href="#about" role="menuitem">About</a></li>
+                    <li role="none"><a href="#platform" role="menuitem">Platform</a></li>
+                    <li role="none"><a href="#showcase" role="menuitem">Portfolio</a></li>
+                    <li role="none"><a href="#agents" role="menuitem">Agents</a></li>
+                    <li role="none"><a href="#contact" role="menuitem">Contact</a></li>
                 </ul>
             </div>
         </nav>
     </header>
 
-    <main>
-        <section class="hero">
+    <main id="main-content" role="main">
+        <section class="hero" aria-labelledby="hero-title">
             <div class="hero-container">
                 <div class="hero-content">
                     <div class="hero-text">
-                        <h1 class="hero-title">AI-Powered Business Solutions</h1>
+                        <h1 id="hero-title" class="hero-title">AI-Powered Business Solutions</h1>
                         <p class="hero-subtitle">17+ specialized agents • MongoDB-backed system • Voice-enabled platform for problem-solving</p>
                         <div class="hero-cta">
                             <a href="#platform" class="btn btn-primary">Enter Rubber Ducky</a>
                             <a href="#contact" class="btn btn-secondary">Initialize Session</a>
                         </div>
                     </div>
-                    <div class="hero-image">
+                    <div class="hero-image" role="img" aria-label="Decorative rubber duck mascot illustration">
                         <picture>
                             <source srcset="screenshots/1756957668700-cutout.webp" type="image/webp">
-                            <img src="screenshots/1756957668700-cutout.png" alt="Rubber Duck Mascot" class="duck-mascot" loading="lazy" width="864" height="929">
+                            <img src="screenshots/1756957668700-cutout.png" alt="Stylized rubber duck mascot with red headband surrounded by cherry blossoms and water waves" class="duck-mascot" loading="lazy" width="864" height="929">
                         </picture>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="about" class="about">
+        <section id="about" class="about" aria-labelledby="about-heading">
             <div class="container">
-                <h2>About can.code</h2>
+                <h2 id="about-heading">About can.code</h2>
                 <p class="lead">We're building AI tools and voice-enabled platforms to help with coding, problem-solving, and business tasks.</p>
-                <div class="about-grid">
-                    <div class="about-card">
+                <div class="about-grid" role="list">
+                    <div class="about-card" role="listitem">
                         <h3>Agentic Architecture</h3>
                         <p>We've built 17+ specialized agents including senior-code-reviewer, meeting-engineer, storyteller, and business-owner - each designed for specific tasks with MongoDB storage.</p>
                     </div>
-                    <div class="about-card">
+                    <div class="about-card" role="listitem">
                         <h3>Voice-First Innovation</h3>
                         <p>We're working on interfaces that combine voice and text input, allowing you to talk through problems and get AI assistance in real-time.</p>
                     </div>
-                    <div class="about-card">
+                    <div class="about-card" role="listitem">
                         <h3>Platform Thinking</h3>
                         <p>Building reusable tools and frameworks to make problem-solving more interactive and AI-enhanced across different types of work.</p>
                     </div>
@@ -136,9 +977,9 @@
             </div>
         </section>
 
-        <section id="platform" class="platform">
+        <section id="platform" class="platform" aria-labelledby="platform-heading">
             <div class="container">
-                <h2>Rubber Ducky Platform</h2>
+                <h2 id="platform-heading">Rubber Ducky Platform</h2>
                 <p class="lead">A voice-enabled AI platform that helps you work through problems by talking them through instead of just typing</p>
                 
                 <div class="platform-overview">
