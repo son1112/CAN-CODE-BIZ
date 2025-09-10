@@ -1,0 +1,632 @@
+#+TITLE: Project Universe Strategic Intelligence API
+#+DATE: [2025-09-06 Fri]
+#+AUTHOR: Project Universe Team
+#+DESCRIPTION: External Integration Guide for Project Universe Strategic Intelligence Platform
+
+* Overview
+
+Project Universe is a comprehensive strategic intelligence platform that continuously analyzes 126+ software projects across 7+ technology ecosystems, providing real-time insights, AI-powered recommendations, and portfolio analytics for informed decision-making.
+
+** Key Capabilities
+- *Real-time Portfolio Analysis*: Continuous scanning and assessment of entire project portfolio
+- *AI-Powered Recommendations*: Intelligent technology and architecture guidance based on data patterns
+- *Production Readiness Assessment*: Automated evaluation of deployment readiness across projects
+- *Cross-Project Intelligence*: Dependency mapping and shared component identification
+- *Strategic Templates*: Auto-generated project templates from successful patterns
+- *Portfolio Showcases*: Professional presentations in multiple export formats
+
+** Platform Statistics
+- *Projects Analyzed*: 126+ active software projects
+- *Lines of Code Coverage*: 147,000,000+ LOC analyzed
+- *Technology Stacks*: 20+ distinct technology patterns identified
+- *Export Formats*: HTML, PDF, JSON with customizable templates
+- *Real-time Updates*: Server-Sent Events for live progress tracking
+
+* API Endpoints
+
+** Base Configuration
+#+begin_src 
+Base URL: http://localhost:3004/api
+Content-Type: application/json
+Rate Limiting: 100 requests/15 minutes
+#+end_src
+
+** Public API Endpoints (CAN-CODE-BIZ Integration)
+
+*** Public Portfolio Statistics
+#+begin_src http
+GET /api/public-stats
+Content-Type: application/json
+Cache-Control: public, max-age=3600
+Access-Control-Allow-Origin: https://can-code.dev
+#+end_src
+
+**SECURITY NOTE**: This endpoint exposes only aggregated portfolio metrics. No individual project information, names, paths, or sensitive data is included.
+
+*Public-Safe Data Included*:
+- Total project count and LOC (aggregated numbers only)
+- Average portfolio health score (rounded to 1 decimal)
+- Technology distribution (percentages, no project identifiers)
+- Health distribution by categories (counts only)
+- General trends and readiness metrics (aggregated)
+
+*Response Structure*:
+#+begin_src json
+{
+  "portfolio": {
+    "overview": {
+      "totalProjects": 128,
+      "totalLOC": 147000000,
+      "avgHealthScore": 8.2,
+      "lastAnalyzed": "2025-09-07T17:25:00Z"
+    },
+    "healthDistribution": {
+      "excellent": 44,
+      "good": 52,
+      "needsAttention": 31,
+      "categories": {
+        "excellent": "9.0-10.0 health score",
+        "good": "7.0-8.9 health score",
+        "needsAttention": "Below 7.0 health score"
+      }
+    },
+    "technologies": {
+      "languages": {
+        "JavaScript": 42, "TypeScript": 38, "Python": 18,
+        "Go": 12, "Ruby": 8, "Other": 8
+      },
+      "frameworks": {
+        "React": 35, "Express": 28, "Next.js": 15,
+        "FastAPI": 8, "Rails": 6, "Other": 34
+      },
+      "totalTechStacks": 20
+    },
+    "trends": {
+      "healthTrend": "improving",
+      "portfolioGrowth": "12% per quarter",
+      "modernizationRate": "85% using current frameworks"
+    },
+    "readiness": {
+      "productionReady": 98,
+      "inDevelopment": 30,
+      "readinessRate": "77%"
+    }
+  },
+  "metadata": {
+    "dataSource": "Project Universe Strategic Intelligence Platform",
+    "version": "2.0",
+    "privacyLevel": "aggregated-public",
+    "updateFrequency": "hourly",
+    "privacyNote": "Aggregated metrics only - no individual project data exposed",
+    "methodology": "Automated analysis using Project Universe platform"
+  }
+}
+#+end_src
+
+*Security Features*:
+- CORS restricted to can-code.dev and localhost domains only
+- 1-hour response caching for performance
+- Rate limiting: 100 requests per 15-minute window
+- Security headers: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
+- Data sanitization pipeline prevents any individual project exposure
+
+*Performance Characteristics*:
+- Response time: <50ms (cached), <200ms (fresh)
+- Response size: ~2KB compressed
+- Cache hit ratio: >90% expected for marketing site usage
+- Graceful degradation with fallback data if scan unavailable
+
+** Core Intelligence Endpoints
+
+*** Portfolio Analytics Dashboard
+#+begin_src http
+GET /api/analytics-dashboard
+#+end_src
+
+Returns comprehensive portfolio analytics including:
+- Project health metrics and trends
+- Technology distribution analysis  
+- Production readiness statistics
+- Resource allocation insights
+- Performance benchmarks across portfolio
+
+*Response Structure*:
+#+begin_src json
+{
+  "overview": {
+    "totalProjects": 126,
+    "totalLOC": 147000000,
+    "healthScore": 8.2,
+    "lastUpdated": "2025-09-06T10:30:00Z"
+  },
+  "health": {
+    "excellent": 45,
+    "good": 52,
+    "needsAttention": 29
+  },
+  "technologies": {
+    "distribution": {...},
+    "trends": {...}
+  },
+  "insights": [...],
+  "recommendations": [...]
+}
+#+end_src
+
+*** AI-Powered Strategic Recommendations  
+#+begin_src http
+GET /api/ai-recommendations
+#+end_src
+
+Intelligent recommendations based on portfolio analysis:
+- Architecture optimization suggestions
+- Technology modernization recommendations
+- Resource allocation guidance
+- Risk mitigation strategies
+- Growth opportunity identification
+
+*** Project Health Assessment
+#+begin_src http  
+GET /api/health-report
+GET /api/projects/{projectName}/health
+#+end_src
+
+Individual and aggregate project health metrics:
+- Code quality indicators
+- Dependency health scores
+- Security vulnerability assessments
+- Performance optimization opportunities
+- Maintenance burden analysis
+
+** Project Intelligence Endpoints
+
+*** Scan Results & Project Data
+#+begin_src http
+GET /api/scan-results           # Complete scan results
+GET /api/projects              # Project listing with metadata
+GET /api/project/{name}        # Individual project details
+#+end_src
+
+*** Cross-Project Dependencies
+#+begin_src http
+GET /api/dependencies          # Full dependency analysis
+GET /api/dependency-graph      # Visual dependency mapping
+GET /api/shared-dependencies   # Cross-project shared components
+#+end_src
+
+*** Template Factory
+#+begin_src http
+GET /api/templates             # Available project templates
+GET /api/templates/{id}        # Individual template details
+POST /api/templates/generate   # Generate new templates from patterns
+#+end_src
+
+** Portfolio Management Endpoints
+
+*** Portfolio Showcase Generation
+#+begin_src http
+GET /api/portfolio                    # Portfolio data
+POST /api/portfolio/generate          # Generate new portfolio showcase
+GET /api/portfolio/export/{format}    # Export (html/pdf/json)
+#+end_src
+
+*** Production Readiness Analysis
+#+begin_src http
+POST /api/projects/{name}/analyze-production-readiness
+GET /api/projects/{name}/production-readiness
+#+end_src
+
+** Visualization & Exploration
+
+*** Directory Tree Visualization
+#+begin_src http
+GET /api/tree/full                    # Complete project tree structure
+GET /api/tree/project/{name}          # Individual project tree
+POST /api/tree/search                 # Search within tree structures
+#+end_src
+
+*** Knowledge Graph
+#+begin_src http
+GET /api/graph                        # Knowledge graph visualization data
+#+end_src
+
+** Real-Time Operations
+
+*** Scanning & Progress Tracking
+#+begin_src http
+POST /api/rescan                      # Trigger portfolio rescan
+GET /api/scan/progress                # Current scan progress
+POST /api/scan/cancel                 # Cancel active scan
+#+end_src
+
+*** Server-Sent Events (SSE)
+#+begin_src http
+GET /api/events/progress              # Real-time progress updates
+Content-Type: text/event-stream
+#+end_src
+
+*Event Types*:
+- ~progress~: Scan progress updates
+- ~completion~: Scan completion notifications  
+- ~error~: Error notifications
+- ~analytics~: Real-time analytics updates
+
+* Integration Patterns
+
+** Polling for Updates
+#+begin_src javascript
+// Check for updates every 5 minutes
+const checkForUpdates = async () => {
+  const response = await fetch('/api/scan-results');
+  const data = await response.json();
+  
+  // Check lastModified timestamp
+  if (data.lastModified > lastKnownUpdate) {
+    // Process updated data
+    await processPortfolioUpdates(data);
+    lastKnownUpdate = data.lastModified;
+  }
+};
+
+setInterval(checkForUpdates, 5 * 60 * 1000);
+#+end_src
+
+** Real-Time Updates via SSE
+#+begin_src javascript
+const eventSource = new EventSource('/api/events/progress');
+
+eventSource.addEventListener('progress', (event) => {
+  const progress = JSON.parse(event.data);
+  updateProgressIndicator(progress);
+});
+
+eventSource.addEventListener('completion', (event) => {
+  const results = JSON.parse(event.data);
+  refreshPortfolioData(results);
+});
+#+end_src
+
+** Batch Data Processing
+#+begin_src javascript
+// Process multiple projects efficiently
+const analyzeProjects = async (projectNames) => {
+  const results = await Promise.all(
+    projectNames.map(name => 
+      fetch(`/api/project/${name}`).then(r => r.json())
+    )
+  );
+  
+  return processAnalysisResults(results);
+};
+#+end_src
+
+* Data Formats & Schemas
+
+** Project Object Schema
+#+begin_src json
+{
+  "name": "project-name",
+  "path": "/path/to/project",
+  "technologies": ["Node.js", "React", "TypeScript"],
+  "analysis": {
+    "metrics": {
+      "loc": 15420,
+      "files": 187,
+      "complexity": "moderate"
+    },
+    "health": {
+      "score": 8.5,
+      "factors": {
+        "codeQuality": 9.0,
+        "dependencies": 7.5,
+        "security": 8.8,
+        "performance": 8.2
+      }
+    },
+    "recommendations": [...],
+    "lastAnalyzed": "2025-09-06T10:30:00Z"
+  }
+}
+#+end_src
+
+** Analytics Dashboard Schema  
+#+begin_src json
+{
+  "timestamp": "2025-09-06T10:30:00Z",
+  "overview": {
+    "totalProjects": 126,
+    "totalLOC": 147000000,
+    "averageHealth": 8.2,
+    "activeProjects": 98
+  },
+  "distribution": {
+    "byTechnology": {...},
+    "byHealth": {...},
+    "bySize": {...}
+  },
+  "trends": {
+    "healthTrend": "improving",
+    "growthRate": "12% per quarter",
+    "technologyAdoption": {...}
+  },
+  "insights": [
+    {
+      "type": "opportunity",
+      "priority": "high", 
+      "message": "15 projects ready for TypeScript migration",
+      "actionable": true,
+      "projects": [...]
+    }
+  ]
+}
+#+end_src
+
+** Template Schema
+#+begin_src json
+{
+  "id": "react-typescript-template",
+  "name": "React + TypeScript Template",
+  "description": "Modern React application with TypeScript",
+  "technologies": ["React", "TypeScript", "Node.js"],
+  "pattern": {
+    "structure": {...},
+    "dependencies": {...},
+    "configuration": {...}
+  },
+  "metadata": {
+    "basedOnProjects": ["project-a", "project-b"],
+    "successScore": 9.2,
+    "usageCount": 12,
+    "lastUpdated": "2025-09-06T10:30:00Z"
+  }
+}
+#+end_src
+
+* Webhook Integration
+
+Project Universe supports outbound webhooks for real-time external system integration:
+
+** Configuration
+#+begin_src json
+{
+  "webhooks": [
+    {
+      "url": "https://your-system.com/webhook/project-universe",
+      "events": ["scan.completed", "health.alert", "recommendation.generated"],
+      "secret": "your-webhook-secret",
+      "active": true
+    }
+  ]
+}
+#+end_src
+
+** Event Payloads
+#+begin_src json
+{
+  "event": "scan.completed",
+  "timestamp": "2025-09-06T10:30:00Z",
+  "data": {
+    "scanId": "scan-123456",
+    "projectsAnalyzed": 126,
+    "duration": "00:15:42",
+    "changes": {
+      "new": 2,
+      "updated": 15,
+      "removed": 0
+    },
+    "summary": {
+      "healthScore": 8.2,
+      "criticalIssues": 3,
+      "recommendations": 12
+    }
+  }
+}
+#+end_src
+
+* Authentication & Security
+
+** Current State (Internal Use)
+- No authentication required for internal deployment
+- CORS configured for localhost development
+- Rate limiting: 100 requests per 15-minute window
+- Input validation on all endpoints
+
+** Production Readiness (Future)
+- API key authentication planned
+- OAuth2 integration roadmap  
+- Role-based access control design
+- Audit logging capabilities
+
+* Monitoring & Observability
+
+** Health Check Endpoints
+#+begin_src http
+GET /api/health          # System health status
+GET /api/metrics         # Performance metrics  
+GET /api/version         # Version information
+#+end_src
+
+** Performance Metrics
+- Average response time: < 200ms for most endpoints
+- Large dataset endpoints (tree visualization): < 5s
+- Concurrent scan limit: 1 active scan at a time
+- Memory usage: Optimized for 147M+ LOC processing
+
+* Error Handling
+
+** Standard Error Response Format
+#+begin_src json
+{
+  "error": true,
+  "message": "Resource not found",
+  "code": "RESOURCE_NOT_FOUND", 
+  "timestamp": "2025-09-06T10:30:00Z",
+  "requestId": "req-123456"
+}
+#+end_src
+
+** Common Error Codes
+- ~SCAN_IN_PROGRESS~: Another scan is currently running
+- ~PROJECT_NOT_FOUND~: Requested project doesn't exist
+- ~INVALID_FORMAT~: Unsupported export format requested
+- ~RATE_LIMIT_EXCEEDED~: Too many requests
+- ~SERVER_ERROR~: Internal server error
+
+* Usage Examples
+
+** CAN-CODE-BIZ Marketing Site Integration
+#+begin_src javascript
+// Live portfolio metrics integration for can-code.dev
+const loadLivePortfolioStats = async () => {
+  try {
+    const response = await fetch('http://localhost:3004/api/public-stats');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    const data = await response.json();
+    
+    // Update marketing site with live data - transforms static claims to live proof
+    document.getElementById('project-count').textContent = 
+      `${data.portfolio.overview.totalProjects}+`;
+    document.getElementById('health-score').textContent = 
+      data.portfolio.overview.avgHealthScore;
+    document.getElementById('loc-analyzed').textContent = 
+      `${(data.portfolio.overview.totalLOC / 1000000).toFixed(0)}M+`;
+    document.getElementById('tech-stacks').textContent = 
+      `${data.portfolio.technologies.totalTechStacks}+`;
+    
+    // Update health distribution for credibility
+    const healthData = data.portfolio.healthDistribution;
+    document.getElementById('projects-excellent').textContent = healthData.excellent;
+    document.getElementById('projects-good').textContent = healthData.good;
+    
+    // Technology expertise demonstration
+    const languages = data.portfolio.technologies.languages;
+    document.getElementById('js-percentage').textContent = `${languages.JavaScript}%`;
+    document.getElementById('ts-percentage').textContent = `${languages.TypeScript}%`;
+    
+    // Show live data transparency badge
+    document.getElementById('live-data-badge').style.display = 'block';
+    document.getElementById('last-updated').textContent = 
+      new Date(data.portfolio.overview.lastAnalyzed).toLocaleDateString();
+      
+  } catch (error) {
+    console.log('Graceful degradation to static content:', error);
+    // Marketing site still works with fallback values
+    document.getElementById('project-count').textContent = '126+';
+    document.getElementById('health-score').textContent = '8.2';
+    document.getElementById('loc-analyzed').textContent = '147M+';
+    document.getElementById('live-data-badge').style.display = 'none';
+  }
+};
+
+// Load live data on page ready
+document.addEventListener('DOMContentLoaded', loadLivePortfolioStats);
+#+end_src
+
+** Business Intelligence Dashboard Integration
+#+begin_src javascript
+// Daily portfolio health report
+const generateDailyReport = async () => {
+  const [analytics, health, recommendations] = await Promise.all([
+    fetch('/api/analytics-dashboard').then(r => r.json()),
+    fetch('/api/health-report').then(r => r.json()), 
+    fetch('/api/ai-recommendations').then(r => r.json())
+  ]);
+  
+  return {
+    date: new Date().toISOString().split('T')[0],
+    portfolioHealth: analytics.overview.healthScore,
+    criticalIssues: health.critical.length,
+    actionableRecommendations: recommendations.filter(r => r.actionable).length,
+    summary: generateExecutiveSummary(analytics, health, recommendations)
+  };
+};
+#+end_src
+
+** CI/CD Pipeline Integration  
+#+begin_src javascript
+// Check production readiness before deployment
+const checkProductionReadiness = async (projectName) => {
+  const analysis = await fetch(
+    `/api/projects/${projectName}/production-readiness`
+  ).then(r => r.json());
+  
+  if (analysis.score < 8.0) {
+    throw new Error(`Production readiness score too low: ${analysis.score}`);
+  }
+  
+  return {
+    approved: true,
+    score: analysis.score,
+    blockers: analysis.blockers,
+    warnings: analysis.warnings
+  };
+};
+#+end_src
+
+** Project Management Tool Integration
+#+begin_src javascript  
+// Sync project status with external PM tools
+const syncProjectStatus = async () => {
+  const projects = await fetch('/api/projects').then(r => r.json());
+  
+  for (const project of projects.projects) {
+    await updateExternalTool({
+      projectId: project.name,
+      healthScore: project.analysis?.health?.score,
+      lastActivity: project.lastModified,
+      technologies: project.technologies,
+      recommendations: project.analysis?.recommendations?.length || 0
+    });
+  }
+};
+#+end_src
+
+* Roadmap & Future Capabilities
+
+** Short-term Enhancements (Next Quarter)
+- Enhanced error scenario testing and resilience
+- Response caching for improved performance
+- API rate limiting refinements
+- Comprehensive unit test coverage
+
+** Medium-term Features (6 months)
+- Database migration from JSON file storage
+- Multi-tenant support with authentication
+- Advanced webhook configuration
+- Performance monitoring dashboard
+
+** Long-term Vision (1 year)  
+- Machine learning model integration for predictions
+- Plugin architecture for custom analyzers
+- WebSocket support for real-time collaboration
+- Enterprise deployment packages
+
+* Support & Documentation
+
+** Getting Started
+1. Clone the repository: ~git clone [repository-url]~
+2. Install dependencies: ~npm install~
+3. Start the server: ~npm run dev~ (port 3004)
+4. Access web interface: ~http://localhost:3004~
+5. API documentation: ~http://localhost:3004/api~
+
+** Contributing
+- Development branch: ~develop~
+- Feature branches: ~feature/*~
+- Production baseline: ~main~
+- Security fixes: High priority review process
+
+** Contact & Support  
+- Internal development team contact
+- Issue tracking via GitHub Issues
+- Documentation updates via pull requests
+- Feature requests via project backlog
+
+---
+
+*Last Updated*: [2025-09-06 Fri]
+*API Version*: v2.0 (Strategic Intelligence Platform)
+*Next Review*: Quarterly or upon major feature releases
+
+*Note*: This is an internal development platform. External production deployment requires implementation of authentication, enhanced security measures, and formal SLA commitments as outlined in the roadmap.*

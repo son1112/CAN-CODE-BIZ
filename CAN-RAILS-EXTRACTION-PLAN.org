@@ -1,0 +1,654 @@
+#+TITLE: CAN-RAILS Extraction & Generalization Plan
+#+AUTHOR: CAN.CODE Engineering Team
+#+DATE: 2025-09-09
+#+STARTUP: overview
+#+TODO: TODO IN-PROGRESS RESEARCH | DONE CANCELLED
+#+PRIORITY: A B C
+
+* Executive Summary
+
+This document outlines the strategic extraction of the can-rails platform from 
+the BEER project codebase, transforming it from a livestock testing-specific
+application into a generalized, reusable Rails engine for order-sign-pay 
+workflows across multiple business domains.
+
+** Strategic Objectives
+- Extract proven business workflow patterns
+- Create reusable Rails engine/gem
+- Establish template architecture for rapid application development
+- Preserve domain expertise while enabling horizontal scaling
+
+** Business Impact
+- Accelerate time-to-market for new client applications
+- Standardize order-sign-pay workflow implementations
+- Leverage proven technical patterns from successful BEER deployment
+- Create competitive advantage through rapid custom application delivery
+
+* Current can-rails Architecture Analysis
+
+** Technical Foundation
+*** Core Technology Stack
+- **Framework**: Ruby on Rails 7.1
+- **Frontend**: Stimulus JavaScript + TailwindCSS
+- **Database**: PostgreSQL with JSONB support
+- **Session Management**: Redis
+- **Payment Processing**: Stripe integration
+- **Deployment**: Heroku-ready configuration
+
+*** Database Schema Architecture
+**** Primary Business Model: CanApplication
+The CanApplication model represents the core workflow entity with three 
+fundamental phases:
+
+***** Approval Workflow States
+#+begin_src ruby
+# Core workflow states
+t.boolean "approved"    # Administrative approval
+t.boolean "paid"        # Payment completion
+t.boolean "signed"      # Legal signature capture
+#+end_src
+
+***** Customer Data Structure
+#+begin_src ruby
+# Customer information (standardized across domains)
+t.string "company_name"
+t.string "contact_person"
+t.string "office_phone"
+t.string "cell_phone"
+t.string "email"
+t.string "mailing_address"
+t.string "city", "state", "zip"
+#+end_src
+
+***** Flexible Order Management
+#+begin_src ruby
+# Order details (domain-agnostic)
+t.string "order_id"
+t.string "date"
+t.text "notes"
+t.integer "application_type"
+t.boolean "rush_order", default: false
+#+end_src
+
+***** Financial Tracking
+#+begin_src ruby
+# Payment processing
+t.integer "total_amount_due"
+t.integer "amount_due"
+t.integer "amount_paid"
+#+end_src
+
+***** Domain-Specific Flexibility
+#+begin_src ruby
+# JSONB for domain-specific data
+t.jsonb "admin"           # Administrative metadata
+t.jsonb "test_quantities" # Domain-specific quantities
+t.jsonb "billing_info"    # Flexible billing data
+t.jsonb "breed_assoc_auth" # Domain-specific authorizations
+
+# EQ/Promogen specific (to be generalized)
+t.integer "semen_test_count", default: 0
+t.integer "saliva_test_count", default: 0
+t.integer "colostrum_test_count", default: 0
+#+end_src
+
+*** Controller Architecture
+**** Core Controllers (Extraction Candidates)
+***** LandingController
+- Entry point orchestration
+- Application type routing
+- Initial data capture
+
+***** CanApplicationsController
+- Primary business logic hub
+- Workflow state management
+- Data validation and processing
+
+***** CheckoutController
+- Payment processing integration
+- Stripe session management
+- Payment confirmation workflows
+
+***** ContentsController
+- Dynamic content management
+- Component-based content delivery
+- Configuration-driven interfaces
+
+*** View Component System
+**** Content-Type Based Architecture
+The application uses a sophisticated content-type system:
+
+***** Core Components
+- **_application.html.erb**: Primary application form
+- **_data.html.erb**: Data collection interface
+- **_info.html.erb**: Information display
+- **_pay.html.erb**: Payment processing interface
+- **_sign.html.erb**: Digital signature capture
+
+***** Component Strategy Benefits
+- Modular workflow steps
+- Reusable interface elements
+- Domain-specific customizations
+- A/B testing capabilities
+- Multi-tenant content management
+
+*** JavaScript Architecture
+**** Stimulus Controllers (Extraction Targets)
+- **application_sign_controller.js**: Digital signature capture
+- **application_test_info_controller.js**: Dynamic form management
+- **address_match_toggle_controller.js**: Address validation
+- **hello_controller.js**: Base interaction patterns
+
+* Extraction Strategy
+
+** Phase 1: Code Analysis & Component Identification
+*** TODO Deep Dive into can-rails Codebase
+SCHEDULED: <2025-09-10>
+:PROPERTIES:
+:EFFORT: 8h
+:PRIORITY: A
+:END:
+
+**** Technical Analysis Tasks
+- [ ] Map complete MVC architecture
+- [ ] Identify all database models and relationships
+- [ ] Document Stimulus controller interactions
+- [ ] Analyze Stripe integration patterns
+- [ ] Review JSONB usage patterns
+- [ ] Document TailwindCSS component classes
+
+**** Business Logic Analysis
+- [ ] Map complete order-sign-pay workflow
+- [ ] Identify domain-agnostic vs domain-specific logic
+- [ ] Document validation rules and business constraints
+- [ ] Analyze pricing and financial calculation logic
+- [ ] Review notification and email patterns
+
+** Phase 2: Rails Engine Architecture Design
+*** TODO Design CanRails Engine Structure
+SCHEDULED: <2025-09-12>
+:PROPERTIES:
+:EFFORT: 12h
+:PRIORITY: A
+:END:
+
+**** Engine Structure Design
+#+begin_src
+can_rails_engine/
+├── app/
+│   ├── controllers/
+│   │   └── can_rails/
+│   │       ├── applications_controller.rb
+│   │       ├── checkout_controller.rb
+│   │       └── base_controller.rb
+│   ├── models/
+│   │   └── can_rails/
+│   │       ├── application.rb (core model)
+│   │       └── concerns/
+│   │           ├── workflow_states.rb
+│   │           ├── payment_processing.rb
+│   │           └── signature_capture.rb
+│   ├── views/
+│   │   └── can_rails/
+│   │       ├── layouts/
+│   │       └── components/
+│   │           ├── _application_form.html.erb
+│   │           ├── _payment_interface.html.erb
+│   │           └── _signature_capture.html.erb
+│   └── assets/
+│       ├── stylesheets/can_rails/
+│       └── javascripts/can_rails/
+├── config/
+│   └── routes.rb
+├── db/
+│   └── migrate/
+├── lib/
+│   ├── can_rails/
+│   │   ├── engine.rb
+│   │   ├── configuration.rb
+│   │   └── workflow_builder.rb
+│   └── can_rails.rb
+└── can_rails.gemspec
+#+end_src
+
+**** Configuration System Design
+#+begin_src ruby
+# can_rails/lib/can_rails/configuration.rb
+module CanRails
+  class Configuration
+    attr_accessor :stripe_publishable_key,
+                  :stripe_secret_key,
+                  :default_currency,
+                  :application_types,
+                  :workflow_steps,
+                  :notification_settings,
+                  :custom_fields
+
+    def initialize
+      @default_currency = 'usd'
+      @workflow_steps = %i[application payment signature confirmation]
+      @application_types = {}
+      @custom_fields = {}
+    end
+  end
+
+  def self.configuration
+    @configuration ||= Configuration.new
+  end
+
+  def self.configure
+    yield(configuration)
+  end
+end
+#+end_src
+
+** Phase 3: Core Component Extraction
+*** TODO Extract Workflow Engine
+SCHEDULED: <2025-09-15>
+:PROPERTIES:
+:EFFORT: 16h
+:PRIORITY: A
+:END:
+
+**** Workflow State Machine Design
+#+begin_src ruby
+# can_rails/app/models/can_rails/concerns/workflow_states.rb
+module CanRails
+  module Concerns
+    module WorkflowStates
+      extend ActiveSupport::Concern
+      
+      included do
+        # Core workflow states
+        enum status: {
+          draft: 0,
+          submitted: 1,
+          under_review: 2,
+          payment_required: 3,
+          payment_processing: 4,
+          signature_required: 5,
+          completed: 6,
+          cancelled: 7
+        }
+        
+        # Workflow validation
+        validates :status, presence: true
+        
+        # State transition methods
+        def can_submit?
+          draft? && valid_application_data?
+        end
+        
+        def can_pay?
+          (submitted? || under_review?) && amount_due > 0
+        end
+        
+        def can_sign?
+          (payment_processing? || completed?) && signature_required?
+        end
+        
+        def workflow_complete?
+          completed? && paid? && signed?
+        end
+      end
+      
+      private
+      
+      def valid_application_data?
+        # Override in implementing applications
+        true
+      end
+      
+      def signature_required?
+        # Override based on application type
+        true
+      end
+    end
+  end
+end
+#+end_src
+
+**** Payment Processing Abstraction
+#+begin_src ruby
+# can_rails/app/models/can_rails/concerns/payment_processing.rb
+module CanRails
+  module Concerns
+    module PaymentProcessing
+      extend ActiveSupport::Concern
+      
+      included do
+        # Payment tracking
+        monetize :total_amount_due_cents, allow_nil: true
+        monetize :amount_paid_cents, allow_nil: true
+        
+        # Stripe integration
+        attr_accessor :stripe_session_id, :stripe_payment_intent
+        
+        # Payment calculations
+        def amount_due
+          total_amount_due - amount_paid
+        end
+        
+        def payment_complete?
+          amount_due <= 0
+        end
+        
+        def create_payment_session
+          CanRails::PaymentProcessor.create_session(self)
+        end
+      end
+    end
+  end
+end
+#+end_src
+
+*** TODO Extract Component Library
+SCHEDULED: <2025-09-18>
+:PROPERTIES:
+:EFFORT: 20h
+:PRIORITY: A
+:END:
+
+**** Reusable View Components
+***** Application Form Component
+#+begin_src erb
+<%# can_rails/app/views/can_rails/components/_application_form.html.erb %>
+<div class="can-rails-application-form" 
+     data-controller="can-rails--application-form">
+  
+  <%= form_with model: @application, 
+                url: can_rails.applications_path,
+                class: "space-y-6" do |f| %>
+    
+    <%# Customer Information Section %>
+    <div class="can-rails-section" data-section="customer">
+      <h3 class="text-lg font-semibold mb-4">Customer Information</h3>
+      
+      <%= render 'can_rails/components/customer_fields', form: f %>
+    </div>
+    
+    <%# Application-Specific Fields %>
+    <div class="can-rails-section" data-section="application">
+      <h3 class="text-lg font-semibold mb-4">Application Details</h3>
+      
+      <%= yield :application_fields if block_given? %>
+      <%= render_custom_fields(f) if respond_to?(:render_custom_fields) %>
+    </div>
+    
+    <%# Financial Summary %>
+    <div class="can-rails-section" data-section="financial">
+      <%= render 'can_rails/components/financial_summary', 
+                 application: @application %>
+    </div>
+    
+    <%# Form Actions %>
+    <div class="can-rails-actions">
+      <%= f.submit "Submit Application", 
+                   class: "btn btn-primary",
+                   data: { 
+                     action: "click->can-rails--application-form#submit"
+                   } %>
+    </div>
+  <% end %>
+</div>
+#+end_src
+
+***** Payment Interface Component
+#+begin_src erb
+<%# can_rails/app/views/can_rails/components/_payment_interface.html.erb %>
+<div class="can-rails-payment" 
+     data-controller="can-rails--payment"
+     data-can-rails--payment-session-id-value="<%= @stripe_session_id %>">
+  
+  <div class="payment-summary mb-6">
+    <h3 class="text-lg font-semibold mb-4">Payment Summary</h3>
+    
+    <div class="bg-gray-50 p-4 rounded-lg">
+      <div class="flex justify-between items-center mb-2">
+        <span>Total Amount Due:</span>
+        <span class="font-semibold">
+          <%= number_to_currency(@application.total_amount_due / 100.0) %>
+        </span>
+      </div>
+      
+      <% if @application.rush_order? %>
+      <div class="flex justify-between items-center text-sm text-amber-600">
+        <span>Rush Order Surcharge:</span>
+        <span>+ <%= number_to_currency(rush_order_fee / 100.0) %></span>
+      </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <div class="payment-actions">
+    <%= button_to "Proceed to Payment", 
+                  can_rails.checkout_path(@application),
+                  method: :post,
+                  class: "btn btn-primary w-full",
+                  data: { 
+                    action: "click->can-rails--payment#checkout"
+                  } %>
+  </div>
+</div>
+#+end_src
+
+** Phase 4: Testing & Documentation
+*** TODO Comprehensive Testing Suite
+SCHEDULED: <2025-09-22>
+:PROPERTIES:
+:EFFORT: 24h
+:PRIORITY: A
+:END:
+
+**** Test Coverage Requirements
+- [ ] Unit tests for all models and concerns
+- [ ] Integration tests for complete workflows
+- [ ] System tests for UI components
+- [ ] Payment processing tests (with Stripe test mode)
+- [ ] Multi-tenant configuration tests
+
+**** Testing Strategy
+#+begin_src ruby
+# can_rails/spec/models/can_rails/application_spec.rb
+RSpec.describe CanRails::Application, type: :model do
+  describe 'workflow states' do
+    let(:application) { create(:can_rails_application) }
+    
+    it 'starts in draft state' do
+      expect(application).to be_draft
+    end
+    
+    it 'transitions through complete workflow' do
+      application.submit!
+      expect(application).to be_submitted
+      
+      application.mark_payment_required!
+      expect(application).to be_payment_required
+      
+      application.process_payment!
+      expect(application).to be_payment_processing
+      
+      application.capture_signature!
+      expect(application).to be_signature_required
+      
+      application.complete!
+      expect(application).to be_completed
+    end
+  end
+  
+  describe 'payment calculations' do
+    it 'calculates amount due correctly' do
+      application = build(:can_rails_application,
+                         total_amount_due: 10000, # $100.00
+                         amount_paid: 3000)       # $30.00
+      
+      expect(application.amount_due).to eq(7000) # $70.00
+    end
+  end
+end
+#+end_src
+
+** Phase 5: Packaging & Distribution
+*** TODO Gem Creation & Publishing
+SCHEDULED: <2025-09-25>
+:PROPERTIES:
+:EFFORT: 8h
+:PRIORITY: B
+:END:
+
+**** Gem Specification
+#+begin_src ruby
+# can_rails.gemspec
+Gem::Specification.new do |spec|
+  spec.name          = "can_rails"
+  spec.version       = "0.1.0"
+  spec.authors       = ["CAN.CODE Engineering Team"]
+  spec.email         = ["anderson@cancode.net"]
+  
+  spec.summary       = "Reusable Rails engine for order-sign-pay workflows"
+  spec.description   = <<~DESC
+    CanRails provides a complete, configurable Rails engine for implementing
+    order-sign-pay workflows across multiple business domains. Extracted from
+    proven production systems, it includes payment processing, digital 
+    signatures, and flexible data models.
+  DESC
+  
+  spec.homepage      = "https://can-code.dev/gems/can-rails"
+  spec.license       = "MIT"
+  
+  spec.files         = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
+  spec.require_paths = ["lib"]
+  
+  # Dependencies
+  spec.add_dependency "rails", ">= 7.0"
+  spec.add_dependency "stimulus-rails"
+  spec.add_dependency "tailwindcss-rails"
+  spec.add_dependency "redis"
+  spec.add_dependency "stripe"
+  spec.add_dependency "money-rails"
+  
+  # Development dependencies
+  spec.add_development_dependency "rspec-rails"
+  spec.add_development_dependency "factory_bot_rails"
+  spec.add_development_dependency "capybara"
+  spec.add_development_dependency "selenium-webdriver"
+end
+#+end_src
+
+* Integration with CAN-CODE-BIZ Ecosystem
+
+** Port Allocation
+- **Development**: Port 3006 (following established pattern)
+- **Testing**: Port 3007 (for gem testing applications)
+- **Demo Applications**: Ports 3008+ (for client demonstrations)
+
+** Documentation Integration
+- Follow established .org documentation standards
+- Integrate with existing can-code-eng-base-agent.org specifications
+- Align with CAN-CODE-BIZ backlog and project management patterns
+
+** Agent Integration
+- Create specialized `can-rails-technical-lead` agent
+- Integrate with existing agent architecture
+- Support Project Universe intelligence platform
+
+** Testing Integration
+- Use established testing patterns from base agent specification
+- Integrate with Core Web Vitals monitoring
+- Follow accessibility compliance standards (WCAG 2.1 AA)
+
+* Business Applications & Use Cases
+
+** Immediate Applications
+*** CodeBeer Migration (EQ/Promogen)
+- Direct migration path from existing BEER implementation
+- Preserve all business logic and workflow patterns  
+- Maintain client relationships and operational continuity
+
+*** Template Applications
+- Laboratory testing services
+- Professional certification applications
+- Equipment rental/leasing workflows
+- Professional service bookings
+
+** Future Applications
+*** High-Value Targets
+- Medical/healthcare applications requiring signatures
+- Legal document processing workflows
+- Financial services applications
+- Government compliance applications
+- Educational certification processes
+
+*** Market Opportunities
+- SaaS offering for small businesses
+- White-label solutions for agencies
+- Custom development accelerator
+- Enterprise workflow solutions
+
+* Risk Assessment & Mitigation
+
+** Technical Risks
+*** Dependency Management
+- **Risk**: Rails version compatibility issues
+- **Mitigation**: Comprehensive compatibility testing matrix
+- **Monitoring**: Automated CI/CD pipeline testing
+
+*** Data Privacy & Security
+- **Risk**: GDPR/CCPA compliance across domains
+- **Mitigation**: Built-in privacy controls and data anonymization
+- **Monitoring**: Regular security audits and penetration testing
+
+** Business Risks
+*** Client Transition
+- **Risk**: CodeBeer relationship disruption during migration
+- **Mitigation**: Gradual transition with extensive testing
+- **Monitoring**: Regular client check-ins and feedback sessions
+
+*** Market Validation
+- **Risk**: Insufficient market demand for generalized platform
+- **Mitigation**: Proven success with EQ/Promogen implementation
+- **Monitoring**: Client acquisition metrics and market research
+
+* Success Metrics
+
+** Technical Metrics
+- [ ] **Development Velocity**: 50% faster application development
+- [ ] **Code Reuse**: 80% component reusability across applications
+- [ ] **Test Coverage**: 90% coverage for engine core
+- [ ] **Performance**: Sub-200ms response times for all workflows
+
+** Business Metrics
+- [ ] **Client Acquisition**: 3 new clients within 6 months
+- [ ] **Revenue Impact**: $100K ARR from engine-based applications
+- [ ] **Market Position**: Recognized as Rails workflow solution
+- [ ] **Team Efficiency**: Reduced custom development time by 60%
+
+* Timeline & Milestones
+
+** Quarter 1 (Sep-Nov 2025)
+- [ ] Complete technical analysis and component identification
+- [ ] Design Rails engine architecture
+- [ ] Begin core component extraction
+
+** Quarter 2 (Dec 2025-Feb 2026)
+- [ ] Complete workflow engine development
+- [ ] Build component library
+- [ ] Implement comprehensive testing suite
+
+** Quarter 3 (Mar-May 2026)
+- [ ] Package and publish gem
+- [ ] Migrate CodeBeer to engine-based implementation  
+- [ ] Launch first template applications
+
+** Quarter 4 (Jun-Aug 2026)
+- [ ] Client acquisition and market validation
+- [ ] Performance optimization and scaling
+- [ ] Strategic planning for expansion
+
+---
+
+*This document serves as the comprehensive technical and strategic plan for 
+extracting the can-rails platform from the BEER project and transforming it 
+into a powerful, reusable Rails engine for the CAN-CODE-BIZ ecosystem.*
+
+*Next: ORDER-SIGN-PAY-TEMPLATE-ARCHITECTURE.org*

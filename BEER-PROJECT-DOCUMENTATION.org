@@ -1,0 +1,425 @@
+#+TITLE: BEER Project Documentation - can.code Precursor
+#+AUTHOR: can.code Integration Team
+#+DATE: 2024-09-09
+#+STARTUP: overview
+
+* Executive Summary
+
+The BEER project directory represents the foundational precursor to the
+current can.code business ecosystem. This documentation serves as a
+comprehensive reference for integrating BEER's business intelligence,
+technical components, and operational patterns into the modern can.code
+infrastructure.
+
+** Key Project Identity
+- **Primary Brand**: beercode.net/org, lincolnix.org
+- **Evolution Path**: BEER → can.code
+- **Core Client**: CodeBeer (Holmberg Brothers - Adam & Billy)
+- **Primary Application**: EQ/Promogen livestock testing platform
+
+* Business Intelligence & Operations
+
+** Domain Portfolio
+*** Current Domains
+- beercode.net (primary)
+- beercode.org
+- lincolnix.org
+
+*** Planned Expansion
+- [ ] can.code (target acquisition)
+- [ ] can.net
+- [ ] can.org  
+- [ ] cancode.net
+- [ ] cancode.org
+
+** Contact Infrastructure
+*** Primary Contacts
+- anderson@beercode.net
+- info@beercode.net
+- beercodenebraska@gmail.com
+
+*** Target Contacts
+- [ ] anderson@cancode.net
+
+** Core Client Profile: CodeBeer (Holmberg Brothers)
+*** Business Contact
+- Company: CodeBeer
+- Principals: Adam & Billy Holmberg
+- Primary Email: adam.holmberg@gmail.com, billy.holmberg@gmail.com
+- Phone: 480-567-6317, 480-567-6318
+- Location: 25455 S. 54th Street, Firth, NE 68358
+
+*** Family Context :noexport:pii:
+- Daughter: Miriam (5)
+- Daughter: Lydia  
+- Son: Walter
+
+** Business Structure Status
+*** Pending Business Setup
+- [ ] Legal counsel engagement
+- [ ] LLC formation
+- [ ] CPA engagement
+
+** Operational Tools Stack
+- **Project Management**: Monday.com
+- **Version Control**: GitHub
+- **Documentation**: Confluence
+- **API Documentation**: Swagger
+- **Ruby Documentation**: Yard
+- **Email**: Proton
+- **Website**: Squarespace
+- **Domains**: Google Domains/Workspace
+- **Hosting**: Heroku
+
+* Technical Architecture
+
+** Primary Technology Stack
+*** Core Framework
+- **Backend**: Ruby on Rails 7.1
+- **Frontend**: Stimulus JavaScript
+- **Styling**: TailwindCSS with @tailwindcss/forms
+- **Database**: PostgreSQL with JSONB support
+- **Session Storage**: Redis
+- **File Watching**: Chokidar
+- **Build Tools**: Importmap, PostCSS
+
+*** Infrastructure Components
+- **Hosting**: Heroku
+- **Database**: PostgreSQL with extensions (plpgsql)
+- **Caching**: Redis (REDISCLOUD_URL)
+- **Environment**: Ruby 3.x, Node.js ecosystem
+
+** Application Architecture: can-rails
+
+The can-rails application serves as the primary technical implementation,
+designed as a modular, generalizable platform for order-sign-pay workflows.
+
+*** Database Schema
+**** Core Models
+***** Content Model
+#+begin_src ruby
+create_table "contents", force: :cascade do |t|
+  t.string "title"
+  t.string "subtitle"  
+  t.string "tags"
+  t.text "body"
+  t.text "header"
+  t.text "footer"
+  t.string "categories"
+  t.string "content_type"
+  t.text "html"
+  t.datetime "created_at", null: false
+  t.datetime "updated_at", null: false
+end
+#+end_src
+
+***** CanApplication Model (Primary Business Logic)
+#+begin_src ruby
+create_table "can_applications", force: :cascade do |t|
+  # Approval Workflow
+  t.boolean "approved"
+  t.boolean "paid"
+  t.boolean "signed"
+  
+  # Customer Information
+  t.string "company_name"
+  t.string "contact_person"
+  t.string "office_phone"
+  t.string "cell_phone"
+  t.string "fax"
+  t.string "email"
+  t.string "mailing_address"
+  t.string "city"
+  t.string "state"
+  t.string "zip"
+  
+  # Order Details
+  t.string "order_id"
+  t.string "date"
+  t.text "notes"
+  t.integer "application_type"
+  t.boolean "rush_order", default: false
+  
+  # Test-Specific (EQ/Promogen)
+  t.integer "semen_test_count", default: 0
+  t.integer "saliva_test_count", default: 0
+  t.integer "colostrum_test_count", default: 0
+  
+  # Financial
+  t.integer "total_amount_due"
+  t.integer "amount_due"
+  t.integer "amount_paid"
+  
+  # Signatures & Authorization
+  t.string "signature"
+  t.jsonb "breed_assoc_auth"
+  
+  # Administrative & Metadata
+  t.jsonb "admin"
+  t.jsonb "test_quantities"
+  t.jsonb "billing_info"
+  
+  t.datetime "created_at", null: false
+  t.datetime "updated_at", null: false
+end
+#+end_src
+
+*** Controller Architecture
+**** Core Controllers
+- **LandingController**: Entry point and application flow
+- **CanApplicationsController**: Primary business logic
+- **CheckoutController**: Payment processing integration
+- **ContentsController**: Content management system
+
+**** Route Structure
+#+begin_src ruby
+Rails.application.routes.draw do
+  root "landing#index"
+  
+  resources :contents
+  resources :can_applications
+  
+  get "sign" => "can_applications#sign"
+  post "create-checkout-session" => "checkout#create_session"
+  get "session-status" => "checkout#session_status"
+  get "return" => "checkout#return"
+  get "checkout" => "checkout#checkout"
+end
+#+end_src
+
+*** View Architecture: Component-Based System
+**** Content Types (Modular Components)
+- **_application.html.erb**: Primary application form
+- **_data.html.erb**: Data collection interface  
+- **_info.html.erb**: Information display
+- **_pay.html.erb**: Payment processing interface
+- **_sign.html.erb**: Digital signature capture
+
+**** Component Strategy
+The application uses a content-type based component system allowing for:
+- Modular workflow steps
+- Reusable interface components
+- Configurable application flows
+- Type-specific customizations
+
+*** JavaScript Architecture
+**** Stimulus Controllers
+- **application_sign_controller.js**: Signature capture
+- **application_test_info_controller.js**: Test information management
+- **address_match_toggle_controller.js**: Address validation
+- **hello_controller.js**: Basic interaction patterns
+
+*** Payment Integration
+**** Current Implementation
+- Stripe-based checkout sessions
+- Session status tracking
+- Return flow handling
+- Payment confirmation workflow
+
+** Code Examples & Patterns
+
+*** Ruby Examples
+Located in `src/code-examples-ruby/`, includes:
+- Rails application controllers
+- Mailer configurations
+- Job processing patterns
+- Database connection examples
+
+*** Development Patterns
+The codebase demonstrates several reusable patterns:
+- JSONB for flexible data storage
+- Component-based view architecture
+- Stimulus for progressive enhancement
+- Modular controller concerns
+
+* Business Applications
+
+** Primary Application: EQ/Promogen Livestock Testing Platform
+
+*** Business Context
+A comprehensive livestock testing service platform for:
+- Semen testing (raw/straw samples)
+- Saliva testing
+- Colostrum testing
+- Breed association result reporting
+
+*** Workflow Implementation
+**** Multi-Step Process
+1. **Application Submission**: Customer information and test requirements
+2. **Payment Processing**: Stripe-integrated checkout
+3. **Digital Signature**: Legal authorization capture
+4. **Order Confirmation**: Receipt and sample collection instructions
+5. **Lab Processing**: Sample tracking and result generation
+
+**** Pricing Structure
+- Standard Test: $35.00 per sample
+- Rush Order: Additional $15.00 per sample (< 2 weeks notice)
+- Breed Association Reporting: Included
+
+*** Data Flow Architecture
+**** Customer Information Capture
+- Company details and contact information
+- Billing address (can mirror customer info)
+- Mailing address for sample return
+
+**** Test Specification
+- Animal identification (tag/tattoo, breed registration)
+- Sample types and quantities
+- Rush order requirements
+- Breed association authorization
+
+**** Administrative Tracking
+- Order ID generation
+- Date tracking (received, in lab, completed)
+- Payment status monitoring
+- Signature verification
+
+** Generalization Strategy
+
+*** Modular Design Philosophy
+The can-rails platform was designed for generalization:
+- **Content-Type System**: Allows different application types
+- **JSONB Storage**: Flexible data structures
+- **Component Architecture**: Reusable interface elements
+- **Configurable Workflows**: Adaptable business processes
+
+*** Template Applications
+The EQ/Promogen implementation serves as a template for:
+- Order-Sign-Pay workflows
+- Laboratory service platforms
+- Compliance-heavy applications
+- Multi-step approval processes
+
+* Assets & Branding
+
+** Logo Assets
+Multiple can.code logo variations available:
+- cancode-cutout.png (base)
+- cancode-cutout-sm/md/lg/xl/xxl.png (responsive sizes)
+- cancode.png (primary)
+
+** Visual Identity
+- Primary branding transitions from "beer" to "can.code"
+- Professional service design patterns
+- Logo cutout versions for flexible placement
+
+** Documentation Assets
+- Screenshots of UI implementations
+- Workflow demonstration materials
+- Business process documentation
+
+* Integration Recommendations for can.code
+
+** Business Intelligence Migration
+*** Domain Strategy
+1. **Secure Target Domains**: Prioritize can.code acquisition
+2. **Email Migration**: Transition anderson@beercode.net → anderson@cancode.net
+3. **Brand Transition**: Gradual migration from beer-branding to can.code
+
+*** Client Relationship Transfer
+- Maintain CodeBeer relationship under can.code brand
+- Document established workflow patterns
+- Preserve domain expertise in livestock testing
+
+** Technical Integration Opportunities
+*** Platform Generalization
+1. **Extract can-rails**: Develop as standalone Rails gem/engine
+2. **Component Library**: Extract reusable view components
+3. **Workflow Engine**: Generalize order-sign-pay patterns
+4. **Payment Infrastructure**: Extract Stripe integration patterns
+
+*** Architecture Lessons
+- **JSONB Flexibility**: Proven pattern for varying data requirements
+- **Component Modularity**: Successful view architecture
+- **Stimulus Integration**: Effective progressive enhancement
+- **Multi-step Workflows**: Proven UX patterns
+
+** Development Standards Integration
+*** Code Quality Patterns
+- Test-driven development readiness
+- Rails best practices implementation
+- Component-based architecture
+- Configuration-driven behavior
+
+*** Documentation Standards
+- Comprehensive .org file documentation
+- Inline code documentation
+- Architecture decision records
+- Business process documentation
+
+** Port Allocation Integration
+Following CAN-CODE-BIZ ecosystem standards:
+- can-rails could be assigned Port 3006 or later
+- Integration with existing port allocation strategy
+- Consistent development environment setup
+
+* Operational Considerations
+
+** Monday.com Integration
+- Established project management workflows
+- Client communication patterns
+- Deliverable tracking systems
+- Screenshot-based progress documentation
+
+** Heroku Deployment Patterns
+- Production environment configuration
+- Database management practices
+- Redis integration patterns
+- Environment variable management
+
+** Financial Tracking
+- Screenshot-based financial documentation
+- Payment processing integration
+- Invoice and receipt management
+- Compliance documentation patterns
+
+* Next Steps for can.code Integration
+
+** Immediate Actions
+1. **Archive BEER**: Preserve as historical reference
+2. **Extract Patterns**: Document reusable architectures
+3. **Asset Migration**: Transfer logos and branding materials
+4. **Client Transition**: Plan CodeBeer relationship migration
+
+** Medium-term Integration
+1. **Platform Generalization**: Extract can-rails as reusable platform
+2. **Component Library**: Build shared UI components
+3. **Workflow Engine**: Develop configurable business processes
+4. **Documentation Standards**: Integrate .org file patterns
+
+** Long-term Strategic Value
+1. **Template Repository**: Use as reference implementation
+2. **Client Success Story**: Demonstrate platform capabilities
+3. **Business Model**: Proven order-sign-pay workflow
+4. **Technical Patterns**: Reference architecture for new projects
+
+* Appendices
+
+** File Structure Reference
+#+begin_src
+BEER/
+├── README.org (primary documentation)
+├── CONTACTS.org (client information)
+├── assets/ (branding and visual materials)
+├── CLIENTS/ (client-specific materials)
+├── fin/ (financial documentation screenshots)
+├── operations/ (operational tracking and screenshots)
+├── src/
+│   ├── can-rails/ (primary Rails application)
+│   └── code-examples-ruby/ (development patterns)
+└── PROMOGEN → ../PROMOGEN (symlink to related project)
+#+end_src
+
+** Technical Dependencies
+Key gems and packages documented for future reference:
+- TailwindCSS ecosystem
+- Stimulus JavaScript framework
+- PostCSS processing pipeline
+- Redis session management
+- PostgreSQL with JSONB support
+
+---
+
+*Generated: 2024-09-09*
+*For: can.code Integration Team*
+*From: BEER Project Analysis*

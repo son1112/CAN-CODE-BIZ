@@ -1,0 +1,268 @@
+#+TITLE: EQ Livestock Testing Platform - Portfolio Documentation
+#+AUTHOR: can.code Development Team
+#+DATE: 2024-09-09
+#+STARTUP: overview
+
+* Executive Summary
+
+The EQ (Equine Quality) Livestock Testing Platform represents a successful proof-of-concept 
+implementation of digitizing traditional PDF-based genetic testing workflows for the 
+livestock industry. Built as a Ruby on Rails 7.1 application, it demonstrates the 
+practical viability of the order-sign-pay template architecture now documented as part 
+of the can.code ecosystem.
+
+** Project Impact
+- **Industry Digitization**: Successfully converted paper-based livestock genetic testing workflows to digital
+- **Payment Integration**: Implemented Stripe-based payment processing with quantity-based pricing
+- **Workflow Automation**: Demonstrated multi-step application, signature, and payment processes
+- **Technical Validation**: Proved the Rails 7.1 + Stimulus + TailwindCSS stack for business applications
+
+* Project Overview
+
+** Business Context
+***  Client: Promogen Genetics
+- **Industry**: Livestock genetic testing services
+- **Primary Services**: Semen, saliva, and colostrum genetic analysis
+- **Challenge**: Paper PDF forms creating processing bottlenecks
+- **Solution**: Digital application with integrated payment processing
+
+** Technical Specifications
+- **Framework**: Ruby on Rails 7.1.3
+- **Frontend**: Stimulus JavaScript + TailwindCSS 2.3
+- **Database**: PostgreSQL with JSONB support
+- **Payment**: Stripe embedded checkout integration
+- **Session Management**: Redis-backed sessions
+- **Deployment**: Docker containerization with Heroku deployment
+
+** Key Features Implemented
+1. **Digital Application Forms**: Customer information and test specification capture
+2. **Multi-Sample Processing**: Support for semen, saliva, and colostrum test types
+3. **Rush Order Processing**: Premium pricing for expedited service (< 2 weeks)
+4. **Payment Processing**: Stripe integration with quantity-based pricing
+5. **Digital Signature Workflow**: Preparation for legal authorization capture
+6. **Responsive Design**: Mobile-first approach with TailwindCSS
+
+* Technical Architecture Deep Dive
+
+** Database Design
+*** Core Models
+**** CanApplication Model
+The primary business model capturing customer requests:
+
+#+BEGIN_SRC ruby
+# Customer Information
+company_name, contact_person, email, phone contacts
+mailing_address, city, state, zip
+
+# Test Configuration  
+semen_test_count, saliva_test_count, colostrum_test_count
+total_amount_due, rush_order (boolean)
+
+# Processing Workflow States
+approved (boolean), paid (boolean), signed (boolean)
+order_id, signature
+
+# Flexible Data Storage
+billing_info (JSONB) - separate billing addresses
+admin (JSONB) - administrative metadata  
+breed_assoc_auth (JSONB) - regulatory authorization data
+#+END_SRC
+
+**** Content Management System
+Dynamic content delivery for workflow steps:
+
+#+BEGIN_SRC ruby
+# Content Structure
+title, subtitle, body, header, footer
+content_type # "info", "application", "sign", "pay", "data"
+categories, tags
+html # rendered content for display
+#+END_SRC
+
+** Application Flow Architecture
+*** Multi-Step Workflow Implementation
+1. **Information Capture** (`content_type: "application"`)
+   - Customer details and contact information
+   - Test quantity specification
+   - Rush order selection
+   
+2. **Digital Signature** (`content_type: "sign"`) 
+   - Legal authorization workflow preparation
+   - Regulatory compliance setup
+
+3. **Payment Processing** (`content_type: "pay"`)
+   - Stripe embedded checkout integration
+   - Quantity-based pricing calculation
+   - Rush order premium handling
+
+4. **Confirmation & Data** (`content_type: "data"`)
+   - Order summary and receipt
+   - Sample collection instructions
+
+** Payment System Architecture
+*** Stripe Integration Pattern
+- **Pricing Model**: Per-test pricing with rush order premiums
+- **Standard Rate**: Configurable via `test_price_id`
+- **Rush Premium**: Additional $15.00/sample via `test_rush_price_id`
+- **Checkout Flow**: Embedded Stripe checkout for seamless experience
+
+*** Session Management
+- **Redis Backend**: Temporary session storage for application flow
+- **Application Tracking**: Session-based application state management
+- **Payment Confirmation**: Stripe session ID storage for verification
+
+** Frontend Architecture
+*** Stimulus Controller Implementation
+Key interactive components:
+
+1. **Address Matching**: Billing address auto-population
+2. **Test Information Management**: Dynamic test quantity handling  
+3. **Signature Collection**: Digital signature preparation
+4. **Application Flow**: Multi-step form progression
+
+*** TailwindCSS Design System
+- **Responsive Design**: Mobile-first approach
+- **Component Library**: Reusable form and interface elements
+- **Professional Aesthetics**: Clean, business-appropriate styling
+
+* Business Value Demonstrated
+
+** Operational Efficiency Gains
+- **Form Processing**: Eliminated manual PDF processing overhead
+- **Payment Integration**: Automated payment collection and confirmation
+- **Data Quality**: Structured data capture reducing transcription errors
+- **Customer Experience**: Streamlined self-service application process
+
+** Technical Scalability Proof
+- **JSONB Flexibility**: Demonstrated adaptable data structures for varying requirements
+- **Component Modularity**: Reusable interface patterns for similar applications
+- **Payment Abstraction**: Proven Stripe integration patterns
+- **Session Management**: Redis-backed temporary state handling
+
+** Regulatory Compliance Foundation
+- **Digital Signatures**: Framework for legal authorization capture
+- **Audit Trails**: Database structure supporting compliance tracking
+- **Data Security**: Session-based temporary storage patterns
+
+* Lessons Learned & Technical Insights
+
+** Successful Architectural Decisions
+1. **JSONB for Flexibility**: PostgreSQL JSONB proved excellent for varying customer data structures
+2. **Content-Type System**: Dynamic content delivery allowed flexible workflow customization
+3. **Stimulus Progressive Enhancement**: JavaScript functionality without SPA complexity
+4. **Component-Based Views**: Reusable templates supporting multiple workflow variations
+
+** Development Insights
+*** Rails 7.1 + Hotwire Effectiveness
+- **Turbo Integration**: Seamless page transitions without full SPA overhead
+- **Stimulus Controllers**: Targeted JavaScript functionality for specific interactions
+- **Importmap**: Asset management without complex build processes
+
+*** Payment Processing Patterns
+- **Embedded Checkout**: Superior UX compared to redirect-based flows
+- **Quantity Pricing**: Flexible per-item pricing with premium tiers
+- **Session Restoration**: Reliable payment confirmation workflows
+
+** Production Readiness Considerations
+The prototype successfully demonstrated core functionality while identifying production requirements:
+
+- **Authentication System**: User management and session security
+- **Comprehensive Validation**: Input sanitization and business rule enforcement
+- **Error Handling**: Structured API responses and user-friendly error messages
+- **Performance Optimization**: Database indexing and query optimization
+- **Monitoring**: Application health and business metrics tracking
+
+* Portfolio Showcase Elements
+
+** Screenshots & Visual Documentation
+Available in project assets:
+- Logo assets (various sizes and cutout versions)
+- Application workflow screenshots
+- Payment integration demonstrations
+- Mobile responsive design examples
+
+** Code Examples Repository
+Key implementation patterns documented:
+- Rails controller architecture for multi-step workflows
+- Stimulus JavaScript patterns for progressive enhancement
+- Payment integration with session management
+- JSONB data modeling for flexible business requirements
+
+** Business Case Study
+*** Problem Statement
+Traditional PDF-based genetic testing applications created bottlenecks:
+- Manual data entry requirements
+- Payment processing delays  
+- Customer service overhead
+- Error-prone transcription processes
+
+*** Solution Implementation
+Digital transformation via Rails application:
+- Self-service customer application
+- Integrated payment processing
+- Automated data validation
+- Streamlined workflow management
+
+*** Measurable Outcomes
+- **Development Timeline**: 8-week proof-of-concept delivery
+- **Technical Stack**: Modern Rails 7.1 with industry-standard integrations
+- **Payment Processing**: Successful Stripe integration with quantity pricing
+- **Workflow Automation**: Complete order-to-payment digital process
+
+* Technical Documentation References
+
+** Comprehensive Documentation Suite
+- **README.org**: Complete setup and architecture overview
+- **API_DOCUMENTATION.org**: Detailed endpoint and integration specifications  
+- **DEVELOPMENT_SETUP.org**: Development environment configuration guide
+- **DEV.org**: Development notes and known improvement areas
+
+** Deployment Documentation
+- **Docker Support**: Containerized deployment configuration
+- **Heroku Integration**: Cloud deployment patterns
+- **Environment Management**: Configuration and secrets handling
+
+* Strategic Value for can.code Ecosystem
+
+** Template Architecture Validation
+The EQ platform proves the viability of the order-sign-pay template:
+- **Reusable Patterns**: Controllers, models, and views adaptable to similar workflows
+- **Payment Integration**: Proven Stripe patterns for quantity-based pricing
+- **Multi-Step Workflows**: Content-type system supporting various business processes
+
+** Technology Stack Validation  
+- **Rails 7.1 + Hotwire**: Excellent for business application development
+- **PostgreSQL + JSONB**: Optimal for flexible business data requirements
+- **TailwindCSS + Stimulus**: Efficient frontend development patterns
+- **Redis Sessions**: Reliable temporary state management
+
+** Business Development Foundation
+- **Client Success Story**: Demonstrated ability to digitize traditional business processes
+- **Industry Experience**: Proven expertise in regulated industry applications
+- **Technical Excellence**: Modern development practices with production considerations
+
+** Future Applications
+The EQ platform serves as a proven template for:
+- **Healthcare Applications**: Similar regulatory and payment requirements
+- **Professional Services**: Multi-step approval and payment workflows  
+- **Government Services**: Compliance-heavy application processes
+- **Laboratory Services**: Sample tracking and result delivery systems
+
+* Conclusion
+
+The EQ Livestock Testing Platform successfully demonstrates can.code's ability to 
+deliver practical business solutions using modern web technologies. As a proof-of-concept, 
+it validates both the technical architecture and business viability of digitizing 
+traditional paper-based workflows in regulated industries.
+
+The project provides a solid foundation for the can.code ecosystem's order-sign-pay 
+template architecture while establishing credibility in industry-specific application 
+development. Its comprehensive documentation and architectural patterns make it an 
+excellent reference implementation for future client engagements.
+
+---
+
+*Portfolio Status*: Proof-of-Concept Complete
+*Technology Validation*: Rails 7.1 + Hotwire + TailwindCSS + Stripe
+*Business Impact*: Traditional workflow digitization for livestock genetics industry
+*Strategic Value*: Template architecture validation and client success demonstration

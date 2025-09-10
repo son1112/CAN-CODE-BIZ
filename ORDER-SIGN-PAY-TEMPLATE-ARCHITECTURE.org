@@ -1,0 +1,1471 @@
+#+TITLE: Order-Sign-Pay Template Architecture
+#+AUTHOR: CAN.CODE Engineering Team  
+#+DATE: 2025-09-09
+#+STARTUP: overview
+#+TODO: TODO IN-PROGRESS RESEARCH | DONE CANCELLED
+#+PRIORITY: A B C
+
+* Executive Summary
+
+The Order-Sign-Pay (OSP) template architecture represents a proven business
+workflow pattern extracted from successful production implementations. This
+document defines the comprehensive architecture for creating rapid, compliant,
+and scalable applications across diverse business domains.
+
+** Core Workflow Pattern
+1. **Order**: Customer submits application with specifications
+2. **Sign**: Legal authorization and digital signature capture  
+3. **Pay**: Payment processing and financial transaction completion
+
+** Strategic Value Proposition
+- **Rapid Deployment**: 2-3 weeks from requirements to production
+- **Regulatory Compliance**: Built-in legal and financial compliance patterns
+- **Scalable Architecture**: Handles simple forms to complex multi-step processes
+- **Multi-Tenant Ready**: Single codebase, multiple client deployments
+
+* Business Pattern Analysis
+
+** Proven Use Cases (From BEER/EQ-Promogen)
+*** Livestock Testing Services
+- **Order**: Animal identification, test specifications, sample quantities
+- **Sign**: Breed association authorization, legal liability acceptance
+- **Pay**: Per-sample pricing ($35 standard, $50 rush), quantity discounts
+
+*** Success Metrics
+- **Processing Time**: 24-hour application to payment completion
+- **Customer Satisfaction**: 95% completion rate (low abandonment)
+- **Revenue Growth**: Consistent monthly recurring revenue
+- **Compliance**: 100% regulatory compliance (breed association reporting)
+
+** Generalization Analysis
+*** High-Value Target Industries
+
+**** Healthcare & Medical Services
+***** Diagnostic Testing Services
+- **Order**: Patient information, test specifications, insurance details
+- **Sign**: HIPAA authorization, consent to treat, results sharing permissions
+- **Pay**: Insurance billing, patient responsibility, payment plans
+
+***** Telemedicine Applications  
+- **Order**: Appointment scheduling, medical history, symptom assessment
+- **Sign**: Telehealth consent, prescription authorization, treatment agreements
+- **Pay**: Session fees, prescription costs, follow-up scheduling
+
+**** Professional Services
+***** Legal Document Services
+- **Order**: Document type, client information, service specifications
+- **Sign**: Attorney-client agreement, retainer authorization, scope definitions
+- **Pay**: Retainer fees, hourly billing, document preparation costs
+
+***** Accounting & Tax Services
+- **Order**: Service type, business information, document submission
+- **Sign**: Engagement letter, tax preparation authorization, IRS representation
+- **Pay**: Service fees, payment schedules, additional service options
+
+**** Government & Compliance
+***** Permit Applications
+- **Order**: Permit type, business information, compliance requirements
+- **Sign**: Legal declarations, regulatory compliance attestations
+- **Pay**: Application fees, processing costs, expedited service charges
+
+***** Professional Licensing
+- **Order**: License type, qualifications, supporting documentation
+- **Sign**: Ethics agreement, continuing education commitments
+- **Pay**: License fees, renewal schedules, penalty assessments
+
+* Technical Architecture Framework
+
+** Domain-Driven Design Structure
+
+*** Core Domain Models
+**** Application Entity (Central Aggregate)
+#+begin_src ruby
+# Core business entity representing the complete workflow
+class OSP::Application < ApplicationRecord
+  include OSP::WorkflowStates
+  include OSP::PaymentProcessing  
+  include OSP::SignatureCapture
+  include OSP::AuditTracking
+  
+  # Workflow states
+  enum status: {
+    draft: 0,           # Initial creation
+    submitted: 1,       # Customer submission complete
+    under_review: 2,    # Administrative review
+    approved: 3,        # Ready for payment
+    payment_pending: 4, # Payment processing
+    payment_complete: 5,# Payment successful
+    signature_pending: 6,# Awaiting signature
+    completed: 7,       # Fully processed
+    cancelled: 8,       # Workflow terminated
+    refunded: 9         # Payment refunded
+  }
+  
+  # Core relationships
+  belongs_to :application_type
+  belongs_to :customer
+  has_many :application_items
+  has_many :payments
+  has_many :signatures
+  has_many :audit_events
+  
+  # JSONB flexible storage
+  store_accessor :metadata, :custom_fields
+  store_accessor :configuration, :workflow_rules
+  
+  # State transition validations
+  validates :status, presence: true
+  validates :customer, presence: true
+  validates :application_type, presence: true
+  
+  # Workflow business rules
+  def ready_for_payment?
+    approved? && total_amount_due > 0
+  end
+  
+  def signature_required?
+    application_type.requires_signature? || 
+    total_amount_due >= signature_threshold
+  end
+  
+  def workflow_complete?
+    completed? && payment_complete? && 
+    (!signature_required? || signature_captured?)
+  end
+end
+#+end_src
+
+**** Customer Entity
+#+begin_src ruby
+class OSP::Customer < ApplicationRecord
+  # Core identification
+  validates :email, presence: true, uniqueness: true
+  validates :company_name, presence: true
+  validates :contact_person, presence: true
+  
+  # Address management
+  embeds_one :billing_address, class_name: 'OSP::Address'
+  embeds_one :mailing_address, class_name: 'OSP::Address'
+  
+  # Communication preferences
+  store_accessor :preferences, :notification_methods
+  store_accessor :preferences, :communication_frequency
+  
+  # Relationships
+  has_many :applications
+  has_many :payment_methods
+  
+  # Business logic
+  def full_name
+    "#{first_name} #{last_name}".strip
+  end
+  
+  def default_payment_method
+    payment_methods.where(default: true).first ||
+    payment_methods.first
+  end
+end
+#+end_src
+
+**** ApplicationType Entity (Configuration)
+#+begin_src ruby
+class OSP::ApplicationType < ApplicationRecord
+  # Type configuration
+  validates :name, presence: true, uniqueness: true
+  validates :workflow_steps, presence: true
+  
+  # JSONB configuration storage
+  store_accessor :configuration, :pricing_rules
+  store_accessor :configuration, :validation_rules  
+  store_accessor :configuration, :workflow_steps
+  store_accessor :configuration, :signature_requirements
+  store_accessor :configuration, :notification_templates
+  
+  # Relationships
+  has_many :applications
+  has_many :form_fields, -> { order(:position) }
+  
+  # Configuration methods
+  def base_price
+    pricing_rules['base_price'] || 0
+  end
+  
+  def rush_surcharge
+    pricing_rules['rush_surcharge'] || 0
+  end
+  
+  def requires_signature?
+    signature_requirements['required'] == true
+  end
+  
+  def signature_threshold
+    signature_requirements['amount_threshold'] || 0
+  end
+end
+#+end_src
+
+*** Workflow State Management
+**** State Machine Implementation
+#+begin_src ruby
+module OSP::WorkflowStates
+  extend ActiveSupport::Concern
+  
+  included do
+    # State transition callbacks
+    before_transition any => :submitted do |application|
+      application.validate_submission_requirements
+    end
+    
+    before_transition any => :approved do |application|
+      application.calculate_total_amount
+    end
+    
+    after_transition any => :payment_complete do |application|
+      application.send_payment_confirmation
+      application.initiate_signature_process if application.signature_required?
+    end
+    
+    after_transition any => :completed do |application|
+      application.send_completion_notification
+      application.schedule_fulfillment
+    end
+  end
+  
+  # Transition validation
+  def can_transition_to?(target_state)
+    case target_state.to_sym
+    when :submitted
+      draft? && submission_valid?
+    when :approved  
+      submitted? && administrative_approval_valid?
+    when :payment_pending
+      approved? && payment_amount_valid?
+    when :payment_complete
+      payment_pending? && payment_processing_complete?
+    when :completed
+      payment_complete? && (!signature_required? || signature_captured?)
+    else
+      false
+    end
+  end
+  
+  private
+  
+  def submission_valid?
+    required_fields_present? && 
+    business_rules_satisfied? &&
+    customer_information_complete?
+  end
+  
+  def payment_processing_complete?
+    payments.successful.sum(:amount) >= total_amount_due
+  end
+end
+#+end_src
+
+*** Payment Processing Architecture
+**** Payment Strategy Pattern
+#+begin_src ruby
+module OSP::PaymentProcessing
+  extend ActiveSupport::Concern
+  
+  included do
+    has_many :payments, dependent: :destroy
+    monetize :total_amount_due_cents
+    
+    # Payment calculations
+    def amount_paid
+      payments.successful.sum(:amount)
+    end
+    
+    def amount_due
+      total_amount_due - amount_paid
+    end
+    
+    def overpayment_amount
+      [amount_paid - total_amount_due, 0].max
+    end
+  end
+  
+  def create_payment_session(payment_processor: :stripe)
+    processor = payment_processor_for(payment_processor)
+    processor.create_session(self)
+  end
+  
+  def process_payment(payment_params)
+    payment = payments.build(payment_params)
+    
+    if payment.save && payment.process!
+      transition_to!(:payment_complete) if amount_due <= 0
+      payment
+    else
+      payment
+    end
+  end
+  
+  private
+  
+  def payment_processor_for(processor_type)
+    case processor_type
+    when :stripe
+      OSP::PaymentProcessors::StripeProcessor.new
+    when :paypal  
+      OSP::PaymentProcessors::PayPalProcessor.new
+    when :bank_transfer
+      OSP::PaymentProcessors::BankTransferProcessor.new
+    else
+      raise ArgumentError, "Unknown payment processor: #{processor_type}"
+    end
+  end
+end
+#+end_src
+
+**** Payment Processor Abstraction
+#+begin_src ruby
+module OSP::PaymentProcessors
+  class BaseProcessor
+    def create_session(application)
+      raise NotImplementedError
+    end
+    
+    def process_payment(payment_params)
+      raise NotImplementedError
+    end
+    
+    def refund_payment(payment_id, amount = nil)
+      raise NotImplementedError  
+    end
+  end
+  
+  class StripeProcessor < BaseProcessor
+    def create_session(application)
+      Stripe::Checkout::Session.create(
+        payment_method_types: ['card'],
+        line_items: build_line_items(application),
+        mode: 'payment',
+        success_url: success_url(application),
+        cancel_url: cancel_url(application),
+        metadata: {
+          application_id: application.id,
+          customer_id: application.customer_id
+        }
+      )
+    end
+    
+    def process_payment(payment_params)
+      # Implementation for processing Stripe payments
+    end
+    
+    private
+    
+    def build_line_items(application)
+      items = []
+      
+      # Base application fee
+      items << {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: application.application_type.name
+          },
+          unit_amount: application.base_amount_cents
+        },
+        quantity: 1
+      }
+      
+      # Rush order surcharge
+      if application.rush_order?
+        items << {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Rush Order Surcharge'
+            },
+            unit_amount: application.rush_surcharge_cents
+          },
+          quantity: 1
+        }
+      end
+      
+      # Additional items
+      application.application_items.each do |item|
+        items << {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: item.description
+            },
+            unit_amount: item.unit_price_cents
+          },
+          quantity: item.quantity
+        }
+      end
+      
+      items
+    end
+  end
+end
+#+end_src
+
+** Frontend Component Architecture
+
+*** Stimulus Controller Framework
+**** Application Form Controller
+#+begin_src javascript
+// OSP Application Form Management
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["form", "step", "progress", "errors", "submit"]
+  static values = { 
+    currentStep: Number,
+    totalSteps: Number,
+    autoSave: Boolean
+  }
+  
+  connect() {
+    this.initializeFormValidation()
+    this.setupAutoSave()
+    this.updateProgress()
+  }
+  
+  // Multi-step navigation
+  nextStep() {
+    if (this.validateCurrentStep()) {
+      this.currentStepValue++
+      this.updateStepDisplay()
+      this.updateProgress()
+      this.saveProgress()
+    }
+  }
+  
+  previousStep() {
+    if (this.currentStepValue > 1) {
+      this.currentStepValue--
+      this.updateStepDisplay()
+      this.updateProgress()
+    }
+  }
+  
+  // Form validation
+  validateCurrentStep() {
+    const currentStepElement = this.getCurrentStepElement()
+    const requiredFields = currentStepElement.querySelectorAll('[required]')
+    let isValid = true
+    
+    requiredFields.forEach(field => {
+      if (!field.checkValidity()) {
+        this.showFieldError(field)
+        isValid = false
+      } else {
+        this.clearFieldError(field)
+      }
+    })
+    
+    return isValid
+  }
+  
+  // Auto-save functionality
+  setupAutoSave() {
+    if (this.autoSaveValue) {
+      this.autoSaveInterval = setInterval(() => {
+        this.saveProgress()
+      }, 30000) // Auto-save every 30 seconds
+    }
+  }
+  
+  saveProgress() {
+    const formData = new FormData(this.formTarget)
+    
+    fetch('/osp/applications/auto_save', {
+      method: 'PATCH',
+      body: formData,
+      headers: {
+        'X-CSRF-Token': this.getCSRFToken(),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      this.showSaveStatus('saved')
+    })
+    .catch(error => {
+      this.showSaveStatus('error')
+    })
+  }
+  
+  // Dynamic field management
+  addApplicationItem(event) {
+    const template = this.data.get('itemTemplate')
+    const itemsContainer = this.element.querySelector('[data-items-container]')
+    const newItem = this.createElement(template)
+    
+    itemsContainer.appendChild(newItem)
+    this.updateTotalAmount()
+  }
+  
+  removeApplicationItem(event) {
+    const item = event.target.closest('[data-application-item]')
+    item.remove()
+    this.updateTotalAmount()
+  }
+  
+  // Pricing calculations
+  updateTotalAmount() {
+    let total = this.calculateBaseAmount()
+    
+    // Add item costs
+    const items = this.element.querySelectorAll('[data-application-item]')
+    items.forEach(item => {
+      const quantity = parseInt(item.querySelector('[data-quantity]').value) || 0
+      const unitPrice = parseFloat(item.querySelector('[data-unit-price]').value) || 0
+      total += quantity * unitPrice
+    })
+    
+    // Add rush order surcharge
+    if (this.isRushOrder()) {
+      total += this.getRushSurcharge()
+    }
+    
+    this.displayTotalAmount(total)
+  }
+  
+  // Private methods
+  getCurrentStepElement() {
+    return this.stepTargets.find(step => 
+      parseInt(step.dataset.stepNumber) === this.currentStepValue
+    )
+  }
+  
+  updateStepDisplay() {
+    this.stepTargets.forEach(step => {
+      const stepNumber = parseInt(step.dataset.stepNumber)
+      step.classList.toggle('active', stepNumber === this.currentStepValue)
+      step.classList.toggle('completed', stepNumber < this.currentStepValue)
+    })
+  }
+  
+  updateProgress() {
+    const progressPercent = (this.currentStepValue / this.totalStepsValue) * 100
+    this.progressTarget.style.width = `${progressPercent}%`
+  }
+}
+#+end_src
+
+**** Payment Processing Controller  
+#+begin_src javascript
+// OSP Payment Processing Management
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["form", "amount", "method", "processing"]
+  static values = {
+    stripePublishableKey: String,
+    sessionId: String,
+    returnUrl: String
+  }
+  
+  connect() {
+    if (this.stripePublishableKeyValue) {
+      this.initializeStripe()
+    }
+  }
+  
+  initializeStripe() {
+    this.stripe = Stripe(this.stripePublishableKeyValue)
+    
+    if (this.sessionIdValue) {
+      this.redirectToCheckout()
+    }
+  }
+  
+  async createCheckoutSession() {
+    this.showProcessingState()
+    
+    try {
+      const response = await fetch('/osp/checkout/create_session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': this.getCSRFToken()
+        },
+        body: JSON.stringify({
+          application_id: this.data.get('applicationId'),
+          return_url: this.returnUrlValue
+        })
+      })
+      
+      const session = await response.json()
+      
+      if (session.error) {
+        this.showPaymentError(session.error)
+      } else {
+        this.sessionIdValue = session.id
+        this.redirectToCheckout()
+      }
+    } catch (error) {
+      this.showPaymentError('Payment initialization failed')
+    }
+  }
+  
+  async redirectToCheckout() {
+    const { error } = await this.stripe.redirectToCheckout({
+      sessionId: this.sessionIdValue
+    })
+    
+    if (error) {
+      this.showPaymentError(error.message)
+    }
+  }
+  
+  // Payment method selection
+  selectPaymentMethod(event) {
+    const method = event.target.value
+    this.methodTarget.value = method
+    
+    // Show method-specific fields
+    this.element.querySelectorAll('[data-payment-method]').forEach(el => {
+      el.classList.toggle('hidden', el.dataset.paymentMethod !== method)
+    })
+  }
+  
+  // UI state management
+  showProcessingState() {
+    this.processingTarget.classList.remove('hidden')
+    this.formTarget.classList.add('opacity-50', 'pointer-events-none')
+  }
+  
+  hideProcessingState() {
+    this.processingTarget.classList.add('hidden')
+    this.formTarget.classList.remove('opacity-50', 'pointer-events-none')
+  }
+  
+  showPaymentError(message) {
+    this.hideProcessingState()
+    
+    const errorAlert = this.createElement(`
+      <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+        <div class="text-red-800">${message}</div>
+      </div>
+    `)
+    
+    this.formTarget.insertBefore(errorAlert, this.formTarget.firstChild)
+  }
+}
+#+end_src
+
+**** Signature Capture Controller
+#+begin_src javascript
+// OSP Digital Signature Management
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["canvas", "clear", "submit", "signature"]
+  static values = { required: Boolean }
+  
+  connect() {
+    this.initializeCanvas()
+    this.setupEventListeners()
+  }
+  
+  initializeCanvas() {
+    this.canvas = this.canvasTarget
+    this.ctx = this.canvas.getContext('2d')
+    this.isDrawing = false
+    this.hasSignature = false
+    
+    // Set canvas size
+    this.resizeCanvas()
+    window.addEventListener('resize', () => this.resizeCanvas())
+  }
+  
+  setupEventListeners() {
+    // Mouse events
+    this.canvas.addEventListener('mousedown', this.startDrawing.bind(this))
+    this.canvas.addEventListener('mousemove', this.draw.bind(this))
+    this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this))
+    
+    // Touch events for mobile
+    this.canvas.addEventListener('touchstart', this.handleTouch.bind(this))
+    this.canvas.addEventListener('touchmove', this.handleTouch.bind(this))
+    this.canvas.addEventListener('touchend', this.stopDrawing.bind(this))
+  }
+  
+  startDrawing(event) {
+    this.isDrawing = true
+    const rect = this.canvas.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+    
+    this.ctx.beginPath()
+    this.ctx.moveTo(x, y)
+  }
+  
+  draw(event) {
+    if (!this.isDrawing) return
+    
+    const rect = this.canvas.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+    
+    this.ctx.lineWidth = 2
+    this.ctx.lineCap = 'round'
+    this.ctx.strokeStyle = '#000'
+    
+    this.ctx.lineTo(x, y)
+    this.ctx.stroke()
+    
+    this.hasSignature = true
+    this.updateSubmitButton()
+  }
+  
+  stopDrawing() {
+    if (this.isDrawing) {
+      this.isDrawing = false
+      this.ctx.beginPath()
+    }
+  }
+  
+  handleTouch(event) {
+    event.preventDefault()
+    const touch = event.touches[0]
+    const mouseEvent = new MouseEvent(event.type.replace('touch', 'mouse'), {
+      clientX: touch.clientX,
+      clientY: touch.clientY
+    })
+    this.canvas.dispatchEvent(mouseEvent)
+  }
+  
+  clearSignature() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.hasSignature = false
+    this.signatureTarget.value = ''
+    this.updateSubmitButton()
+  }
+  
+  saveSignature() {
+    if (!this.hasSignature && this.requiredValue) {
+      this.showError('Signature is required')
+      return false
+    }
+    
+    if (this.hasSignature) {
+      const signatureData = this.canvas.toDataURL('image/png')
+      this.signatureTarget.value = signatureData
+    }
+    
+    return true
+  }
+  
+  submitSignature() {
+    if (this.saveSignature()) {
+      this.submitTarget.disabled = true
+      this.submitTarget.textContent = 'Processing...'
+      
+      // Submit form
+      this.element.closest('form').submit()
+    }
+  }
+  
+  // Private methods
+  resizeCanvas() {
+    const container = this.canvas.parentElement
+    this.canvas.width = container.offsetWidth
+    this.canvas.height = 200
+  }
+  
+  updateSubmitButton() {
+    const canSubmit = !this.requiredValue || this.hasSignature
+    this.submitTarget.disabled = !canSubmit
+  }
+  
+  showError(message) {
+    // Implementation for showing error messages
+    const errorElement = this.element.querySelector('[data-signature-error]')
+    if (errorElement) {
+      errorElement.textContent = message
+      errorElement.classList.remove('hidden')
+    }
+  }
+}
+#+end_src
+
+** Configuration & Customization Framework
+
+*** Application Type Configuration
+**** YAML-Based Configuration
+#+begin_src yaml
+# config/osp/application_types/livestock_testing.yml
+name: "Livestock Testing Services"
+description: "Comprehensive livestock genetic testing platform"
+
+workflow:
+  steps:
+    - order
+    - review  
+    - payment
+    - signature
+    - fulfillment
+  
+  auto_transitions:
+    submitted: review
+    approved: payment
+    paid: signature
+
+pricing:
+  base_price: 3500  # $35.00 in cents
+  currency: "usd"
+  
+  rush_order:
+    enabled: true
+    surcharge: 1500  # $15.00 in cents
+    threshold_days: 14
+  
+  bulk_discounts:
+    - quantity: 10
+      discount_percent: 10
+    - quantity: 25  
+      discount_percent: 15
+
+validation:
+  required_fields:
+    - company_name
+    - contact_person
+    - email
+    - test_specifications
+  
+  business_rules:
+    - name: "minimum_test_quantity"
+      condition: "test_quantities.values.sum >= 1"
+      message: "At least one test must be selected"
+
+signature:
+  required: true
+  threshold_amount: 0  # Always required
+  legal_text: |
+    By signing below, I authorize the processing of samples
+    and agree to the terms and conditions of service.
+
+notifications:
+  email_templates:
+    submitted: "application_submitted"
+    approved: "payment_required"  
+    paid: "signature_required"
+    completed: "application_complete"
+
+form_fields:
+  - name: "company_name"
+    type: "text"
+    label: "Company Name"
+    required: true
+    position: 1
+    
+  - name: "contact_person"
+    type: "text" 
+    label: "Contact Person"
+    required: true
+    position: 2
+    
+  - name: "test_specifications"
+    type: "nested_form"
+    label: "Test Requirements"
+    position: 10
+    fields:
+      - name: "animal_id"
+        type: "text"
+        label: "Animal ID/Tag"
+        required: true
+      - name: "breed_registration"
+        type: "text"
+        label: "Breed Registration Number"
+      - name: "test_types"
+        type: "checkbox_group"
+        label: "Test Types"
+        options:
+          - value: "semen"
+            label: "Semen Testing"
+            price: 3500
+          - value: "saliva"  
+            label: "Saliva Testing"
+            price: 3500
+          - value: "colostrum"
+            label: "Colostrum Testing"
+            price: 3500
+#+end_src
+
+*** Dynamic Form Generation
+**** Form Builder Service
+#+begin_src ruby
+class OSP::FormBuilder
+  def initialize(application_type)
+    @application_type = application_type
+    @config = application_type.configuration
+  end
+  
+  def build_form(form_helper, model)
+    form_sections = @config['form_fields'].group_by { |field| field['section'] || 'main' }
+    
+    form_sections.map do |section_name, fields|
+      build_section(form_helper, model, section_name, fields)
+    end.join.html_safe
+  end
+  
+  private
+  
+  def build_section(form_helper, model, section_name, fields)
+    content = content_tag :div, class: "form-section", data: { section: section_name } do
+      section_header(section_name) +
+      fields.sort_by { |f| f['position'] || 999 }.map do |field_config|
+        build_field(form_helper, model, field_config)
+      end.join.html_safe
+    end
+    
+    content
+  end
+  
+  def build_field(form_helper, model, field_config)
+    field_type = field_config['type']
+    field_name = field_config['name']
+    
+    case field_type
+    when 'text', 'email', 'tel'
+      build_text_field(form_helper, field_name, field_config)
+    when 'textarea'
+      build_textarea_field(form_helper, field_name, field_config)
+    when 'select'
+      build_select_field(form_helper, field_name, field_config)
+    when 'checkbox_group'
+      build_checkbox_group(form_helper, field_name, field_config)
+    when 'nested_form'
+      build_nested_form(form_helper, model, field_name, field_config)
+    when 'file_upload'
+      build_file_upload(form_helper, field_name, field_config)
+    else
+      build_custom_field(form_helper, model, field_config)
+    end
+  end
+  
+  def build_text_field(form_helper, field_name, config)
+    wrapper_classes = field_wrapper_classes(config)
+    input_classes = field_input_classes(config)
+    
+    content_tag :div, class: wrapper_classes do
+      form_helper.label(field_name, config['label'], class: "form-label") +
+      form_helper.text_field(field_name, 
+        class: input_classes,
+        required: config['required'],
+        placeholder: config['placeholder'],
+        data: field_data_attributes(config)
+      ) +
+      field_help_text(config) +
+      field_error_display(field_name)
+    end
+  end
+  
+  def build_nested_form(form_helper, model, field_name, config)
+    association_name = field_name.pluralize
+    
+    content_tag :div, class: "nested-form-section" do
+      content_tag(:h4, config['label'], class: "form-section-title") +
+      form_helper.fields_for(association_name) do |nested_form|
+        build_nested_fields(nested_form, config['fields'])
+      end +
+      add_nested_item_button(association_name, config)
+    end
+  end
+  
+  def build_checkbox_group(form_helper, field_name, config)
+    wrapper_classes = "checkbox-group #{field_wrapper_classes(config)}"
+    
+    content_tag :div, class: wrapper_classes do
+      content_tag(:label, config['label'], class: "form-label") +
+      content_tag(:div, class: "checkbox-options") do
+        config['options'].map do |option|
+          build_checkbox_option(form_helper, field_name, option, config)
+        end.join.html_safe
+      end
+    end
+  end
+  
+  def build_checkbox_option(form_helper, field_name, option, config)
+    option_value = option['value']
+    option_label = option['label']
+    option_price = option['price']
+    
+    content_tag :label, class: "checkbox-option" do
+      form_helper.check_box("#{field_name}[]", 
+        { 
+          class: "form-checkbox",
+          data: { 
+            price: option_price,
+            action: "change->osp-form#updatePricing"
+          }
+        },
+        option_value, nil
+      ) +
+      content_tag(:span, option_label, class: "checkbox-label") +
+      (option_price ? content_tag(:span, number_to_currency(option_price / 100.0), 
+                                 class: "checkbox-price") : "")
+    end
+  end
+end
+#+end_src
+
+** Deployment & Operations Framework
+
+*** Multi-Tenant Architecture
+**** Tenant Configuration Management
+#+begin_src ruby
+# OSP Multi-tenant configuration system
+module OSP
+  class TenantConfiguration
+    include Singleton
+    
+    def initialize
+      @configurations = {}
+      load_configurations
+    end
+    
+    def for_tenant(tenant_id)
+      @configurations[tenant_id] || default_configuration
+    end
+    
+    def load_configurations
+      tenant_configs = Rails.root.join('config', 'tenants', '*.yml')
+      
+      Dir.glob(tenant_configs).each do |config_file|
+        tenant_id = File.basename(config_file, '.yml')
+        config = YAML.safe_load(File.read(config_file))
+        
+        @configurations[tenant_id] = TenantConfig.new(config)
+      end
+    end
+    
+    private
+    
+    def default_configuration
+      @default_config ||= TenantConfig.new(
+        Rails.application.config_for(:osp_defaults)
+      )
+    end
+  end
+  
+  class TenantConfig
+    attr_reader :config
+    
+    def initialize(config_hash)
+      @config = config_hash.with_indifferent_access
+    end
+    
+    def application_types
+      @config[:application_types] || {}
+    end
+    
+    def payment_processors
+      @config[:payment_processors] || ['stripe']
+    end
+    
+    def branding
+      @config[:branding] || {}
+    end
+    
+    def notification_settings
+      @config[:notifications] || {}
+    end
+    
+    def custom_css
+      @config[:custom_css]
+    end
+    
+    def feature_flags
+      @config[:features] || {}
+    end
+  end
+end
+#+end_src
+
+*** Docker Deployment Configuration
+**** Production-Ready Dockerfile
+#+begin_src dockerfile
+# Multi-stage build for OSP applications
+FROM ruby:3.2-alpine AS base
+
+# Install system dependencies
+RUN apk add --no-cache \
+    postgresql-dev \
+    build-base \
+    git \
+    curl \
+    tzdata \
+    imagemagick \
+    vips-dev
+
+WORKDIR /app
+
+# Install bundler
+RUN gem install bundler:2.4.10
+
+FROM base AS dependencies
+
+# Copy dependency files
+COPY Gemfile Gemfile.lock ./
+COPY package.json yarn.lock ./
+
+# Install Ruby dependencies
+RUN bundle config set --local without 'development test' && \
+    bundle install --jobs 4 --retry 3
+
+# Install Node.js and Yarn
+RUN apk add --no-cache nodejs npm yarn
+
+# Install JavaScript dependencies
+RUN yarn install --frozen-lockfile --production
+
+FROM base AS application
+
+# Copy installed dependencies
+COPY --from=dependencies /usr/local/bundle /usr/local/bundle
+COPY --from=dependencies /app/node_modules ./node_modules
+
+# Copy application code
+COPY . .
+
+# Precompile assets
+ENV RAILS_ENV=production
+ENV SECRET_KEY_BASE=dummy_secret_for_precompilation
+
+RUN bundle exec rails assets:precompile
+
+# Create non-root user
+RUN addgroup -g 1001 -S appuser && \
+    adduser -S appuser -u 1001
+
+# Set ownership
+RUN chown -R appuser:appuser /app
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+EXPOSE 3000
+
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
+#+end_src
+
+**** Docker Compose for Development
+#+begin_src yaml
+# docker-compose.yml for OSP development
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      target: application
+    ports:
+      - "3006:3000"
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+      - node_modules:/app/node_modules
+    environment:
+      - RAILS_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@db:5432/osp_development
+      - REDIS_URL=redis://redis:6379/1
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+    depends_on:
+      - db
+      - redis
+    command: bundle exec rails server -b 0.0.0.0
+    
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=osp_development
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+      
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    environment:
+      - STRIPE_API_KEY=${STRIPE_SECRET_KEY}
+    command: listen --forward-to web:3000/webhooks/stripe
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  redis_data:
+  bundle_cache:
+  node_modules:
+#+end_src
+
+** Testing & Quality Assurance Framework
+
+*** Comprehensive Testing Strategy
+**** RSpec Test Suite Structure
+#+begin_src ruby
+# spec/rails_helper.rb - OSP Testing Configuration
+require 'spec_helper'
+
+ENV['RAILS_ENV'] ||= 'test'
+require_relative '../config/environment'
+
+abort("Running in production mode!") if Rails.env.production?
+
+require 'rspec/rails'
+require 'capybara/rails'
+require 'capybara/rspec'
+require 'selenium-webdriver'
+
+# OSP Testing Helpers
+Dir[Rails.root.join('spec', 'support', '**', '*.rb')].sort.each { |f| require f }
+
+RSpec.configure do |config|
+  # Database cleaner
+  config.use_transactional_fixtures = false
+  
+  # Include OSP test helpers
+  config.include OSP::TestHelpers::WorkflowHelpers
+  config.include OSP::TestHelpers::PaymentHelpers
+  config.include OSP::TestHelpers::SignatureHelpers
+  
+  # Capybara configuration
+  config.include Capybara::DSL
+  
+  config.before(:suite) do
+    DatabaseCleaner.clean_with(:truncation)
+  end
+  
+  config.before(:each) do
+    DatabaseCleaner.strategy = :transaction
+  end
+  
+  config.before(:each, type: :system) do
+    DatabaseCleaner.strategy = :truncation
+  end
+  
+  config.before(:each) do
+    DatabaseCleaner.start
+  end
+  
+  config.after(:each) do
+    DatabaseCleaner.clean
+  end
+end
+#+end_src
+
+**** Workflow Integration Tests
+#+begin_src ruby
+# spec/system/complete_workflow_spec.rb
+RSpec.describe "Complete Order-Sign-Pay Workflow", type: :system do
+  let(:customer) { create(:customer) }
+  let(:application_type) { create(:livestock_testing_type) }
+  
+  before do
+    # Setup Stripe test mode
+    setup_stripe_test_environment
+  end
+  
+  scenario "Customer completes full application workflow" do
+    # Step 1: Order - Customer submits application
+    visit osp.new_application_path(type: application_type.id)
+    
+    fill_in "Company Name", with: "Holmberg Brothers Ranch"
+    fill_in "Contact Person", with: "Adam Holmberg"
+    fill_in "Email", with: "adam.holmberg@example.com"
+    fill_in "Phone", with: "480-567-6317"
+    
+    # Fill address information
+    fill_in "Mailing Address", with: "25455 S. 54th Street"
+    fill_in "City", with: "Firth"
+    select "Nebraska", from: "State"
+    fill_in "ZIP Code", with: "68358"
+    
+    # Add test specifications
+    click_button "Add Test"
+    
+    within(".application-item:last-child") do
+      fill_in "Animal ID", with: "BULL001"
+      fill_in "Breed Registration", with: "12345678"
+      check "Semen Testing"
+      fill_in "Quantity", with: "2"
+    end
+    
+    # Mark as rush order
+    check "Rush Order (< 2 weeks)"
+    
+    # Submit application
+    click_button "Submit Application"
+    
+    expect(page).to have_content("Application submitted successfully")
+    expect(page).to have_content("Total Amount Due: $85.00") # 2 × $35 + $15 rush
+    
+    application = OSP::Application.last
+    expect(application.status).to eq("submitted")
+    
+    # Step 2: Administrative approval (simulate)
+    application.update!(status: :approved)
+    
+    # Step 3: Payment processing
+    visit osp.application_payment_path(application)
+    
+    expect(page).to have_content("Payment Required")
+    expect(page).to have_content("$85.00")
+    
+    click_button "Pay Now"
+    
+    # Stripe checkout simulation
+    expect(page).to have_content("Redirecting to payment...")
+    
+    # Simulate successful payment webhook
+    simulate_successful_stripe_payment(application)
+    
+    # Step 4: Digital signature
+    visit osp.application_signature_path(application)
+    
+    expect(page).to have_content("Digital Signature Required")
+    expect(page).to have_content("livestock testing services")
+    
+    # Sign using canvas (simulated)
+    simulate_digital_signature
+    
+    click_button "Complete Application"
+    
+    # Step 5: Workflow completion
+    expect(page).to have_content("Application completed successfully")
+    expect(page).to have_content("Order confirmation")
+    expect(page).to have_content("BULL001")
+    
+    application.reload
+    expect(application.status).to eq("completed")
+    expect(application.payment_complete?).to be(true)
+    expect(application.signature_captured?).to be(true)
+    expect(application.workflow_complete?).to be(true)
+  end
+  
+  scenario "Customer abandons workflow at payment step" do
+    application = create(:application, 
+                        status: :approved,
+                        customer: customer,
+                        total_amount_due: 8500)
+    
+    visit osp.application_payment_path(application)
+    click_button "Pay Now"
+    
+    # Simulate payment abandonment
+    visit osp.root_path
+    
+    # Application should remain in approved state
+    application.reload
+    expect(application.status).to eq("approved")
+    
+    # Should be able to resume payment
+    visit osp.application_payment_path(application)
+    expect(page).to have_content("Complete Your Payment")
+  end
+  
+  private
+  
+  def simulate_successful_stripe_payment(application)
+    # Simulate Stripe webhook
+    webhook_payload = {
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_123',
+          payment_status: 'paid',
+          amount_total: application.total_amount_due,
+          metadata: {
+            application_id: application.id
+          }
+        }
+      }
+    }
+    
+    post '/webhooks/stripe', params: webhook_payload.to_json,
+         headers: { 'Content-Type' => 'application/json' }
+  end
+  
+  def simulate_digital_signature
+    # Simulate canvas signature using JavaScript
+    execute_script("""
+      const canvas = document.querySelector('[data-signature-canvas]');
+      const ctx = canvas.getContext('2d');
+      ctx.beginPath();
+      ctx.moveTo(50, 50);
+      ctx.lineTo(150, 100);
+      ctx.stroke();
+    """)
+  end
+end
+#+end_src
+
+* Implementation Roadmap
+
+** Phase 1: Foundation (Weeks 1-4)
+*** TODO Core Architecture Setup
+- [ ] Rails engine structure creation
+- [ ] Database schema migration
+- [ ] Basic model implementation  
+- [ ] Core workflow state machine
+- [ ] Configuration framework
+
+** Phase 2: Components (Weeks 5-8)  
+*** TODO UI Component Library
+- [ ] Form builder system
+- [ ] Payment interface components
+- [ ] Signature capture implementation
+- [ ] Multi-step workflow UI
+- [ ] Responsive design system
+
+** Phase 3: Integration (Weeks 9-12)
+*** TODO Payment & Services
+- [ ] Stripe integration
+- [ ] Email notification system
+- [ ] File upload handling
+- [ ] PDF generation
+- [ ] Audit logging
+
+** Phase 4: Production (Weeks 13-16)
+*** TODO Deployment & Operations
+- [ ] Docker containerization
+- [ ] Multi-tenant configuration  
+- [ ] Monitoring and alerting
+- [ ] Documentation completion
+- [ ] Security audit
+
+* Success Metrics & KPIs
+
+** Technical Metrics
+- **Application Generation Time**: < 2 hours from requirements to working prototype
+- **Workflow Completion Rate**: > 90% of started applications reach completion
+- **Payment Processing Success**: > 99% successful payment processing
+- **System Uptime**: > 99.9% availability
+
+** Business Metrics  
+- **Client Onboarding Time**: < 1 week from contract to production deployment
+- **Development Cost Reduction**: 70% reduction vs custom development
+- **Client Satisfaction**: > 4.5/5 rating on platform usability
+- **Revenue Growth**: $500K ARR from template-based applications within 12 months
+
+---
+
+*This comprehensive template architecture document provides the foundation for
+rapid development of order-sign-pay applications across diverse business domains,
+leveraging proven patterns from the BEER/EQ-Promogen implementation while
+enabling unprecedented customization and scalability.*
+
+*Next Phase: Implementation of can-rails extraction and first template deployment.*

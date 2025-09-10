@@ -15,31 +15,32 @@
   --duck-blue: #3498DB;
   --duck-water: #5DADE2;
   --primary-white: #ffffff;
-  --light-cream: #FEF9E7;
-  --warm-yellow: #FFFACD;
+  --light-sky: #F0F8FF;
+  --soft-blue: #E6F3FF;
+  --pale-blue: #CCE7FF;
   --dark-gray: #2C3E50;
   --text-primary: #2C3E50;
-  --text-secondary: #34495E;
+  --text-secondary: #2C3E50;
   --accent-primary: var(--duck-red);
-  --accent-secondary: var(--duck-yellow);
+  --accent-secondary: #B8860B;
   --accent-tertiary: var(--duck-blue);
-  --border-light: #F8C471;
-  --shadow-light: rgba(255, 107, 107, 0.1);
-  --shadow-medium: rgba(255, 107, 107, 0.2);
+  --border-light: #B3D9FF;
+  --shadow-light: rgba(52, 152, 219, 0.1);
+  --shadow-medium: rgba(52, 152, 219, 0.15);
   
-  /* Duck-Themed Background System */
+  /* Duck-Themed Background System with Sky Blue */
   --bg-primary: var(--primary-white);
-  --bg-secondary: var(--light-cream);
-  --bg-tertiary: var(--warm-yellow);
-  --bg-quaternary: var(--duck-golden);
+  --bg-secondary: var(--light-sky);
+  --bg-tertiary: var(--soft-blue);
+  --bg-quaternary: var(--pale-blue);
   
   /* Duck-Themed Border System */
   --border-primary: var(--border-light);
   --border-secondary: var(--duck-coral);
   
   /* Duck-Themed Text Hierarchy */
-  --text-tertiary: #5D6D7E;
-  --text-quaternary: #85929E;
+  --text-tertiary: #2C3E50;
+  --text-quaternary: #34495E;
   
   /* Enhanced Status Colors */
   --status-success: var(--duck-blue);
@@ -515,7 +516,7 @@ p {
     padding: var(--spacing-md);
     background: var(--bg-primary);
     border-radius: var(--radius-md);
-    border-left: 4px solid var(--duck-yellow);
+    border-left: 4px solid var(--duck-blue);
 }
 
 .showcase-note em {
