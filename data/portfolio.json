@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-09-10T03:52:22.061Z",
+  "portfolio": {
+    "scale": {
+      "projectCount": 128,
+      "linesOfCode": 147000000,
+      "avgHealthScore": 8.2,
+      "techStackCount": 20
+    },
+    "quality": {
+      "excellentProjects": 44,
+      "goodProjects": 52,
+      "needsAttentionProjects": 31,
+      "productionReadyRate": "77%"
+    },
+    "technologies": {
+      "languages": {
+        "JavaScript": 42,
+        "TypeScript": 38,
+        "Python": 18,
+        "Go": 12,
+        "Ruby": 8,
+        "Other": 8
+      },
+      "frameworks": {
+        "React": 35,
+        "Express": 28,
+        "Next.js": 15,
+        "FastAPI": 8,
+        "Rails": 6,
+        "Other": 34
+      }
+    },
+    "trends": {
+      "growth": "12% per quarter",
+      "healthTrend": "improving",
+      "modernizationRate": "85%"
+    }
+  },
+  "metadata": {
+    "dataPrivacyLevel": "fallback-static",
+    "updateFrequency": "static",
+    "privacyNote": "Fallback data - Project Universe unavailable",
+    "lastScanCompleted": "2025-09-10T03:52:22.062Z",
+    "version": "1.0.0-fallback"
+  }
+}

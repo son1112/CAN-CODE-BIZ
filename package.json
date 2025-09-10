@@ -1,0 +1,20 @@
+{
+  "name": "can-code-biz",
+  "version": "1.0.0",
+  "main": "monitoring.js",
+  "dependencies": {
+    "playwright": "^1.55.0",
+    "playwright-core": "^1.55.0"
+  },
+  "devDependencies": {
+    "axios": "^1.11.0",
+    "date-fns": "^4.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

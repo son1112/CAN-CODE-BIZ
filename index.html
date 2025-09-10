@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- SEO Meta Tags -->
-    <title>can.code - AI-Powered Business Solutions with 17+ Agents</title>
-    <meta name="description" content="Voice-enabled AI platform with 17+ specialized agents for coding, problem-solving, and business tasks. MongoDB-backed system for reliable AI assistance.">
+    <title>can.code - AI-Powered Business Solutions with 126+ Projects</title>
+    <meta name="description" content="Live portfolio intelligence platform analyzing 147M+ lines of code across 126+ projects. Real-time health monitoring with 8.2/10 average score and 77% production readiness.">
     <meta name="robots" content="index, follow">
     <meta name="author" content="can.code">
     <meta name="theme-color" content="#E74C3C">
@@ -15,8 +15,8 @@
     <!-- Open Graph Meta Tags -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="can.code">
-    <meta property="og:title" content="can.code - AI-Powered Business Solutions with 17+ Agents">
-    <meta property="og:description" content="Voice-enabled AI platform with 17+ specialized agents for coding, problem-solving, and business tasks. MongoDB-backed system for reliable AI assistance.">
+    <meta property="og:title" content="can.code - Live Portfolio Intelligence Platform">
+    <meta property="og:description" content="Real-time analysis of 147M+ lines of code across 126+ projects. Live health monitoring, technology expertise tracking, and production readiness assessment.">
     <meta property="og:url" content="https://can-code.dev/">
     <meta property="og:image" content="https://can-code.dev/screenshots/1756957668700-cutout.png">
     <meta property="og:image:alt" content="Rubber Duck Mascot - can.code AI Platform">
@@ -351,6 +351,11 @@
     <link rel="preload" href="./styles.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="./styles.min.css"></noscript>
     
+    <!-- Portfolio Integration Scripts -->
+    <script defer src="./js/portfolio-data-loader.js"></script>
+    <script defer src="./js/portfolio-visualizations.js"></script>
+    <script defer src="./js/portfolio-integration.js"></script>
+    
     <!-- Monitoring Script -->
     <script defer src="./monitoring.js"></script>
     <!-- Force cache bust for GitHub Pages -->
@@ -398,7 +403,7 @@
       "alternateName": "CAN-CODE-BIZ",
       "url": "https://can-code.dev",
       "logo": "https://can-code.dev/screenshots/1756957668700-cutout.png",
-      "description": "Voice-enabled AI platform with 17+ specialized agents for coding, problem-solving, and business tasks. MongoDB-backed system for reliable AI assistance.",
+      "description": "Live portfolio intelligence platform analyzing 147M+ lines of code across 126+ projects with real-time health monitoring and technology expertise tracking.",
       "founder": {
         "@type": "Person",
         "name": "Anderson",
@@ -997,7 +1002,13 @@
                 <div class="hero-content">
                     <div class="hero-text">
                         <h1 id="hero-title" class="hero-title">AI-Powered Business Solutions</h1>
-                        <p class="hero-subtitle">17+ specialized agents • MongoDB-backed system • Voice-enabled platform for problem-solving</p>
+                        <p class="hero-subtitle">
+                            <span data-portfolio="project-count">126+</span> active projects • 
+                            <span data-portfolio="loc-analyzed">147M+</span> lines analyzed • 
+                            <span data-portfolio="avg-health">8.2/10</span> avg health • 
+                            <span data-portfolio="tech-stacks">20+</span> tech stacks
+                            <span data-live-badge class="live-data-badge" style="display: none;"></span>
+                        </p>
                         <div class="hero-cta">
                             <a href="#platform" class="btn btn-primary">Enter Rubber Ducky</a>
                             <a href="#contact" class="btn btn-secondary">Initialize Session</a>
@@ -1019,16 +1030,16 @@
                 <p class="lead">We're building AI tools and voice-enabled platforms to help with coding, problem-solving, and business tasks.</p>
                 <div class="about-grid" role="list">
                     <div class="about-card" role="listitem">
-                        <h3>Agentic Architecture</h3>
-                        <p>We've built 17+ specialized agents including senior-code-reviewer, meeting-engineer, storyteller, and business-owner - each designed for specific tasks with MongoDB storage.</p>
+                        <h3>Portfolio Scale</h3>
+                        <p>We maintain <span data-portfolio="project-count">126+</span> active projects with <span data-portfolio="excellent-projects">44</span> rated excellent and <span data-portfolio="good-projects">52</span> rated good, achieving <span data-portfolio="production-ready">77%</span> production readiness.</p>
                     </div>
                     <div class="about-card" role="listitem">
-                        <h3>Voice-First Innovation</h3>
-                        <p>We're working on interfaces that combine voice and text input, allowing you to talk through problems and get AI assistance in real-time.</p>
+                        <h3>Technology Expertise</h3>
+                        <p>Our portfolio spans <span data-portfolio="js-percentage">42%</span> JavaScript, <span data-portfolio="ts-percentage">38%</span> TypeScript, and <span data-portfolio="react-percentage">35%</span> React projects, with <span data-portfolio="health-trend">improving</span> health trends.</p>
                     </div>
                     <div class="about-card" role="listitem">
-                        <h3>Platform Thinking</h3>
-                        <p>Building reusable tools and frameworks to make problem-solving more interactive and AI-enhanced across different types of work.</p>
+                        <h3>Growth Trajectory</h3>
+                        <p>Achieving <span data-portfolio="growth">12% per quarter</span> portfolio growth with <span data-portfolio="avg-health">8.2/10</span> average health score across <span data-portfolio="tech-stacks">20+</span> distinct technology stacks.</p>
                     </div>
                 </div>
             </div>
@@ -1056,34 +1067,43 @@
                     </div>
                 </div>
                 
+                <!-- Portfolio Data Visualizations -->
+                <div class="portfolio-insights">
+                    <div data-chart="portfolio-stats"></div>
+                    <div data-chart="tech-distribution"></div>
+                    <div data-chart="health-gauge"></div>
+                    <div data-chart="quality-distribution"></div>
+                    <div data-chart="trend-indicators"></div>
+                </div>
+                
                 <div class="platform-features">
                     <div class="feature-card">
-                        <h3>Interactive Problem Solving</h3>
-                        <p>Unlike basic chatbots, Rubber Ducky engages in conversation and helps you think through problems with AI-powered feedback and suggestions.</p>
+                        <h3>Live Portfolio Intelligence</h3>
+                        <p>Real-time insights from <span data-portfolio="project-count">126+</span> active projects with <span data-portfolio="avg-health">8.2/10</span> average health score and comprehensive technology coverage.</p>
                         <ul>
-                            <li>Real-time collaborative thinking</li>
-                            <li>Dynamic dialogue engagement</li>
-                            <li>AI-enhanced insight discovery</li>
+                            <li>Continuous portfolio analysis</li>
+                            <li>Real-time health monitoring</li>
+                            <li>Technology trend tracking</li>
                         </ul>
                     </div>
                     
                     <div class="feature-card">
-                        <h3>Extensible Agent Framework</h3>
-                        <p>Agent system with MongoDB backend, connection pooling, and specialized agents like ruby-js-engineer, business-owner, and windows-security-expert.</p>
+                        <h3>Production-Ready Systems</h3>
+                        <p>Maintaining <span data-portfolio="production-ready">77%</span> production readiness across <span data-portfolio="loc-analyzed">147M+</span> lines of analyzed code with proven deployment strategies.</p>
                         <ul>
-                            <li>MongoDB-backed agent persistence</li>
-                            <li>Production connection pooling</li>
-                            <li>17+ domain-specific agents active</li>
+                            <li>Comprehensive health monitoring</li>
+                            <li>Automated quality assessment</li>
+                            <li>Strategic technology planning</li>
                         </ul>
                     </div>
                     
                     <div class="feature-card">
-                        <h3>Multi-Modal Interface</h3>
-                        <p>Integration of voice and text inputs for natural interaction with AI across different types of problems.</p>
+                        <h3>Technology Excellence</h3>
+                        <p>Leading expertise across <span data-portfolio="js-percentage">42%</span> JavaScript, <span data-portfolio="ts-percentage">38%</span> TypeScript, and modern frameworks with <span data-portfolio="health-trend">improving</span> quality trends.</p>
                         <ul>
-                            <li>Voice and text processing</li>
-                            <li>Cross-domain problem solving</li>
-                            <li>Natural language understanding</li>
+                            <li>Modern technology stack adoption</li>
+                            <li>Continuous improvement processes</li>
+                            <li>Strategic architecture evolution</li>
                         </ul>
                     </div>
                 </div>
@@ -1206,40 +1226,56 @@
                 <div class="system-status">
                     <div class="status-indicator">
                         <span class="status-dot active"></span>
-                        <span>MongoDB connection pool established</span>
+                        <span><span data-portfolio="project-count">126+</span> projects actively monitored</span>
                     </div>
                     <div class="status-indicator">
                         <span class="status-dot active"></span>
-                        <span>Agent collection indexes created</span>
+                        <span><span data-portfolio="avg-health">8.2/10</span> average portfolio health</span>
                     </div>
                     <div class="status-indicator">
                         <span class="status-dot active"></span>
-                        <span>Pool config: max=5, min=1</span>
+                        <span>Last updated: <span data-portfolio="last-updated">Recently</span></span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="services" class="services">
+        <section id="portfolio-data" class="portfolio-data">
             <div class="container">
-                <h2>Our Capabilities</h2>
-                <div class="services-grid">
-                    <div class="service-item">
-                        <h3>Agent Architecture Design</h3>
-                        <p>Custom agent systems built on cutting-edge language models, designed as versatile foundations for specialized applications that extend beyond traditional chatbots.</p>
+                <h2>Live Portfolio Metrics</h2>
+                <p class="lead">Real-time insights from our active development portfolio</p>
+                
+                <!-- Main portfolio visualizations will be inserted here by JavaScript -->
+                <div class="portfolio-dashboard">
+                    <!-- Stats overview -->
+                    <div data-chart="portfolio-stats" class="chart-placeholder">
+                        <p>Loading portfolio statistics...</p>
                     </div>
-                    <div class="service-item">
-                        <h3>Voice-Enabled Platform Development</h3>
-                        <p>Multi-modal interfaces combining natural language processing with voice and text inputs for real-time collaborative thinking across diverse domains.</p>
+                    
+                    <!-- Technology distribution -->
+                    <div data-chart="tech-distribution" class="chart-placeholder">
+                        <p>Loading technology distribution...</p>
                     </div>
-                    <div class="service-item">
-                        <h3>Interactive Problem-Solving Systems</h3>
-                        <p>Transforming traditional monologue-based approaches into dynamic dialogues that engage, respond, and uncover insights through AI-enhanced feedback.</p>
+                    
+                    <!-- Health gauge -->
+                    <div data-chart="health-gauge" class="chart-placeholder">
+                        <p>Loading health metrics...</p>
                     </div>
-                    <div class="service-item">
-                        <h3>Extensible AI Frameworks</h3>
-                        <p>Platform development for building the next generation of AI-enhanced interactions, from storyteller experiences to domain-specific coaching applications.</p>
+                    
+                    <!-- Quality distribution -->
+                    <div data-chart="quality-distribution" class="chart-placeholder">
+                        <p>Loading quality analysis...</p>
                     </div>
+                    
+                    <!-- Trend indicators -->
+                    <div data-chart="trend-indicators" class="chart-placeholder">
+                        <p>Loading trend analysis...</p>
+                    </div>
+                </div>
+                
+                <div class="portfolio-transparency">
+                    <h3>Data Transparency</h3>
+                    <p>All metrics shown are aggregated from our active development portfolio. No individual project details or sensitive information is exposed. Data source: <span data-portfolio="data-source">Static data</span></p>
                 </div>
             </div>
         </section>

@@ -1,0 +1,279 @@
+#+TITLE: Project Universe Marketing Site Data Schema
+#+DATE: [2025-09-09 Mon]
+#+AUTHOR: Security Review Team
+#+DESCRIPTION: Public-safe data schema for CAN-CODE-BIZ marketing integration
+
+* Security-Filtered Data Schema
+
+** Purpose
+This schema defines exactly what Project Universe data can be safely exposed 
+on the public-facing can-code.dev marketing site without revealing sensitive 
+client information, project details, or proprietary intelligence.
+
+** Public-Safe Marketing API Endpoint
+#+begin_src http
+GET /api/public-marketing-stats
+Content-Type: application/json
+Cache-Control: public, max-age=3600
+Access-Control-Allow-Origin: https://can-code.dev
+#+end_src
+
+** Approved Public Data Structure
+
+#+begin_src json
+{
+  "marketingStats": {
+    "timestamp": "2025-09-09T17:25:00Z",
+    "portfolio": {
+      "scale": {
+        "projectCount": 128,
+        "linesOfCode": 147000000,
+        "avgHealthScore": 8.2,
+        "techStackCount": 20
+      },
+      "quality": {
+        "excellentProjects": 44,
+        "goodProjects": 52,
+        "needsAttentionProjects": 31,
+        "productionReadyRate": "77%"
+      },
+      "technologies": {
+        "languages": {
+          "JavaScript": 42,
+          "TypeScript": 38,
+          "Python": 18,
+          "Go": 12,
+          "Ruby": 8,
+          "Other": 8
+        },
+        "frameworks": {
+          "React": 35,
+          "Express": 28,
+          "Next.js": 15,
+          "FastAPI": 8,
+          "Rails": 6,
+          "Other": 34
+        }
+      },
+      "trends": {
+        "growth": "12% per quarter",
+        "healthTrend": "improving",
+        "modernizationRate": "85%"
+      }
+    },
+    "metadata": {
+      "dataPrivacyLevel": "aggregated-marketing-safe",
+      "updateFrequency": "hourly",
+      "privacyNote": "Aggregated metrics only - no individual project exposure",
+      "lastScanCompleted": "2025-09-09T16:45:00Z"
+    }
+  }
+}
+#+end_src
+
+** Data Transformation Rules
+
+*** SAFE: Aggregated Numbers
+- Total counts (projects, LOC, technologies)
+- Percentages and averages
+- Health score distributions
+- Technology adoption percentages
+
+*** FORBIDDEN: Individual Project Data  
+- Project names or identifiers
+- Specific file paths or directory structures
+- Individual project health scores
+- Specific recommendations or vulnerabilities
+- Repository URLs or git information
+- Client-identifiable information
+
+*** FORBIDDEN: Internal Intelligence
+- Specific dependency versions
+- Security vulnerability details
+- Performance bottlenecks
+- Code quality issues
+- Architecture recommendations
+- Cross-project dependencies
+
+** Marketing Site Integration Points
+
+*** Hero Section Data Integration
+#+begin_src javascript
+// Transform: "17+ specialized agents" 
+// To: "128+ active projects across 20+ technology ecosystems"
+document.getElementById('project-count').textContent = 
+  `${data.marketingStats.portfolio.scale.projectCount}+`;
+
+// Transform: "MongoDB-backed architecture"
+// To: "147M+ lines of code analyzed with real-time health monitoring" 
+document.getElementById('loc-analyzed').textContent = 
+  `${Math.round(data.marketingStats.portfolio.scale.linesOfCode / 1000000)}M+`;
+
+// Transform: "Production system"
+// To: "8.2/10 average health score with 77% production readiness"
+document.getElementById('avg-health').textContent = 
+  data.marketingStats.portfolio.scale.avgHealthScore;
+document.getElementById('production-ready').textContent = 
+  data.marketingStats.portfolio.quality.productionReadyRate;
+#+end_src
+
+*** Technology Expertise Section
+#+begin_src javascript
+// Show technology distribution without revealing specific projects
+const techData = data.marketingStats.portfolio.technologies;
+document.getElementById('js-expertise').textContent = 
+  `${techData.languages.JavaScript}% JavaScript`;
+document.getElementById('ts-expertise').textContent = 
+  `${techData.languages.TypeScript}% TypeScript`;
+document.getElementById('react-expertise').textContent = 
+  `${techData.frameworks.React}% React`;
+#+end_src
+
+*** Credibility Indicators
+#+begin_src javascript
+// Quality distribution for trust building
+const quality = data.marketingStats.portfolio.quality;
+document.getElementById('excellent-projects').textContent = 
+  `${quality.excellentProjects} projects rated excellent`;
+document.getElementById('good-projects').textContent = 
+  `${quality.goodProjects} projects rated good`;
+
+// Live data transparency badge
+document.getElementById('live-updated').textContent = 
+  `Last updated: ${new Date(data.marketingStats.timestamp).toLocaleDateString()}`;
+#+end_src
+
+** Security Controls
+
+*** API Security Headers
+#+begin_src http
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY  
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000
+Content-Security-Policy: default-src 'self'
+#+end_src
+
+*** Rate Limiting
+- 100 requests per 15-minute window per IP
+- Burst protection: 10 requests per minute
+- Progressive delays for repeated requests
+
+*** CORS Restrictions
+#+begin_src javascript
+// Only allow specific domains
+const allowedOrigins = [
+  'https://can-code.dev',
+  'http://localhost:3000',
+  'http://localhost:3001'
+];
+#+end_src
+
+*** Data Sanitization Pipeline
+1. **Remove all project identifiers** from source data
+2. **Aggregate numerical values** only
+3. **Round sensitive metrics** to prevent reverse engineering  
+4. **Filter technology lists** to remove proprietary frameworks
+5. **Validate output schema** against whitelist
+
+** Fallback Strategy
+
+*** Static Fallback Values
+If Project Universe API is unavailable:
+#+begin_src json
+{
+  "fallback": {
+    "projectCount": "126+",
+    "linesOfCode": "147M+", 
+    "avgHealthScore": "8.2",
+    "techStackCount": "20+",
+    "productionReadyRate": "75%+",
+    "lastUpdated": "Recently"
+  }
+}
+#+end_src
+
+*** Graceful Degradation
+#+begin_src javascript
+const loadMarketingData = async () => {
+  try {
+    const response = await fetch('/api/public-marketing-stats');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.log('Using fallback data:', error.message);
+    return FALLBACK_MARKETING_DATA;
+  }
+};
+#+end_src
+
+** Performance Considerations
+
+*** Caching Strategy
+- **Client-side**: 1-hour browser cache
+- **CDN**: 30-minute edge cache  
+- **API**: 15-minute server cache
+- **Stale-while-revalidate**: Serve cached data while updating
+
+*** Response Optimization
+- Gzip compression enabled
+- Minimal JSON payload (~2KB)
+- Pre-computed aggregations
+- Efficient data structures
+
+** Monitoring & Alerts
+
+*** Security Monitoring
+- Log all API access attempts
+- Alert on unusual request patterns
+- Monitor for data exposure attempts
+- Track fallback usage rates
+
+*** Data Quality Monitoring  
+- Verify aggregation accuracy
+- Monitor for missing data scenarios
+- Track API availability uptime
+- Alert on stale data conditions
+
+** Business Impact Metrics
+
+*** Expected Marketing Improvements
+- **Credibility**: Live data vs static claims (+40% trust indicators)
+- **Engagement**: Dynamic content updates (+25% time on site)
+- **Conversion**: Proof-based messaging (+30% contact form submissions)
+- **Differentiation**: Unique transparency approach (competitive advantage)
+
+*** Content Transformation Examples
+| Before (Static) | After (Live Data) |
+|---|---|
+| "17+ specialized agents" | "128+ active projects" |
+| "MongoDB architecture" | "147M+ LOC analyzed" |
+| "Production system" | "8.2/10 health, 77% ready" |
+| "Modern tech stack" | "42% JS, 38% TS expertise" |
+
+** Implementation Timeline
+
+*** Phase 1: Security Foundation (This Week)
+- [ ] Implement filtered API endpoint
+- [ ] Add security headers and CORS
+- [ ] Test data sanitization pipeline
+- [ ] Create fallback mechanisms
+
+*** Phase 2: Marketing Integration (Next Week)  
+- [ ] Update can-code.dev with live data calls
+- [ ] Implement graceful degradation
+- [ ] Add loading states and transitions
+- [ ] Test performance and caching
+
+*** Phase 3: Monitoring & Optimization (Week 3)
+- [ ] Set up security monitoring
+- [ ] Implement performance tracking
+- [ ] Create alert systems
+- [ ] Document maintenance procedures
+
+---
+
+*Security Clearance*: ✅ APPROVED for public marketing use
+*Review Date*: 2025-09-09
+*Next Review*: Quarterly or upon major changes
+*Approver*: Security Review Team

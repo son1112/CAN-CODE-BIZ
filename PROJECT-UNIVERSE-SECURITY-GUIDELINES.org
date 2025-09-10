@@ -1,0 +1,405 @@
+#+TITLE: Project Universe Security Guidelines for Public Data Exposure
+#+DATE: [2025-09-09 Mon] 
+#+AUTHOR: Security Review Team
+#+DESCRIPTION: Mandatory security protocols for exposing Project Universe data publicly
+
+* SECURITY CLASSIFICATION: CRITICAL
+
+** Zero-Tolerance Security Policy
+Any violation of these guidelines constitutes a **CRITICAL SECURITY BREACH**
+and must be treated as an immediate incident requiring emergency response.
+
+* FORBIDDEN DATA - NEVER EXPOSE PUBLICLY
+
+** Client-Identifiable Information
+*** FORBIDDEN: Project Names or Identifiers
+- ❌ "rubber-ducky-live", "project-alpha", "client-beta-app"
+- ❌ Any string that could identify a specific project or client
+- ❌ Repository names, folder names, or directory identifiers
+- ❌ Git branch names or commit references
+
+*** FORBIDDEN: File System Information  
+- ❌ File paths: "/Users/client/project/src/components"
+- ❌ Directory structures or tree hierarchies
+- ❌ File names or extensions that reveal project details
+- ❌ Repository URLs or git remote information
+
+*** FORBIDDEN: Individual Project Metrics
+- ❌ Specific project health scores: "ProjectX: 7.2/10" 
+- ❌ Individual project LOC counts or complexity metrics
+- ❌ Project-specific technology stacks or dependencies
+- ❌ Individual project creation dates or modification times
+
+** Technical Intelligence
+*** FORBIDDEN: Security and Vulnerability Data
+- ❌ Specific vulnerabilities or security issues found
+- ❌ Dependency versions with known CVEs
+- ❌ Security audit results or penetration test findings
+- ❌ Authentication schemes or security implementations
+
+*** FORBIDDEN: Performance and Optimization Data
+- ❌ Specific performance bottlenecks or slow queries
+- ❌ Memory usage patterns or resource consumption
+- ❌ Database schema details or query performance
+- ❌ Architecture weaknesses or technical debt specifics
+
+*** FORBIDDEN: Intellectual Property
+- ❌ Proprietary algorithms or business logic patterns
+- ❌ Custom framework names or internal library references  
+- ❌ API endpoint structures or internal service names
+- ❌ Database table names or field structures
+
+** Business Intelligence
+*** FORBIDDEN: Strategic Information
+- ❌ Client business models or revenue information
+- ❌ Project budgets, timelines, or resource allocation
+- ❌ Competitive analysis or market positioning data
+- ❌ Internal development priorities or roadmaps
+
+*** FORBIDDEN: Operational Data
+- ❌ Development team assignments or responsibilities
+- ❌ Client communication patterns or feedback
+- ❌ Project status updates or milestone information
+- ❌ Support ticket data or issue resolution patterns
+
+* APPROVED PUBLIC DATA - AGGREGATED ONLY
+
+** Portfolio Scale Metrics (Aggregated)
+*** SAFE: High-Level Numbers
+- ✅ Total project count: "128+ projects"
+- ✅ Total lines of code: "147M+ LOC analyzed"  
+- ✅ Technology stack count: "20+ distinct technology stacks"
+- ✅ Overall portfolio health: "8.2/10 average health score"
+
+*** SAFE: Distribution Percentages
+- ✅ Technology distribution: "42% JavaScript, 38% TypeScript"
+- ✅ Health distribution: "44 excellent, 52 good, 31 needs attention"
+- ✅ Production readiness: "77% production ready"
+- ✅ Framework adoption: "35% React, 28% Express"
+
+*** SAFE: Trend Information
+- ✅ Portfolio growth: "12% per quarter"
+- ✅ Health trend: "improving" or "stable"
+- ✅ Modernization rate: "85% using current frameworks"
+- ✅ General activity: "actively maintained"
+
+** Temporal Data (Sanitized)
+*** SAFE: Aggregated Time Information
+- ✅ Last scan completed: timestamp without project details
+- ✅ Update frequency: "hourly analysis cycles"
+- ✅ Data freshness: "last updated 2 hours ago"
+- ✅ Analysis coverage: "comprehensive weekly scans"
+
+* DATA SANITIZATION REQUIREMENTS
+
+** Mandatory Data Processing Pipeline
+
+*** Step 1: Source Data Isolation
+#+begin_src javascript
+// CRITICAL: Never pass raw Project Universe data to public endpoints
+const sanitizeForPublic = (rawProjectData) => {
+  // FORBIDDEN: Direct passthrough of any project data
+  if (containsProjectIdentifiers(rawProjectData)) {
+    throw new SecurityError('FORBIDDEN: Project identifiers detected');
+  }
+  
+  // REQUIRED: Only aggregated processing allowed
+  return aggregateOnly(rawProjectData);
+};
+#+end_src
+
+*** Step 2: Aggregation-Only Processing
+#+begin_src javascript
+const createPublicSafeAggregates = (projects) => {
+  return {
+    // SAFE: Aggregated counts only
+    totalProjects: projects.length,
+    totalLOC: projects.reduce((sum, p) => sum + p.loc, 0),
+    
+    // SAFE: Calculated averages only  
+    avgHealthScore: calculateAverage(projects.map(p => p.healthScore)),
+    
+    // SAFE: Technology distribution percentages
+    techDistribution: calculatePercentages(
+      projects.flatMap(p => p.technologies)
+    ),
+    
+    // FORBIDDEN: Individual project data
+    // projects: projects, // ❌ NEVER INCLUDE RAW PROJECT DATA
+    // projectDetails: [...] // ❌ NEVER INCLUDE PROJECT DETAILS
+  };
+};
+#+end_src
+
+*** Step 3: Output Validation
+#+begin_src javascript
+const validatePublicSafeOutput = (output) => {
+  const forbidden = [
+    /project[_-]?name/i,
+    /client[_-]?id/i, 
+    /repo[_-]?url/i,
+    /file[_-]?path/i,
+    /directory/i,
+    /vulnerability/i,
+    /password/i,
+    /api[_-]?key/i
+  ];
+  
+  const outputString = JSON.stringify(output);
+  
+  for (const pattern of forbidden) {
+    if (pattern.test(outputString)) {
+      throw new SecurityError(`FORBIDDEN PATTERN DETECTED: ${pattern}`);
+    }
+  }
+  
+  return output;
+};
+#+end_src
+
+** Required Security Headers
+#+begin_src http
+# MANDATORY: Must be included in all public API responses
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Security-Policy: default-src 'self'; script-src 'none'
+Referrer-Policy: no-referrer
+X-Privacy-Level: aggregated-public-safe
+X-Data-Source: project-universe-sanitized
+#+end_src
+
+* ACCESS CONTROL REQUIREMENTS
+
+** Domain Restriction (CORS)
+#+begin_src javascript
+// MANDATORY: Whitelist-only approach
+const ALLOWED_ORIGINS = [
+  'https://can-code.dev',           // Production marketing site
+  'https://www.can-code.dev',       // WWW variant
+  'http://localhost:3000',          // Local development
+  'http://localhost:3001'           // Local testing
+];
+
+// FORBIDDEN: Wildcard origins
+// 'https://*.can-code.dev',        // ❌ Too permissive
+// '*',                            // ❌ Completely insecure
+#+end_src
+
+** Rate Limiting (Mandatory)
+#+begin_src javascript
+// REQUIRED: Aggressive rate limiting for public endpoints
+const RATE_LIMITS = {
+  publicMarketingAPI: {
+    windowMs: 15 * 60 * 1000,      // 15 minutes
+    maxRequests: 100,              // Maximum requests per window
+    burstProtection: {
+      windowMs: 60 * 1000,         // 1 minute
+      maxRequests: 10              // Burst limit
+    },
+    skipSuccessfulRequests: false,  // Count all requests
+    skipFailedRequests: false       // Count failed requests
+  }
+};
+#+end_src
+
+** IP Monitoring and Alerting
+#+begin_src javascript
+// REQUIRED: Track and alert on suspicious patterns
+const monitorAccess = (req, res, next) => {
+  const clientIP = req.ip;
+  const userAgent = req.get('User-Agent');
+  
+  // Log all access attempts
+  securityLogger.info('Public API Access', {
+    ip: clientIP,
+    userAgent,
+    endpoint: req.path,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Alert on suspicious patterns
+  if (detectSuspiciousActivity(clientIP, req.path)) {
+    securityLogger.alert('SUSPICIOUS ACTIVITY DETECTED', {
+      ip: clientIP,
+      pattern: 'potential_data_mining',
+      action: 'rate_limit_triggered'
+    });
+  }
+  
+  next();
+};
+#+end_src
+
+* INCIDENT RESPONSE PROCEDURES
+
+** Immediate Response (< 5 minutes)
+1. **Kill Switch Activation**: Immediately disable public API endpoint
+2. **Access Logging**: Capture all recent access logs for analysis
+3. **Stakeholder Alert**: Notify security team and project leadership
+4. **Damage Assessment**: Determine scope of potential data exposure
+
+** Investigation Phase (< 30 minutes)  
+1. **Log Analysis**: Review all access patterns and data requests
+2. **Data Audit**: Verify what data may have been exposed
+3. **Client Impact**: Assess potential impact to client projects
+4. **Root Cause**: Identify how security controls were bypassed
+
+** Remediation Phase (< 2 hours)
+1. **Security Patch**: Fix the vulnerability that allowed exposure  
+2. **Data Sanitization**: Ensure no sensitive data remains accessible
+3. **Enhanced Monitoring**: Implement additional monitoring controls
+4. **Client Notification**: Notify affected clients if necessary
+
+** Recovery Phase (< 24 hours)
+1. **Security Validation**: Comprehensive security testing before re-enabling
+2. **Enhanced Controls**: Implement additional security measures
+3. **Documentation Update**: Update security guidelines and procedures
+4. **Team Training**: Conduct security awareness briefing
+
+* MONITORING AND ALERTING
+
+** Real-Time Security Monitoring
+#+begin_src javascript
+// REQUIRED: Continuous monitoring for security violations
+const securityMonitor = {
+  
+  // Monitor for forbidden data exposure attempts
+  checkDataLeakage: (response) => {
+    const content = JSON.stringify(response);
+    
+    if (containsForbiddenPatterns(content)) {
+      EMERGENCY_ALERT('DATA_LEAKAGE_DETECTED', {
+        severity: 'CRITICAL',
+        response: truncate(content, 100),
+        timestamp: Date.now()
+      });
+      
+      // IMMEDIATE: Block response
+      return { error: 'Access denied' };
+    }
+    
+    return response;
+  },
+  
+  // Monitor for unusual access patterns
+  detectAnomalousAccess: (accessLog) => {
+    const patterns = analyzeAccessPatterns(accessLog);
+    
+    if (patterns.suspiciousScore > 0.8) {
+      SECURITY_ALERT('ANOMALOUS_ACCESS_PATTERN', {
+        severity: 'HIGH',
+        patterns: patterns,
+        action: 'increased_monitoring'
+      });
+    }
+  }
+};
+#+end_src
+
+** Performance and Availability Alerts
+#+begin_src javascript
+// REQUIRED: Monitor for DoS attempts or system abuse
+const performanceMonitor = {
+  
+  // Alert on unusual load patterns
+  monitorLoad: () => {
+    if (getCurrentRequestRate() > NORMAL_RATE * 3) {
+      SECURITY_ALERT('POTENTIAL_DOS_ATTACK', {
+        severity: 'HIGH',
+        currentRate: getCurrentRequestRate(),
+        threshold: NORMAL_RATE * 3
+      });
+    }
+  },
+  
+  // Monitor response times for tampering
+  monitorResponseTimes: (endpoint, duration) => {
+    if (duration > EXPECTED_RESPONSE_TIME * 10) {
+      PERFORMANCE_ALERT('SLOW_RESPONSE_DETECTED', {
+        endpoint,
+        duration,
+        possibleCause: 'data_mining_attempt'
+      });
+    }
+  }
+};
+#+end_src
+
+* TESTING AND VALIDATION
+
+** Mandatory Security Testing
+*** REQUIRED: Before Any Public Deployment
+#+begin_src bash
+# Security validation checklist - ALL must pass
+npm run security:test:data-leakage      # Test for data exposure
+npm run security:test:cors              # Validate CORS restrictions  
+npm run security:test:rate-limiting     # Test rate limiting
+npm run security:test:headers           # Verify security headers
+npm run security:test:sanitization     # Test data sanitization
+npm run security:test:penetration      # Basic penetration testing
+#+end_src
+
+*** REQUIRED: Continuous Monitoring Tests
+#+begin_src bash
+# Automated security monitoring - runs every hour
+npm run security:monitor:access-patterns
+npm run security:monitor:data-integrity  
+npm run security:monitor:performance
+npm run security:audit:public-endpoints
+#+end_src
+
+** Security Validation Checklist
+*** Pre-Deployment (100% Required)
+- [ ] Data sanitization pipeline tested and verified
+- [ ] CORS restrictions properly configured and tested
+- [ ] Rate limiting implemented and tested
+- [ ] Security headers present and validated  
+- [ ] No forbidden data patterns in sample responses
+- [ ] Fallback mechanisms tested for API failures
+- [ ] Monitoring and alerting systems operational
+- [ ] Incident response procedures documented
+
+*** Post-Deployment (Daily)
+- [ ] Monitor security logs for anomalous access
+- [ ] Verify data sanitization effectiveness
+- [ ] Test fallback mechanisms
+- [ ] Review rate limiting effectiveness
+- [ ] Analyze request patterns for mining attempts
+
+* COMPLIANCE AND GOVERNANCE
+
+** Quarterly Security Reviews (MANDATORY)
+1. **Data Classification Review**: Re-evaluate what data can be public
+2. **Threat Model Update**: Update security threats and mitigations
+3. **Penetration Testing**: Professional security assessment
+4. **Incident Response Drill**: Test emergency response procedures
+5. **Staff Security Training**: Update team on latest security protocols
+
+** Documentation Requirements
+*** REQUIRED: Maintain Current Documentation
+- Security incident response playbook
+- Data classification guidelines  
+- API security configuration guide
+- Monitoring and alerting runbook
+- Emergency contact information
+
+** Audit Trail Requirements
+*** REQUIRED: Log Retention (Minimum 1 Year)
+- All public API access attempts
+- Security incidents and responses  
+- Configuration changes to public endpoints
+- Data sanitization process executions
+- Security testing results and findings
+
+---
+
+**SECURITY CLASSIFICATION**: CRITICAL - MANDATORY COMPLIANCE
+**Review Frequency**: Monthly or immediately upon security incident
+**Authority**: Chief Security Officer approval required for any exceptions
+**Violation Response**: Immediate incident response procedures activation
+
+**Emergency Contact**: Internal security team escalation procedures
+**Last Updated**: 2025-09-09
+**Next Review**: 2025-10-09 or upon any security incident
