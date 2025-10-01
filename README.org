@@ -1,128 +1,214 @@
-#+TITLE: can.code Business Website
-#+AUTHOR: can.code Development Team
-#+DATE: 2024-08-24
+#+TITLE: can.code Research Labs
+#+AUTHOR: can.code Research Labs
+#+DATE: 2025-10-01
 
-* can.code - AI-Powered Business Solutions
+* can.code Research Labs - Empathy-First AI Research
 
-A modern, responsive business website for can.code, an innovative information
-technology company specializing in AI tooling and the rubberDucky platform.
+A research organization investigating LLM agentic capabilities through systematic
+experimentation with accessibility-first design principles. Founded on empathy-first
+philosophy to build accessible intelligence for underserved communities.
 
-** Features
+** Philosophy
 
-- Modern, responsive design with mobile-first approach
-- SEO optimized with proper meta tags and semantic HTML
-- Professional business presentation
-- Interactive contact form
-- Smooth scrolling navigation
-- Cross-browser compatible
+can.code Research Labs operates on empathy-first design principles:
 
-** Technology Stack
+*** Technology Accessibility as First-Class Architecture
+- Universal design embedded in core technical decisions
+- Accessibility testing at every development stage
+- Multi-modal interfaces for diverse user needs
+- WCAG 2.1 AA/AAA compliance from day one
 
-- HTML5 with semantic markup
-- CSS3 with modern features (Grid, Flexbox, CSS Variables)
-- Vanilla JavaScript (ready for enhancement)
+*** Service-First Organizational Structure
+- Research prioritizes user thriving over profit extraction
+- Transparent limitation documentation builds trust
+- Community governance includes marginalized voices
+- Recognition-based systems honoring individual differences
+
+*** Mission: Personal Reality Into Shared Meaning
+- Success measured by user confidence and joy, not efficiency
+- Technology serves human flourishing
+- Systemic change in how society values communication diversity
+- Assistive technology for neurodivergent communities
+
+** Research Projects
+
+*** PRISM - Empathy-First Communication Assistance
+
+Personal Reality Into Shared Meaning: Assistive communication platform born from
+neurodivergent lived experience, helping people translate their authentic voice
+across different contexts.
+
+**** Three-Layer Philosophy
+1. *Technology:* Perspective Refining Intelligent Speech Module
+2. *Organization:* People Recognizing Individual Speech Methods
+3. *Mission:* Personal Reality Into Shared Meaning
+
+**** Key Features
+- Voice preservation with perspective refinement for different audiences
+- Recognition over correction paradigm shift
+- Layered agent architecture maintaining speaker authenticity
+- Community-centered learning from communication patterns
+- Accessibility-first technical architecture from day one
+- Universal design for neurodivergent and neurotypical users
+
+**** Technology Stack
+- Next.js, React, TypeScript
+- Claude AI, MongoDB
+- AssemblyAI for voice processing
+- Accessibility APIs, WCAG compliance tools
+
+**** Impact
+Bridges communication gaps through recognition and translation rather than
+correction and transformation. Shifts paradigm from "fixing" communication
+to honoring individual speech methods.
+
+*** Rubber Ducky - Accessible Voice-AI Research Platform
+
+Experimental research platform investigating voice-AI problem-solving effectiveness
+through systematic experimentation with transparent methodology.
+
+**** Research Findings (126+ Implementations)
+
+***** Documented Success Patterns (73% Success Rate)
+- Structured problem-solving sessions with clear context
+- Technical debugging conversations with specific goals
+- Brainstorming within focused domains
+- Interview preparation with defined scenarios
+
+***** Identified Limitations (Transparent Documentation)
+- Context switching failures in longer conversations
+- Degraded performance beyond 45-minute sessions
+- Topic drift in unstructured open-ended discussions
+- Memory constraints in multi-topic sessions
+
+**** Research Methodology
+- Systematic session recording and analysis
+- User outcome tracking and validation
+- Limitation documentation alongside capabilities
+- Academic rigor over marketing claims
+- Reproducible methodology for research community
+
+**** Accessibility-First Architecture
+- Voice-first interface for diverse communication needs
+- Multi-modal input (voice, text, custom agents)
+- Universal design principles in UI/UX
+- Screen reader optimization and keyboard navigation
+- WCAG 2.1 AA/AAA compliance from day one
+
+**** Technology Stack
+- Next.js, React, TypeScript
+- MongoDB for data persistence
+- Claude AI integration
+- AssemblyAI real-time streaming
+- WebSocket technology
+- Mobile-first design
+
+**** Research Contribution
+This research contributes to understanding AI system boundaries and informing
+future assistive technology development. Results shared openly to advance
+the field through honest capability assessment.
+
+** Research Methodology
+
+*** Transparent Limitation Documentation
+- Document what doesn't work as rigorously as what does
+- Honest capability assessment over marketing claims
+- Failure modes analyzed and published
+- Success rate calculated with reproducible methodology
+
+*** Academic Rigor
+- Systematic experimentation with controlled variables
+- Reproducible results and methodology documentation
+- Peer-review-ready research processes
+- Contributing to broader research community understanding
+
+*** Community-Centered Development
+- Marginalized voices in leadership roles
+- User thriving prioritized over productivity metrics
+- Open collaboration with underserved communities
+- Recognition-based systems vs correction-based approaches
+
+** Technology Standards
+
+*** Accessibility Requirements (Mandatory)
+- WCAG 2.1 AA minimum, AAA target
+- Screen reader compatibility (NVDA, JAWS, VoiceOver)
+- Keyboard navigation for all functionality
+- Color contrast ratios meeting standards
+- Focus indicators and skip links
+- ARIA labels and semantic HTML
+
+*** Universal Design Principles
+- Multi-modal interfaces (voice, text, visual)
+- Flexible interaction methods
+- Adaptable to user preferences
+- Performance optimization for assistive technologies
 - Mobile-first responsive design
-- Progressive enhancement approach
+
+*** Development Practices
+- Accessibility testing at every stage
+- User testing with diverse communities
+- Continuous integration with accessibility checks
+- Documentation of accessibility features
+- Transparent limitation reporting
 
 ** Project Structure
 
 #+BEGIN_EXAMPLE
 CAN-CODE-BIZ/
-├── index.html              # Main HTML file
-├── styles.css              # CSS styles with mobile-first approach
-├── README.org              # Project documentation
-├── colleen_business_session-message-export-1755756718104.pdf  # rubberDucky examples
-└── colleen_computer_help-message-export-1755757338530.pdf     # rubberDucky examples
+├── index.html              # Research Labs homepage
+├── styles.css              # Accessible styles with WCAG compliance
+├── README.org              # Project documentation (this file)
+├── research/               # Research findings and methodology
+└── accessibility/          # Accessibility compliance documentation
 #+END_EXAMPLE
-
-** Website Sections
-
-*** Hero Section
-- Compelling headline showcasing can.code's AI expertise
-- Call-to-action buttons for platform exploration and contact
-
-*** About Section
-- Company overview highlighting AI tooling specialization
-- Three key value propositions:
-  - AI Expertise
-  - Innovation Focus
-  - Business Impact
-
-*** rubberDucky Platform Section
-- Detailed presentation of the flagship AI platform
-- Three specialized assistants:
-  - Business Strategy Assistant
-  - Security Expert Agent
-  - Application Development Support
-
-*** Services Section
-- Four main service offerings:
-  - AI Integration Consulting
-  - Custom AI Development
-  - Platform Integration
-  - Training & Support
-
-*** Contact Section
-- Professional contact information
-- Interactive contact form
-- Multiple communication channels
-
-** SEO Features
-
-- Semantic HTML5 structure
-- Optimized meta descriptions and keywords
-- Proper heading hierarchy (H1-H4)
-- Alt text ready for images
-- Clean URL structure
-- Fast loading times
-- Mobile-responsive design
-
-** Mobile Optimization
-
-The website implements a mobile-first approach with:
-- Responsive grid layouts
-- Touch-friendly navigation
-- Optimized typography scaling
-- Flexible button sizes
-- Collapsible navigation (ready for JS enhancement)
-
-** Browser Support
-
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- Progressive enhancement for older browsers
-- CSS Grid with fallbacks
-- Flexbox support
-
-** Performance
-
-- Minimal external dependencies
-- Optimized CSS delivery
-- Clean, semantic markup
-- Fast loading times
-
-** Future Enhancements
-
-- JavaScript interactivity for mobile navigation
-- Form validation and submission handling
-- Animation libraries integration
-- Analytics integration
-- CMS integration capabilities
 
 ** Contact Information
 
-- Email: hello@can.code
-- Business Inquiries: business@can.code
+- Research Inquiries: research@can.code
+- Collaboration: collaborate@can.code
 - Support: support@can.code
+- General: hello@can.code
 
 ** License
 
-Copyright © 2024 can.code. All rights reserved.
+Copyright © 2024-2025 can.code Research Labs. All rights reserved.
 
-** Development Notes
+Research findings and methodology documentation available for academic use.
 
-This website was built following modern web development best practices:
-- Accessibility considerations
-- SEO optimization
-- Performance optimization
+** Development Principles
+
+This organization was built following empathy-first principles:
+
+*** Technical Excellence
+- Accessibility as core requirement
+- Universal design from day one
+- Performance optimization for assistive technologies
 - Progressive enhancement
-- Responsive design principles
+
+*** Research Integrity
+- Transparent methodology
+- Honest limitation documentation
+- Reproducible results
+- Academic rigor over marketing claims
+
+*** Social Impact
+- Technology serving underserved communities
+- Human flourishing over productivity optimization
+- Recognition honoring individual differences
+- Community-centered governance
+
+** Future Research Directions
+
+- Expanding PRISM to additional communication contexts
+- Investigating AI system boundaries in assistive technology
+- Developing new accessibility-first architecture patterns
+- Building community-centered governance models
+- Contributing findings to broader research community
+
+** Acknowledgments
+
+Built from neurodivergent lived experience with deep gratitude to communities
+teaching us that people aren't bad at communicating - they're communicating
+in ways that aren't always recognized. Technology should bridge gaps through
+translation, not enforce conformity through correction.
