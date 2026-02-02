@@ -38,3 +38,22 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+# Security-sensitive files
+.claude/settings.local.json
+.bullet-log.json
+.jot.json
+.jot.ids.json
+.jot.ids.json.lock
+do_not_commit/
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Secrets and credentials
+*secret*.json
+*credentials*.json
+*.env.*

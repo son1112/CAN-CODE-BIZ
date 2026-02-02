@@ -1,6 +1,21 @@
 {
   "name": "can-code-biz",
   "version": "1.0.0",
+  "description": "Community learning organization where we teach and learn AI capabilities together, building open-source tools with accessibility-first design for underserved communities.",
+  "keywords": [
+    "community",
+    "learning",
+    "open-source",
+    "teaching",
+    "collaboration",
+    "AI",
+    "accessibility",
+    "voice-enabled",
+    "social-impact",
+    "technology-for-good"
+  ],
+  "author": "can.code Community Labs",
+  "license": "ISC",
   "main": "monitoring.js",
   "dependencies": {
     "playwright": "^1.55.0",
@@ -12,9 +27,5 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  }
 }

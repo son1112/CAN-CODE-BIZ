@@ -1,16 +1,17 @@
-#+TITLE: can.code Research Labs
-#+AUTHOR: can.code Research Labs
+#+TITLE: can.code Community Labs
+#+AUTHOR: can.code Community Labs
 #+DATE: 2025-10-01
 
-* can.code Research Labs - Empathy-First AI Research
+* can.code Community Labs - Learning and Building Together
 
-A research organization investigating LLM agentic capabilities through systematic
-experimentation with accessibility-first design principles. Founded on empathy-first
-philosophy to build accessible intelligence for underserved communities.
+A community learning organization where we teach and learn AI capabilities together,
+creating open-source tools with accessibility-first design principles. Founded on
+empathy-first philosophy and the belief that to teach is to learn, we build accessible
+technology for underserved communities.
 
 ** Philosophy
 
-can.code Research Labs operates on empathy-first design principles:
+can.code Community Labs operates on empathy-first learning principles:
 
 *** Technology Accessibility as First-Class Architecture
 - Universal design embedded in core technical decisions
@@ -18,11 +19,12 @@ can.code Research Labs operates on empathy-first design principles:
 - Multi-modal interfaces for diverse user needs
 - WCAG 2.1 AA/AAA compliance from day one
 
-*** Service-First Organizational Structure
-- Research prioritizes user thriving over profit extraction
-- Transparent limitation documentation builds trust
+*** Community-First Organizational Structure
+- Learning together prioritizes collective growth over profit extraction
+- Transparent sharing of what works and what doesn't builds trust
 - Community governance includes marginalized voices
 - Recognition-based systems honoring individual differences
+- Open-source tools as primary goal, not afterthought
 
 *** Mission: Personal Reality Into Shared Meaning
 - Success measured by user confidence and joy, not efficiency
@@ -30,13 +32,146 @@ can.code Research Labs operates on empathy-first design principles:
 - Systemic change in how society values communication diversity
 - Assistive technology for neurodivergent communities
 
-** Research Projects
+** Foundation & History
+
+can.code Community Labs evolved from a decade of full-stack development experience,
+representing an intentional progression from personal experimentation through
+professional consulting to community-centered learning and open-source contribution.
+
+*** The Lincolnix Era (2020-2022)
+
+Personal development portfolio at =lincolnix.org=, establishing core technical
+capabilities through production applications:
+
+**** Core Applications
+- *Cafe*: Communication and collaboration platform (Rails 7.1, Hotwire)
+  - Modern room-based system for organizing conversations
+  - Deployed: https://lincolnix-097787ceaaeb.herokuapp.com/
+  - Early exploration of accessible communication patterns
+
+- *Socia*: Social platform with novel "emissions" content model
+  - User authentication, comments, notifications system
+  - Deployed: https://gentle-ravine-95638.herokuapp.com/
+  - Preservation of authentic voice → PRISM concept origins
+
+- *Budgeit*: Financial tracking with prediction algorithms
+  - Recurring transactions, Chart.js visualization
+  - Data-driven decision support patterns
+
+- *Hilo*: Advanced data visualization platform
+  - Plotly integration for publication-quality charts
+  - High/low value tracking and analysis
+  - Foundation for research methodology visualization
+
+- *LogMuncher*: Log analysis with background processing
+  - Sidekiq for background job handling
+  - RPM tracking and visualization
+  - Systems thinking and pattern recognition
+
+**** Technical Foundation Established
+- Ruby on Rails mastery (Rails 6 → Rails 7)
+- PostgreSQL database design
+- Modern frontend evolution (Webpacker → Hotwire)
+- Production deployment experience (Heroku)
+- Diverse domain expertise (social, financial, communication, visualization)
+
+**** Philosophical Seeds
+- Cafe's "communications and creations" → accessibility-first focus
+- Socia's emissions model → personal voice preservation (PRISM)
+- Early experimentation with tools that honor individual expression
+
+*** Professional Evolution: BEER/beercode.net (2022-2024)
+
+Transition to professional consulting, developing production business applications:
+
+**** Key Client Work
+- *CodeBeer Client*: Holmberg Brothers (Adam & Billy)
+- *Primary Project*: EQ/Promogen livestock testing platform (Rails 7.1)
+  - Genetic testing workflow with Stripe payment integration
+  - Order-sign-pay workflow template (can-rails)
+  - JSONB-based flexible data models
+  - Production system serving real business needs
+
+**** Technical Evolution
+- Template architecture development (reusable patterns)
+- Stripe payment integration patterns
+- Rails 7.1 with modern Hotwire architecture
+- Client delivery and production support experience
+- Contact: anderson@beercode.net
+- Domains: beercode.net, beercode.org, lincolnix.org
+
+**** Professional Insights
+- Understanding real-world business requirements
+- Production system reliability and maintenance
+- Client communication and requirement translation
+- Balancing technical excellence with business pragmatism
+
+*** Community Labs Formation (2024-2025)
+
+Strategic pivot from business consulting to community-centered learning and teaching:
+
+**** Recognition & Reorientation
+- Neurodivergent lived experience informing community direction
+- Recognition that technology should serve underserved communities
+- Shift from general consulting to teaching and learning together
+- Understanding that people aren't bad at communicating—they're
+  communicating in ways that aren't always recognized
+
+**** Technology Stack Evolution
+- Rails foundation → Next.js/React for AI integration
+- PostgreSQL → MongoDB for flexible AI/ML workflows
+- Traditional web → Voice-AI interfaces (AssemblyAI)
+- Business tools → Community learning platforms (Claude AI)
+
+**** Philosophy Development
+- Under-promise, over-deliver (transparency-first methodology)
+- Accessibility as first-class architecture, not afterthought
+- Sharing what works and what doesn't with equal transparency
+- Recognition over correction paradigm shift
+- Community-centered governance models
+- To teach is to learn - collaborative knowledge building
+
+**** Community Focus
+- PRISM: Assistive communication honoring individual speech methods
+- Rubber Ducky: Learning AI capabilities together with honest sharing
+- Contributing to collective understanding through open collaboration
+- Building open-source tools for neurodivergent and marginalized communities
+- Seeking opportunities to utilize technology to assist those in need
+
+*** Continuity & Evolution
+
+**** Technical DNA
+The progression from lincolnix through BEER to can.code demonstrates:
+- Consistent full-stack excellence across eras
+- Evolution of tools while maintaining technical rigor
+- Production deployment experience informing research reliability
+- 10+ years of proven development expertise
+
+**** Philosophical Progression
+- *2020-2022*: Personal experimentation with communication platforms
+- *2022-2024*: Professional delivery and real-world application
+- *2024-2025*: Community learning and open-source contribution serving underserved communities
+- *2026*: Pivot to community-first focus - teaching and learning together
+- Continuous thread: Technology honoring individual expression
+
+**** Domain Identity Evolution
+- =lincolnix.org=: Personal brand and technical experimentation
+- =beercode.net=: Professional consulting identity
+- =can.code=: Community Labs focused on learning together and social impact
+- Progression showing intentional growth, not rebranding
+
+This evolution represents not abandonment of previous work, but integration
+of experience into community-centered learning, teaching others what we've
+learned while learning from those we serve. Every era contributed essential
+foundations to can.code's current mission.
+
+** Community Projects
 
 *** PRISM - Empathy-First Communication Assistance
 
 Personal Reality Into Shared Meaning: Assistive communication platform born from
 neurodivergent lived experience, helping people translate their authentic voice
-across different contexts.
+across different contexts. An open-source tool we're building and learning from together.
 
 **** Three-Layer Philosophy
 1. *Technology:* Perspective Refining Intelligent Speech Module
@@ -62,31 +197,31 @@ Bridges communication gaps through recognition and translation rather than
 correction and transformation. Shifts paradigm from "fixing" communication
 to honoring individual speech methods.
 
-*** Rubber Ducky - Accessible Voice-AI Research Platform
+*** Rubber Ducky - Accessible Voice-AI Learning Platform
 
-Experimental research platform investigating voice-AI problem-solving effectiveness
-through systematic experimentation with transparent methodology.
+Community learning platform where we explore voice-AI problem-solving together,
+sharing what works and what doesn't with full transparency.
 
-**** Research Findings (126+ Implementations)
+**** What We've Learned Together (126+ Implementations)
 
-***** Documented Success Patterns (73% Success Rate)
+***** Patterns That Work Well (73% Success Rate)
 - Structured problem-solving sessions with clear context
 - Technical debugging conversations with specific goals
 - Brainstorming within focused domains
 - Interview preparation with defined scenarios
 
-***** Identified Limitations (Transparent Documentation)
+***** Honest Challenges We've Found
 - Context switching failures in longer conversations
 - Degraded performance beyond 45-minute sessions
 - Topic drift in unstructured open-ended discussions
 - Memory constraints in multi-topic sessions
 
-**** Research Methodology
-- Systematic session recording and analysis
-- User outcome tracking and validation
-- Limitation documentation alongside capabilities
-- Academic rigor over marketing claims
-- Reproducible methodology for research community
+**** Our Learning Approach
+- Systematic session recording and shared analysis
+- User outcome tracking and collective validation
+- Sharing limitations as openly as capabilities
+- Honesty over hype - transparency in all findings
+- Open methodology for community participation and contribution
 
 **** Accessibility-First Architecture
 - Voice-first interface for diverse communication needs
@@ -103,30 +238,34 @@ through systematic experimentation with transparent methodology.
 - WebSocket technology
 - Mobile-first design
 
-**** Research Contribution
-This research contributes to understanding AI system boundaries and informing
-future assistive technology development. Results shared openly to advance
-the field through honest capability assessment.
+**** Community Contribution
+What we learn together helps everyone understand AI capabilities and limitations.
+We share all findings openly so the whole community can benefit from our collective
+experience. This is learning in public - teaching through doing, learning through
+teaching.
 
-** Research Methodology
+** Our Learning Approach
 
-*** Transparent Limitation Documentation
-- Document what doesn't work as rigorously as what does
-- Honest capability assessment over marketing claims
-- Failure modes analyzed and published
-- Success rate calculated with reproducible methodology
+*** Transparent Sharing Culture
+- Share what doesn't work as openly as what does
+- Honest assessment over marketing hype
+- Failure modes documented and discussed openly
+- Success rates shared with complete transparency
+- To teach is to learn - we learn by sharing our experiences
 
-*** Academic Rigor
-- Systematic experimentation with controlled variables
-- Reproducible results and methodology documentation
-- Peer-review-ready research processes
-- Contributing to broader research community understanding
+*** Rigorous Learning Together
+- Systematic exploration with shared documentation
+- Reproducible results anyone can verify
+- Open processes the whole community can participate in
+- Contributing to collective understanding through transparency
 
 *** Community-Centered Development
 - Marginalized voices in leadership roles
-- User thriving prioritized over productivity metrics
+- Community thriving prioritized over productivity metrics
 - Open collaboration with underserved communities
 - Recognition-based systems vs correction-based approaches
+- Open-source as primary goal, not afterthought
+- Seeking opportunities to help those in need through technology
 
 ** Technology Standards
 
@@ -156,55 +295,60 @@ the field through honest capability assessment.
 
 #+BEGIN_EXAMPLE
 CAN-CODE-BIZ/
-├── index.html              # Research Labs homepage
+├── index.html              # Community Labs homepage
 ├── styles.css              # Accessible styles with WCAG compliance
 ├── README.org              # Project documentation (this file)
-├── research/               # Research findings and methodology
+├── shared-learnings/       # What we've learned together
 └── accessibility/          # Accessibility compliance documentation
 #+END_EXAMPLE
 
 ** Contact Information
 
-- Research Inquiries: research@can.code
+- Learning Together: learn@can.code
 - Collaboration: collaborate@can.code
 - Support: support@can.code
 - General: hello@can.code
 
 ** License
 
-Copyright © 2024-2025 can.code Research Labs. All rights reserved.
+Copyright © 2024-2026 can.code Community Labs. All rights reserved.
 
-Research findings and methodology documentation available for academic use.
+Shared learnings and methodology documentation available for community use.
+Open-source contributions released under appropriate licenses for community benefit.
 
 ** Development Principles
 
-This organization was built following empathy-first principles:
+This organization was built following empathy-first community principles:
 
 *** Technical Excellence
 - Accessibility as core requirement
 - Universal design from day one
 - Performance optimization for assistive technologies
 - Progressive enhancement
+- Open-source as primary goal
 
-*** Research Integrity
-- Transparent methodology
+*** Learning Together
+- Transparent sharing of what works and what doesn't
 - Honest limitation documentation
-- Reproducible results
-- Academic rigor over marketing claims
+- Reproducible results anyone can verify
+- Transparency over marketing hype
+- To teach is to learn - we grow together
 
 *** Social Impact
 - Technology serving underserved communities
 - Human flourishing over productivity optimization
 - Recognition honoring individual differences
 - Community-centered governance
+- Seeking opportunities to help those in need
 
-** Future Research Directions
+** What We're Learning Next
 
 - Expanding PRISM to additional communication contexts
-- Investigating AI system boundaries in assistive technology
+- Exploring AI capabilities and limitations together in assistive technology
 - Developing new accessibility-first architecture patterns
 - Building community-centered governance models
-- Contributing findings to broader research community
+- Sharing findings openly with the broader community
+- Finding new opportunities to use technology to help those in need
 
 ** Acknowledgments
 

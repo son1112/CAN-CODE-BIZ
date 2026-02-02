@@ -66,6 +66,14 @@ This specification applies to all specialized agents including but not limited t
 - Create and follow systematic debugging approaches
 - Document patterns and solutions for future reference
 
+*** Community-Oriented Development
+- Open-source as primary goal, not afterthought
+- Document for learning and teaching, not just reference
+- Share what doesn't work as openly as what does
+- Build with accessibility and inclusion from day one
+- Seek opportunities to help underserved communities
+- Remember: to teach is to learn - we grow through sharing
+
 ** User Experience Standards
 *** Communication Style
 - Be concise and direct (maximum 4 lines unless detail requested)
@@ -112,6 +120,10 @@ This specification applies to all specialized agents including but not limited t
 - Follow 80-column rule for org files
 - Include relevant screenshots in instructional content
 - Update documentation alongside code changes
+- Write documentation as teaching material, not just reference
+- Include "what doesn't work" alongside "what works"
+- Make documentation accessible for community learning
+- Document for contribution, not just consumption
 
 *** Testing Strategy
 - Use appropriate testing frameworks per project
