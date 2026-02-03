@@ -1,0 +1,541 @@
+#+TITLE: Claude Code Agents - Project Tracker Backlog Integration Guide
+#+SUBTITLE: Comprehensive guide for adapting backlog files for Project Tracker compatibility
+#+AUTHOR: Project Tracker Development Team
+#+DATE: 2025-09-09
+#+STARTUP: overview
+#+FILETAGS: claude-code agents backlog integration guide documentation
+
+* Overview
+
+This guide provides Claude Code agents working in other applications with comprehensive 
+instructions for creating and adapting backlog files that integrate seamlessly with 
+the Project Tracker application's AI-powered directory analysis system.
+
+** Target Audience
+- Claude Code agents working on software projects
+- Development teams using Project Tracker for project management
+- AI assistants managing project backlogs and task tracking
+- Developers integrating Project Tracker into existing workflows
+
+** Integration Benefits
+- Automatic task detection and counting in Project Tracker UI
+- AI-powered project analysis with backlog insights
+- Cross-project task visibility and progress tracking
+- Standardized task management across development projects
+
+* Supported File Formats and Detection
+
+** File Naming Conventions
+Project Tracker automatically discovers backlog files with these names:
+- =BACKLOG.org= (recommended primary format)
+- =TODO.org=
+- =BACKLOG.md=
+- =TODO.md=
+- =TODO.txt=
+- =BACKLOG.txt=
+- =tasks.org=, =tasks.md=, =tasks.txt=
+
+** File Format Priority
+1. **Org-mode (.org)** - Primary format with full feature support
+2. **Markdown (.md)** - Good compatibility with checkbox syntax
+3. **Plain text (.txt)** - Basic support for simple checkbox patterns
+
+* Org-Mode Format (Recommended)
+
+** Basic Task Structure
+#+BEGIN_SRC org
+* Project Tasks
+** TODO Implement user authentication
+   DEADLINE: <2025-09-15>
+   :PROPERTIES:
+   :EFFORT: 4h
+   :PRIORITY: A
+   :END:
+   
+** IN-PROGRESS Design database schema
+   SCHEDULED: <2025-09-10>
+   
+** DONE Setup development environment
+   CLOSED: [2025-09-08]
+#+END_SRC
+
+** Supported Task Statuses
+
+*** Active Tasks (counted in todoCount)
+- =TODO= - Standard pending task
+- =IN-PROGRESS= - Currently being worked on
+
+*** Completed Tasks (counted in completedCount)  
+- =DONE= - Successfully completed task
+
+*** Other Statuses (tracked but not counted)
+- =CANCELLED= - Task cancelled or no longer needed
+
+** Task Hierarchy
+Any heading level is supported (*, **, ***, etc.):
+#+BEGIN_SRC org
+* Epic: User Management
+** TODO User registration system
+*** TODO Email validation
+*** TODO Password hashing
+*** DONE Basic form creation
+** TODO User login system
+*** IN-PROGRESS OAuth integration
+*** TODO Session management
+#+END_SRC
+
+** Advanced Org-Mode Features
+#+BEGIN_SRC org
+** TODO Implement payment processing
+   DEADLINE: <2025-09-20>
+   SCHEDULED: <2025-09-15>
+   :PROPERTIES:
+   :EFFORT: 8h
+   :PRIORITY: A+
+   :CATEGORY: Backend
+   :ASSIGNED: john.doe
+   :END:
+   
+   Implement Stripe payment integration with:
+   - Credit card processing
+   - Subscription management  
+   - Webhook handling
+   
+   Dependencies: User authentication system
+#+END_SRC
+
+* Markdown Format
+
+** Basic Checkbox Structure
+#+BEGIN_SRC markdown
+# Project Backlog
+
+## Core Features
+- [ ] Implement user authentication     # Active task
+- [x] Setup development environment     # Completed task
+- [ ] Design database schema            # Active task
+
+## Bug Fixes  
+- [x] Fix login redirect issue          # Completed task
+- [ ] Resolve CSS styling problems      # Active task
+#+END_SRC
+
+** Hierarchical Tasks
+#+BEGIN_SRC markdown
+# Development Roadmap
+
+## Phase 1: Foundation
+- [ ] Setup project structure
+  - [x] Initialize repository
+  - [ ] Configure build system
+  - [ ] Setup testing framework
+- [x] Define project requirements
+
+## Phase 2: Core Development
+- [ ] User management system
+  - [ ] User registration
+  - [ ] User authentication
+  - [ ] Password reset functionality
+#+END_SRC
+
+** Task Categories and Organization
+#+BEGIN_SRC markdown
+# Project Tasks by Priority
+
+## High Priority (Must Have)
+- [ ] Critical security fixes
+- [ ] User authentication system
+- [x] Database setup
+
+## Medium Priority (Should Have)
+- [ ] Email notifications
+- [ ] User profile management
+
+## Low Priority (Nice to Have)
+- [ ] Dark mode support  
+- [ ] Advanced analytics
+#+END_SRC
+
+* Plain Text Format
+
+** Simple Checkbox Structure
+#+BEGIN_SRC text
+Project Tasks:
+- [ ] Implement user authentication
+- [x] Setup development environment  
+- [ ] Design database schema
+- [x] Create project documentation
+- [ ] Setup CI/CD pipeline
+
+Bug Fixes:
+- [x] Fix login redirect issue
+- [ ] Resolve CSS styling problems
+- [ ] Update dependencies
+#+END_SRC
+
+* Best Practices for Claude Code Agents
+
+** File Naming Strategy
+1. **Primary backlog**: Always use =BACKLOG.org= as the main project backlog
+2. **Specialized lists**: Use descriptive names like =BUGS.org=, =FEATURES.org=
+3. **Sprint planning**: Consider =SPRINT-N.org= for specific sprint backlogs
+
+** Task Organization Hierarchy
+#+BEGIN_SRC org
+* Project Overview
+Brief description of project goals and status
+
+* High Priority Features (Sprint 1)
+** TODO Critical Feature A
+   DEADLINE: <2025-09-15>
+   :PROPERTIES:
+   :PRIORITY: A+
+   :END:
+
+** TODO Important Feature B  
+   DEADLINE: <2025-09-20>
+   :PROPERTIES:
+   :PRIORITY: A
+   :END:
+
+* Medium Priority Features (Sprint 2)
+** TODO Nice-to-have Feature C
+   :PROPERTIES:
+   :PRIORITY: B
+   :END:
+
+* Technical Debt and Maintenance
+** TODO Code refactoring
+** TODO Update dependencies
+** TODO Performance optimization
+
+* Completed Features
+** DONE Foundation setup
+   CLOSED: [2025-09-01]
+** DONE Initial implementation  
+   CLOSED: [2025-09-05]
+#+END_SRC
+
+** Task Description Guidelines
+1. **Clear titles**: Use descriptive, actionable task titles
+2. **Detailed descriptions**: Include implementation notes in task body
+3. **Dependencies**: Note task dependencies and blockers
+4. **Acceptance criteria**: Define what constitutes task completion
+
+** Effort and Time Tracking
+#+BEGIN_SRC org
+** TODO Implement user dashboard
+   DEADLINE: <2025-09-25>
+   :PROPERTIES:
+   :EFFORT: 12h
+   :PRIORITY: A
+   :CATEGORY: Frontend
+   :END:
+   
+   Create user dashboard with:
+   - User profile display
+   - Activity timeline
+   - Settings panel
+   
+   Estimated breakdown:
+   - UI design: 3h
+   - Component implementation: 6h  
+   - Testing: 2h
+   - Documentation: 1h
+#+END_SRC
+
+** Status Transition Guidelines
+#+BEGIN_SRC org
+** TODO → IN-PROGRESS Task name
+   When starting work on a task
+
+** IN-PROGRESS → DONE Task name  
+   CLOSED: [2025-09-09]
+   When completing a task
+
+** TODO → CANCELLED Task name
+   When task is no longer needed
+#+END_SRC
+
+* Integration with Project Tracker Analysis
+
+** AI Analysis Enhancement
+When Project Tracker analyzes your directory, backlog files enhance the analysis:
+- **Task count visibility**: Shows active vs completed work
+- **Project health indicators**: Completion percentages and velocity
+- **Progress tracking**: Historical task completion patterns
+- **Project insights**: AI recommendations based on backlog patterns
+
+** Directory Structure Recommendations
+#+BEGIN_EXAMPLE
+project-root/
+├── BACKLOG.org              # Main project backlog
+├── src/                     # Source code
+├── docs/                    # Documentation
+│   ├── FEATURES.org         # Detailed feature specifications
+│   └── BUGS.org             # Known issues and fixes
+├── tests/                   # Test files
+└── scripts/
+    └── DEPLOYMENT.org       # Deployment tasks and checklists
+#+END_EXAMPLE
+
+** Multi-File Backlog Strategy
+For large projects, organize backlogs by area:
+#+BEGIN_SRC org
+* Main BACKLOG.org - Project overview and high-level tasks
+* FEATURES.org - Detailed feature development tasks
+* BUGS.org - Bug fixes and issue resolution
+* MAINTENANCE.org - Technical debt and maintenance tasks
+* DEPLOYMENT.org - Release and deployment checklists
+#+END_SRC
+
+* Claude Code Agent Implementation Examples
+
+** Creating a New Backlog File
+#+BEGIN_SRC org
+# When Claude Code agent creates a new project backlog
+#+TITLE: [Project Name] - Development Backlog
+#+AUTHOR: Claude Code Assistant
+#+DATE: [Current Date]
+
+* Project Overview
+[Brief project description and goals]
+
+* Current Sprint - High Priority
+** TODO [Task 1]
+   DEADLINE: <[Date]>
+   :PROPERTIES:
+   :PRIORITY: A
+   :EFFORT: [Estimate]
+   :END:
+   
+   [Detailed task description]
+
+** TODO [Task 2]
+   [Additional tasks...]
+
+* Next Sprint - Medium Priority
+** TODO [Future task 1]
+** TODO [Future task 2]
+
+* Completed Work
+** DONE [Completed task 1]  
+   CLOSED: [Date]
+** DONE [Completed task 2]
+   CLOSED: [Date]
+#+END_SRC
+
+** Converting Existing Task Lists
+#+BEGIN_SRC org
+# When adapting existing project documentation
+
+# Original format (various sources)
+- Need to implement user auth
+- Database schema is needed
+- Tests should be written
+- ✓ Project setup is complete
+
+# Converted to Project Tracker compatible format
+* Project Tasks
+** TODO Implement user authentication  
+   :PROPERTIES:
+   :PRIORITY: A
+   :EFFORT: 6h
+   :END:
+   
+** TODO Design and implement database schema
+   :PROPERTIES:
+   :PRIORITY: A
+   :EFFORT: 4h
+   :END:
+   
+** TODO Write comprehensive test suite
+   :PROPERTIES:
+   :PRIORITY: B
+   :EFFORT: 8h
+   :END:
+   
+** DONE Complete project setup and initialization
+   CLOSED: [2025-09-09]
+#+END_SRC
+
+** Updating Task Status
+#+BEGIN_SRC org
+# When updating task progress
+** IN-PROGRESS Implement user authentication
+   Started: [2025-09-09]
+   
+   Progress notes:
+   - Set up authentication middleware ✓
+   - Implemented JWT token generation ✓
+   - Working on password hashing
+   - TODO: Add password reset functionality
+   
+   Estimated completion: 2025-09-12
+#+END_SRC
+
+* Integration Testing and Validation
+
+** Validation Checklist
+Before committing backlog files, verify:
+- [ ] File uses supported naming convention
+- [ ] Tasks use proper status keywords (TODO, IN-PROGRESS, DONE)
+- [ ] File is placed in project root or discoverable location
+- [ ] Syntax follows format-specific conventions
+- [ ] Task titles are descriptive and actionable
+
+** Testing with Project Tracker
+1. **Add directory**: Add your project directory to Project Tracker
+2. **Verify detection**: Confirm backlog files are discovered
+3. **Check counts**: Verify task counts match expectations
+4. **Review analysis**: Examine AI analysis results for backlog insights
+
+** Common Issues and Solutions
+
+*** Tasks Not Detected
+- Verify file naming matches supported conventions
+- Check task status keywords are exact (case-sensitive)
+- Ensure proper syntax for chosen format
+
+*** Incorrect Counts
+- Review status keywords for typos
+- Check for unsupported status variations
+- Verify format-specific syntax requirements
+
+*** File Not Found  
+- Place backlog files in project root directory
+- Use standard naming conventions
+- Check file permissions and accessibility
+
+* Advanced Integration Patterns
+
+** Cross-Project Dependencies
+#+BEGIN_SRC org
+** TODO Implement shared authentication service
+   :PROPERTIES:
+   :PRIORITY: A
+   :DEPENDENCIES: user-management-service
+   :BLOCKS: mobile-app, web-dashboard
+   :END:
+   
+   This task depends on completion of user-management-service
+   and blocks mobile-app and web-dashboard development.
+#+END_SRC
+
+** Sprint Planning Integration
+#+BEGIN_SRC org
+* Sprint 3 (2025-09-15 to 2025-09-29)
+** TODO Feature A implementation
+   SCHEDULED: <2025-09-15>
+   DEADLINE: <2025-09-22>
+   
+** TODO Feature B testing
+   SCHEDULED: <2025-09-20>
+   DEADLINE: <2025-09-28>
+
+* Sprint Backlog (Future)
+** TODO Feature C design
+** TODO Feature D planning
+#+END_SRC
+
+** Release Management
+#+BEGIN_SRC org
+* Release 2.0 (Target: 2025-10-01)
+** DONE Core feature development
+   CLOSED: [2025-09-15]
+** IN-PROGRESS Integration testing
+** TODO Performance optimization
+** TODO Documentation updates
+** TODO Release preparation
+
+* Post-Release Maintenance  
+** TODO Monitor production metrics
+** TODO Address user feedback
+** TODO Plan version 2.1 features
+#+END_SRC
+
+* Automation and Workflow Integration
+
+** Git Integration Patterns
+#+BEGIN_SRC org
+** TODO Implement feature X
+   :PROPERTIES:
+   :BRANCH: feature/implement-x
+   :PR: https://github.com/user/repo/pull/123
+   :END:
+   
+   Linked to feature branch and pull request for
+   automatic status tracking integration.
+#+END_SRC
+
+** CI/CD Pipeline Integration
+#+BEGIN_SRC org
+** TODO Deploy to staging environment
+   :PROPERTIES:
+   :PIPELINE: staging-deployment
+   :TRIGGER: after-tests-pass
+   :END:
+   
+** TODO Production deployment
+   :PROPERTIES:
+   :DEPENDENCIES: staging-validation
+   :APPROVAL: required
+   :END:
+#+END_SRC
+
+* Troubleshooting Guide
+
+** Common File Format Issues
+| Issue | Solution |
+|-------|----------|
+| Tasks not counting | Check status keywords: TODO, IN-PROGRESS, DONE |
+| File not detected | Use supported filename: BACKLOG.org, TODO.md |
+| Org syntax errors | Verify heading levels with * ** *** |
+| Markdown not parsing | Ensure checkbox format: - [ ] and - [x] |
+
+** Performance Considerations
+- Keep individual backlog files under 1000 lines
+- Use multiple files for large projects (BACKLOG.org, FEATURES.org, etc.)
+- Place files in project root for fastest detection
+- Avoid deeply nested directory structures for backlog files
+
+** Directory Structure Optimization
+#+BEGIN_EXAMPLE
+✓ Good: project-root/BACKLOG.org
+✓ Good: project-root/docs/FEATURES.org  
+✗ Avoid: project-root/src/lib/internal/tasks.org
+✗ Avoid: very-deeply-nested/path/TODO.md
+#+END_EXAMPLE
+
+* Best Practices Summary
+
+** For Claude Code Agents
+1. **Always create BACKLOG.org** as the primary project backlog
+2. **Use consistent status keywords**: TODO, IN-PROGRESS, DONE
+3. **Include effort estimates** and deadlines when possible
+4. **Organize hierarchically** with clear project structure
+5. **Update task status** as work progresses
+6. **Add descriptive context** in task bodies
+7. **Test integration** by adding directory to Project Tracker
+
+** For Development Teams  
+1. **Standardize on org-mode format** for maximum feature support
+2. **Establish naming conventions** across projects
+3. **Regular backlog maintenance** and status updates
+4. **Use Project Tracker analysis** for project health insights
+5. **Integrate backlog updates** into development workflow
+6. **Document project-specific conventions** in team guidelines
+
+** For Project Management
+1. **Monitor task completion trends** through Project Tracker
+2. **Use AI analysis insights** for project planning
+3. **Track velocity and bottlenecks** via task status patterns
+4. **Maintain consistent backlog quality** across projects
+5. **Leverage cross-project visibility** for resource planning
+
+---
+
+**Document Version**: 1.0
+**Last Updated**: 2025-09-09  
+**Compatibility**: Project Tracker v2.0+
+**Contact**: See Project Tracker documentation for support

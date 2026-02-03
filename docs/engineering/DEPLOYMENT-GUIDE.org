@@ -1,0 +1,566 @@
+#+TITLE: Project Universe Dynamic Integration - Deployment Guide
+#+DATE: [2025-09-09 Mon]
+#+AUTHOR: CAN-CODE-BIZ Development Team
+#+DESCRIPTION: Complete deployment and troubleshooting guide for dynamic content integration
+
+* Deployment Overview
+
+** System Architecture
+The Project Universe dynamic content integration transforms the CAN-CODE-BIZ marketing
+site from static claims to live portfolio proof through a secure, progressive enhancement
+architecture with comprehensive fallback strategies.
+
+** Components
+- **GitHub Actions Pipeline**: Automated daily data fetching and updates
+- **JavaScript Integration Layer**: Progressive enhancement with fallback support
+- **Performance Monitoring**: Core Web Vitals and portfolio-specific metrics tracking
+- **Analytics Integration**: Comprehensive user engagement and conversion tracking
+- **Security Layer**: Data sanitization and exposure prevention
+
+* Pre-Deployment Requirements
+
+** Security Validation (MANDATORY)
+*** CRITICAL: Security Review Checklist
+- [ ] **Security guidelines reviewed**: PROJECT-UNIVERSE-SECURITY-GUIDELINES.org
+- [ ] **Data schema approved**: PROJECT-UNIVERSE-MARKETING-SCHEMA.org
+- [ ] **No sensitive data exposure**: All API responses contain only aggregated metrics
+- [ ] **CORS restrictions configured**: Only can-code.dev and localhost domains allowed
+- [ ] **Rate limiting implemented**: 100 requests per 15-minute window
+- [ ] **Data sanitization pipeline tested**: Security patterns filtered out
+
+** Performance Baseline
+*** Required Performance Scores (Pre-deployment)
+- **Lighthouse Performance**: > 90
+- **Core Web Vitals**: All "Good" ratings
+- **First Contentful Paint**: < 1.8s
+- **Largest Contentful Paint**: < 2.5s
+- **Cumulative Layout Shift**: < 0.1
+
+** Dependencies Verification
+- [ ] **Node.js packages installed**: axios, date-fns for GitHub Actions
+- [ ] **JavaScript modules loaded**: All integration scripts accessible
+- [ ] **Data directory created**: data/portfolio.json with fallback data
+- [ ] **GitHub Actions workflow**: .github/workflows/update-portfolio.yml configured
+
+* Deployment Process
+
+** Phase 1: GitHub Actions Setup
+
+*** Step 1: Repository Configuration
+#+BEGIN_SRC bash
+# Verify GitHub Actions is enabled for repository
+gh api repos/son1112/CAN-CODE-BIZ/actions/permissions
+
+# Check workflow file syntax
+gh workflow list
+
+# Validate workflow configuration
+gh workflow run update-portfolio.yml --ref main
+#+END_SRC
+
+*** Step 2: Environment Variables (If Required)
+#+BEGIN_SRC bash
+# Set Project Universe URL if different from default
+gh secret set PROJECT_UNIVERSE_URL --body "http://localhost:3004"
+
+# Verify secrets are configured
+gh secret list
+#+END_SRC
+
+*** Step 3: Initial Pipeline Test
+#+BEGIN_SRC bash
+# Trigger manual workflow run
+gh workflow run update-portfolio.yml
+
+# Monitor execution
+gh run list --workflow=update-portfolio.yml --limit=1
+
+# Check for successful completion
+gh run view [RUN_ID] --log
+#+END_SRC
+
+** Phase 2: Frontend Integration Deployment
+
+*** Step 1: JavaScript Module Integration
+Verify all integration scripts are properly loaded:
+#+BEGIN_SRC html
+<!-- Critical loading order in index.html -->
+<script defer src="./js/performance-monitor.js"></script>
+<script defer src="./js/analytics-integration.js"></script>
+<script defer src="./js/portfolio-data-loader.js"></script>
+<script defer src="./js/portfolio-visualizations.js"></script>
+<script defer src="./js/portfolio-integration.js"></script>
+#+END_SRC
+
+*** Step 2: Integration Point Validation
+Verify all dynamic content integration points are configured:
+#+BEGIN_SRC javascript
+// Browser console test
+document.querySelectorAll('[data-portfolio]').forEach(el => 
+  console.log(el.dataset.portfolio, el.textContent)
+);
+
+// Should show 15+ integration points with fallback values
+#+END_SRC
+
+*** Step 3: Progressive Enhancement Testing
+#+BEGIN_SRC bash
+# Test with JavaScript disabled
+# Site should display static fallback content
+
+# Test with slow network
+# Loading states should be visible
+
+# Test with API unavailable
+# Fallback data should be used gracefully
+#+END_SRC
+
+** Phase 3: Performance and Analytics Setup
+
+*** Step 1: Performance Monitoring Activation
+#+BEGIN_SRC javascript
+// Verify performance monitoring is active
+if (window.performanceMonitor) {
+  console.log('Performance monitoring status:', 
+              window.performanceMonitor.getStatus());
+} else {
+  console.error('Performance monitoring not initialized');
+}
+#+END_SRC
+
+*** Step 2: Analytics Integration Verification
+#+BEGIN_SRC javascript
+// Verify analytics integration
+if (window.analyticsIntegration) {
+  console.log('Analytics status:', 
+              window.analyticsIntegration.getSessionData());
+} else {
+  console.error('Analytics integration not initialized');
+}
+#+END_SRC
+
+*** Step 3: Core Web Vitals Baseline
+#+BEGIN_SRC bash
+# Use Lighthouse CLI for baseline measurement
+npx lighthouse https://can-code.dev --output=json --quiet
+
+# Target scores for production:
+# Performance: > 90
+# Accessibility: > 95
+# Best Practices: > 90
+# SEO: > 95
+#+END_SRC
+
+* Post-Deployment Verification
+
+** Immediate Checks (First 15 minutes)
+
+*** GitHub Actions Pipeline
+#+BEGIN_SRC bash
+# Verify workflow completed successfully
+gh run list --workflow=update-portfolio.yml --limit=1 --json
+
+# Check for any error notifications
+gh run view [LATEST_RUN_ID] --log | grep -i error
+
+# Verify data file was updated
+curl https://can-code.dev/data/portfolio.json | jq '.timestamp'
+#+END_SRC
+
+*** Frontend Integration
+#+BEGIN_SRC javascript
+// Browser console verification
+// 1. Check portfolio integration status
+portfolioIntegration.getStatus()
+
+// 2. Verify data loaded
+portfolioIntegration.getCurrentData()
+
+// 3. Check integration points updated
+document.querySelectorAll('[data-portfolio]').length
+
+// 4. Test visualizations rendered
+Object.keys(portfolioIntegration.visualizations?.charts || {})
+#+END_SRC
+
+*** Security Validation
+#+BEGIN_SRC bash
+# Verify no sensitive data exposed
+curl https://can-code.dev/data/portfolio.json | \
+  grep -E "(project[_-]?name|client|/Users/|\.git)" || echo "SECURE"
+
+# Test CORS restrictions
+curl -H "Origin: https://malicious-site.com" \
+     https://can-code.dev/data/portfolio.json
+
+# Verify rate limiting (should trigger after multiple requests)
+for i in {1..15}; do 
+  curl -w "%{http_code}\n" https://can-code.dev/data/portfolio.json -o /dev/null
+done
+#+END_SRC
+
+** Extended Verification (First Hour)
+
+*** Performance Monitoring
+- Monitor Core Web Vitals scores in browser DevTools
+- Check for JavaScript errors in console
+- Verify loading times under various network conditions
+- Test mobile responsiveness across device types
+
+*** Analytics Tracking
+- Verify events are being tracked in Google Analytics
+- Check custom dimensions are populating
+- Monitor conversion tracking setup
+- Test privacy controls (Do Not Track, ad blockers)
+
+*** User Experience Testing
+- Test with screen readers for accessibility
+- Verify keyboard navigation works
+- Check color contrast ratios
+- Test in different browsers (Chrome, Firefox, Safari, Edge)
+
+* Monitoring and Maintenance
+
+** Daily Automated Monitoring
+
+*** GitHub Actions Health Check
+The workflow runs daily at 6 AM UTC. Monitor for:
+- Successful execution notifications
+- Data freshness (timestamp updates)
+- Error reports in workflow logs
+- Fallback data usage patterns
+
+*** Performance Metrics Tracking
+Key metrics to monitor daily:
+- **Core Web Vitals scores**: Maintain "Good" ratings
+- **Page load times**: < 2 seconds average
+- **API response times**: < 200ms average
+- **Error rates**: < 1% of total requests
+
+*** Security Monitoring
+Daily security checks:
+- No forbidden data patterns in API responses
+- CORS policy violations (should be blocked)
+- Unusual traffic patterns or potential attacks
+- Rate limiting effectiveness
+
+** Weekly Review Process
+
+*** Performance Analysis
+#+BEGIN_SRC bash
+# Generate weekly performance report
+# This would typically be automated
+lighthouse-batch --sites https://can-code.dev --html --store
+
+# Check performance trends
+curl https://can-code.dev/api/performance-report || \
+  echo "Manual performance review required"
+#+END_SRC
+
+*** Analytics Review
+- Engagement metrics with dynamic content
+- Conversion rate improvements from live data
+- User behavior patterns with visualizations
+- Popular integration points and interactions
+
+*** Security Assessment
+- Review access logs for suspicious patterns
+- Verify no data exposure incidents
+- Update security guidelines if needed
+- Test backup and recovery procedures
+
+** Monthly Optimization
+
+*** Performance Optimization
+- Review and optimize JavaScript bundles
+- Update image formats and compression
+- Optimize CSS delivery and critical rendering path
+- Review and update service worker caching strategies
+
+*** Content Strategy Updates
+- Analyze which dynamic metrics drive most engagement
+- Update static fallback content if needed
+- Review and improve visualization designs
+- Optimize conversion funnel based on analytics
+
+* Troubleshooting Guide
+
+** Common Issues and Solutions
+
+*** GitHub Actions Pipeline Failures
+
+**** Issue: Workflow fails with "Project Universe unavailable"
+#+BEGIN_SRC bash
+# Check Project Universe service status
+curl http://localhost:3004/api/health || echo "Service down"
+
+# Verify network connectivity from GitHub Actions
+# (This would be done by examining workflow logs)
+
+# Solution: Workflow should gracefully handle this with fallback data
+# If persistent, check Project Universe service health
+#+END_SRC
+
+**** Issue: Portfolio data not updating
+#+BEGIN_SRC bash
+# Check last successful workflow run
+gh run list --workflow=update-portfolio.yml --status=success --limit=1
+
+# Check for changes in data
+git log --oneline -- data/portfolio.json | head -5
+
+# Manually trigger workflow
+gh workflow run update-portfolio.yml
+
+# Solution: Usually resolves with manual trigger or next scheduled run
+#+END_SRC
+
+**** Issue: Workflow commits failing
+#+BEGIN_SRC bash
+# Check repository permissions
+gh api repos/son1112/CAN-CODE-BIZ/actions/permissions
+
+# Verify GITHUB_TOKEN permissions
+# Solution: Ensure workflow has write permissions to repository
+#+END_SRC
+
+*** Frontend Integration Issues
+
+**** Issue: Dynamic content not loading
+#+BEGIN_SRC javascript
+// Debug portfolio integration
+console.log('Portfolio Integration Status:', portfolioIntegration?.getStatus());
+
+// Check data availability
+console.log('Portfolio Data:', portfolioIntegration?.getCurrentData());
+
+// Check network requests
+// Open DevTools > Network > Filter by "portfolio"
+#+END_SRC
+
+**Solution Steps:**
+1. Check browser console for JavaScript errors
+2. Verify data/portfolio.json is accessible
+3. Check network connectivity
+4. Verify integration points exist in HTML
+5. Test with browser cache cleared
+
+**** Issue: Visualizations not rendering
+#+BEGIN_SRC javascript
+// Check visualization status
+console.log('Visualizations:', window.portfolioIntegration?.visualizations);
+
+// Check chart containers exist
+document.querySelectorAll('[data-chart]').length
+
+// Check for CSS loading issues
+getComputedStyle(document.querySelector('[data-chart]')).display
+#+END_SRC
+
+**Solution Steps:**
+1. Verify chart containers exist in HTML
+2. Check CSS styles are loaded
+3. Verify visualization data is available
+4. Check browser compatibility
+5. Test with different viewport sizes
+
+**** Issue: Performance degradation
+#+BEGIN_SRC javascript
+// Check performance metrics
+console.log('Performance:', window.performanceMonitor?.getCurrentMetrics());
+
+// Check resource loading
+performance.getEntriesByType('resource').filter(r => r.duration > 1000)
+
+// Check long tasks
+performance.getEntriesByType('longtask')
+#+END_SRC
+
+**Solution Steps:**
+1. Analyze Core Web Vitals reports
+2. Check for JavaScript bundle size increases
+3. Verify image optimization
+4. Review third-party script loading
+5. Test network throttling scenarios
+
+*** Security Issues
+
+**** Issue: Sensitive data exposure detected
+**CRITICAL - IMMEDIATE RESPONSE REQUIRED**
+
+#+BEGIN_SRC bash
+# STEP 1: Immediately disable public API endpoint
+# (This would require server-side configuration)
+
+# STEP 2: Verify scope of exposure
+curl https://can-code.dev/data/portfolio.json | \
+  grep -E "(project[_-]?name|client|/Users/|\.git|password|secret)"
+
+# STEP 3: Check recent commits for data issues
+git log --oneline -10 -- data/portfolio.json
+
+# STEP 4: Review workflow logs for sanitization failures
+gh run list --workflow=update-portfolio.yml --limit=5
+#+END_SRC
+
+**Incident Response Procedure:**
+1. **Immediate**: Disable data endpoint or revert to static fallback
+2. **Within 5 minutes**: Assess scope of data exposure
+3. **Within 15 minutes**: Fix data sanitization issue
+4. **Within 30 minutes**: Re-enable with verified secure data
+5. **Within 2 hours**: Complete incident report and prevention measures
+
+**** Issue: CORS policy violations
+#+BEGIN_SRC bash
+# Check for cross-origin request attempts
+# This would typically be in server logs
+grep "CORS" /var/log/nginx/access.log || echo "Check browser DevTools"
+
+# Solution: Verify CORS configuration allows only authorized domains
+#+END_SRC
+
+**** Issue: Rate limiting not working
+#+BEGIN_SRC bash
+# Test rate limiting
+for i in {1..25}; do 
+  curl -w "%{http_code}," https://can-code.dev/data/portfolio.json -o /dev/null
+done
+
+# Should show increasing 429 responses after 15-20 requests
+#+END_SRC
+
+*** Performance Issues
+
+**** Issue: Slow Core Web Vitals
+#+BEGIN_SRC bash
+# Generate performance report
+npx lighthouse https://can-code.dev --view
+
+# Check specific metrics
+npx lighthouse https://can-code.dev --only-categories=performance --output=json
+#+END_SRC
+
+**Optimization Steps:**
+1. **LCP > 2.5s**: Optimize images, preload critical resources
+2. **FID > 100ms**: Reduce JavaScript execution time, use code splitting
+3. **CLS > 0.1**: Set dimensions on images, avoid dynamic content insertion
+4. **FCP > 1.8s**: Optimize critical rendering path, inline critical CSS
+
+**** Issue: High memory usage
+#+BEGIN_SRC javascript
+// Check memory usage
+if (performance.memory) {
+  console.log('Memory:', {
+    used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) + ' MB',
+    total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024) + ' MB'
+  });
+}
+
+// Check for memory leaks
+// Monitor over time - usage should stabilize, not continuously increase
+#+END_SRC
+
+**Solution Steps:**
+1. Review JavaScript for memory leaks
+2. Check event listener cleanup
+3. Monitor visualization re-rendering
+4. Optimize data structure sizes
+5. Implement proper cleanup on page unload
+
+* Backup and Recovery
+
+** Data Recovery Procedures
+
+*** GitHub Actions Pipeline Recovery
+If the automated pipeline fails completely:
+
+#+BEGIN_SRC bash
+# 1. Restore from last known good state
+git checkout HEAD~1 -- data/portfolio.json
+
+# 2. Manually run local pipeline
+node test-portfolio-pipeline.js
+
+# 3. Commit manual update
+git add data/portfolio.json
+git commit -m "Manual portfolio data update - pipeline recovery"
+git push
+
+# 4. Test and fix pipeline issues
+gh workflow run update-portfolio.yml
+#+END_SRC
+
+*** Frontend Integration Recovery
+If the frontend integration breaks:
+
+#+BEGIN_SRC bash
+# 1. Revert to static fallback mode
+# Edit index.html to remove dynamic integration scripts temporarily
+
+# 2. Verify static site works
+# Test basic functionality without dynamic content
+
+# 3. Debug integration issues in development
+# Use local testing environment to isolate problems
+
+# 4. Deploy fix with minimal downtime
+git add . && git commit -m "Fix integration issues" && git push
+#+END_SRC
+
+*** Performance Recovery
+If performance degrades significantly:
+
+#+BEGIN_SRC bash
+# 1. Disable non-critical features temporarily
+# Comment out visualization scripts if needed
+
+# 2. Revert to last known good performance state
+git bisect start
+git bisect bad HEAD
+git bisect good [KNOWN_GOOD_COMMIT]
+
+# 3. Identify and fix performance regression
+# Use bisect to find problematic commit
+
+# 4. Re-enable features with performance fixes
+#+END_SRC
+
+** Emergency Contacts and Escalation
+
+*** Internal Escalation Path
+1. **Level 1**: Development team lead (immediate response)
+2. **Level 2**: Technical architecture review (within 2 hours)
+3. **Level 3**: Business stakeholder notification (within 4 hours)
+
+*** External Dependencies
+- **GitHub Actions**: https://www.githubstatus.com/
+- **Google Analytics**: https://www.google.com/appsstatus/
+- **CDN Services**: Monitor provider status pages
+
+* Success Metrics and KPIs
+
+** Technical Performance KPIs
+- **Uptime**: > 99.9%
+- **Page Load Time**: < 2 seconds average
+- **Core Web Vitals**: All "Good" ratings maintained
+- **Error Rate**: < 0.1% of total requests
+- **API Response Time**: < 200ms average
+
+** Business Impact KPIs
+- **Engagement Increase**: +25% time on site (target)
+- **Conversion Rate**: +30% contact form submissions (target)  
+- **Return Visitors**: +40% due to dynamic content (target)
+- **SEO Improvement**: Maintained or improved search rankings
+
+** Security KPIs
+- **Zero Data Breaches**: No sensitive information exposed
+- **Security Scan Results**: All scans pass without critical findings
+- **Incident Response Time**: < 5 minutes for critical issues
+- **Compliance Maintenance**: All security guidelines followed
+
+---
+
+**Document Status**: Production Ready
+**Last Updated**: 2025-09-09
+**Next Review**: After major deployment or monthly
+**Approval**: Technical lead and security review required

@@ -1,0 +1,430 @@
+#+TITLE: Dynamic Content Integration - Comprehensive Test Plan
+#+DATE: [2025-09-09 Mon]
+#+AUTHOR: CAN-CODE-BIZ Development Team
+#+DESCRIPTION: Complete testing strategy for Project Universe dynamic content integration
+
+* Testing Strategy Overview
+
+** Purpose
+Comprehensive validation of the dynamic content integration system that transforms
+static marketing claims into live portfolio metrics from Project Universe API.
+
+** Testing Scope
+- Security validation of data exposure
+- Performance optimization verification
+- Progressive enhancement functionality
+- Cross-browser compatibility
+- Mobile responsiveness
+- Accessibility compliance
+- Error handling and fallback mechanisms
+- GitHub Actions automation pipeline
+
+** Success Criteria
+- Zero sensitive data exposure in public endpoints
+- Page load performance maintains Core Web Vitals scores
+- Graceful degradation when Project Universe unavailable
+- All dynamic content points update correctly
+- Cross-platform compatibility confirmed
+- WCAG 2.1 AA accessibility compliance
+
+* Security Testing (CRITICAL)
+
+** Data Exposure Validation
+*** MANDATORY: Public API Security Audit
+#+BEGIN_SRC bash
+# Test forbidden patterns in API responses
+curl https://can-code.dev/data/portfolio.json | grep -E "(project[_-]?name|client|/Users/|\.git|vulnerability)"
+
+# Should return NO matches - any match is a security violation
+#+END_SRC
+
+*** Required Security Tests
+- [ ] **No individual project names or identifiers exposed**
+- [ ] **No file paths or directory structures visible**  
+- [ ] **No client-identifiable information present**
+- [ ] **No specific vulnerability details revealed**
+- [ ] **Only aggregated metrics in API responses**
+- [ ] **CORS restrictions properly configured**
+- [ ] **Rate limiting functional and effective**
+
+*** Security Test Commands
+#+BEGIN_SRC bash
+# 1. Test API endpoint security
+curl -H "Origin: https://malicious-site.com" https://can-code.dev/data/portfolio.json
+# Should be blocked by CORS
+
+# 2. Test rate limiting
+for i in {1..20}; do curl https://can-code.dev/data/portfolio.json; done
+# Should trigger rate limiting
+
+# 3. Validate data structure
+curl https://can-code.dev/data/portfolio.json | jq '.portfolio.projects // "SAFE"'
+# Should return "SAFE" - no individual projects array
+
+# 4. Security pattern check
+curl https://can-code.dev/data/portfolio.json | \
+  grep -i -E "(password|secret|key|token|auth|private)" || echo "SECURE"
+# Should output "SECURE"
+#+END_SRC
+
+** Expected Security Outcomes
+- API returns only aggregated portfolio metrics
+- CORS blocks unauthorized domain requests
+- Rate limiting prevents abuse
+- No sensitive patterns detected in responses
+
+* Functional Testing
+
+** Data Loading Tests
+*** Primary Data Loading
+- [ ] **Fresh data loads successfully from Project Universe API**
+- [ ] **Cached data used when available and valid**
+- [ ] **Fallback data used when API unavailable**
+- [ ] **Data validation prevents corrupt responses**
+- [ ] **Error handling gracefully manages failures**
+
+*** Integration Point Updates
+- [ ] **Hero section metrics update correctly**
+  - Project count: `data-portfolio="project-count"`
+  - LOC analyzed: `data-portfolio="loc-analyzed"`  
+  - Health score: `data-portfolio="avg-health"`
+  - Tech stacks: `data-portfolio="tech-stacks"`
+
+- [ ] **About section transforms properly**
+  - Portfolio scale indicators
+  - Technology expertise percentages
+  - Growth trajectory metrics
+
+- [ ] **Platform section visualizations render**
+  - Portfolio stats cards with counters
+  - Technology distribution bars
+  - Health gauge with proper scoring
+  - Quality distribution donut chart
+  - Trend indicators with directional arrows
+
+*** Test Commands
+#+BEGIN_SRC javascript
+// Browser console tests
+// 1. Test data loader directly
+portfolioIntegration.getCurrentData()
+// Should return valid portfolio data object
+
+// 2. Test refresh functionality  
+portfolioIntegration.refresh()
+// Should fetch fresh data and update DOM
+
+// 3. Test integration points
+document.querySelectorAll('[data-portfolio]').forEach(el => 
+  console.log(el.dataset.portfolio, el.textContent)
+)
+// Should show updated values, not default fallbacks
+
+// 4. Test visualizations
+Object.keys(portfolioIntegration.visualizations?.charts || {})
+// Should return array of chart names if visualizations loaded
+#+END_SRC
+
+** Progressive Enhancement Tests
+- [ ] **Site works without JavaScript enabled**
+- [ ] **Static fallback values displayed when JS disabled**
+- [ ] **Dynamic enhancements layer on top without breaking**
+- [ ] **Loading states shown during data fetching**
+- [ ] **Smooth transitions between static and dynamic content**
+
+** Error Handling Tests
+- [ ] **Network failures handled gracefully**
+- [ ] **Invalid JSON responses don't break site**
+- [ ] **Timeout scenarios use fallback data**
+- [ ] **CORS errors fail silently to fallback**
+- [ ] **Rate limiting triggers fallback mechanism**
+
+* Performance Testing
+
+** Core Web Vitals Validation
+*** Required Metrics (Target Scores)
+- **First Contentful Paint (FCP)**: < 1.8s (Good)
+- **Largest Contentful Paint (LCP)**: < 2.5s (Good)  
+- **First Input Delay (FID)**: < 100ms (Good)
+- **Cumulative Layout Shift (CLS)**: < 0.1 (Good)
+- **Time to First Byte (TTFB)**: < 200ms (Good)
+
+*** Performance Test Commands
+#+BEGIN_SRC bash
+# Using Lighthouse CLI
+npx lighthouse https://can-code.dev --output=json --quiet
+
+# Using WebPageTest API
+curl "https://www.webpagetest.org/runtest.php?url=https://can-code.dev&f=json&k=YOUR_API_KEY"
+
+# Manual browser testing
+# Open DevTools > Lighthouse > Run Performance Audit
+#+END_SRC
+
+** Resource Optimization Tests  
+- [ ] **JavaScript bundles are minified and compressed**
+- [ ] **CSS is optimized and non-critical CSS deferred**
+- [ ] **Images are optimized (WebP format where supported)**
+- [ ] **Fonts are preloaded to prevent layout shift**
+- [ ] **Service worker caches resources effectively**
+
+** Caching Strategy Tests
+- [ ] **Portfolio data cached for 1 hour client-side**
+- [ ] **Stale data served while revalidating**
+- [ ] **Cache invalidation works on data updates**
+- [ ] **Browser caching headers properly configured**
+
+* Cross-Browser Testing
+
+** Desktop Browser Matrix
+*** Required Browsers (Last 2 versions)
+- [ ] **Chrome 118+** (Primary target)
+- [ ] **Firefox 118+** (Secondary target)
+- [ ] **Safari 16+** (macOS compatibility)
+- [ ] **Edge 118+** (Windows compatibility)
+
+*** Test Scenarios Per Browser
+- [ ] **Dynamic content loads and displays correctly**
+- [ ] **Visualizations render without JavaScript errors**
+- [ ] **Animations and transitions work smoothly**
+- [ ] **Error fallbacks function properly**
+
+** Mobile Browser Testing
+- [ ] **Chrome Mobile** (Android primary)
+- [ ] **Safari Mobile** (iOS primary)
+- [ ] **Samsung Internet** (Android alternative)
+- [ ] **Firefox Mobile** (Cross-platform)
+
+** Browser Feature Detection Tests
+#+BEGIN_SRC javascript
+// Test feature support
+const features = {
+  fetch: typeof fetch !== 'undefined',
+  promises: typeof Promise !== 'undefined',
+  asyncAwait: typeof async !== 'undefined',
+  localStorage: typeof Storage !== 'undefined',
+  intersectionObserver: typeof IntersectionObserver !== 'undefined'
+};
+
+console.log('Browser Features:', features);
+// All should be true for modern browsers
+#+END_SRC
+
+* Mobile Responsiveness Testing
+
+** Device Testing Matrix
+*** Primary Devices
+- [ ] **iPhone 14 Pro** (iOS, 393×852)
+- [ ] **Samsung Galaxy S23** (Android, 360×800)
+- [ ] **iPad Pro** (iPadOS, 1024×1366)
+- [ ] **Desktop 1920×1080** (Primary desktop)
+
+*** Responsive Breakpoints
+- [ ] **Mobile**: < 768px
+- [ ] **Tablet**: 768px - 1024px  
+- [ ] **Desktop**: > 1024px
+
+** Mobile-Specific Tests
+- [ ] **Touch interactions work correctly**
+- [ ] **Tap targets are minimum 44px**
+- [ ] **Horizontal scrolling prevented**
+- [ ] **Text remains readable without zooming**
+- [ ] **Visualizations adapt to small screens**
+- [ ] **Loading indicators visible on mobile**
+
+** Test Commands
+#+BEGIN_SRC bash
+# Browser DevTools testing
+# 1. Open DevTools (F12)
+# 2. Enable Device Mode (Ctrl/Cmd + Shift + M)
+# 3. Test each device size
+# 4. Verify layout and functionality
+#+END_SRC
+
+* Accessibility Testing
+
+** WCAG 2.1 AA Compliance
+*** Required Tests
+- [ ] **Keyboard navigation works for all interactive elements**
+- [ ] **Screen reader compatibility (NVDA, JAWS, VoiceOver)**
+- [ ] **Color contrast ratios meet 4.5:1 minimum**
+- [ ] **Alternative text provided for all images**
+- [ ] **ARIA labels present where needed**
+- [ ] **Focus indicators clearly visible**
+- [ ] **Semantic HTML structure maintained**
+
+*** Automated Accessibility Testing
+#+BEGIN_SRC bash
+# Using axe-core via browser console
+axe.run().then(results => {
+  console.log('Violations:', results.violations.length);
+  console.log('Passes:', results.passes.length);
+});
+
+# Using Lighthouse accessibility audit
+npx lighthouse https://can-code.dev --only-categories=accessibility
+
+# Using axe CLI
+npm install -g @axe-core/cli
+axe https://can-code.dev
+#+END_SRC
+
+** Keyboard Navigation Tests
+- [ ] **Tab order logical and complete**
+- [ ] **Skip to main content link functional**
+- [ ] **All interactive elements reachable via keyboard**
+- [ ] **No keyboard traps present**
+- [ ] **Enter and Space keys activate buttons**
+
+** Screen Reader Tests
+- [ ] **VoiceOver (macOS/iOS) reads content correctly**
+- [ ] **NVDA (Windows) announces dynamic updates**
+- [ ] **Content structure makes sense when read aloud**
+- [ ] **Data visualizations have text alternatives**
+
+* GitHub Actions Pipeline Testing
+
+** Workflow Validation
+*** Pipeline Tests
+- [ ] **Daily scheduled execution (6 AM UTC)**
+- [ ] **Manual trigger functionality works**
+- [ ] **Security validation passes in pipeline**
+- [ ] **Data sanitization prevents sensitive exposure**
+- [ ] **Automated commits work correctly**
+- [ ] **Error handling prevents pipeline failures**
+
+*** Test Commands
+#+BEGIN_SRC bash
+# 1. Trigger manual workflow
+gh workflow run update-portfolio.yml
+
+# 2. Check workflow status
+gh run list --workflow=update-portfolio.yml --limit=5
+
+# 3. View workflow logs
+gh run view --log [RUN_ID]
+
+# 4. Test local pipeline script
+node test-portfolio-pipeline.js
+#+END_SRC
+
+** Pipeline Security Tests
+- [ ] **No secrets logged in workflow output**
+- [ ] **Sensitive data filtered before commit**
+- [ ] **GITHUB_TOKEN permissions restricted appropriately**
+- [ ] **Workflow cannot be modified by unauthorized users**
+
+* User Experience Testing
+
+** Content Transformation Validation
+*** Before/After Verification
+- [ ] **Static**: "17+ specialized agents" → **Dynamic**: "126+ active projects"
+- [ ] **Static**: "MongoDB-backed system" → **Dynamic**: "147M+ lines analyzed"
+- [ ] **Static**: "Production system" → **Dynamic**: "8.2/10 health, 77% ready"
+
+*** User Journey Tests
+- [ ] **First-time visitor sees meaningful content immediately**
+- [ ] **Live data badge appears when dynamic content loaded**
+- [ ] **Visualizations enhance understanding of capabilities**
+- [ ] **No jarring transitions between static and dynamic content**
+- [ ] **Value proposition clearer with live metrics**
+
+** Engagement Metrics
+- [ ] **Time on site tracking configured**
+- [ ] **Scroll depth measurement active**
+- [ ] **CTA interaction tracking functional**
+- [ ] **Portfolio data interaction analytics**
+
+* Load Testing
+
+** Traffic Simulation
+*** Load Test Scenarios
+- [ ] **100 concurrent users** (Normal traffic)
+- [ ] **500 concurrent users** (High traffic)
+- [ ] **1000 concurrent users** (Peak traffic)
+
+*** Test Commands
+#+BEGIN_SRC bash
+# Using Apache Bench
+ab -n 1000 -c 100 https://can-code.dev/
+
+# Using K6 for more complex testing
+k6 run --vus 100 --duration 30s load-test.js
+
+# Monitor response times and error rates
+#+END_SRC
+
+** Resource Usage Monitoring
+- [ ] **CDN performance under load**
+- [ ] **GitHub Pages stability**
+- [ ] **API endpoint response times**
+- [ ] **Database query performance (if applicable)**
+
+* Monitoring and Analytics Testing
+
+** Analytics Validation
+- [ ] **Google Analytics 4 tracking active**
+- [ ] **Portfolio data update events tracked**
+- [ ] **Error events properly categorized**
+- [ ] **User engagement metrics collected**
+- [ ] **Core Web Vitals reported to analytics**
+
+** Error Monitoring Tests
+- [ ] **JavaScript errors captured**
+- [ ] **Network failures logged**
+- [ ] **Performance issues detected**
+- [ ] **Security violations alerted**
+
+* Test Execution Schedule
+
+** Phase 1: Security and Functional (Day 1)
+- Morning: Complete security testing battery
+- Afternoon: Functional testing and integration validation
+- Evening: Error handling and fallback verification
+
+** Phase 2: Performance and Compatibility (Day 2)  
+- Morning: Performance optimization and Core Web Vitals
+- Afternoon: Cross-browser compatibility matrix
+- Evening: Mobile responsiveness and touch interactions
+
+** Phase 3: Accessibility and UX (Day 3)
+- Morning: WCAG compliance and screen reader testing
+- Afternoon: User experience validation and content transformation
+- Evening: Analytics and monitoring configuration
+
+** Phase 4: Load Testing and Deployment (Day 4)
+- Morning: Load testing and traffic simulation
+- Afternoon: GitHub Actions pipeline validation
+- Evening: Production deployment and monitoring setup
+
+* Success Criteria and Sign-off
+
+** Mandatory Requirements (Must Pass)
+- [ ] **Zero security violations detected**
+- [ ] **All Core Web Vitals score "Good"**
+- [ ] **WCAG 2.1 AA compliance achieved**
+- [ ] **Cross-browser functionality confirmed**
+- [ ] **Mobile responsiveness validated**
+- [ ] **Progressive enhancement working**
+- [ ] **GitHub Actions pipeline operational**
+
+** Quality Indicators (Target Metrics)
+- [ ] **Page load time < 2 seconds**
+- [ ] **First meaningful paint < 1.5 seconds**
+- [ ] **Accessibility score > 95%**
+- [ ] **Performance score > 90%**
+- [ ] **SEO score > 95%**
+
+** Final Deployment Checklist
+- [ ] **All tests passing**
+- [ ] **Documentation updated**
+- [ ] **Monitoring configured**
+- [ ] **Error alerting active**
+- [ ] **Performance baseline established**
+- [ ] **Team trained on new system**
+
+---
+
+**Test Plan Status**: Ready for execution
+**Review Date**: 2025-09-09
+**Next Review**: After test completion or major changes
+**Approval**: Development team lead sign-off required

@@ -1,0 +1,107 @@
+#+TITLE: can.code Community Labs Documentation
+#+AUTHOR: can.code Community Labs
+#+DATE: 2026-02-03
+
+* Documentation Index
+
+This directory contains all organizational documentation for can.code Community Labs,
+organized by purpose and topic area.
+
+** Quick Links
+- [[../README.org][Main README]] - Primary entry point for the organization
+- [[file:strategy/COMMUNITY-PORTFOLIO-ALIGNMENT.org][Community Portfolio Alignment]] - Strategic direction and project positioning
+- [[file:foundation/FOUNDATION.org][Foundation]] - Historical context and organizational evolution
+- [[file:engineering/can-code-eng-base-agent.org][Engineering Standards]] - Base agent specification and development principles
+
+* Directory Structure
+
+** [[file:foundation/][foundation/]] - Historical & Organizational Context
+Documentation about the organization's history, evolution, and foundational projects.
+
+- [[file:foundation/FOUNDATION.org][FOUNDATION.org]] - Complete organizational history and evolution
+- [[file:foundation/BEER-PROJECT-DOCUMENTATION.org][BEER-PROJECT-DOCUMENTATION.org]] - BEER/beercode.net era (2022-2024)
+- [[file:foundation/LINCOLNIX-APPLICATIONS.org][LINCOLNIX-APPLICATIONS.org]] - Lincolnix era (2020-2022)
+- [[file:foundation/EQ-PORTFOLIO-DOCUMENTATION.org][EQ-PORTFOLIO-DOCUMENTATION.org]] - EQ/Promogen client project documentation
+
+** [[file:strategy/][strategy/]] - Strategic Planning Documents
+High-level strategic direction, portfolio alignment, and ecosystem coordination.
+
+- [[file:strategy/COMMUNITY-PORTFOLIO-ALIGNMENT.org][COMMUNITY-PORTFOLIO-ALIGNMENT.org]] - Community-oriented portfolio strategy (2026+)
+- [[file:strategy/ECOSYSTEM-COORDINATION.org][ECOSYSTEM-COORDINATION.org]] - Cross-project coordination and metrics
+- [[file:strategy/RESEARCH-PORTFOLIO-ALIGNMENT.org][RESEARCH-PORTFOLIO-ALIGNMENT.org]] - Historical research positioning (2024-2025)
+
+** [[file:engineering/][engineering/]] - Engineering & Technical Standards
+Technical specifications, deployment guides, and architectural documentation.
+
+- [[file:engineering/can-code-eng-base-agent.org][can-code-eng-base-agent.org]] - Base agent specification for all projects
+- [[file:engineering/DEPLOYMENT-GUIDE.org][DEPLOYMENT-GUIDE.org]] - Deployment procedures and guidelines
+- [[file:engineering/DYNAMIC-INTEGRATION-TEST-PLAN.org][DYNAMIC-INTEGRATION-TEST-PLAN.org]] - Integration testing strategy
+- [[file:engineering/CAN-RAILS-EXTRACTION-PLAN.org][CAN-RAILS-EXTRACTION-PLAN.org]] - Rails template extraction plan
+- [[file:engineering/ORDER-SIGN-PAY-TEMPLATE-ARCHITECTURE.org][ORDER-SIGN-PAY-TEMPLATE-ARCHITECTURE.org]] - Template architecture documentation
+
+** [[file:project-universe/][project-universe/]] - Project Universe Documentation
+Specific documentation for the Project Universe meta-analysis platform.
+
+- [[file:project-universe/PROJECT_UNIVERSE_API.org][PROJECT_UNIVERSE_API.org]] - API specifications
+- [[file:project-universe/PROJECT_UNIVERSE_PUBLIC_API_REQUIREMENTS.org][PROJECT_UNIVERSE_PUBLIC_API_REQUIREMENTS.org]] - Public API requirements
+- [[file:project-universe/PROJECT-UNIVERSE-MARKETING-SCHEMA.org][PROJECT-UNIVERSE-MARKETING-SCHEMA.org]] - Marketing integration schema
+- [[file:project-universe/PROJECT-UNIVERSE-SECURITY-GUIDELINES.org][PROJECT-UNIVERSE-SECURITY-GUIDELINES.org]] - Security guidelines and patterns
+
+** [[file:backlogs/][backlogs/]] - Planning & Task Management
+Backlog documents, roadmaps, and strategic planning tasks.
+
+- [[file:backlogs/BACKLOG.org][BACKLOG.org]] - Main project backlog
+- [[file:backlogs/CLAUDE-CODE-AGENTS-BACKLOG-GUIDE.org][CLAUDE-CODE-AGENTS-BACKLOG-GUIDE.org]] - Agent development backlog guide
+- [[file:backlogs/JOB-SEARCH-STRATEGY-2026.org][JOB-SEARCH-STRATEGY-2026.org]] - 2026 job search strategy
+
+** [[file:session-notes/][session-notes/]] - Development Session Notes
+Archive of development session notes and progress documentation.
+
+- [[file:session-notes/SESSION-NOTES-2025-01-09.org][SESSION-NOTES-2025-01-09.org]] - Session notes from January 9, 2025
+- [[file:session-notes/SESSION-NOTES-2025-09-24.org][SESSION-NOTES-2025-09-24.org]] - Session notes from September 24, 2025
+- [[file:session-notes/SESSION-NOTES.md][SESSION-NOTES.md]] - Ongoing session notes
+- [[file:session-notes/SESSION_NOTES.md][SESSION_NOTES.md]] - Additional session notes
+
+* Document Categories by Purpose
+
+** Getting Started
+1. [[../README.org][Main README]] - Start here
+2. [[file:foundation/FOUNDATION.org][Foundation]] - Understand our history
+3. [[file:strategy/COMMUNITY-PORTFOLIO-ALIGNMENT.org][Community Portfolio Alignment]] - Current strategic direction
+
+** For Contributors
+1. [[file:engineering/can-code-eng-base-agent.org][Engineering Standards]] - Development principles and requirements
+2. [[file:engineering/DEPLOYMENT-GUIDE.org][Deployment Guide]] - How to deploy projects
+3. [[file:backlogs/BACKLOG.org][Backlog]] - What needs to be done
+
+** For Strategic Planning
+1. [[file:strategy/ECOSYSTEM-COORDINATION.org][Ecosystem Coordination]] - Cross-project coordination
+2. [[file:strategy/COMMUNITY-PORTFOLIO-ALIGNMENT.org][Portfolio Alignment]] - Strategic positioning
+3. [[file:backlogs/][Backlogs]] - Planning and roadmaps
+
+** Project-Specific
+- [[file:project-universe/][Project Universe Documentation]] - Meta-analysis platform
+- [[file:foundation/EQ-PORTFOLIO-DOCUMENTATION.org][EQ Portfolio]] - Client project example
+- [[file:engineering/ORDER-SIGN-PAY-TEMPLATE-ARCHITECTURE.org][Order-Sign-Pay Template]] - Template architecture
+
+* Maintenance
+
+** Adding New Documentation
+Place new documentation in the appropriate category:
+- Historical/organizational context → =foundation/=
+- Strategic planning and alignment → =strategy/=
+- Technical standards and guides → =engineering/=
+- Project-specific technical docs → =project-universe/= (or create new project directory)
+- Task planning and backlogs → =backlogs/=
+- Development session records → =session-notes/=
+
+** Documentation Standards
+- Prefer =.org= format for consistency
+- Follow 80-column rule
+- Include clear headers and structure
+- Cross-reference related documents using org-mode links
+- Update this index when adding new categories
+
+---
+
+*Last Updated: 2026-02-03*
