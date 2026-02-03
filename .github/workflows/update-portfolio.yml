@@ -8,7 +8,7 @@ on:
     # Allow manual trigger for testing and immediate updates
     inputs:
       force_update:
-        description: 'Force update even if data hasn\'t changed'
+        description: "Force update even if data hasn't changed"
         required: false
         default: 'false'
         type: boolean
