@@ -5,7 +5,7 @@
     box-sizing: border-box;
 }
 
-/* Rubber Duck Themed Design System */
+/* Rubber Duck Themed Design System - Dark Mode */
 :root {
   /* Duck Illustration Color Palette */
   --duck-yellow: #FFD700;
@@ -14,34 +14,33 @@
   --duck-coral: #FF6B6B;
   --duck-blue: #3498DB;
   --duck-water: #5DADE2;
-  --primary-white: #ffffff;
-  --light-sky: #F0F8FF;
-  --soft-blue: #E6F3FF;
-  --pale-blue: #CCE7FF;
-  --dark-gray: #2C3E50;
-  --text-primary: #2C3E50;
-  --text-secondary: #2C3E50;
+
+  /* Dark Theme Colors */
+  --dark-bg-primary: #1a1a1a;
+  --dark-bg-secondary: #242424;
+  --dark-bg-tertiary: #2d2d2d;
+  --dark-bg-quaternary: #383838;
+  --dark-text-primary: #e8e8e8;
+  --dark-text-secondary: #b8b8b8;
+  --dark-border: #404040;
+
+  /* Apply Dark Theme */
+  --bg-primary: var(--dark-bg-primary);
+  --bg-secondary: var(--dark-bg-secondary);
+  --bg-tertiary: var(--dark-bg-tertiary);
+  --bg-quaternary: var(--dark-bg-quaternary);
+  --text-primary: var(--dark-text-primary);
+  --text-secondary: var(--dark-text-secondary);
+  --text-tertiary: var(--dark-text-secondary);
+  --text-quaternary: #a0a0a0;
   --accent-primary: var(--duck-red);
-  --accent-secondary: #B8860B;
+  --accent-secondary: var(--duck-yellow);
   --accent-tertiary: var(--duck-blue);
-  --border-light: #B3D9FF;
-  --shadow-light: rgba(52, 152, 219, 0.1);
-  --shadow-medium: rgba(52, 152, 219, 0.15);
-  
-  /* Duck-Themed Background System with Sky Blue */
-  --bg-primary: var(--primary-white);
-  --bg-secondary: var(--light-sky);
-  --bg-tertiary: var(--soft-blue);
-  --bg-quaternary: var(--pale-blue);
-  
-  /* Duck-Themed Border System */
-  --border-primary: var(--border-light);
+  --border-primary: var(--dark-border);
   --border-secondary: var(--duck-coral);
-  
-  /* Duck-Themed Text Hierarchy */
-  --text-tertiary: #2C3E50;
-  --text-quaternary: #34495E;
-  
+  --shadow-light: rgba(0, 0, 0, 0.3);
+  --shadow-medium: rgba(0, 0, 0, 0.5);
+
   /* Enhanced Status Colors */
   --status-success: var(--duck-blue);
   --status-warning: var(--duck-yellow);
@@ -388,8 +387,8 @@ p {
 }
 
 .feature-card {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-light);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
     border-radius: var(--radius-lg);
     padding: var(--spacing-xl);
     transition: all var(--duration-normal) var(--easing-default);
